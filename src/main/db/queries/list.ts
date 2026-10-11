@@ -79,15 +79,18 @@ interface SortSpec {
 /** Tri d'une portée (ARCHI §7) ; la corbeille trie « récents » par date de suppression. */
 export function sortSpec(
   sort: SortMode,
-  scope: 'library' | 'collection',
+  _scope: 'library' | 'collection',
   tab: LibraryTab,
 ): SortSpec | null {
   switch (sort) {
+    // En collection aussi, « Plus récents » suit la date de l'élément (fidélité `c7j4tx` : Dev
+    // commence par « Colorful Usage Monitor » puis « Social Media Profile », dans l'ordre des dates
+    // d'ajout à la bibliothèque et non d'entrée dans la collection). Les couvertures, elles, restent
+    // sur `collection_items.added_at` (ERRATA §C).
     case 'recent':
-      if (scope === 'collection') return { key: 'ci.added_at', dir: 'DESC' }
       return { key: tab === 'trash' ? 'i.deleted_at' : 'i.created_at', dir: 'DESC' }
     case 'oldest':
-      return { key: scope === 'collection' ? 'ci.added_at' : 'i.created_at', dir: 'ASC' }
+      return { key: 'i.created_at', dir: 'ASC' }
     case 'name':
       return { key: 'i.name_key', dir: 'ASC' }
     case 'color':

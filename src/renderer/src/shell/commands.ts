@@ -39,6 +39,28 @@ export async function newCollection(): Promise<void> {
   }
 }
 
+/** Export zip (bibliothèque ou collection) ; la progression arrive par `export.progress`. */
+export async function exportZip(collectionUuid?: string): Promise<void> {
+  try {
+    const r = await rpc('data.exportZip', {
+      includeDerived: false,
+      ...(collectionUuid ? { collectionUuid } : {}),
+    })
+    if ('path' in r) toast(fr.toast.exportDone)
+  } catch (err) {
+    toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  }
+}
+
+export async function createSnapshot(): Promise<void> {
+  try {
+    await rpc('data.snapshot.create', { reason: 'manual' })
+    toast(fr.settingsMoreUi.snapshotDone)
+  } catch (err) {
+    toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  }
+}
+
 export function toggleTheme(): void {
   const prefs = usePrefs.getState().prefs
   const next = effectiveTheme(prefs.theme) === 'dark' ? 'light' : 'dark'
@@ -86,6 +108,12 @@ export function runMenuCommand(cmd: MenuCommand): void {
       return
     case 'newCollection':
       void newCollection()
+      return
+    case 'exportZip':
+      void exportZip()
+      return
+    case 'snapshot':
+      void createSnapshot()
       return
     case 'undo':
     case 'redo':

@@ -16,21 +16,30 @@ function a11y(label: string | undefined) {
   return label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true as const }
 }
 
-/** X (ex-Twitter) : deux diagonales croisées, la montante plus fine. */
+/**
+ * Logo X (ex-Twitter), géométrie maison : la diagonale descendante est une bande évidée (contour
+ * d'un parallélogramme), la montante une barre fine interrompue par la bande. Remplissage plein
+ * (`evenodd`) : surtout pas deux traits croisés, qu'on confondrait avec une croix de fermeture.
+ */
+export const X_LOGO_PATH =
+  'M2.5 3H8.2L21.5 21H15.8Z' +
+  'M4.89 4.2L16.41 19.8H19.11L7.59 4.2Z' +
+  'M19.65 3H21.55L14.02 10.88L13.19 9.76Z' +
+  'M9.98 13.12L10.81 14.24L4.34 21H2.44Z'
+
 export function XGlyph({ size = 18, label, ...rest }: GlyphProps) {
   return (
     <svg
       viewBox="0 0 24 24"
       width={size}
       height={size}
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
+      fill="currentColor"
+      fillRule="evenodd"
+      data-glyph="x"
       {...a11y(label)}
       {...rest}
     >
-      <path d="M5 4.5 19 19.5" strokeWidth="2.6" />
-      <path d="M19 4.5 5 19.5" strokeWidth="1.5" />
+      <path d={X_LOGO_PATH} />
     </svg>
   )
 }

@@ -3,7 +3,7 @@
  * graine de recherche (`ui.openSearch`, ERRATA §B).
  */
 import { create } from 'zustand'
-import type { LibraryTab } from '../../../shared/enums'
+import { SortMode, type LibraryTab } from '../../../shared/enums'
 
 export type Route =
   | { name: 'library' }
@@ -43,6 +43,8 @@ export interface UiState {
   search: SearchSeed & { nonce: number }
   /** Colonnes par vue (`library`, `collection:<uuid>`…), 2 à 8. */
   columns: Record<string, number>
+  /** Tri choisi par vue (`collection:<uuid>`…) ; absent = tri par défaut des Réglages. */
+  sorts: Record<string, SortMode>
 
   navigate: (route: Route) => void
   back: () => void
@@ -56,6 +58,41 @@ export interface UiState {
   clearInternalDrag: () => void
   openSearch: (seed?: SearchSeed) => void
   setColumns: (viewKey: string, n: number) => void
+  setSort: (viewKey: string, sort: SortMode) => void
+}
+
+/** Colonnes et tris par vue, mémorisés localement (confort par poste, jamais critique). */
+const VIEW_PREFS_KEY = 'recolt.viewPrefs.v1'
+
+function readViewPrefs(): { columns: Record<string, number>; sorts: Record<string, SortMode> } {
+  try {
+    const raw = globalThis.localStorage?.getItem(VIEW_PREFS_KEY)
+    if (raw) {
+      const v = JSON.parse(raw) as { columns?: unknown; sorts?: unknown }
+      const entries = (x: unknown) =>
+        x && typeof x === 'object' && !Array.isArray(x) ? Object.entries(x) : []
+      const columns = Object.fromEntries(
+        entries(v.columns).filter(
+          (e): e is [string, number] => typeof e[1] === 'number' && e[1] >= 2 && e[1] <= 8,
+        ),
+      )
+      const sorts = Object.fromEntries(
+        entries(v.sorts).filter((e): e is [string, SortMode] => SortMode.safeParse(e[1]).success),
+      )
+      return { columns, sorts }
+    }
+  } catch {
+    // stockage indisponible : défauts
+  }
+  return { columns: {}, sorts: {} }
+}
+
+function writeViewPrefs(columns: Record<string, number>, sorts: Record<string, SortMode>): void {
+  try {
+    globalThis.localStorage?.setItem(VIEW_PREFS_KEY, JSON.stringify({ columns, sorts }))
+  } catch {
+    // stockage indisponible : sans conséquence
+  }
 }
 
 export const clampColumns = (n: number): number => Math.min(8, Math.max(2, Math.round(n)))
@@ -68,7 +105,7 @@ export const useUi = create<UiState>()((set, get) => ({
   selection: [],
   internalDrag: null,
   search: { nonce: 0 },
-  columns: {},
+  ...readViewPrefs(),
 
   navigate: (route) => set((s) => ({ route, previous: s.route, selection: [] })),
   back: () => {
@@ -95,6 +132,14 @@ export const useUi = create<UiState>()((set, get) => ({
       overlay: null,
       search: { ...seed, nonce: s.search.nonce + 1 },
     })),
-  setColumns: (viewKey, n) =>
-    set((s) => ({ columns: { ...s.columns, [viewKey]: clampColumns(n) } })),
+  setColumns: (viewKey, n) => {
+    const columns = { ...get().columns, [viewKey]: clampColumns(n) }
+    set({ columns })
+    writeViewPrefs(columns, get().sorts)
+  },
+  setSort: (viewKey, sort) => {
+    const sorts = { ...get().sorts, [viewKey]: sort }
+    set({ sorts })
+    writeViewPrefs(get().columns, sorts)
+  },
 }))

@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ItemCard, ItemsPage } from '../../../../shared/dto/items'
 import type { LibraryTab, SortMode } from '../../../../shared/enums'
+import type { ItemsListInput } from '../../../../shared/ipc/items'
 import { isNotImplemented, rpc, subscribe } from '../../lib/rpc'
 
 export interface LibraryItemsState {
@@ -19,6 +20,25 @@ export interface LibraryItemsState {
 export const PAGE_SIZE = 120
 
 export function useLibraryItems(tab: LibraryTab, sort: SortMode, seed: number): LibraryItemsState {
+  return useItemsList({ scope: 'library', tab, sort, seed }, tab === 'saved' || tab === 'unsorted')
+}
+
+/** Membres directs d'une collection (DESIGN §3.3), rechargés aussi sur `collections.changed`. */
+export function useCollectionItems(
+  collectionUuid: string,
+  sort: SortMode,
+  seed: number,
+): LibraryItemsState {
+  return useItemsList({ scope: 'collection', collectionUuid, sort, seed }, true)
+}
+
+type ListBase =
+  | { scope: 'library'; tab: LibraryTab; sort: SortMode; seed: number }
+  | { scope: 'collection'; collectionUuid: string; sort: SortMode; seed: number }
+
+/** Liste complète d'une portée, par pages keyset. */
+export function useItemsList(base: ListBase, onCollectionsChanged: boolean): LibraryItemsState {
+  const key = JSON.stringify(base)
   const [state, setState] = useState<LibraryItemsState>({
     items: [],
     total: 0,
@@ -37,14 +57,8 @@ export function useLibraryItems(tab: LibraryTab, sort: SortMode, seed: number): 
         const all: ItemCard[] = []
         let total = 0
         for (let page = 0; page < 1000; page++) {
-          const r: ItemsPage = await rpc('items.list', {
-            scope: 'library',
-            tab,
-            sort,
-            seed,
-            cursor,
-            limit: PAGE_SIZE,
-          })
+          const input: ItemsListInput = { ...base, cursor, limit: PAGE_SIZE }
+          const r: ItemsPage = await rpc('items.list', input)
           if (my !== gen.current) return
           all.push(...r.items)
           total = r.total
@@ -57,7 +71,7 @@ export function useLibraryItems(tab: LibraryTab, sort: SortMode, seed: number): 
         setState({ items: all, total, loading: false, loaded: true })
       } catch (err) {
         if (my !== gen.current) return
-        if (!isNotImplemented(err)) console.warn('[library] liste indisponible', err)
+        if (!isNotImplemented(err)) console.warn('[items] liste indisponible', err)
         setState((s) => ({ ...s, loading: false, loaded: true }))
       }
     }
@@ -69,7 +83,7 @@ export function useLibraryItems(tab: LibraryTab, sort: SortMode, seed: number): 
     const offs = [
       subscribe('items.changed', schedule),
       subscribe('collections.changed', () => {
-        if (tab === 'saved' || tab === 'unsorted') schedule()
+        if (onCollectionsChanged) schedule()
       }),
       subscribe('library.switched', schedule),
     ]
@@ -78,6 +92,8 @@ export function useLibraryItems(tab: LibraryTab, sort: SortMode, seed: number): 
       if (timer) clearTimeout(timer)
       offs.forEach((o) => o())
     }
-  }, [tab, sort, seed])
+    // `key` résume `base` (objet recréé à chaque rendu).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, onCollectionsChanged])
   return state
 }

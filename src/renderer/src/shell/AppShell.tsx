@@ -10,7 +10,7 @@ import { fr } from '../i18n/fr'
 import { cn } from '../lib/cn'
 import { isDigit } from '../lib/shortcuts'
 import { isNotImplemented, rpc, subscribe } from '../lib/rpc'
-import { followCollections, useCollections } from '../state/collections'
+import { flattenTree, followCollections, useCollections } from '../state/collections'
 import { useUi, type Route } from '../state/ui'
 import { useUndo } from '../state/undo'
 import { Dialogs } from './Dialogs'
@@ -121,31 +121,41 @@ export function AppShell({ dark }: { dark: boolean }) {
   const Overlay = overlay ? overlays[overlay.type] : null
   const collection =
     route.name === 'collection'
-      ? (useCollections.getState().tree.find((c) => c.uuid === route.uuid) ?? null)
+      ? (flattenTree(useCollections.getState().tree).find((f) => f.node.uuid === route.uuid)
+          ?.node ?? null)
       : null
 
+  // Étagère (DESIGN §3.4) : plein cadre noir, en-tête réduit aux feux et au segmented sombre.
+  const immersive = route.name === 'shelf' && implemented
   return (
     <TooltipProvider>
-      <div data-testid="app-shell" className="flex h-full flex-col bg-bg text-fg">
+      <div
+        data-testid="app-shell"
+        data-immersive={immersive ? 'shelf' : undefined}
+        className={cn('flex h-full flex-col text-fg', immersive ? 'bg-[var(--shelf-bg)]' : 'bg-bg')}
+      >
         <header
           data-testid="header"
-          className={cn('relative h-24 shrink-0', overlay === null && 'app-drag')}
+          className={cn('relative z-10 h-24 shrink-0', overlay === null && 'app-drag')}
         >
-          <LibraryPicker />
+          {immersive ? null : <LibraryPicker />}
           <NavSegmented
             value={navOf(route)}
+            tone={immersive ? 'dark' : 'light'}
             onChange={(v) =>
               v === 'search' ? useUi.getState().openSearch() : navigate(routeOf(v))
             }
           />
-          <HeaderActions
-            compact={width < 1100}
-            dark={dark}
-            onSearch={() => useUi.getState().openSearch()}
-            onRediscover={soon}
-            onToggleTheme={toggleTheme}
-            onSettings={() => openOverlay({ type: 'settings' })}
-          />
+          {immersive ? null : (
+            <HeaderActions
+              compact={width < 1100}
+              dark={dark}
+              onSearch={() => useUi.getState().openSearch()}
+              onRediscover={soon}
+              onToggleTheme={toggleTheme}
+              onSettings={() => openOverlay({ type: 'settings' })}
+            />
+          )}
         </header>
         <div className="relative flex min-h-0 flex-1 flex-col">
           {implemented ? (

@@ -1,7 +1,8 @@
 /**
  * `TweetCard` (DESIGN §3.2) : post X / Instagram / Cosmos rendu nativement (suit le thème).
  * Variantes `light` (grille), `overlay` (Redécouvrir, toujours blanc), `cover` (FanStack, étagère :
- * largeur fixe 300 px réduite par `transform`). Corps tronqué à 8 lignes puis « … ».
+ * toujours blanche, largeur fixe 300 px réduite par `transform`). Corps tronqué à 8 lignes puis « … ».
+ * Icône de source en haut à droite : logo X / Instagram / Cosmos (jamais une croix de fermeture).
  */
 import { MessageSquareText } from 'lucide-react'
 import type { CSSProperties } from 'react'
@@ -51,7 +52,7 @@ export function TweetCard({
       data-tweet=""
       className={cn(
         'tweet-card relative flex flex-col rounded-md border px-4 pb-[18px] pt-4 text-left',
-        variant === 'overlay' ? 'tweet-overlay' : 'border-border-subtle bg-surface text-fg',
+        variant === 'light' ? 'border-border-subtle bg-surface text-fg' : 'tweet-overlay',
         variant === 'cover' && 'w-[300px]',
         className,
       )}
@@ -71,7 +72,7 @@ export function TweetCard({
           ) : null}
         </div>
       </header>
-      <span className="absolute right-4 top-4">
+      <span className="absolute right-4 top-4" data-testid="source-glyph" data-source={card.source}>
         <SourceGlyph source={card.source} />
       </span>
       {text ? (
