@@ -126,7 +126,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     const win = windowOf(ctx)
     if (!win) throw new AppError('not_found', 'Aucune fenêtre active.')
     const { item } = loadItem(lib, itemUuid)
-    win.previewFile(abs, item.title ?? path.basename(abs))
+    win.previewFile(abs, item.title || path.basename(abs))
   },
 
   'system.edit': ({ cmd }, ctx) => {
