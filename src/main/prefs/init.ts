@@ -1,9 +1,29 @@
 /**
- * Initialisation du domaine `prefs` : magasin prefs.json (écriture atomique, prefs.changed).
- * Stub créé par WP-00 (registre `bootstrap/services.ts`), possédé ensuite par WP-02.
+ * Initialisation du domaine `prefs` (registre `bootstrap/services.ts`, possédé par WP-02) :
+ * magasin `prefs.json` (écriture atomique), événement `prefs.changed`, thème natif synchronisé
+ * (`nativeTheme.themeSource` suit `prefs.theme` ; le fond de fenêtre suit via `followNativeTheme`).
  */
-import type { ServiceContext } from '../bootstrap/context'
+import { nativeTheme } from 'electron'
+import type { Disposer, ServiceContext } from '../bootstrap/context'
+import { userDataPaths } from '../library/paths'
+import { createPrefsStore, setPrefsStore } from './store'
 
-export function initPrefs(_ctx: ServiceContext): void {
-  // Rien à faire tant que WP-02 n'a pas livré ce domaine.
+export function initPrefs(ctx: ServiceContext): Disposer {
+  const store = createPrefsStore({ file: userDataPaths(ctx.userData).prefs, log: ctx.log })
+  setPrefsStore(store)
+  // Premier lancement, fichier mis de côté ou réparé : on écrit l'état effectif sur disque.
+  if (store.repairedAtOpen) store.persist()
+  // Hors Electron (tests sous Node), `nativeTheme` est absent : le thème natif n'est alors pas touché.
+  const syncNativeTheme = (theme: ReturnType<typeof store.get>['theme']) => {
+    if (nativeTheme) nativeTheme.themeSource = theme
+  }
+  syncNativeTheme(store.get().theme)
+  const off = store.onChange((next, previous) => {
+    if (next.theme !== previous.theme) syncNativeTheme(next.theme)
+    ctx.emit('prefs.changed', next)
+  })
+  return () => {
+    off()
+    setPrefsStore(null)
+  }
 }
