@@ -54,6 +54,59 @@ test.describe('vue détail', () => {
       .toBe(uuid4)
   })
 
+  test('fermeture : aucune vidéo ne continue de jouer (ni avec du son) hors du Viewer', async ({
+    page,
+  }) => {
+    const card = page.locator(`${t('grid')} ${t('card')}[data-kind="video"]`).first()
+    await expect(card).toBeVisible()
+    await card.click()
+    const detail = page.locator(t('detail'))
+    await expect(detail).toBeVisible()
+    const video = page.locator(t('viewer-video'))
+    await expect(video).toBeVisible()
+    // Lecture réelle, avec du son (préférence par défaut : non muet).
+    await video.evaluate(async (v: HTMLVideoElement) => {
+      v.muted = false
+      await v.play()
+    })
+    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => !v.paused)).toBe(true)
+
+    const src = await video.evaluate((v: HTMLVideoElement) => v.currentSrc)
+
+    const playing = () =>
+      page.evaluate(() => [...document.querySelectorAll('video')].filter((v) => !v.paused).length)
+    const audible = () =>
+      page.evaluate(
+        () => [...document.querySelectorAll('video')].filter((v) => !v.paused && !v.muted).length,
+      )
+
+    // Dès le début de l'animation de fermeture : plus de lecture, même si on insiste (Espace).
+    await page.keyboard.press('Escape')
+    expect(await playing()).toBe(0)
+    await page.keyboard.press('Space')
+    expect(await audible()).toBe(0)
+    await expect(detail).toHaveCount(0)
+    expect(await playing()).toBe(0)
+    // Le flux est libéré : plus aucun <video> sonore ni en lecture dans le document.
+    await page.waitForTimeout(400)
+    expect(await audible()).toBe(0)
+    expect(await playing()).toBe(0)
+
+    // Un <video> non muet ne peut pas démarrer hors du Viewer (garde globale).
+    const guarded = await page.evaluate(async (url) => {
+      const v = document.createElement('video')
+      v.src = url
+      document.body.append(v)
+      v.muted = false
+      await v.play().catch(() => undefined)
+      await new Promise((r) => setTimeout(r, 100))
+      const paused = v.paused
+      v.remove()
+      return paused
+    }, src)
+    expect(guarded).toBe(true)
+  })
+
   test('note (800 ms), tag et panneau ⌘I modifient la base', async ({
     app,
     page,

@@ -10,6 +10,7 @@ import type { ItemCard, Slide } from '../../../../../shared/dto/items'
 import { MediaBadge } from '../../../components/ui'
 import { fr } from '../../../i18n/fr'
 import { mediaSrc } from '../../../lib/media-url'
+import { releaseDetached } from '../../../lib/video-guard'
 import { rpc } from '../../../lib/rpc'
 
 export function CardImage({
@@ -95,7 +96,7 @@ export function VideoCard({
     v.currentTime = 0
     void v.play().catch(() => undefined)
     return () => {
-      v.pause()
+      releaseDetached(v)
       if (playing === v) playing = null
     }
   }, [active])

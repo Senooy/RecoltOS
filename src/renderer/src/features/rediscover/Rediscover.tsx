@@ -34,6 +34,7 @@ import { fr } from '../../i18n/fr'
 import { cn } from '../../lib/cn'
 import { cardLargeSrc, mediaSrc } from '../../lib/media-url'
 import { RpcError, rpc } from '../../lib/rpc'
+import { releaseOnUnmount } from '../../lib/video-guard'
 import { askName } from '../../state/dialogs'
 import { useUi } from '../../state/ui'
 import { useUndo } from '../../state/undo'
@@ -115,7 +116,17 @@ function CardFace({ card, top }: { card: ItemCard; top: boolean }) {
       style={{ width: w, height: h, background: card.dominant ?? '#1c1c1e' }}
     >
       {img ? <img src={img} alt="" draggable={false} className="rd-img" /> : null}
-      {video ? <video src={video} autoPlay loop muted playsInline className="rd-img" /> : null}
+      {video ? (
+        <video
+          ref={releaseOnUnmount}
+          src={video}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="rd-img"
+        />
+      ) : null}
       {card.post && (card.post.text || card.post.quoted) ? (
         <div className="rd-tweet-wrap">
           <TweetCard card={card} variant="overlay" className="rd-tweet" />

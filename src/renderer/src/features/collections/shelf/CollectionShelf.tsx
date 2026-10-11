@@ -26,6 +26,7 @@ import { fr } from '../../../i18n/fr'
 import { mediaSrc } from '../../../lib/media-url'
 import { RpcError, rpc } from '../../../lib/rpc'
 import { isEditableTarget } from '../../../lib/shortcuts'
+import { releaseOnUnmount } from '../../../lib/video-guard'
 import { useCollections } from '../../../state/collections'
 import { askName } from '../../../state/dialogs'
 import { useUi } from '../../../state/ui'
@@ -80,6 +81,7 @@ function CoverContent({ card, play }: { card: ItemCard | undefined; play: boolea
   if (card.kind === 'video' && play && card.previewUrl) {
     return (
       <video
+        ref={releaseOnUnmount}
         data-testid="shelf-video"
         src={mediaSrc(card.previewUrl)}
         poster={poster}

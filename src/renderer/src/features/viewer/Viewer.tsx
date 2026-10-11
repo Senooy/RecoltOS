@@ -31,6 +31,7 @@ import { SHEET_EASING } from '../../lib/flip'
 import { pct } from '../../lib/format'
 import { mediaSrc } from '../../lib/media-url'
 import { RpcError, rpc, subscribe } from '../../lib/rpc'
+import { pauseVideo, releaseDetached, releaseVideo } from '../../lib/video-guard'
 import { isEditableTarget } from '../../lib/shortcuts'
 import { usePrefs } from '../../state/prefs'
 import { useUi } from '../../state/ui'
@@ -214,6 +215,15 @@ export default function Viewer() {
   const stageRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const closing = useRef(false)
+  // Ref stable : libère le flux de l'élément à son démontage ou à tout changement de `key`.
+  const setVideoEl = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el
+    if (!el) return
+    return () => {
+      if (videoRef.current === el) videoRef.current = null
+      releaseDetached(el)
+    }
+  }, [])
 
   const card: ItemCard | null = detail && detail.uuid === uuid ? detail : (sourceCard(uuid) ?? null)
   const currentDetail = detail && detail.uuid === uuid ? detail : null
@@ -320,6 +330,7 @@ export default function Viewer() {
   }, [])
 
   const finish = useCallback((target: HTMLElement | null) => {
+    releaseVideo(videoRef.current)
     useUi.getState().closeOverlay()
     const card = target?.closest<HTMLElement>('[data-uuid]') ?? target
     card?.focus({ preventScroll: true })
@@ -328,7 +339,9 @@ export default function Viewer() {
   const close = useCallback(() => {
     if (closing.current) return
     closing.current = true
-    videoRef.current?.pause()
+    // Dès le début de la fermeture : la vidéo se tait (le flux est libéré à la fin / au démontage).
+    rootRef.current?.setAttribute('data-closing', '')
+    pauseVideo(videoRef.current)
     const reduced = motionOff()
     emit('grid.scrollTo', { uuid })
     let tries = 0
@@ -389,6 +402,8 @@ export default function Viewer() {
 
   const go = useCallback(
     (dir: 1 | -1) => {
+      if (closing.current) return
+      pauseVideo(videoRef.current)
       setIndex((i) => Math.min(list.length - 1, Math.max(0, i + dir)))
     },
     [list.length],
@@ -396,7 +411,8 @@ export default function Viewer() {
 
   const goSlide = useCallback(
     (dir: 1 | -1) => {
-      if (!carousel) return
+      if (!carousel || closing.current) return
+      pauseVideo(videoRef.current)
       setSlide((s) => Math.min(slideCount - 1, Math.max(0, s + dir)))
       setZoom(1)
       setPan({ x: 0, y: 0 })
@@ -424,10 +440,13 @@ export default function Viewer() {
 
   const remove = useCallback(async () => {
     if (!uuid) return
+    if (closing.current) return
+    pauseVideo(videoRef.current)
     await trashItems([uuid])
     const next = list.filter((u) => u !== uuid)
     if (next.length === 0) {
       closing.current = true
+      releaseVideo(videoRef.current)
       useUi.getState().closeOverlay()
       return
     }
@@ -473,6 +492,7 @@ export default function Viewer() {
         return
       }
       if (editing) return
+      if (closing.current) return
       const v = videoRef.current
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         const dir = e.key === 'ArrowRight' ? 1 : -1
@@ -584,11 +604,14 @@ export default function Viewer() {
             {media.kind === 'video' ? (
               <video
                 key={media.src}
-                ref={videoRef}
+                ref={setVideoEl}
                 data-testid="viewer-video"
                 src={media.src}
                 poster={media.poster}
                 autoPlay
+                onPlay={(e) => {
+                  if (closing.current) pauseVideo(e.currentTarget)
+                }}
                 loop
                 playsInline
                 muted={muted}

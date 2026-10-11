@@ -6,6 +6,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import { initApi } from './api/client'
+import { installVideoGuard } from './lib/video-guard'
 import './styles/tokens.css'
 import './styles/globals.css'
 
@@ -14,6 +15,8 @@ const flags = window.recolt?.flags
 root.dataset.theme =
   flags?.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
 if (flags?.e2e) root.dataset.e2e = '1'
+
+installVideoGuard()
 
 const el = document.getElementById('root')
 if (!el) throw new Error('#root introuvable')
