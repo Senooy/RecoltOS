@@ -1,5 +1,9 @@
 /**
- * Textes du domaine `grid`, possédé par WP-14 (ERRATA §F). Ajouter ici les namespaces propres au
- * domaine (tutoiement, typographie FR) ; ne pas redéfinir un namespace de `base.ts`.
+ * Textes du domaine `grid` (WP-14) : grille, cartes, menu contextuel (complète `card` et `menu`).
  */
-export const grid = {} as const
+export const grid = {
+  gridUi: {
+    label: 'Éléments',
+    loading: 'Chargement des éléments…',
+  },
+} as const
