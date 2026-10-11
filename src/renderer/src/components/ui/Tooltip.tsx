@@ -3,7 +3,7 @@
  * Chaque instance embarque son `Provider` : aucun montage global requis.
  */
 import { Tooltip as TooltipPrimitive } from 'radix-ui'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { cn } from '../../lib/cn'
 import { Kbd } from './Kbd'
 import { TOOLTIP_DELAY_MS } from './motion'
@@ -39,16 +39,26 @@ export function Tooltip({
   sideOffset = 6,
   disabled = false,
   delayDuration = TOOLTIP_DELAY_MS,
+  open,
+  defaultOpen = false,
+  onOpenChange,
   children,
-  ...root
 }: TooltipProps) {
   const container = usePortalContainer()
   // `disabled` ne ferme que l'ouverture : l'arbre Provider > Root > Trigger reste le même, donc
   // l'enfant n'est jamais démonté (focus et état conservés, menu ancré intact) même si la prop bascule.
-  const rootProps = disabled ? { open: false } : root
+  // Le Root reste toujours contrôlé (état géré ici) : pas d'avertissement contrôlé/non contrôlé.
+  const [innerOpen, setInnerOpen] = useState(defaultOpen)
+  const isControlled = open !== undefined
+  const isOpen = disabled ? false : (open ?? innerOpen)
+  const handleOpenChange = (next: boolean) => {
+    if (disabled) return
+    if (!isControlled) setInnerOpen(next)
+    onOpenChange?.(next)
+  }
   return (
     <TooltipPrimitive.Provider delayDuration={delayDuration} skipDelayDuration={300}>
-      <TooltipPrimitive.Root {...rootProps}>
+      <TooltipPrimitive.Root open={isOpen} onOpenChange={handleOpenChange}>
         <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal container={container}>
           <TooltipPrimitive.Content

@@ -366,11 +366,11 @@ function Showcase() {
         <Row>
           <Spinner />
           <Spinner size={24} />
-          <PillBar>
+          <PillBar aria-label="Notification">
             Ajouté à Gaming
             <PillBar.Action>Annuler</PillBar.Action>
           </PillBar>
-          <PillBar>
+          <PillBar aria-label="Sélection">
             3 sélectionnés
             <PillBar.Action tone="ghost">Masquer</PillBar.Action>
             <PillBar.Action tone="danger">Supprimer</PillBar.Action>

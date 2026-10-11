@@ -262,7 +262,7 @@ describe('EmptyState, Spinner, PillBar', () => {
   })
   it('PillBar : pilule de 40 px, action en pilule noire', () => {
     render(
-      <PillBar floating>
+      <PillBar floating aria-label="Sélection">
         Ajouté à Gaming
         <PillBar.Action>Annuler</PillBar.Action>
       </PillBar>,
@@ -358,6 +358,24 @@ describe('Tooltip disabled : arbre stable', () => {
     )
     expect(screen.getByRole('button', { name: 'Ouvrir' })).toBe(before)
     expect(document.activeElement).toBe(before)
+  })
+
+  it('basculer disabled dans les deux sens ne journalise aucun avertissement React/Radix', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const tree = (disabled: boolean) => (
+      <Tooltip content="Réglages" disabled={disabled}>
+        <button type="button">Ouvrir</button>
+      </Tooltip>
+    )
+    const { rerender } = render(tree(false))
+    rerender(tree(true))
+    rerender(tree(false))
+    rerender(tree(true))
+    expect(warn).not.toHaveBeenCalled()
+    expect(error).not.toHaveBeenCalled()
+    warn.mockRestore()
+    error.mockRestore()
   })
 })
 
