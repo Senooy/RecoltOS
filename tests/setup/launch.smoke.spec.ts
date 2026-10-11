@@ -8,7 +8,7 @@ import { expect, test } from '../helpers/e2e-fixtures'
 test('lancement : fenêtre, window.recolt, 0 erreur console', async ({
   app,
   page,
-  consoleErrors,
+  collectErrors,
 }) => {
   // Fenêtre visible à la taille imposée par RECOLTOS_WINDOW.
   await expect(page.locator('#root > *').first()).toBeVisible()
@@ -35,5 +35,6 @@ test('lancement : fenêtre, window.recolt, 0 erreur console', async ({
 
   // Mode e2e : animations coupées (QA §2.2) et aucune erreur console jusque-là.
   await expect(page.locator('html')).toHaveAttribute('data-e2e', '1')
-  expect(consoleErrors).toEqual([])
+  // `collectErrors()` relit aussi les erreurs du chargement initial (écouteurs posés trop tard).
+  expect(await collectErrors()).toEqual([])
 })

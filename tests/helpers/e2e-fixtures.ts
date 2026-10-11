@@ -3,7 +3,8 @@
  *   import { test, expect } from '../helpers/e2e-fixtures'
  *   test('…', async ({ page, app, userData }) => { … })
  * Chaque test lance l'app avec un `userData` neuf et ÉCHOUE à la fin sur tout `console.error` /
- * `pageerror` non toléré (y compris violation CSP). Surcharge : `test.use({ allowErrors: [/…/] })`.
+ * `pageerror` non toléré (y compris violation CSP, y compris au chargement initial : relecture des
+ * messages retenus par Playwright via `flushErrors()`). Surcharge : `test.use({ allowErrors: [/…/] })`.
  */
 import { test as base, expect, type ElectronApplication, type Page } from '@playwright/test'
 import { launchApp, type LaunchOptions } from './electron-app'
@@ -14,8 +15,13 @@ interface Fixtures {
   app: ElectronApplication
   page: Page
   userData: string
-  /** Erreurs console recueillies (lecture seule, pour les assertions fines). */
+  /** Erreurs console recueillies jusqu'ici (lecture seule). Préférer `collectErrors()`. */
   consoleErrors: string[]
+  /**
+   * Relit les erreurs retenues par Playwright (dont celles émises avant la pose des écouteurs, au
+   * chargement) et renvoie la liste complète. À utiliser pour toute assertion « 0 erreur ».
+   */
+  collectErrors: () => Promise<string[]>
 }
 
 export const test = base.extend<Fixtures>({
@@ -26,7 +32,8 @@ export const test = base.extend<Fixtures>({
     const handle = await launchApp({ ...appLaunch, allowErrors })
     ;(handle.app as ElectronApplication & { __handle?: typeof handle }).__handle = handle
     await use(handle.app)
-    const errors = [...handle.errors]
+    // Avant la fermeture : les fenêtres doivent encore être là pour relire leurs erreurs retenues.
+    const errors = [...(await handle.flushErrors().catch(() => handle.errors))]
     await handle.close()
     expect(errors, 'erreurs console / pageerror pendant le test').toEqual([])
   },
@@ -40,6 +47,11 @@ export const test = base.extend<Fixtures>({
   consoleErrors: async ({ app }, use) => {
     const h = (app as ElectronApplication & { __handle?: { errors: string[] } }).__handle
     await use(h?.errors ?? [])
+  },
+  collectErrors: async ({ app }, use) => {
+    const h = (app as ElectronApplication & { __handle?: { flushErrors: () => Promise<string[]> } })
+      .__handle
+    await use(async () => [...((await h?.flushErrors()) ?? [])])
   },
 })
 

@@ -2,7 +2,11 @@
  * Bibliothèque de démonstration (`pnpm run fixtures`, `pnpm run dev:demo`, projets e2e / visual).
  *
  *   tsx --tsconfig tsconfig.node.json scripts/make-fixtures.mts --out <userData> [--if-missing]
- *       [--count 60] [--collections 6] [--no-cache]
+ *       [--count 60] [--collections 6] [--no-cache] [--force]
+ *
+ * SÉCURITÉ : `--out` est supprimé avant d'être régénéré. `tests/helpers/safe-out.ts` refuse un dossier
+ * non vide sans marqueur `.recolt-fixture`, `$HOME`, le dépôt, `Library` / `Application Support` /
+ * la référence ; hors `<dépôt>/.tmp` et `os.tmpdir()`, `--force` est exigé.
  *
  * Fabrique un `userData` complet : `libraries.json` + `libraries/default/recolt.db` (schéma =
  * migrations de production `src/main/db/migrations/*.sql`, `user_version` posé comme `db/migrate.ts`)
@@ -36,6 +40,7 @@ import { pathToFileURL } from 'node:url'
 import sharp from 'sharp'
 import { shard } from '../src/shared/ids'
 import { openTestDb, seedSyntheticLibrary, type TestDb } from '../tests/helpers/db'
+import { assertSafeOutDir, markFixtureDir } from '../tests/helpers/safe-out'
 import { findFfmpeg, makeImage, makeVideo } from '../tests/helpers/synthetic-media'
 import {
   makeSyntheticLibrary,
@@ -223,6 +228,7 @@ async function build(target: string, options: Required<DemoOptions>): Promise<De
   rmSync(target, { recursive: true, force: true })
   const libraryDir = join(target, 'libraries', 'default')
   mkdirSync(libraryDir, { recursive: true })
+  markFixtureDir(target, 'make-fixtures')
 
   const lib = makeSyntheticLibrary({
     count: options.count,
@@ -268,7 +274,8 @@ async function build(target: string, options: Required<DemoOptions>): Promise<De
 }
 
 /** Clone APFS quand c'est possible (`cp -c`), copie classique sinon. */
-export function cloneDir(from: string, to: string): void {
+export function cloneDir(from: string, to: string, options: { force?: boolean } = {}): void {
+  assertSafeOutDir(to, options)
   rmSync(to, { recursive: true, force: true })
   mkdirSync(dirname(to), { recursive: true })
   const r = spawnSync('cp', ['-cR', from, to])
@@ -279,6 +286,7 @@ export async function makeDemoLibrary(
   out: string,
   options: DemoOptions = {},
   useCache = true,
+  safety: { force?: boolean } = {},
 ): Promise<DemoResult & { cached: boolean }> {
   const opts: Required<DemoOptions> = {
     count: options.count ?? 60,
@@ -286,7 +294,8 @@ export async function makeDemoLibrary(
     trashed: options.trashed ?? 0,
     hidden: options.hidden ?? 0,
   }
-  const target = resolve(out)
+  // `build` et `cloneDir` suppriment `target` : contrôle AVANT toute écriture (cf. safe-out.ts).
+  const target = assertSafeOutDir(out, safety)
   if (!useCache) return { ...(await build(target, opts)), cached: false }
 
   const cache = join(ROOT, 'node_modules/.cache/recoltos-demo', cacheKey(opts))
@@ -299,7 +308,7 @@ export async function makeDemoLibrary(
     mkdirSync(dirname(cache), { recursive: true })
     renameSync(tmp, cache)
   }
-  cloneDir(cache, target)
+  cloneDir(cache, target, safety)
   const db = openTestDb({ file: join(target, 'libraries/default/recolt.db') })
   const items = (db.prepare('SELECT count(*) n FROM items').get() as { n: number }).n
   const media = (db.prepare('SELECT count(*) n FROM item_media').get() as { n: number }).n
@@ -326,11 +335,12 @@ async function main(argv: readonly string[]): Promise<number> {
       trashed: { type: 'string' },
       hidden: { type: 'string' },
       'no-cache': { type: 'boolean', default: false },
+      force: { type: 'boolean', default: false },
     },
   })
   if (!values.out) {
     console.error(
-      'usage : make-fixtures.mts --out <userData> [--if-missing] [--count N] [--collections N] [--no-cache]',
+      'usage : make-fixtures.mts --out <userData> [--if-missing] [--count N] [--collections N] [--no-cache] [--force]',
     )
     return 2
   }
@@ -340,6 +350,12 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0
   }
   const t0 = Date.now()
+  try {
+    assertSafeOutDir(out, { force: values.force })
+  } catch (e) {
+    console.error(`fixtures : ${(e as Error).message}`)
+    return 2
+  }
   const res = await makeDemoLibrary(
     out,
     {
@@ -349,6 +365,7 @@ async function main(argv: readonly string[]): Promise<number> {
       hidden: values.hidden ? Number(values.hidden) : undefined,
     },
     !values['no-cache'],
+    { force: values.force },
   )
   console.log(
     `fixtures : ${res.items} éléments, ${res.media} médias${res.cached ? ' (cache)' : ''}${res.ffmpeg ? '' : ' (ffmpeg absent : vidéos sans fichier lisible)'} → ${out} en ${Date.now() - t0} ms`,

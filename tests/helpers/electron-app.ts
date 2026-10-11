@@ -4,6 +4,13 @@
  * `RECOLTOS_USER_DATA` (un dossier neuf sous `.tmp/`), `RECOLTOS_E2E=1`, `RECOLTOS_HOME`,
  * `RECOLTOS_WINDOW=1280x820`, `TZ=Europe/Paris`, `LANG=fr_FR.UTF-8`. Collecte `console.error` et
  * `pageerror` (y compris les violations CSP, converties en erreurs par le navigateur).
+ *
+ * Capture déterministe : les écouteurs `console` / `pageerror` sont posés APRÈS `electron.launch()`,
+ * donc les erreurs émises pendant le chargement initial leur échappent (course mesurée : 1 lancement
+ * sur 3 seulement les voyait). Playwright retient pourtant les derniers messages et erreurs de
+ * chaque page depuis sa création : `flushErrors()` les relit (`page.consoleMessages()`,
+ * `page.pageErrors()`) et les fusionne avec `errors` (sans doublon). À appeler avant toute
+ * assertion « 0 erreur » et avant la fermeture ; la fixture `e2e-fixtures.ts` le fait.
  */
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test'
 import { createRequire } from 'node:module'
@@ -36,8 +43,13 @@ export interface AppHandle {
   page: Page
   userData: string
   home: string
-  /** Erreurs console / pageerror reçues jusqu'ici, hors motifs tolérés. */
+  /** Erreurs console / pageerror reçues jusqu'ici (écouteurs en direct), hors motifs tolérés. */
   errors: string[]
+  /**
+   * Fusionne dans `errors` les erreurs retenues par Playwright pour toutes les fenêtres ouvertes
+   * (y compris celles émises avant la pose des écouteurs) et renvoie la liste complète, sans doublon.
+   */
+  flushErrors: () => Promise<string[]>
   close: () => Promise<void>
 }
 
@@ -81,13 +93,28 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
   const errors: string[] = []
   const allow = options.allowErrors ?? []
   const record = (text: string): void => {
-    if (!allow.some((re) => re.test(text))) errors.push(text)
+    if (!allow.some((re) => re.test(text)) && !errors.includes(text)) errors.push(text)
   }
+  const consoleLine = (text: string): string => `console.error : ${text}`
+  const pageErrorLine = (message: string): string => `pageerror : ${message}`
   const watch = (page: Page): void => {
     page.on('console', (msg) => {
-      if (msg.type() === 'error') record(`console.error : ${msg.text()}`)
+      if (msg.type() === 'error') record(consoleLine(msg.text()))
     })
-    page.on('pageerror', (err) => record(`pageerror : ${err.message}`))
+    page.on('pageerror', (err) => record(pageErrorLine(err.message)))
+  }
+  const flushErrors = async (): Promise<string[]> => {
+    for (const w of app.windows()) {
+      if (w.isClosed()) continue
+      // Les erreurs de chargement (CSP, script inline) sont émises avant `load` : on l'attend, sinon
+      // un appel trop précoce lirait une liste encore vide.
+      await w.waitForLoadState('load', { timeout: 15_000 }).catch(() => undefined)
+      for (const msg of await w.consoleMessages().catch(() => [])) {
+        if (msg.type() === 'error') record(consoleLine(msg.text()))
+      }
+      for (const err of await w.pageErrors().catch(() => [])) record(pageErrorLine(err.message))
+    }
+    return errors
   }
   app.on('window', watch)
   const page = await app.firstWindow()
@@ -99,6 +126,7 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
     userData,
     home,
     errors,
+    flushErrors,
     close: async () => {
       await app.close().catch(() => undefined)
       if (ownsUserData) {

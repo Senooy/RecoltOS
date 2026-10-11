@@ -32,7 +32,11 @@ export default defineConfig({
       testDir: 'tests',
       // `tests/setup/launch.smoke.spec.ts` : fumée du lot outillage (WP-01) ; les scénarios des lots
       // vivent sous `tests/e2e/`.
-      testMatch: [/e2e\/.*\.spec\.ts$/, /setup\/launch\.smoke\.spec\.ts$/],
+      testMatch: [
+        /e2e\/.*\.spec\.ts$/,
+        /setup\/launch\.smoke\.spec\.ts$/,
+        /setup\/console-capture\.spec\.ts$/,
+      ],
       dependencies: ['build'],
     },
     {
