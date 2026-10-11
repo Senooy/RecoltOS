@@ -6,10 +6,12 @@ macOS rattache les autorisations de confidentialité (Enregistrement d'écran, a
 
 Avec un **certificat local stable**, l'exigence devient « identifiant `com.recoltos.app` + ce certificat » : elle ne dépend plus du contenu, et les permissions survivent aux reconstructions.
 
+C'est l'hypothèse à confirmer : aucune source officielle ne garantit qu'un certificat **auto-signé** produise un `granted` stable pour Enregistrement d'écran. Si la preuve WP-0F échoue (permission non conservée, ou `CGPreflightScreenCaptureAccess` reste à `false` hors identité à Team ID), le repli est une identité **Apple Development** (voir plus bas). Les notifications d'Electron 42+ exigent en outre une app signée.
+
 | Signature                     | `codesign -dr -`                                            | Permissions conservées entre deux builds |
 | ----------------------------- | ----------------------------------------------------------- | ---------------------------------------- |
 | Ad hoc (`-`, par défaut)      | `designated => cdhash H"…"`                                 | Non, dès que le contenu change           |
-| Certificat « RecoltOS Local » | `identifier "com.recoltos.app" and certificate leaf = H"…"` | Oui                                      |
+| Certificat « RecoltOS Local » | `identifier "com.recoltos.app" and certificate leaf = H"…"` | Attendu, non encore prouvé (WP-0F)       |
 
 Le build ad hoc reste pleinement fonctionnel : il suffit pour développer et pour lancer l'app. Le certificat n'est utile que pour garder les permissions entre les builds.
 
