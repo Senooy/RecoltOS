@@ -12,6 +12,9 @@ export const ItemFilters = z.object({
   /** Bornes en ms epoch, incluses (ERRATA §B). */
   period: z
     .object({ from: z.number().int().nullable(), to: z.number().int().nullable() })
+    .refine((p) => p.from == null || p.to == null || p.from <= p.to, {
+      message: 'période invalide : from doit être ≤ to',
+    })
     .optional(),
   collectionUuid: Uuid.optional(),
 })
@@ -22,7 +25,12 @@ const ListCommon = {
   /** Tri aléatoire stable. */
   seed: z.number().int().optional(),
   /** Keyset opaque (base64url). */
-  cursor: z.string().nullable().default(null),
+  cursor: z
+    .string()
+    .max(512)
+    .regex(/^[A-Za-z0-9_-]*$/, 'curseur invalide')
+    .nullable()
+    .default(null),
   limit: z.number().int().min(1).max(500).default(120),
   filters: ItemFilters.optional(),
 }

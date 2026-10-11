@@ -24,3 +24,6 @@ export const AbsPath = z
   .refine((p) => !p.split('/').some((seg) => seg === '.' || seg === '..'), {
     message: 'chemin absolu sans segment . ni ..',
   })
+  .refine((p) => !p.includes('\0') && !p.includes('//') && p !== '/', {
+    message: 'chemin absolu sans octet NUL, sans « // » et distinct de la racine',
+  })

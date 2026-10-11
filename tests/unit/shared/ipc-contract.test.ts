@@ -43,6 +43,9 @@ describe('contrat IPC', () => {
       { scope: 'library', limit: 0 },
       { scope: 'library', limit: 501 },
       { scope: 'library', sort: 'size' },
+      { scope: 'library', filters: { period: { from: 10, to: 1 } } },
+      { scope: 'library', cursor: 'a'.repeat(513) },
+      { scope: 'library', cursor: 'pas base64 !' },
       { scope: 'library', filters: { color: 'red' } },
       undefined,
     ]

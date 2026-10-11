@@ -97,6 +97,16 @@ export const MediaUrl = z
   .refine((u) => !(u.split('?')[0] ?? '').split('/').some((seg) => seg === '.' || seg === '..'), {
     message: 'segment de chemin interdit (. ou ..)',
   })
+  // Encodages et segments vides : `%2e%2e`, `..%2f`, `%5c` et `//` contournent le contrôle
+  // littéral. La vraie défense reste côté main (décodage, realpath, racine : WP-05).
+  .refine(
+    (u) => {
+      const pathPart = (u.split('?')[0] ?? '').slice('recolt://'.length)
+      if (/%(2e|2f|5c)/i.test(pathPart)) return false
+      return !pathPart.split('/').some((seg) => seg === '')
+    },
+    { message: 'encodage ou segment vide interdit dans le chemin' },
+  )
 export type MediaUrl = z.output<typeof MediaUrl>
 
 /** URL web saisie par l'utilisateur ou ouverte dans le navigateur (jamais chargée par le renderer). */

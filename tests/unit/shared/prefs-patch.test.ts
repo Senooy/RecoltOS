@@ -29,6 +29,25 @@ describe('prefs.set : patch strict', () => {
     expect(ok({ version: 1 })).toBe(false)
   })
 
+  it('dropFolder doit être absolu ; model ne peut pas ressembler à une option de CLI', () => {
+    expect(ok({ capture: { dropFolder: '../../x' } })).toBe(false)
+    expect(ok({ capture: { dropFolder: '/Users/me/Bureau' } })).toBe(true)
+    expect(ok({ ai: { claude: { model: '--dangerously-skip-permissions' } } })).toBe(false)
+    expect(ok({ ai: { codex: { model: '-x' } } })).toBe(false)
+    expect(ok({ ai: { claude: { model: 'claude-opus-4-1' } } })).toBe(true)
+  })
+
+  it('shortcut : un modificateur et une touche, sans raccourci système', () => {
+    expect(ok({ capture: { shortcut: 'Command+Q' } })).toBe(false)
+    expect(ok({ capture: { shortcut: 'CommandOrControl+W' } })).toBe(false)
+    expect(ok({ capture: { shortcut: 'S' } })).toBe(false)
+    expect(ok({ capture: { shortcut: 'CommandOrControl+Shift+S' } })).toBe(true)
+    expect(ok({ capture: { shortcut: 'CommandOrControl+Alt+X' } })).toBe(true)
+    expect(
+      contract['capture.setShortcut'].input.safeParse({ accel: 'Command+Q', label: 'Q' }).success,
+    ).toBe(false)
+  })
+
   it('rejette les clés inconnues à tous les niveaux et les mauvais types', () => {
     expect(ok({ thme: 'dark' })).toBe(false)
     expect(ok({ capture: { notifyy: true } })).toBe(false)

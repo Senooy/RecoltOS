@@ -6,7 +6,12 @@
  * Pas de secret partagé avec l'hôte (PLAN §1.18), aucun réglage d'embeddings (ERRATA §G).
  */
 import { z } from 'zod'
+import { Accelerator } from './accelerator'
 import { SortMode, Theme } from './enums'
+import { AbsPath } from './ipc/define'
+
+/** Identifiant de modèle passé en argv d'une CLI : pas de tiret initial ni d'espace (AI §3). */
+const ModelId = z.string().regex(/^[a-z0-9][a-z0-9._-]{0,63}$/i, 'identifiant de modèle invalide')
 
 export const CaptureMode = z.enum(['region', 'window', 'screen'])
 export type CaptureMode = z.output<typeof CaptureMode>
@@ -16,12 +21,12 @@ export const AiFallbackPref = z.enum(['none', 'claude', 'codex'])
 
 export const CapturePrefs = z.object({
   /** Accélérateur Electron positionnel, construit depuis `e.code` (SPACES §2.2). */
-  shortcut: z.string().min(1).default('CommandOrControl+Shift+S'),
+  shortcut: Accelerator.default('CommandOrControl+Shift+S'),
   /** Libellé de la touche sur la disposition active (`getLayoutMap()`). */
   shortcutLabel: z.string().default('S'),
   mode: CaptureMode.default('region'),
   /** `null` = bibliothèque seule ; le Bureau est proposé au premier lancement (WP-33). */
-  dropFolder: z.string().nullable().default(null),
+  dropFolder: AbsPath.nullable().default(null),
   notify: z.boolean().default(true),
   hideApp: z.boolean().default(true),
   copyToClipboard: z.boolean().default(false),
@@ -36,7 +41,7 @@ export const SyncPrefs = z.object({
 
 export const ClaudePrefs = z.object({
   path: z.string().optional(),
-  model: z.string().default('sonnet'),
+  model: ModelId.default('sonnet'),
   effort: z.enum(['low', 'medium']).default('low'),
   imageMode: z.enum(['read-tool', 'base64-stream']).default('read-tool'),
   outputMode: z.enum(['stream-json', 'json']).default('stream-json'),
@@ -45,7 +50,7 @@ export const ClaudePrefs = z.object({
 
 export const CodexPrefs = z.object({
   path: z.string().optional(),
-  model: z.string().optional(),
+  model: ModelId.optional(),
   effort: z.enum(['low', 'medium']).default('low'),
 })
 

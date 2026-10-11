@@ -22,6 +22,16 @@ describe('MediaUrl (PLAN §1.7 : recolt://<libraryId>/<root>/<rel>?v=<n>)', () =
     expect(MediaUrl.safeParse('recolt://lib/items\\..\\x').success).toBe(false)
     expect(MediaUrl.safeParse('recolt://lib/').success).toBe(false)
   })
+  it('refuse les encodages %2e, %2f, %5c (insensible à la casse) et les segments vides', () => {
+    for (const bad of [
+      'recolt://lib/items/%2e%2e/%2e%2e/etc/passwd',
+      'recolt://lib/items/..%2f..%2fetc',
+      'recolt://lib/items/%2E%2E%5Cx.jpg',
+      'recolt://lib/items//etc/passwd',
+      'recolt://lib/items/a.jpg/',
+    ])
+      expect(MediaUrl.safeParse(bad).success, bad).toBe(false)
+  })
 })
 
 describe('AbsPath', () => {
@@ -30,6 +40,12 @@ describe('AbsPath', () => {
     expect(AbsPath.safeParse('/Users/me/../etc/passwd').success).toBe(false)
     expect(AbsPath.safeParse('/Users/me/./a.jpg').success).toBe(false)
     expect(AbsPath.safeParse('relatif.jpg').success).toBe(false)
+  })
+  it('refuse l’octet NUL, « // » et la racine seule', () => {
+    expect(AbsPath.safeParse('/a\u0000b').success).toBe(false)
+    expect(AbsPath.safeParse('/').success).toBe(false)
+    expect(AbsPath.safeParse('//etc').success).toBe(false)
+    expect(AbsPath.safeParse('/Users/me//Photos').success).toBe(false)
   })
 })
 
