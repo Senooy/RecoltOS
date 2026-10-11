@@ -74,3 +74,56 @@ describe('check:pkg (CLI)', () => {
     expect(r.stderr).toContain('^4.6.5')
   })
 })
+
+describe('check:pkg : overrides et entrée CLI', () => {
+  it.each([
+    ['overrides', { overrides: { zod: '^4.6.5' } }],
+    ['overrides', { overrides: { zod: '4.6.5 || 4.6.4' } }],
+    ['pnpm.overrides', { pnpm: { overrides: { zod: '~4.6.5' } } }],
+    ['overrides', { overrides: { zod: { '.': '4.6.5' } } }],
+  ])('refuse une version non exacte dans %s', (label, extra) => {
+    const errors = checkPackage({ ...clone(), ...extra })
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toContain(`${label}.zod`)
+  })
+
+  it('accepte des forçages exacts (npm et pnpm)', () => {
+    expect(
+      checkPackage({
+        ...clone(),
+        overrides: { zod: '4.6.5' },
+        pnpm: { overrides: { zod: '4.6.5' } },
+      }),
+    ).toEqual([])
+  })
+
+  const cli = (args: string[]) =>
+    spawnSync(
+      join(REPO_ROOT, 'node_modules/.bin/tsx'),
+      ['--tsconfig', 'tsconfig.node.json', 'scripts/check-package.mts', ...args],
+      { cwd: REPO_ROOT, encoding: 'utf8' },
+    )
+
+  it('fichier absent ou JSON invalide : sortie 1 avec message, sans trace de pile', () => {
+    const dir = makeTmpDir('pkg-missing')
+    const absent = cli(['--file', join(dir, 'introuvable.json')])
+    expect(absent.status).toBe(1)
+    expect(absent.stderr).toContain('lecture impossible')
+    expect(absent.stderr).not.toContain('    at ')
+
+    const broken = join(dir, 'broken.json')
+    writeFileSync(broken, '{ "name": ')
+    const r = cli(['--file', broken])
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain('lecture impossible')
+    expect(r.stderr).not.toContain('    at ')
+  })
+
+  it('--file sans valeur : refusé (sortie 2), pas de repli silencieux sur package.json', () => {
+    const r = cli(['--file'])
+    expect(r.status).toBe(2)
+    expect(r.stderr).toContain('--file exige un chemin')
+    expect(r.stdout).toBe('')
+    expect(cli(['--file', '--autre']).status).toBe(2)
+  })
+})

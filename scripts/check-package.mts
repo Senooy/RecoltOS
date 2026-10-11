@@ -63,6 +63,9 @@ export interface PackageJsonLike {
   devDependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
+  /** Forçages de version : npm (`overrides`) et pnpm (`pnpm.overrides`). Mêmes règles d'exactitude. */
+  overrides?: Record<string, unknown>
+  pnpm?: { overrides?: Record<string, unknown> }
   packageManager?: string
   type?: string
 }
@@ -85,6 +88,20 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
     for (const [name, spec] of Object.entries(pkg[field] ?? {})) {
       if (!isExactSpec(spec)) {
         errors.push(`${field}.${name} : version « ${spec} » non exacte (ni ^, ni ~, ni plage)`)
+      }
+    }
+  }
+
+  for (const [label, forced] of [
+    ['overrides', pkg.overrides],
+    ['pnpm.overrides', pkg.pnpm?.overrides],
+  ] as const) {
+    for (const [name, spec] of Object.entries(forced ?? {})) {
+      // Un forçage imbriqué (objet) ou non textuel n'est pas contrôlable ici : refusé.
+      if (typeof spec !== 'string' || !isExactSpec(spec)) {
+        errors.push(
+          `${label}.${name} : version « ${typeof spec === 'string' ? spec : JSON.stringify(spec)} » non exacte (ni ^, ni ~, ni plage ; PLAN §2.11)`,
+        )
       }
     }
   }
@@ -112,8 +129,26 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
 
 function main(argv: readonly string[]): number {
   const i = argv.indexOf('--file')
-  const file = resolve(i >= 0 && argv[i + 1] ? argv[i + 1]! : 'package.json')
-  const pkg = JSON.parse(readFileSync(file, 'utf8')) as PackageJsonLike
+  const value = i >= 0 ? argv[i + 1] : 'package.json'
+  if (value === undefined || value === '' || value.startsWith('--')) {
+    console.error(
+      'check:pkg : --file exige un chemin (usage : check-package.mts [--file <package.json>])',
+    )
+    return 2
+  }
+  const file = resolve(value)
+  let pkg: PackageJsonLike
+  try {
+    pkg = JSON.parse(readFileSync(file, 'utf8')) as PackageJsonLike
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err)
+    console.error(`check:pkg : lecture impossible de ${file} : ${reason}`)
+    return 1
+  }
+  if (typeof pkg !== 'object' || pkg === null || Array.isArray(pkg)) {
+    console.error(`check:pkg : ${file} ne contient pas un objet JSON`)
+    return 1
+  }
   const errors = checkPackage(pkg)
   if (errors.length > 0) {
     console.error(`check:pkg : ${errors.length} problème(s) dans ${file}`)

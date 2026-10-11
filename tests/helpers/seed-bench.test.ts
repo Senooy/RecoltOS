@@ -1,8 +1,10 @@
+import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { seedBench } from '../../scripts/seed-bench.mjs'
 import { openTestDb } from './db'
+import { REPO_ROOT } from './paths'
 import { makeTmpDir } from './tmpdir'
 
 describe('seed-bench', () => {
@@ -28,5 +30,27 @@ describe('seed-bench', () => {
     const res = await seedBench(out, { count: 100, files: false })
     expect(res.files).toBe(0)
     expect(existsSync(join(out, 'libraries/default/thumbs'))).toBe(false)
+  })
+})
+
+describe('seed-bench CLI : --count validé', () => {
+  it.each(['abc', '-1', '2.5', ''])('--count « %s » : sortie 2, rien écrit', (value) => {
+    const out = makeTmpDir('bench-badnum')
+    const r = spawnSync(
+      join(REPO_ROOT, 'node_modules/.bin/tsx'),
+      [
+        '--tsconfig',
+        'tsconfig.node.json',
+        'scripts/seed-bench.mts',
+        '--out',
+        out,
+        `--count=${value}`,
+      ],
+      { cwd: REPO_ROOT, encoding: 'utf8' },
+    )
+    expect(r.status).toBe(2)
+    expect(r.stderr).toContain('--count doit être un entier ≥ 0')
+    expect(r.stderr).toContain('usage :')
+    expect(existsSync(join(out, 'libraries.json'))).toBe(false)
   })
 })

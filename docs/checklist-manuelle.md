@@ -51,4 +51,4 @@ une case n'est cochée que si le comportement a été vu, jamais déduit.
 
 - [ ] Tous les points ci-dessus sont cochés, ou l'écart est consigné dans `docs/contrats/CHANGELOG.md`.
 
-Signature : ____________________ Date : ____-**-**
+Signature : ____________________ Date : `____-__-__`

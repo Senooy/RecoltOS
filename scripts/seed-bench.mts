@@ -129,8 +129,18 @@ export async function seedBench(
   }
 }
 
-async function main(argv: readonly string[]): Promise<number> {
-  const { values } = parseArgs({
+/** Entier ≥ 0 d'une option numérique. Refus explicite (sortie 2) plutôt que `NaN` silencieux. */
+function parseCount(flag: string, raw: string | undefined): number | undefined {
+  if (raw === undefined) return undefined
+  const n = raw.trim() === '' ? Number.NaN : Number(raw)
+  if (!Number.isInteger(n) || n < 0)
+    throw new Error(`--${flag} doit être un entier ≥ 0 (reçu « ${raw} »)`)
+  return n
+}
+
+/** Analyse des options : une exception de `parseArgs` (option inconnue, valeur absente) devient une erreur d'usage. */
+function parseOptions(argv: readonly string[]) {
+  return parseArgs({
     args: [...argv],
     options: {
       out: { type: 'string' },
@@ -139,6 +149,17 @@ async function main(argv: readonly string[]): Promise<number> {
       force: { type: 'boolean', default: false },
     },
   })
+}
+
+async function main(argv: readonly string[]): Promise<number> {
+  let values: ReturnType<typeof parseOptions>['values']
+  try {
+    ;({ values } = parseOptions(argv))
+  } catch (e) {
+    console.error(`seed-bench : ${(e as Error).message}`)
+    console.error('usage : seed-bench.mts --out <userData> [--count 10000] [--no-files] [--force]')
+    return 2
+  }
   if (!values.out) {
     console.error('usage : seed-bench.mts --out <userData> [--count 10000] [--no-files] [--force]')
     return 2
@@ -146,12 +167,13 @@ async function main(argv: readonly string[]): Promise<number> {
   let res: SeedBenchResult
   try {
     res = await seedBench(values.out, {
-      count: values.count ? Number(values.count) : undefined,
+      count: parseCount('count', values.count),
       files: !values['no-files'],
       force: values.force,
     })
   } catch (e) {
     console.error(`seed-bench : ${(e as Error).message}`)
+    console.error('usage : seed-bench.mts --out <userData> [--count 10000] [--no-files] [--force]')
     return 2
   }
   console.log(

@@ -92,3 +92,34 @@ describe('make-fixtures', () => {
     expect(run().stdout).toContain('existe déjà')
   })
 })
+
+describe('CLI : options numériques validées', () => {
+  it.each([
+    ['--count', 'abc'],
+    ['--count', '-3'],
+    ['--count', '1.5'],
+    ['--collections', 'x'],
+    ['--trashed', ''],
+    ['--hidden', '2e'],
+  ])('%s %s : sortie 2 avec message d’usage, aucune bibliothèque créée', (flag, value) => {
+    const out = makeTmpDir('fixtures-badnum')
+    const r = spawnSync(
+      join(REPO_ROOT, 'node_modules/.bin/tsx'),
+      [
+        '--tsconfig',
+        'tsconfig.node.json',
+        'scripts/make-fixtures.mts',
+        '--out',
+        out,
+        `${flag}=${value}`,
+      ],
+      { cwd: REPO_ROOT, encoding: 'utf8' },
+    )
+    expect(r.status).toBe(2)
+    expect(r.stderr).toContain(flag)
+    expect(r.stderr).toContain('entier ≥ 0')
+    expect(r.stderr).toContain('usage :')
+    expect(r.stdout).not.toContain('éléments')
+    expect(existsSync(join(out, 'libraries.json'))).toBe(false)
+  })
+})

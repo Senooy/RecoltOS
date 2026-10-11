@@ -4,6 +4,7 @@ import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import {
   blend,
+  isLayoutOnly,
   layoutScore,
   makeMontage,
   maskRect,
@@ -11,7 +12,7 @@ import {
   toRaw,
 } from '../../scripts/visual/compare.mjs'
 import { ALL_SCENES, START_SCENES, selectScenes } from '../../scripts/visual/scenes.mjs'
-import { refsFor, loadRefMap } from '../../scripts/visual/refs.mjs'
+import { loadRefMap, mergeManifest, refsFor } from '../../scripts/visual/refs.mjs'
 import { makeTmpDir } from './tmpdir'
 
 const solid = (w: number, h: number, color: string) =>
@@ -85,5 +86,42 @@ describe('scènes et références', () => {
     const r = refsFor(loadRefMap(), 'settings-ai', 'light')
     expect(r.every((x) => !x.duplicateOf)).toBe(true)
     expect(r.map((x) => x.k)).toEqual([...r.map((x) => x.k)].sort((a, b) => b - a))
+  })
+})
+
+describe('disposition seulement (ERRATA §E)', () => {
+  it('k ≤ 0,6 : o86neo (k = 0,6 exactement) et les autres références citées par ERRATA §E', () => {
+    const byId = new Map(loadRefMap().map((r) => [r.id, r]))
+    for (const id of ['o86neo', 'ejjk79', '35yuga', 'dn6m6w']) {
+      const ref = byId.get(id)
+      expect(ref, id).toBeDefined()
+      expect(isLayoutOnly(ref!), id).toBe(true)
+    }
+    expect(isLayoutOnly({ k: 0.6 })).toBe(true)
+    expect(isLayoutOnly({ k: 0.6001 })).toBe(false)
+    // Référence à pleine échelle : la comparaison reste informative mais hors disposition seule.
+    expect(isLayoutOnly(byId.get('zzrib6')!)).toBe(false)
+  })
+})
+
+describe('manifeste des captures (shots)', () => {
+  it('une relance partielle garde les scènes précédentes et remplace la scène relancée', () => {
+    type Entry = { scene: string; theme: string; file: string | null; status: string }
+    const before: Entry[] = [
+      { scene: 'a', theme: 'light', file: '/x/a-light.png', status: 'ok' },
+      { scene: 'b', theme: 'light', file: '/x/b-light.png', status: 'ok' },
+      { scene: 'a', theme: 'dark', file: '/x/a-dark.png', status: 'ok' },
+    ]
+    const fresh: Entry[] = [{ scene: 'a', theme: 'light', file: null, status: 'erreur' }]
+    expect(mergeManifest(before, fresh)).toEqual([
+      { scene: 'a', theme: 'light', file: null, status: 'erreur' },
+      { scene: 'b', theme: 'light', file: '/x/b-light.png', status: 'ok' },
+      { scene: 'a', theme: 'dark', file: '/x/a-dark.png', status: 'ok' },
+    ])
+  })
+
+  it('sans manifeste précédent, les résultats neufs sont repris tels quels', () => {
+    const fresh = [{ scene: 'c', theme: 'dark', file: '/x/c.png', status: 'ok' }]
+    expect(mergeManifest([], fresh)).toEqual(fresh)
   })
 })

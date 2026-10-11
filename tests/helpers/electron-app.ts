@@ -60,35 +60,48 @@ export function electronExecutable(root: string = REPO_ROOT): string {
 export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle> {
   const root = options.root ?? REPO_ROOT
   const ownsUserData = !options.userData
+  // `home` est créé à côté de `userData` quand il n'est pas imposé : il est alors supprimé avec lui,
+  // y compris quand `userData` est fourni par l'appelant (sinon il restait sur disque).
+  const ownsHome = !options.home
   const userData = options.userData ?? makeTmpDir('userdata')
   const home = options.home ?? join(userData, '..', `${userData.split('/').pop() ?? 'ud'}-home`)
   mkdirSync(userData, { recursive: true })
   mkdirSync(home, { recursive: true })
   const dsf = options.deviceScaleFactor ?? 1
+  const cleanupDirs = (): void => {
+    if (ownsUserData) rmSync(userData, { recursive: true, force: true })
+    if (ownsHome) rmSync(home, { recursive: true, force: true })
+  }
 
-  const app = await electron.launch({
-    executablePath: electronExecutable(root),
-    cwd: root,
-    args: [
-      '.',
-      `--force-device-scale-factor=${dsf}`,
-      '--disable-renderer-backgrounding',
-      '--disable-backgrounding-occluded-windows',
-      ...(options.args ?? []),
-    ],
-    env: {
-      ...(process.env as Record<string, string>),
-      RECOLTOS_USER_DATA: userData,
-      RECOLTOS_E2E: '1',
-      RECOLTOS_HOME: home,
-      RECOLTOS_WINDOW: options.windowSize ?? '1280x820',
-      TZ: 'Europe/Paris',
-      LANG: 'fr_FR.UTF-8',
-      // L'app lancée n'hérite jamais de l'environnement d'un autre lot.
-      ELECTRON_RENDERER_URL: '',
-      ...options.env,
-    },
-  })
+  let app: ElectronApplication
+  try {
+    app = await electron.launch({
+      executablePath: electronExecutable(root),
+      cwd: root,
+      args: [
+        '.',
+        `--force-device-scale-factor=${dsf}`,
+        '--disable-renderer-backgrounding',
+        '--disable-backgrounding-occluded-windows',
+        ...(options.args ?? []),
+      ],
+      env: {
+        ...(process.env as Record<string, string>),
+        RECOLTOS_USER_DATA: userData,
+        RECOLTOS_E2E: '1',
+        RECOLTOS_HOME: home,
+        RECOLTOS_WINDOW: options.windowSize ?? '1280x820',
+        TZ: 'Europe/Paris',
+        LANG: 'fr_FR.UTF-8',
+        // L'app lancée n'hérite jamais de l'environnement d'un autre lot.
+        ELECTRON_RENDERER_URL: '',
+        ...options.env,
+      },
+    })
+  } catch (err) {
+    cleanupDirs()
+    throw err
+  }
 
   const errors: string[] = []
   const allow = options.allowErrors ?? []
@@ -116,9 +129,22 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
     }
     return errors
   }
-  app.on('window', watch)
-  const page = await app.firstWindow()
-  watch(page)
+  const close = async (): Promise<void> => {
+    await app.close().catch(() => undefined)
+    cleanupDirs()
+  }
+
+  // Si `firstWindow()` échoue (délai dépassé), l'application lancée est fermée et les dossiers
+  // nettoyés avant de relancer l'erreur : sinon un processus Electron reste en vie.
+  let page: Page
+  try {
+    app.on('window', watch)
+    page = await app.firstWindow()
+    watch(page)
+  } catch (err) {
+    await close()
+    throw err
+  }
 
   return {
     app,
@@ -127,12 +153,6 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
     home,
     errors,
     flushErrors,
-    close: async () => {
-      await app.close().catch(() => undefined)
-      if (ownsUserData) {
-        rmSync(userData, { recursive: true, force: true })
-        rmSync(home, { recursive: true, force: true })
-      }
-    },
+    close,
   }
 }

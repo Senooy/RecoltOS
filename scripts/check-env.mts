@@ -2,6 +2,11 @@
  * Contrôles de l'environnement (QA §3.3, PLAN §1.15-1.16, ERRATA §F) utilisés par `doctor.mts`
  * (`pnpm run check:env`). Trois niveaux : `ok`, `warn` (jamais bloquant : outils optionnels,
  * mauvais pnpm) et `fail` (natifs qui ne chargent pas, FTS5 absent, plateforme/Node non supportés).
+ *
+ * Limite connue : avec pnpm 9 (p. ex. `/opt/homebrew/bin/pnpm` 9.15.0), `pnpm run check:env` échoue
+ * avant d'atteindre le script (`ERROR packages field missing or empty`, dû à `pnpm-workspace.yaml`
+ * de pnpm 12). L'avertissement « pnpm/9.15.0 détecté » n'est alors visible qu'avec
+ * `corepack pnpm run check:env` ou `tsx --tsconfig tsconfig.node.json scripts/doctor.mts`.
  */
 import { spawnSync } from 'node:child_process'
 import { accessSync, constants, existsSync, statfsSync } from 'node:fs'
@@ -318,7 +323,8 @@ export function runChecks(root: string): Check[] {
     parsePnpmUserAgent(process.env.npm_config_user_agent) === EXPECTED_PNPM ? [] : whichAllPnpm(),
   )
   const out: Check[] = [checkNodeVersion(), checkPlatform(), pm]
-  // Les natifs ne sont sondés que si la plateforme est supportée.
+  // Les natifs sont sondés dans tous les cas, y compris hors plateforme supportée : un échec de
+  // chargement se lit alors dans leur détail, il n'est pas écarté.
   out.push(checkNativesInNode(root), checkNativesInElectron(root))
   out.push(...checkOptionalTools(), checkDisk(root), checkXcode())
   const sign = checkSignIdentity()

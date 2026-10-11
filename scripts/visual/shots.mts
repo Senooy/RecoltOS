@@ -8,14 +8,14 @@
  * de la vraie bibliothèque importée, depuis `RECOLTOS_REAL_USERDATA` (jamais le dossier la référence) ;
  * `--library none` : app vide.
  */
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { launchApp } from '../../tests/helpers/electron-app'
 import { ensureBuild } from '../../tests/helpers/ensure-build'
 import { makeTmpDir, removeTmpDir } from '../../tests/helpers/tmpdir'
 import { cloneDir, makeDemoLibrary } from '../make-fixtures.mjs'
-import { ROOT } from './refs.mjs'
+import { mergeManifest, ROOT } from './refs.mjs'
 import { ALL_SCENES, freezePage, playScene, selectScenes } from './scenes.mjs'
 
 export interface ShotResult {
@@ -99,7 +99,12 @@ async function main(argv: readonly string[]): Promise<number> {
       }
     }
   }
-  writeFileSync(join(out, 'manifest.json'), JSON.stringify(results, null, 2) + '\n')
+  // Fusion avec le manifeste précédent : `shots --scene a` ne doit pas faire disparaître les autres.
+  const manifestFile = join(out, 'manifest.json')
+  const previous: ShotResult[] = existsSync(manifestFile)
+    ? (JSON.parse(readFileSync(manifestFile, 'utf8')) as ShotResult[])
+    : []
+  writeFileSync(manifestFile, JSON.stringify(mergeManifest(previous, results), null, 2) + '\n')
   const ok = results.filter((r) => r.status === 'ok').length
   console.log(`\nshots : ${ok}/${results.length} scène(s) capturée(s) dans ${out}`)
   return results.some((r) => r.status === 'erreur') ? 1 : 0
