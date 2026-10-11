@@ -4,7 +4,7 @@
  */
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { mkdir, rename, rm } from 'node:fs/promises'
+import { mkdir, rename, rm, stat } from 'node:fs/promises'
 import { basename, dirname, extname, isAbsolute, join } from 'node:path'
 import { AppError } from '../../../shared/errors'
 
@@ -39,6 +39,30 @@ export function assertAbs(p: unknown, field: string): string {
     throw new AppError('validation', `chemin absolu attendu (champ ${field})`)
   }
   return p
+}
+
+/**
+ * Erreur d'E/S Node → AppError typée et en français : ENOENT/ENOTDIR → `not_found`,
+ * EISDIR → `validation` (pas un fichier), le reste → `io`. Jamais de message Node brut.
+ */
+export function ioError(err: unknown, p: string): AppError {
+  if (err instanceof AppError) return err
+  const e = err as NodeJS.ErrnoException
+  if (e.code === 'ENOENT' || e.code === 'ENOTDIR') {
+    return new AppError('not_found', `fichier introuvable : ${p}`)
+  }
+  if (e.code === 'EISDIR') return new AppError('validation', `ce n'est pas un fichier : ${p}`)
+  return new AppError('io', `${e.code ?? 'erreur'} : ${e.message}`)
+}
+
+/** Vérifie que `p` est un fichier régulier ; sinon `not_found` / `validation` / `io`. */
+export async function assertFile(p: string): Promise<void> {
+  try {
+    if (!(await stat(p)).isFile())
+      throw new AppError('validation', `ce n'est pas un fichier : ${p}`)
+  } catch (err) {
+    throw ioError(err, p)
+  }
 }
 
 export interface RunResult {

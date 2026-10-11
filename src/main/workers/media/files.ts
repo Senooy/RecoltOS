@@ -12,7 +12,7 @@ import sharp from 'sharp'
 import yazl from 'yazl'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult, ZipEntry } from '../../../shared/worker-protocol'
-import { assertAbs, writeAtomic, type MediaTools } from './exec'
+import { assertAbs, ioError, writeAtomic, type MediaTools } from './exec'
 import { withReadable } from './foreign'
 
 /** PNG (première image, orientation appliquée) ; `nativeImage` ne lit pas le webp (PLAN §1.12). */
@@ -58,12 +58,6 @@ export async function hashFile(a: { abs: string }): Promise<MediaResult<'hashFil
     throw ioError(err, abs)
   }
   return { sha256: hash.digest('hex'), bytes }
-}
-
-function ioError(err: unknown, p: string): AppError {
-  const e = err as NodeJS.ErrnoException
-  if (e.code === 'ENOENT') return new AppError('not_found', `fichier introuvable : ${p}`)
-  return new AppError('io', `${e.code ?? 'erreur'} : ${e.message}`)
 }
 
 /** Erreur d'export zip → AppError typée (source modifiée, absente, ou E/S). */

@@ -2,7 +2,7 @@
  * WP-03 — `platform/` : résolution des binaires (PLAN §1.16), shell de login (ARCHI §2.6),
  * détection de processus (`pgrep -x`), Corbeille macOS.
  */
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
 import {
@@ -146,6 +146,47 @@ describe('login-shell-env', () => {
       await readLoginShellEnv({ spawnShell: () => Promise.reject(new Error('boom')) }),
     ).toEqual({ path: null, tools: {} })
   })
+
+  it('le délai est une vraie borne : un petit-enfant qui garde stdout ouvert ne bloque pas', async () => {
+    const dir = join(tmp.dir, 'shells')
+    mkdirSync(dir, { recursive: true })
+    const pidFile = join(dir, 'pid')
+    const fake = join(dir, 'slow-shell.sh')
+    writeFileSync(fake, `#!/bin/sh\nsleep 30 &\necho $! > '${pidFile}'\nsleep 30\n`)
+    chmodSync(fake, 0o755)
+    const t0 = Date.now()
+    const r = await readLoginShellEnv({ shell: fake, timeoutMs: 500 })
+    expect(Date.now() - t0).toBeLessThan(1_500)
+    expect(r).toEqual({ path: null, tools: {} })
+    // Pas d'orphelin : le groupe entier a été tué.
+    const pid = Number(readFileSync(pidFile, 'utf8').trim())
+    let alive = true
+    for (let i = 0; i < 30 && alive; i++) {
+      try {
+        process.kill(pid, 0)
+        await new Promise((res) => setTimeout(res, 100))
+      } catch {
+        alive = false
+      }
+    }
+    expect(alive).toBe(false)
+  }, 10_000)
+
+  it('shell terminé mais stdout retenu par un démon : résultat rendu juste après la sortie', async () => {
+    const dir = join(tmp.dir, 'shells')
+    mkdirSync(dir, { recursive: true })
+    const fake = join(dir, 'daemon-shell.sh')
+    writeFileSync(
+      fake,
+      "#!/bin/sh\n(sleep 3) &\nprintf '__RECOLT__PATH=/opt/x/bin:/usr/bin\\n__RECOLT__ffmpeg=/opt/x/bin/ffmpeg\\n'\n",
+    )
+    chmodSync(fake, 0o755)
+    const t0 = Date.now()
+    const r = await readLoginShellEnv({ shell: fake, timeoutMs: 5_000 })
+    expect(Date.now() - t0).toBeLessThan(2_000)
+    expect(r.path).toBe('/opt/x/bin:/usr/bin')
+    expect(r.tools.ffmpeg).toBe('/opt/x/bin/ffmpeg')
+  }, 10_000)
 
   it('vrai /bin/zsh -lic (5 s max) : PATH lu', async () => {
     const t0 = Date.now()

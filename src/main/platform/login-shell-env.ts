@@ -4,7 +4,7 @@
  * On interroge `zsh -lic` (timeout 5 s) ; chaque outil est imprimé sur une ligne balisée pour
  * résister aux sorties parasites de `.zshrc` (invites, extensions) et aux outils absents.
  */
-import { spawn } from 'node:child_process'
+import { spawn, type ChildProcess } from 'node:child_process'
 import { isAbsolute } from 'node:path'
 
 export const LOGIN_SHELL_TOOLS = ['claude', 'codex', 'ffmpeg', 'ffprobe'] as const
@@ -58,37 +58,60 @@ export type SpawnShell = (
   timeoutMs: number,
 ) => Promise<{ stdout: string; timedOut: boolean }>
 
+/** Après la sortie du shell, attente des dernières données avant de rendre la main. */
+const EXIT_GRACE_MS = 250
+
+/**
+ * Le délai est une vraie borne : la promesse se résout au déclenchement du timer (stdout
+ * partiel, `timedOut`), sans attendre `close` — un petit-enfant lancé par `.zshrc` (agent,
+ * démon, `cmd &`) peut garder stdout ouvert bien plus longtemps. Le shell est un chef de groupe
+ * (`detached`) : au délai, on tue tout le groupe pour ne laisser aucun orphelin.
+ */
 const defaultSpawnShell: SpawnShell = (shell, args, timeoutMs) =>
   new Promise((resolve) => {
     let stdout = ''
     let timedOut = false
-    let child
+    let settled = false
+    let graceTimer: ReturnType<typeof setTimeout> | null = null
+    let child: ChildProcess
+    const finish = (): void => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      if (graceTimer) clearTimeout(graceTimer)
+      // Libère le tuyau : un petit-enfant qui le garde ouvert ne doit pas retenir la boucle.
+      child?.stdout?.destroy()
+      resolve({ stdout, timedOut })
+    }
+    const timer = setTimeout(() => {
+      timedOut = true
+      try {
+        if (child.pid !== undefined) process.kill(-child.pid, 'SIGKILL')
+      } catch {
+        child.kill('SIGKILL')
+      }
+      finish()
+    }, timeoutMs)
     try {
       child = spawn(shell, args, {
         stdio: ['ignore', 'pipe', 'ignore'],
         env: { HOME: process.env.HOME ?? '', USER: process.env.USER ?? '', TERM: 'dumb' },
-        detached: false,
+        detached: true,
       })
     } catch {
-      resolve({ stdout: '', timedOut: false })
+      finish()
       return
     }
-    const timer = setTimeout(() => {
-      timedOut = true
-      child.kill('SIGKILL')
-    }, timeoutMs)
-    child.stdout.setEncoding('utf8')
-    child.stdout.on('data', (d: string) => {
+    child.stdout?.setEncoding('utf8')
+    child.stdout?.on('data', (d: string) => {
       if (stdout.length < 256 * 1024) stdout += d
     })
-    child.on('error', () => {
-      clearTimeout(timer)
-      resolve({ stdout, timedOut })
+    child.on('error', finish)
+    // `exit` plutôt que `close` : `close` attend la fermeture de tous les tuyaux héritables.
+    child.on('exit', () => {
+      graceTimer = setTimeout(finish, EXIT_GRACE_MS)
     })
-    child.on('close', () => {
-      clearTimeout(timer)
-      resolve({ stdout, timedOut })
-    })
+    child.on('close', finish)
   })
 
 export interface ReadLoginShellOptions {

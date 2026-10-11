@@ -3,7 +3,7 @@
  * aperçu mp4 ≤ 8 s muet 540p `+faststart`, ffmpeg absent → `tool_missing` sans crash.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -163,6 +163,61 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     expect(r.durationMs).toBeLessThanOrEqual(2100)
   })
 
+  it.runIf(HAS_FF)(
+    'makePreview : petit côté ≤ 540 (portrait 1080×1920 → 540×960), sans agrandir',
+    async () => {
+      const gen = (name: string, size: string): string => {
+        const f = join(tmp.dir, name)
+        execFileSync(
+          FFMPEG!,
+          [
+            '-v',
+            'error',
+            '-y',
+            '-f',
+            'lavfi',
+            '-i',
+            `testsrc=size=${size}:rate=10:duration=1`,
+            '-c:v',
+            'libx264',
+            '-pix_fmt',
+            'yuv420p',
+            f,
+          ],
+          { stdio: 'ignore' },
+        )
+        return f
+      }
+      const cases: [string, string, [number, number]][] = [
+        ['v1080.mp4', '1080x1920', [540, 960]],
+        ['v360.mp4', '360x640', [360, 640]],
+        ['h1080.mp4', '1920x1080', [960, 540]],
+        ['sq800.mp4', '800x800', [540, 540]],
+      ]
+      for (const [name, size, expected] of cases) {
+        const r = await makePreview(
+          { src: gen(name, size), dst: out(`previews/${name}`), maxSeconds: 8, height: 540 },
+          TOOLS,
+          undefined,
+          ['libx264'],
+        )
+        expect([size, r.width, r.height]).toEqual([size, ...expected])
+      }
+    },
+    60_000,
+  )
+
+  it.runIf(HAS_FF)('vidéo absente → not_found (probeVideo, makePoster, makePreview)', async () => {
+    const src = join(tmp.dir, 'absente.mp4')
+    for (const call of [
+      () => probeVideo({ abs: src }, TOOLS),
+      () => makePoster({ src, dst: out('posters/a.jpg'), atMs: 0 }, TOOLS),
+      () => makePreview({ src, dst: out('previews/a.mp4'), maxSeconds: 8, height: 540 }, TOOLS),
+    ]) {
+      await expect(call()).rejects.toMatchObject({ code: 'not_found' })
+    }
+  })
+
   it.runIf(process.platform === 'darwin')(
     'h264_videotoolbox seul : encode sur ce Mac',
     async () => {
@@ -201,7 +256,9 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
 })
 
 describe('outils absents → tool_missing, pas de crash', () => {
-  const src = '/tmp/inexistant.mp4'
+  // Le fichier existe (octets quelconques) : seul l'outil manque, pas la source.
+  const src = join(tmp.dir, 'quelconque.mp4')
+  writeFileSync(src, 'pas une vraie vidéo')
   it('ffmpeg non résolu', async () => {
     await expect(
       makePreview(

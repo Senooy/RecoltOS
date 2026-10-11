@@ -8,6 +8,12 @@
  * (`UPDATE jobs SET state='queued' … WHERE id IN (…)`, sans consommer de tentative).
  * Les requêtes pas encore envoyées attendent le redémarrage.
  *
+ * Un worker qui meurt avant d'avoir envoyé `hello` (module introuvable, `sharp` natif cassé,
+ * asar mal dépaqueté) ne redémarrera pas mieux : après `maxStartFailures` sorties consécutives
+ * sans `hello`, l'hôte passe en état `broken`. Toutes les requêtes en attente sont alors
+ * rejetées avec `worker_unavailable` (et signalées à `onCrash`, `broken: true`), les appels
+ * suivants sont refusés de la même façon, jusqu'à un `restart()` explicite.
+ *
  * Le lancement est injecté (`fork`) : `utilityFork` (Electron) en production,
  * `child_process.fork` dans les tests.
  */
@@ -53,8 +59,14 @@ export interface CrashInfo {
   signal: string | null
   /** Requêtes envoyées au worker et perdues avec lui. */
   interrupted: InterruptedCall[]
-  /** Délai avant redémarrage (backoff). */
+  /** Délai avant redémarrage (backoff) ; 0 si `broken`. */
   restartInMs: number
+  /**
+   * Le worker ne démarre pas (sorties répétées sans `hello`) : plus de redémarrage automatique,
+   * les requêtes de `interrupted` sont rejetées avec `worker_unavailable`. Le job ne doit pas être
+   * relancé en boucle : le marquer en échec, puis `restart()` quand la cause est corrigée.
+   */
+  broken: boolean
 }
 
 export interface HostLogger {
@@ -70,6 +82,8 @@ export interface WorkerHostOptions {
   fork: ForkFn
   /** Délais de redémarrage successifs ; le dernier se répète. */
   backoffMs?: readonly number[]
+  /** Sorties consécutives sans `hello` avant l'état `broken` (défaut 3). */
+  maxStartFailures?: number
   /** Un worker resté prêt aussi longtemps remet le backoff à zéro. */
   stableAfterMs?: number
   /** SIGTERM, puis SIGKILL après ce délai. */
@@ -81,7 +95,8 @@ export interface WorkerHostOptions {
   log?: HostLogger
 }
 
-export type HostState = 'idle' | 'starting' | 'ready' | 'restarting' | 'stopping' | 'stopped'
+export type HostState =
+  'idle' | 'starting' | 'ready' | 'restarting' | 'broken' | 'stopping' | 'stopped'
 
 interface Pending {
   id: number
@@ -96,6 +111,7 @@ interface Pending {
 }
 
 export const DEFAULT_BACKOFF_MS = [1_000, 5_000, 30_000] as const
+export const DEFAULT_MAX_START_FAILURES = 3
 
 const silent: HostLogger = { info: () => {}, warn: () => {}, error: () => {} }
 
@@ -111,6 +127,10 @@ export class WorkerHost {
   private nextId = 1
   private readonly pending = new Map<number, Pending>()
   private attempt = 0
+  /** Sorties consécutives sans `hello`. */
+  private startFailures = 0
+  /** `hello` reçu du processus courant. */
+  private helloSeen = false
   private restartTimer: ReturnType<typeof setTimeout> | null = null
   private stableTimer: ReturnType<typeof setTimeout> | null = null
   private stopPromise: Promise<void> | null = null
@@ -140,6 +160,17 @@ export class WorkerHost {
     if (this._state === 'idle') this.spawn()
   }
 
+  /**
+   * Relance explicite après l'état `broken` (cause corrigée : build réparé, outils re-détectés).
+   * Sans effet dans les autres états.
+   */
+  restart(): void {
+    if (this._state !== 'broken') return
+    this.attempt = 0
+    this.startFailures = 0
+    this.spawn()
+  }
+
   /** Change la configuration ; envoyée tout de suite si le worker tourne, et à chaque redémarrage. */
   setConfig(config: unknown): Promise<void> {
     this.config = config
@@ -160,6 +191,9 @@ export class WorkerHost {
   ): Promise<unknown> {
     if (this._state === 'stopping' || this._state === 'stopped') {
       return Promise.reject(new AppError('cancelled', `worker ${this.name} arrêté`))
+    }
+    if (this._state === 'broken') {
+      return Promise.reject(this.unavailable(op, opts.jobId))
     }
     if (opts.signal?.aborted) return Promise.reject(new AppError('cancelled', 'opération annulée'))
     const id = this.nextId++
@@ -193,6 +227,14 @@ export class WorkerHost {
     })
   }
 
+  private unavailable(op: string, jobId: number | undefined): AppError {
+    return new AppError(
+      'worker_unavailable',
+      `le worker ${this.name} ne démarre pas (${op}) : redémarre l'application ou réinstalle-la`,
+      { jobId },
+    )
+  }
+
   /** Rejette une requête et demande au worker de l'annuler. */
   private abandon(id: number, err: AppError): void {
     const p = this.pending.get(id)
@@ -222,6 +264,7 @@ export class WorkerHost {
   private spawn(): void {
     this._state = this._state === 'idle' ? 'starting' : 'restarting'
     this.ready = false
+    this.helloSeen = false
     let child: WorkerChild
     try {
       child = this.opts.fork(this.opts.modulePath, { serviceName: this.name })
@@ -250,6 +293,8 @@ export class WorkerHost {
         return
       }
       this.ready = true
+      this.helloSeen = true
+      this.startFailures = 0
       this._state = 'ready'
       this.log.info(`[${this.name}] prêt (pid ${m.pid})`)
       if (this.config !== undefined) {
@@ -296,9 +341,14 @@ export class WorkerHost {
       return
     }
 
+    // Un enfant qui n'a jamais dit `hello` n'a rien exécuté : ses requêtes (`sent` ou non) sont
+    // perdues d'avance, et trop de sorties de ce genre signifient que le démarrage est cassé.
+    if (!this.helloSeen) this.startFailures++
+    const broken = this.startFailures >= (this.opts.maxStartFailures ?? DEFAULT_MAX_START_FAILURES)
+
     const interrupted: InterruptedCall[] = []
     for (const p of [...this.pending.values()]) {
-      if (!p.sent) continue
+      if (!p.sent && !broken) continue
       this.pending.delete(p.id)
       p.cleanup()
       if (p.internal) {
@@ -310,10 +360,25 @@ export class WorkerHost {
       if (p.opts.jobId !== undefined) it.jobId = p.opts.jobId
       interrupted.push(it)
       p.reject(
-        new AppError('worker_crashed', `le worker ${this.name} s'est arrêté pendant ${p.op}`, {
-          jobId: p.opts.jobId,
-        }),
+        broken
+          ? this.unavailable(p.op, p.opts.jobId)
+          : new AppError('worker_crashed', `le worker ${this.name} s'est arrêté pendant ${p.op}`, {
+              jobId: p.opts.jobId,
+            }),
       )
+    }
+    if (broken) {
+      this._state = 'broken'
+      this.log.error(
+        `[${this.name}] démarrage impossible (${this.startFailures} sorties sans hello, ` +
+          `code ${code ?? '–'}, signal ${signal ?? '–'}) ; ${interrupted.length} requête(s) rejetée(s)`,
+      )
+      try {
+        this.opts.onCrash?.({ name: this.name, code, signal, interrupted, restartInMs: 0, broken })
+      } catch (err) {
+        this.log.error(`[${this.name}] onCrash a levé une erreur`, err)
+      }
+      return
     }
     const delays = this.opts.backoffMs ?? DEFAULT_BACKOFF_MS
     const restartInMs = delays[Math.min(this.attempt, delays.length - 1)] ?? 30_000
@@ -324,7 +389,14 @@ export class WorkerHost {
         `redémarrage dans ${restartInMs} ms, ${interrupted.length} requête(s) interrompue(s)`,
     )
     try {
-      this.opts.onCrash?.({ name: this.name, code, signal, interrupted, restartInMs })
+      this.opts.onCrash?.({
+        name: this.name,
+        code,
+        signal,
+        interrupted,
+        restartInMs,
+        broken,
+      })
     } catch (err) {
       this.log.error(`[${this.name}] onCrash a levé une erreur`, err)
     }
@@ -403,6 +475,8 @@ export async function stopAll(): Promise<void> {
 export interface MediaWorker {
   readonly host: WorkerHost
   call<O extends MediaOp>(op: O, args: MediaArgs<O>, opts?: CallOptions): Promise<MediaResult<O>>
+  /** Relance après l'état `broken` (voir `WorkerHost.restart`). */
+  restart(): void
   /** Chemins des outils (après « Re-détecter ») ; renvoyés à chaque redémarrage. */
   setTools(tools: MediaTools): Promise<void>
   stop(): Promise<void>
@@ -418,6 +492,7 @@ export function createMediaWorker(
   return {
     host,
     call: (op, args, o) => host.call(op, args, o) as Promise<never>,
+    restart: () => host.restart(),
     setTools: (t) => host.setConfig({ tools: t }),
     stop: () => host.stop(),
   }

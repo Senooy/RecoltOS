@@ -7,7 +7,7 @@ import { stat } from 'node:fs/promises'
 import sharp from 'sharp'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
-import { assertAbs, requireTool, run, writeAtomic, type MediaTools } from './exec'
+import { assertAbs, assertFile, requireTool, run, writeAtomic, type MediaTools } from './exec'
 import { probeVideo } from './probe'
 
 export const POSTER_MAX_WIDTH = 1280
@@ -51,6 +51,7 @@ export async function makePoster(
   const dst = assertAbs(a.dst, 'dst')
   if (!Number.isFinite(a.atMs)) throw new AppError('validation', 'atMs invalide')
   const ffmpeg = requireTool(tools, 'ffmpeg')
+  await assertFile(src)
   return writeAtomic(
     dst,
     async (tmp) => {
@@ -80,9 +81,13 @@ export async function makePoster(
 export type PreviewEncoder = 'h264_videotoolbox' | 'libx264'
 
 export function previewArgs(src: string, out: string, encoder: PreviewEncoder): string[] {
-  // Hauteur ≤ 540 sans agrandir, paire (contrainte yuv420p) ; largeur paire au ratio.
+  // « 540p » = petit côté ≤ 540, sans agrandir : paysage → hauteur 540 (960×540), portrait →
+  // largeur 540 (540×960), pour que l'aperçu d'une vidéo verticale reste net face à son poster.
+  // Dimensions paires (yuv420p) ; l'autre côté suit le ratio (-2). ffmpeg a déjà appliqué la
+  // rotation d'affichage : iw/ih sont les dimensions vues par l'utilisateur.
+  const h = PREVIEW.height
   const vf = [
-    `scale=-2:'trunc(min(${PREVIEW.height},ih)/2)*2':flags=bicubic`,
+    `scale='if(gte(iw,ih),-2,trunc(min(${h},iw)/2)*2)':'if(gte(iw,ih),trunc(min(${h},ih)/2)*2,-2)':flags=bicubic`,
     'format=yuv420p',
   ].join(',')
   const extras: Record<PreviewEncoder, string[]> = {
@@ -133,6 +138,7 @@ export async function makePreview(
   }
   const ffmpeg = requireTool(tools, 'ffmpeg')
   requireTool(tools, 'ffprobe')
+  await assertFile(src)
   return writeAtomic(
     dst,
     async (tmp) => {

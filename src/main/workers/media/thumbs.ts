@@ -11,6 +11,8 @@ import { withReadable } from './foreign'
 
 export const THUMB = { width: 800, quality: 80, effort: 4 } as const
 export const LARGE = { width: 1440, quality: 82, effort: 4 } as const
+/** Plafond du format WebP sur chaque côté (images très hautes : captures pleine page, infographies). */
+export const WEBP_MAX_EDGE = 16383
 export const DISPLAY = { maxEdge: 2048, quality: 85, effort: 4 } as const
 
 function checkWidth(w: unknown, expected: number, field: string): number {
@@ -61,7 +63,7 @@ export function makeThumb(
     a.dst,
     tools,
     signal,
-    { width },
+    { width, height: WEBP_MAX_EDGE, fit: 'inside' },
     {
       quality: THUMB.quality,
       effort: THUMB.effort,
@@ -80,7 +82,7 @@ export function makeLarge(
     a.dst,
     tools,
     signal,
-    { width },
+    { width, height: WEBP_MAX_EDGE, fit: 'inside' },
     {
       quality: LARGE.quality,
       effort: LARGE.effort,

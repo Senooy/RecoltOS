@@ -186,6 +186,30 @@ describe('media-worker réel (child_process + tsx)', () => {
     expect(readdirSync(outDir)).toEqual([])
   }, 30_000)
 
+  it('module qui lève au chargement (enfant réel) → broken, appel rejeté, pas de boucle', async () => {
+    const bad = join(tmp.dir, 'boom.cjs')
+    writeFileSync(bad, "throw new Error('boom au chargement')\n")
+    const nf = nodeFork()
+    const crashes: CrashInfo[] = []
+    const h = new WorkerHost({
+      name: 'boom',
+      modulePath: bad,
+      fork: nf.fork,
+      backoffMs: [20, 20, 20],
+      onCrash: (i) => crashes.push(i),
+    })
+    await expect(h.call('hashFile', { abs: file }, { jobId: 3 })).rejects.toMatchObject({
+      code: 'worker_unavailable',
+      details: { jobId: 3 },
+    })
+    expect(h.state).toBe('broken')
+    expect(nf.children).toHaveLength(3)
+    expect(crashes.at(-1)).toMatchObject({ broken: true, interrupted: [{ jobId: 3 }] })
+    await new Promise((r) => setTimeout(r, 300))
+    expect(nf.children).toHaveLength(3)
+    await h.stop()
+  }, 30_000)
+
   it('stopAll : arrêt propre, appels ultérieurs refusés', async () => {
     const nf = nodeFork()
     const mw = createMediaWorker({ modulePath: MEDIA_WORKER_TS, fork: nf.fork, tools: TOOLS })
@@ -263,6 +287,87 @@ describe('WorkerHost (enfant factice)', () => {
       k.exit(1)
       expect(delays.at(-1)).toBe(1_000)
       await h.stop()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('sorties répétées sans hello → broken : requêtes rejetées (worker_unavailable), plus de boucle', async () => {
+    vi.useFakeTimers()
+    try {
+      const ff = fakeFork()
+      const crashes: CrashInfo[] = []
+      const h = new WorkerHost({
+        name: 't',
+        modulePath: '/x.js',
+        fork: ff.fork,
+        onCrash: (i) => crashes.push(i),
+      })
+      const p1 = h.call('hashFile', { abs: '/a' }, { jobId: 7 })
+      const p2 = h.call('hashFile', { abs: '/b' })
+      const settled = Promise.allSettled([p1, p2])
+      for (let i = 0; i < 3; i++) {
+        ff.kids.at(-1)!.exit(1) // sort sans avoir dit hello
+        if (i < 2) {
+          expect(h.state).toBe('restarting')
+          await vi.advanceTimersByTimeAsync(i === 0 ? 1_000 : 5_000)
+        }
+      }
+      expect(h.state).toBe('broken')
+      expect(ff.kids).toHaveLength(3)
+      const [r1, r2] = await settled
+      expect(r1).toMatchObject({
+        status: 'rejected',
+        reason: { code: 'worker_unavailable', details: { jobId: 7 } },
+      })
+      expect(r2).toMatchObject({ status: 'rejected', reason: { code: 'worker_unavailable' } })
+      // Un seul signal « broken », avec les requêtes (jobId) à échouer côté file de jobs.
+      const last = crashes.at(-1)!
+      expect(last.broken).toBe(true)
+      expect(last.restartInMs).toBe(0)
+      expect(last.interrupted.map((i) => i.jobId)).toEqual([7, undefined])
+      expect(crashes.slice(0, -1).every((c) => !c.broken && c.interrupted.length === 0)).toBe(true)
+      // Plus aucun redémarrage automatique, et les appels suivants échouent tout de suite.
+      await vi.advanceTimersByTimeAsync(120_000)
+      expect(ff.kids).toHaveLength(3)
+      await expect(h.call('hashFile', { abs: '/c' }, { jobId: 9 })).rejects.toMatchObject({
+        code: 'worker_unavailable',
+        details: { jobId: 9 },
+      })
+      // restart() explicite : le worker repart et sert de nouveau.
+      h.restart()
+      expect(ff.kids).toHaveLength(4)
+      const k = ff.kids.at(-1)!
+      k.reply({ ready: true, pid: k.child.pid })
+      const ok = h.call('hashFile', { abs: '/d' })
+      expect(k.sent.at(-1)).toMatchObject({ op: 'hashFile' })
+      k.reply({ id: k.sent.at(-1)!.id, ok: true, result: { sha256: 'x', bytes: 1 } })
+      await expect(ok).resolves.toEqual({ sha256: 'x', bytes: 1 })
+      expect(h.state).toBe('ready')
+      const stopped = h.stop()
+      k.exit(null, 'SIGTERM')
+      await stopped
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('un hello suffit à remettre le compteur de démarrages ratés à zéro', async () => {
+    vi.useFakeTimers()
+    try {
+      const ff = fakeFork()
+      const h = new WorkerHost({ name: 't', modulePath: '/x.js', fork: ff.fork })
+      h.start()
+      for (let i = 0; i < 6; i++) {
+        const k = ff.kids.at(-1)!
+        if (i % 2 === 1) k.reply({ ready: true, pid: k.child.pid }) // un démarrage sur deux réussit
+        k.exit(1)
+        await vi.advanceTimersByTimeAsync(30_000)
+      }
+      expect(h.state).not.toBe('broken')
+      const stopped = h.stop()
+      ff.kids.at(-1)?.exit(null, 'SIGTERM')
+      await stopped
     } finally {
       vi.useRealTimers()
     }

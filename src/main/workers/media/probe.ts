@@ -4,7 +4,7 @@
 import sharp, { type Metadata } from 'sharp'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
-import { assertAbs, requireTool, run, type MediaTools } from './exec'
+import { assertAbs, assertFile, requireTool, run, type MediaTools } from './exec'
 import { FOREIGN_MIME, orientedSize, sniffForeign, withReadable } from './foreign'
 
 const MIME_BY_FORMAT: Record<string, string> = {
@@ -127,6 +127,7 @@ export async function probeVideo(
 ): Promise<MediaResult<'probeVideo'>> {
   const abs = assertAbs(a.abs, 'abs')
   const ffprobe = requireTool(tools, 'ffprobe')
+  await assertFile(abs)
   const { stdout } = await run(
     ffprobe,
     ['-v', 'error', '-print_format', 'json', '-show_streams', '-show_format', abs],

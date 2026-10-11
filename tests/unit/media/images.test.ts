@@ -2,6 +2,7 @@
  * WP-03 — critères 1 (images) et 2 : orientation EXIF, webp animé, HEIC/PSD par sips,
  * TIFF par sharp, dérivés webp, originaux intacts.
  */
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -9,6 +10,7 @@ import { decodeForeign, sniffForeign } from '../../../src/main/workers/media/for
 import { probeImage } from '../../../src/main/workers/media/probe'
 import { makeDisplay, makeLarge, makeThumb } from '../../../src/main/workers/media/thumbs'
 import { toPng } from '../../../src/main/workers/media/files'
+import { palette } from '../../../src/main/workers/media/palette'
 import { HAS_SIPS, generateMediaFixtures, type MediaFixtures } from '../../fixtures/media/generate'
 import { TOOLS, makeTmp, sha256 } from './helpers'
 
@@ -247,4 +249,81 @@ describe('dérivés webp', () => {
     const m = await sharp(Buffer.from(r.png)).metadata()
     expect([m.format, m.width, m.height]).toEqual(['png', 100, 150])
   })
+})
+
+describe('fichier source absent ou dossier', () => {
+  const missing = join(tmp.dir, 'absent', 'nope.jpg')
+  const ops: [string, () => Promise<unknown>][] = [
+    ['probeImage', () => probeImage({ abs: missing }, TOOLS)],
+    ['makeThumb', () => makeThumb({ src: missing, dst: out('m/t.webp'), width: 800 }, TOOLS)],
+    ['makeLarge', () => makeLarge({ src: missing, dst: out('m/l.webp'), width: 1440 }, TOOLS)],
+    [
+      'makeDisplay',
+      () => makeDisplay({ src: missing, dst: out('m/d.webp'), maxEdge: 2048 }, TOOLS),
+    ],
+    ['palette', () => palette({ src: missing }, TOOLS)],
+    ['toPng', () => toPng({ abs: missing }, TOOLS)],
+    [
+      'decodeForeign',
+      () => decodeForeign({ src: missing, dst: out('m/x.png'), format: 'png' }, TOOLS),
+    ],
+  ]
+  for (const [name, call] of ops) {
+    it(`${name} : fichier absent → not_found en français`, async () => {
+      const err = await call().then(
+        () => null,
+        (e: unknown) => e,
+      )
+      expect(err).toMatchObject({ code: 'not_found' })
+      expect((err as Error).message).toMatch(/^fichier introuvable : /)
+      expect((err as Error).message).not.toMatch(/ENOENT|no such file/i)
+    })
+  }
+
+  it('un dossier à la place du fichier → validation, pas internal', async () => {
+    const dir = join(tmp.dir, 'un-dossier')
+    mkdirSync(dir, { recursive: true })
+    for (const call of [
+      () => probeImage({ abs: dir }, TOOLS),
+      () => makeThumb({ src: dir, dst: out('m/t2.webp'), width: 800 }, TOOLS),
+      () => palette({ src: dir }, TOOLS),
+      () => toPng({ abs: dir }, TOOLS),
+    ]) {
+      const err = await call().then(
+        () => null,
+        (e: unknown) => e,
+      )
+      expect(err).toMatchObject({ code: 'validation' })
+      expect((err as Error).message).not.toMatch(/EISDIR|illegal operation/i)
+    }
+  })
+})
+
+describe('images très hautes (plafond WebP 16383 px)', () => {
+  it.each([
+    [1280, 26000],
+    [800, 40000],
+  ])(
+    '%i×%i : makeThumb et makeLarge réussissent, côtés ≤ 16383',
+    async (w, h) => {
+      const src = join(tmp.dir, `tall-${w}x${h}.png`)
+      await sharp({
+        create: { width: w, height: h, channels: 3, background: '#3366cc' },
+      })
+        .png()
+        .toFile(src)
+      const t = await makeThumb({ src, dst: out(`tall/${w}-thumb.webp`), width: 800 }, TOOLS)
+      const l = await makeLarge({ src, dst: out(`tall/${w}-large.webp`), width: 1440 }, TOOLS)
+      for (const r of [t, l]) {
+        expect(r.height).toBeLessThanOrEqual(16383)
+        expect(r.width).toBeLessThanOrEqual(w)
+        expect(r.bytes).toBeGreaterThan(0)
+      }
+      expect(t.width).toBeLessThanOrEqual(800)
+      expect(l.width).toBeLessThanOrEqual(1440)
+      const m = await sharp(out(`tall/${w}-large.webp`)).metadata()
+      expect([m.width, m.height]).toEqual([l.width, l.height])
+    },
+    60_000,
+  )
 })

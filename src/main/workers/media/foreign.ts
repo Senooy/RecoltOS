@@ -8,7 +8,15 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { AppError } from '../../../shared/errors'
-import { DEFAULT_SIPS, assertAbs, run, writeAtomic, type MediaTools } from './exec'
+import {
+  DEFAULT_SIPS,
+  assertAbs,
+  assertFile,
+  ioError,
+  run,
+  writeAtomic,
+  type MediaTools,
+} from './exec'
 
 export type ForeignKind = 'heic' | 'heif' | 'psd'
 
@@ -24,10 +32,20 @@ const AVIF_BRANDS = new Set(['avif', 'avis'])
 
 /** Reconnaît HEIC/HEIF/PSD par les octets magiques (jamais par l'extension). */
 export async function sniffForeign(abs: string): Promise<ForeignKind | null> {
-  const fh = await open(abs, 'r')
+  let fh
+  try {
+    fh = await open(abs, 'r')
+  } catch (err) {
+    throw ioError(err, abs)
+  }
   try {
     const buf = Buffer.alloc(64)
-    const { bytesRead } = await fh.read(buf, 0, 64, 0)
+    let bytesRead: number
+    try {
+      ;({ bytesRead } = await fh.read(buf, 0, 64, 0))
+    } catch (err) {
+      throw ioError(err, abs) // EISDIR : un dossier s'ouvre en lecture mais ne se lit pas
+    }
     const head = buf.subarray(0, bytesRead)
     if (head.length >= 4 && head.toString('latin1', 0, 4) === '8BPS') return 'psd'
     if (head.length >= 12 && head.toString('latin1', 4, 8) === 'ftyp') {
@@ -83,6 +101,7 @@ export async function decodeForeign(
     throw new AppError('validation', 'format attendu : jpeg ou png')
   }
   if (src === dst) throw new AppError('validation', 'la destination doit différer de la source')
+  await assertFile(src)
   const ext = a.format === 'jpeg' ? '.jpg' : '.png'
   await writeAtomic(
     dst,
