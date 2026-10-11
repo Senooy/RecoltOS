@@ -3,7 +3,16 @@
  * 200 / HEAD / 206 + `Content-Range`, `bytes=-500`, 416, `..` et `\0` → 403, racine inconnue → 403,
  * lien symbolique sortant → 403, bibliothèque inconnue → 404, cache `immutable` si `?v`, CORS.
  */
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
+import {
+  mkdirSync,
+  promises as fsPromises,
+  symlinkSync,
+  writeFileSync,
+  type Mode,
+  type OpenMode,
+  type PathLike,
+} from 'node:fs'
+import type { FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
@@ -192,5 +201,56 @@ describe('parseRecoltPath', () => {
     expect(parseRecoltPath('/avatars/x/k.jpg')).toEqual({ rel: 'avatars/x/k.jpg' })
     expect(parseRecoltPath('/thumbs/a/../b')).toHaveProperty('denied')
     expect(parseRecoltPath('/thumbs/a/./b')).toHaveProperty('denied')
+  })
+})
+
+describe('recolt:// — annulation de la requête', () => {
+  // Plus grand que le highWaterMark du flux (64 KiB) : sans lecture, le flux s'arrête et garde le handle.
+  const BIG = 'items/0d/big.mp4'
+  beforeAll(() => {
+    writeFileSync(join(root, BIG), Buffer.alloc(256 * 1024, 7))
+  })
+
+  /** Espionne les handles ouverts par le handler, sans changer leur comportement. */
+  function spyOpenedHandles(): { handles: FileHandle[]; restore(): void } {
+    const handles: FileHandle[] = []
+    const realOpen = fsPromises.open
+    const spy = vi
+      .spyOn(fsPromises, 'open')
+      .mockImplementation(async (file: PathLike, flags?: OpenMode, mode?: Mode) => {
+        const h = await realOpen(file, flags, mode)
+        handles.push(h)
+        return h
+      })
+    return { handles, restore: () => spy.mockRestore() }
+  }
+
+  it('abort du signal pendant un corps non lu : le handle est fermé', async () => {
+    const spied = spyOpenedHandles()
+    try {
+      const ac = new AbortController()
+      const res = await handler(new Request(`recolt://default/${BIG}`, { signal: ac.signal }))
+      expect(res.status).toBe(200)
+      const handle = spied.handles.at(-1)!
+      expect(handle.fd).not.toBe(-1)
+      ac.abort()
+      await vi.waitFor(() => expect(handle.fd).toBe(-1))
+    } finally {
+      spied.restore()
+    }
+  })
+
+  it('signal déjà annulé avant la lecture : 499 et handle fermé', async () => {
+    const spied = spyOpenedHandles()
+    try {
+      const ac = new AbortController()
+      ac.abort()
+      const res = await handler(new Request(`recolt://default/${BIG}`, { signal: ac.signal }))
+      expect(res.status).toBe(499)
+      const handle = spied.handles.at(-1)!
+      await vi.waitFor(() => expect(handle.fd).toBe(-1))
+    } finally {
+      spied.restore()
+    }
   })
 })

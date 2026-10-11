@@ -184,7 +184,20 @@ export function createRecoltHandler(deps: RecoltHandlerDeps): RecoltHandler {
       if (req.method === 'HEAD' || length === 0) {
         return new Response(null, { status, headers })
       }
-      const body = Readable.toWeb(handle.createReadStream({ start, end, autoClose: true }))
+      // Requête déjà annulée : personne ne lira le corps, le handle est fermé par le `finally`.
+      if (req.signal?.aborted) return empty(499)
+      // `autoClose` ferme le handle à la fin, à l'erreur ou au `destroy()` du flux. Un corps qui n'est
+      // jamais lu ni annulé ne déclenche rien : l'annulation de la requête (`signal`) détruit le flux.
+      const stream = handle.createReadStream({ start, end, autoClose: true })
+      const signal = req.signal
+      if (signal) {
+        const onAbort = (): void => {
+          stream.destroy()
+        }
+        signal.addEventListener('abort', onAbort, { once: true })
+        stream.once('close', () => signal.removeEventListener('abort', onAbort))
+      }
+      const body = Readable.toWeb(stream)
       keepOpen = true
       return new Response(body as ReadableStream<Uint8Array>, { status, headers })
     } finally {
