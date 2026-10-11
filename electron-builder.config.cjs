@@ -33,20 +33,30 @@ const extension = fs.existsSync(path.join(root, 'dist-extension'))
  * Identité de signature demandée. electron-builder 26 ne bloque pas si l'identité nommée est absente ou
  * non approuvée du trousseau : il logue « skipped macOS application code signing », sort avec 0 et produit
  * un .app en signature ad hoc (cdhash instable, permissions TCC perdues). On échoue donc ici, tôt et
- * clairement. `RECOLTOS_SECURITY_BIN` remplace `security` (tests uniquement).
+ * clairement.
+ *
+ * Correspondance : seul le nom exact du certificat ou son hash complet (40 hex) est accepté. electron-builder
+ * accepte une sous-chaîne ; on est volontairement plus strict pour ne jamais signer avec une identité proche
+ * de celle demandée.
+ *
+ * `RECOLTOS_SECURITY_BIN` remplace `security`, et seulement sous Vitest ou NODE_ENV=test : ce hook de test
+ * ne doit pas être actif dans un build de production.
  */
+const testHooksEnabled = process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST)
+
 function resolveSignIdentity() {
   const identity = (process.env.RECOLTOS_SIGN_IDENTITY || '').trim()
   if (identity === '') return '-'
   if (identity === '-') return '-'
-  if (process.platform !== 'darwin' && !process.env.RECOLTOS_SECURITY_BIN) return identity
+  const securityBin = (testHooksEnabled && process.env.RECOLTOS_SECURITY_BIN) || 'security'
+  if (process.platform !== 'darwin' && !(testHooksEnabled && process.env.RECOLTOS_SECURITY_BIN))
+    return identity
   let listing = ''
   try {
-    listing = execFileSync(
-      process.env.RECOLTOS_SECURITY_BIN || 'security',
-      ['find-identity', '-v', '-p', 'codesigning'],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
-    )
+    listing = execFileSync(securityBin, ['find-identity', '-v', '-p', 'codesigning'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
   } catch {
     listing = ''
   }

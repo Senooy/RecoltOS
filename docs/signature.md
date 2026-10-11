@@ -17,6 +17,8 @@ Le build ad hoc reste pleinement fonctionnel : il suffit pour développer et pou
 
 ## Créer le certificat (action à faire par toi, une seule fois)
 
+> **Nom officiel : « RecoltOS Local »** (ERRATA §G et PLAN §1.19 : ce nom prime). La spec QA §8.6 écrit « RecoltOS Local Signing » : c'est une version antérieure, à ne pas suivre. Le nom est imposé par `electron-builder.config.cjs` et `scripts/install-local.sh`, et `check:env` doit le chercher sous ce nom exact.
+
 C'est un réglage de sécurité de ton Mac : aucun script ne le fait à ta place.
 
 1. Ouvre **Trousseau d'accès** (Applications > Utilitaires).

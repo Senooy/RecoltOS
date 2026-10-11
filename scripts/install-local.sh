@@ -8,6 +8,11 @@
 # Les données (~/Library/Application Support/RecoltOS) ne sont JAMAIS touchées.
 set -eu
 
+# Teste si l'app installée à $DST tourne (correspondance littérale du chemin, pas une regex).
+running_from_dst() {
+  ps -axww -o command= | grep -F -- "$DST/Contents/MacOS/RecoltOS" | grep -v -F -- grep >/dev/null 2>&1
+}
+
 # Résout la destination depuis le dossier d'appel, avant le cd vers la racine du dépôt.
 DEST_DIR="${RECOLTOS_INSTALL_DIR:-/Applications}"
 case "$DEST_DIR" in
@@ -29,18 +34,30 @@ mkdir -p "$DEST_DIR"
 STAGE="$DEST_DIR/.RecoltOS.app.new.$$"
 BACKUP="$DEST_DIR/.RecoltOS.app.old.$$"
 rm -rf "$STAGE"
-trap 'rm -rf "$STAGE"' EXIT
+# Nettoyage sur sortie, y compris interruption : la copie de travail disparaît, et si l'ancienne app a été
+# mise de côté ($BACKUP) sans que la nouvelle soit en place ($DST absent), elle est restaurée.
+cleanup() {
+  rm -rf "$STAGE"
+  if [ -d "$BACKUP" ] && [ ! -e "$DST" ]; then
+    mv "$BACKUP" "$DST" 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 ditto "$SRC" "$STAGE"
 # Une copie faite par ditto n'est pas en quarantaine ; cette commande couvre une copie qui a voyagé.
 xattr -dr com.apple.quarantine "$STAGE" 2>/dev/null || true
 
 # Vérifications sur la copie AVANT de toucher à l'app existante : en cas d'échec, l'ancienne reste en place.
-if ! codesign --verify --deep --strict --verbose=2 "$STAGE"; then
+if ! codesign --verify --deep --strict --verbose=1 "$STAGE"; then
   echo "install-local : la signature de $SRC est invalide ; $DST est inchangé." >&2
   exit 1
 fi
 # Identité explicite demandée : l'exigence désignée doit s'appuyer sur le certificat, pas sur un cdhash
 # (electron-builder peut produire un build ad hoc en silence si l'identité est introuvable).
+# Critère « certificate leaf » : correct pour un auto-signé et pour Apple Development (certificate leaf[subject.CN]),
+# mais NON encore prouvé avec le vrai certificat « RecoltOS Local » : à valider en WP-0F (docs/spikes/s2-signature.md).
 if [ -n "${RECOLTOS_SIGN_IDENTITY:-}" ] && [ "${RECOLTOS_SIGN_IDENTITY}" != "-" ]; then
   if ! codesign -dr - "$STAGE" 2>&1 | grep -q "certificate leaf"; then
     echo "install-local : RECOLTOS_SIGN_IDENTITY est défini mais le build est en signature ad hoc (cdhash)." >&2
@@ -56,7 +73,7 @@ if [ -d "$DST" ]; then
     osascript -e 'tell application id "com.recoltos.app" to quit' 2>/dev/null || true
   fi
   i=0
-  while pgrep -f "$DST/Contents/MacOS/RecoltOS" >/dev/null 2>&1; do
+  while running_from_dst; do
     i=$((i + 1))
     if [ "$i" -ge 20 ]; then
       echo "install-local : RecoltOS tourne toujours depuis $DST après 10 s ; ferme-le puis relance." >&2

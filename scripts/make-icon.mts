@@ -7,6 +7,7 @@
  */
 import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
 const SIZE = 1024
@@ -91,7 +92,9 @@ async function main(): Promise<void> {
   console.log(`icône générée : ${out}`)
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Garde : comparaison de chemins décodés (et non de chaînes `file://` brutes), pour qu'un chemin
+// contenant un espace ou un caractère encodé lance bien le script au lieu de sortir en silence.
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   main().catch((error: unknown) => {
     console.error(error)
     process.exit(1)
