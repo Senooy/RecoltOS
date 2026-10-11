@@ -1,5 +1,16 @@
 /**
- * Textes du domaine `library`, possédé par WP-15 (ERRATA §F). Ajouter ici les namespaces propres au
- * domaine (tutoiement, typographie FR) ; ne pas redéfinir un namespace de `base.ts`.
+ * Textes du domaine `library` (WP-15) : page Bibliothèque, onglets, tri, rangée de collections.
  */
-export const library = {} as const
+import { plural } from '../plural'
+
+export const library = {
+  libraryUi: {
+    tabsLabel: 'Onglets de la bibliothèque',
+    sortLabel: 'Trier',
+    columns: (n: number) => `${n} ${plural(n, 'colonne', 'colonnes')}`,
+    collectionsLabel: 'Collections',
+    newCollectionPlaceholder: 'Nom de la collection',
+    shuffle: 'Mélanger',
+    emptySaved: 'Aucun élément rangé dans une collection',
+  },
+} as const
