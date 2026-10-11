@@ -2,7 +2,7 @@
  * Image synthétique 256×256 du test de connexion niveau 2 (AI §3.5) : PNG encodé à la main (zlib),
  * dégradé et damier, sans aucune donnée de l'utilisateur. Le media-worker en fait le JPEG envoyé.
  */
-import { writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { deflateSync } from 'node:zlib'
 import type { AiInput } from '../../shared/ai-types'
@@ -61,6 +61,7 @@ export function syntheticPng(size = 256): Buffer {
 }
 
 export async function syntheticInput(media: MediaCaller, jobDir: string): Promise<AiInput> {
+  await mkdir(jobDir, { recursive: true, mode: 0o700 })
   const src = join(jobDir, 'synthetic.png')
   await writeFile(src, syntheticPng())
   const m = await prepareImageForAi(media, src, jobDir, 'img1.jpg')

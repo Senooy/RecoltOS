@@ -118,7 +118,7 @@ export const ai = {
     liveTest: 'Tester un vrai appel',
     liveTestHint: 'Consomme 1 requête de ton abonnement (image synthétique).',
     liveOk: (ms: number, model?: string) =>
-      `Réponse conforme en ${Math.round(ms / 100) / 10}${NNBSP}s${model ? ` (${model})` : ''}`,
+      `Réponse conforme en ${String(Math.round(ms / 100) / 10).replace('.', ',')}${NNBSP}s${model ? ` (${model})` : ''}`,
     liveFail: (e: string) => `Échec : ${e}`,
     keychainHint:
       'Si macOS demande l’accès au trousseau pour « claude », clique sur « Toujours autoriser ».',

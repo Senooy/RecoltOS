@@ -488,6 +488,14 @@ describe('lots, estimation, contrôle, journal, aperçu', () => {
     expect(svc.callsList(10)).toHaveLength(0)
   })
 
+  it('test de connexion niveau 2 : image synthétique, appel journalisé (tâche « test »)', async () => {
+    const r = await svc.test('claude', true)
+    expect(r).toMatchObject({ ok: true, model: 'claude-haiku-5-5' })
+    expect(calls()).toMatchObject([{ task: 'test', outcome: 'ok', item_id: null }])
+    expect((await svc.test('claude', false)).ok).toBe(true)
+    expect(calls()).toHaveLength(1)
+  })
+
   it("prompt d'image à la demande", async () => {
     const a = await addImage()
     svc.enqueue({ itemUuids: [a.uuid], task: 'imagePrompt' })
