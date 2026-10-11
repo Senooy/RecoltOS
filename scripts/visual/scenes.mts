@@ -105,8 +105,8 @@ export const START_SCENES: Scene[] = [
   {
     id: 'settings-modal',
     ref: 'settings-modal',
-    title: 'Réglages, coque de la modale',
-    steps: [{ click: t('btn-settings') }, { wait: t('settings') }],
+    title: 'Réglages, coque de la modale (section Bibliothèques, ERRATA §E)',
+    steps: settings('libraries'),
   },
   {
     id: 'settings-syncing',

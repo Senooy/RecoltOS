@@ -2,7 +2,8 @@
  * Vitest (QA §5.1) : trois projets.
  *  - `unit`     : Node, processus enfants (`forks`), `tests/unit/**`, `src/**` et les auto-tests de l'outillage.
  *  - `renderer` : happy-dom, `tests/renderer/**`.
- *  - `real`     : `tests/real/**`, séquentiel, ignoré sauf si `RECOLTOS_REAL_LIBRARY` est défini.
+ *  - `real`     : `tests/real/**`, séquentiel, ignoré sauf si `RECOLTOS_REAL_LIBRARY` est défini
+ *                 (ou `RECOLT_TEST_IMPORTED_USERDATA` : seulement `m2-imported.test.ts`).
  * Les alias répliquent ceux d'`electron.vite.config.ts` / `tsconfig.base.json`.
  */
 import { fileURLToPath } from 'node:url'
@@ -16,6 +17,8 @@ const alias = {
 }
 
 const realLibrary = process.env.RECOLTOS_REAL_LIBRARY
+/** Bibliothèque RecoltOS déjà importée (copie de dev, ex. `.tmp/m2-real`) : tests M2 sur données réelles. */
+const importedUserData = process.env.RECOLT_TEST_IMPORTED_USERDATA
 
 export default defineConfig({
   resolve: { alias },
@@ -57,7 +60,11 @@ export default defineConfig({
           name: 'real',
           environment: 'node',
           pool: 'forks',
-          include: realLibrary ? ['tests/real/**/*.test.ts'] : [],
+          include: realLibrary
+            ? ['tests/real/**/*.test.ts']
+            : importedUserData
+              ? ['tests/real/m2-imported.test.ts']
+              : [],
           fileParallelism: false,
           testTimeout: 600_000,
           hookTimeout: 600_000,

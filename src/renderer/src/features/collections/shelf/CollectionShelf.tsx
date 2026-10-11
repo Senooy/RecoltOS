@@ -89,7 +89,8 @@ function CoverContent({ card, play }: { card: ItemCard | undefined; play: boolea
 export default function CollectionShelf() {
   const tree = useCollections((s) => s.tree)
   const navigate = useUi((s) => s.navigate)
-  const reduced = useReducedMotion()
+  // Captures et tests (RECOLTOS_E2E) : étagère figée, comme en mouvement réduit.
+  const reduced = useReducedMotion() || document.documentElement.dataset.e2e === '1'
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [viewport, setViewport] = useState(1280)
   const [scroll, setScroll] = useState(0)
@@ -285,9 +286,11 @@ export default function CollectionShelf() {
           onFocus={() => setActive(tree.length)}
           onClick={() => void createCollection()}
         >
-          <span className="cover-face cover-face-new flex flex-col items-center justify-center gap-3 text-[rgba(255,255,255,.55)]">
-            <Plus size={28} strokeWidth={1.5} />
-            <span className="text-[15px] font-medium">{fr.collection.new}</span>
+          <span className="cover-face cover-face-new" />
+          {/* Libellé à plat sur le créneau visible (le texte d'une face 3D vide n'est pas peint). */}
+          <span className="pointer-events-none absolute inset-y-0 left-0 right-0 flex flex-col items-center justify-center gap-2 px-2 text-center text-[13px] font-medium leading-4 text-[rgba(255,255,255,.55)]">
+            <Plus size={24} strokeWidth={1.5} />
+            {fr.collection.new}
           </span>
         </button>
       </div>
