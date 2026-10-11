@@ -15,7 +15,7 @@ import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
-import { makeDemoLibrary } from '../tests/helpers/demo-library'
+import { isDemoLibraryCurrent, makeDemoLibrary } from '../tests/helpers/demo-library'
 import { assertSafeOutDir } from '../tests/helpers/safe-out'
 
 /** Entier ≥ 0 d'une option numérique. Refus explicite (sortie 2) plutôt que `NaN` silencieux. */
@@ -62,9 +62,14 @@ async function main(argv: readonly string[]): Promise<number> {
     return 2
   }
   const out = resolve(values.out)
-  if (values['if-missing'] && existsSync(join(out, 'libraries.json'))) {
-    console.log(`fixtures : ${out} existe déjà (--if-missing)`)
-    return 0
+  if (values['if-missing']) {
+    // Une copie antérieure à la dernière migration (user_version périmé) est régénérée, pas réutilisée.
+    if (isDemoLibraryCurrent(out)) {
+      console.log(`fixtures : ${out} existe déjà et est à jour (--if-missing)`)
+      return 0
+    }
+    if (existsSync(join(out, 'libraries.json')))
+      console.log(`fixtures : ${out} est périmé ou incomplet, régénération (--if-missing)`)
   }
   const t0 = Date.now()
   try {

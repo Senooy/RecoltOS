@@ -14,9 +14,13 @@
  * l'insertion par l'ingestion réelle.
  *
  * Cache (QA §6.1) : `node_modules/.cache/recoltos-demo/<clé>/`, clé = hash de ce module, des helpers
- * de synthèse, des migrations, des versions de sharp et de ffmpeg, et des paramètres. La sortie est un
- * clone APFS (`cp -c`) de l'entrée de cache.
+ * de synthèse (`synthetic-items.ts` importe `src/shared/color.ts`, `synthetic-media.ts`, `db.ts`), de
+ * `src/shared/ids.ts` (fabrication des identifiants `shard()`), des migrations, des versions de sharp et
+ * de ffmpeg, et des paramètres. La sortie est un clone APFS (`cp -c`) de l'entrée de cache.
+ * `isDemoLibraryCurrent` compare `user_version` à la dernière migration : une copie antérieure à une
+ * nouvelle migration est régénérée (`--if-missing`).
  */
+import Database from 'better-sqlite3'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import {
@@ -29,10 +33,10 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 import sharp from 'sharp'
 import { shard } from '../../src/shared/ids'
-import { openTestDb, seedSyntheticLibrary, type TestDb } from './db'
+import { listMigrations, openTestDb, seedSyntheticLibrary, type TestDb } from './db'
 import { REPO_ROOT as ROOT } from './paths'
 import { assertSafeOutDir, markFixtureDir } from './safe-out'
 import { findFfmpeg, makeImage, makeVideo } from './synthetic-media'
@@ -61,6 +65,56 @@ export interface DemoResult {
 
 const sha1 = (s: string): string => createHash('sha1').update(s).digest('hex')
 
+/** Numéro de la dernière migration (`NNNN_nom.sql`) : la valeur attendue de `PRAGMA user_version`. */
+export function latestMigrationVersion(): number {
+  return Math.max(0, ...listMigrations().map((m) => m.version))
+}
+
+/**
+ * Vrai si `userData` contient une bibliothèque de démo complète ET à jour : `libraries.json`, base
+ * `libraries/default/recolt.db` ouvrable en lecture seule, `user_version` = dernière migration.
+ * Toute erreur (base absente, corrompue, verrouillée) = « pas à jour » : on régénère plutôt que deviner.
+ */
+export function isDemoLibraryCurrent(userData: string): boolean {
+  const file = join(userData, 'libraries', 'default', 'recolt.db')
+  if (!existsSync(join(userData, 'libraries.json')) || !existsSync(file)) return false
+  let db: Database.Database | undefined
+  try {
+    db = new Database(file, { readonly: true, fileMustExist: true })
+    return db.pragma('user_version', { simple: true }) === latestMigrationVersion()
+  } catch {
+    return false
+  } finally {
+    db?.close()
+  }
+}
+
+function isPidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (err) {
+    // EPERM : le processus existe mais appartient à un autre utilisateur. ESRCH : il n'existe plus.
+    return (err as NodeJS.ErrnoException).code === 'EPERM'
+  }
+}
+
+/**
+ * Supprime les `<cache>.building-<pid>` laissés par un build interrompu. Un build dont le pid est encore
+ * vivant (lancement concurrent) est épargné.
+ */
+function removeStaleBuilds(cache: string): void {
+  const dir = dirname(cache)
+  if (!existsSync(dir)) return
+  const prefix = `${basename(cache)}.building-`
+  for (const name of readdirSync(dir)) {
+    if (!name.startsWith(prefix)) continue
+    const pid = Number(name.slice(prefix.length))
+    if (Number.isInteger(pid) && pid > 0 && isPidAlive(pid)) continue
+    rmSync(join(dir, name), { recursive: true, force: true })
+  }
+}
+
 /** Clé d'avatar : sha1(lower(handle)) sur 16 hex (ARCHI §3.1). */
 export const avatarKey = (handle: string): string => sha1(handle.toLowerCase()).slice(0, 16)
 
@@ -78,6 +132,8 @@ export function cacheKey(options: Required<DemoOptions>): string {
     'tests/helpers/synthetic-items.ts',
     'tests/helpers/synthetic-media.ts',
     'tests/helpers/db.ts',
+    'src/shared/ids.ts',
+    'src/shared/color.ts',
     ...readdirSync(join(ROOT, 'src/main/db/migrations'))
       .sort()
       .map((f) => `src/main/db/migrations/${f}`),
@@ -288,14 +344,30 @@ export async function makeDemoLibrary(
   if (!useCache) return { ...(await build(target, opts)), cached: false }
 
   const cache = join(ROOT, 'node_modules/.cache/recoltos-demo', cacheKey(opts))
+  // Nettoyage à chaque appel (pas seulement quand on reconstruit) : un build interrompu ne doit pas
+  // s'accumuler, même si le cache courant existe déjà.
+  removeStaleBuilds(cache)
   let cached = true
   if (!existsSync(join(cache, 'libraries.json'))) {
     cached = false
     const tmp = `${cache}.building-${process.pid}`
-    await build(tmp, opts)
-    rmSync(cache, { recursive: true, force: true })
+    try {
+      await build(tmp, opts)
+    } catch (err) {
+      rmSync(tmp, { recursive: true, force: true })
+      throw err
+    }
     mkdirSync(dirname(cache), { recursive: true })
-    renameSync(tmp, cache)
+    // Entrée partielle (sans libraries.json) : jamais utilisée, on la remplace.
+    if (!existsSync(join(cache, 'libraries.json'))) rmSync(cache, { recursive: true, force: true })
+    try {
+      renameSync(tmp, cache)
+    } catch (err) {
+      // Un autre processus a publié le même cache entre-temps : on garde le sien.
+      rmSync(tmp, { recursive: true, force: true })
+      if (!existsSync(join(cache, 'libraries.json'))) throw err
+      cached = true
+    }
   }
   cloneDir(cache, target, safety)
   const db = openTestDb({ file: join(target, 'libraries/default/recolt.db') })

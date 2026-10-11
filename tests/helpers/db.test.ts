@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { hasFts5, listMigrations, openTestDb, seedSyntheticLibrary } from './db'
+import { hasFts5, listMigrations, nameKeyOf, openTestDb, seedSyntheticLibrary } from './db'
 import { makeSyntheticLibrary } from './synthetic-items'
 import { makeTmpDir } from './tmpdir'
 import { join } from 'node:path'
+
+describe('nameKeyOf (tri « Nom », ARCHI §4.3)', () => {
+  it('NFD sans accents et minuscules, comme la production', () => {
+    expect(nameKeyOf('Lumière')).toBe('lumiere')
+    expect(nameKeyOf('Récolte BRUME')).toBe('recolte brume')
+    expect(nameKeyOf('Œuvre')).toBe('œuvre')
+  })
+})
 
 describe('openTestDb', () => {
   it('applique 0001 et pose user_version ; FTS5 disponible', () => {

@@ -5,8 +5,8 @@
  * pas `pnpm@12.6.0+sha512.…` ; `"type": "module"` est posé (main et preload sont en CJS, PLAN §1.14).
  * `checkPackage` est pure (testée sans disque) ; le CLI accepte `--file <package.json>`.
  */
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 /** Commandes intégrées de pnpm : `pnpm <nom>` les exécute avant un script du même nom (QA §3.5). */
@@ -73,6 +73,89 @@ export interface PackageJsonLike {
 function isExactSpec(spec: string): boolean {
   // `npm:alias@1.2.3`, `workspace:*` et `file:` ne sont pas utilisés ici ; seules les versions exactes passent.
   return EXACT_VERSION.test(spec)
+}
+
+const unquote = (v: string): string => v.replace(/^(["'])(.*)\1$/, '$2')
+
+/**
+ * Contrôle de `pnpm-workspace.yaml` (PLAN §2.11) : `overrides`, `catalog` et `catalogs.<nom>` portent
+ * des versions que pnpm 12 applique comme `package.json`. Lecteur volontairement restreint (pas de
+ * dépendance YAML) : mappings `clé: valeur` indentés, sans listes ni ancres. Il ÉCHOUE FERMÉ : une ligne
+ * de ces sections qu'il ne sait pas lire est une erreur, jamais un passage silencieux.
+ */
+export function checkWorkspace(yamlText: string): string[] {
+  const errors: string[] = []
+  const SECTIONS = ['overrides', 'catalog', 'catalogs'] as const
+  let section: (typeof SECTIONS)[number] | null = null
+  let childIndent = -1 // indentation des entrées directes de la section
+  let catalogName: string | null = null // `catalogs` : catalogue courant
+  let lineNo = 0
+  const fail = (why: string): void => {
+    errors.push(`pnpm-workspace.yaml ligne ${lineNo} : ${why} (refus par prudence)`)
+  }
+  for (const raw of yamlText.split(/\r?\n/)) {
+    lineNo++
+    const trimmed = raw.trim()
+    if (trimmed === '' || trimmed.startsWith('#')) continue
+    const indent = raw.length - raw.trimStart().length
+    const colon = trimmed.indexOf(':')
+    const key = colon > 0 ? unquote(trimmed.slice(0, colon).trim()) : null
+    const value =
+      colon > 0
+        ? trimmed
+            .slice(colon + 1)
+            .replace(/\s+#.*$/, '')
+            .trim()
+        : ''
+
+    if (indent === 0) {
+      section = null
+      childIndent = -1
+      catalogName = null
+      if (key !== null && (SECTIONS as readonly string[]).includes(key)) {
+        section = key as (typeof SECTIONS)[number]
+        if (value !== '') fail(`« ${key} » doit être un bloc indenté (valeur en ligne refusée)`)
+      }
+      continue
+    }
+    if (section === null) continue // autres réglages pnpm : hors périmètre
+
+    if (childIndent === -1) childIndent = indent
+    if (indent < childIndent) {
+      fail(`indentation inattendue dans « ${section} »`)
+      continue
+    }
+    if (section === 'catalogs' && indent === childIndent) {
+      // Nom de catalogue : seulement un bloc, jamais une version directe.
+      if (key === null || value !== '') {
+        fail(`entrée de « catalogs » non analysable`)
+        catalogName = null
+        continue
+      }
+      catalogName = key
+      continue
+    }
+    if (section === 'catalogs' && indent > childIndent && catalogName === null) {
+      fail(`entrée de « catalogs » sans catalogue`)
+      continue
+    }
+    if (indent > childIndent && section !== 'catalogs') {
+      fail(`entrée imbriquée non analysable dans « ${section} »`)
+      continue
+    }
+    if (key === null) {
+      fail(`ligne non analysable dans « ${section} »`)
+      continue
+    }
+    const spec = unquote(value)
+    const label = section === 'catalogs' ? `catalogs.${catalogName}.${key}` : `${section}.${key}`
+    if (spec === '') {
+      fail(`« ${label} » sans version (bloc non analysable)`)
+    } else if (!isExactSpec(spec)) {
+      errors.push(`${label} : version « ${spec} » non exacte (ni ^, ni ~, ni plage ; PLAN §2.11)`)
+    }
+  }
+  return errors
 }
 
 export function checkPackage(pkg: PackageJsonLike): string[] {
@@ -150,6 +233,17 @@ function main(argv: readonly string[]): number {
     return 1
   }
   const errors = checkPackage(pkg)
+  // Forçages et catalogues pnpm 12 : `pnpm-workspace.yaml` à côté du package.json (absent = rien à contrôler).
+  const workspaceFile = join(dirname(file), 'pnpm-workspace.yaml')
+  if (existsSync(workspaceFile)) {
+    try {
+      errors.push(...checkWorkspace(readFileSync(workspaceFile, 'utf8')))
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err)
+      console.error(`check:pkg : lecture impossible de ${workspaceFile} : ${reason}`)
+      return 1
+    }
+  }
   if (errors.length > 0) {
     console.error(`check:pkg : ${errors.length} problème(s) dans ${file}`)
     for (const e of errors) console.error(`  - ${e}`)

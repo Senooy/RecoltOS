@@ -1,8 +1,15 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, statSync } from 'node:fs'
+import Database from 'better-sqlite3'
+import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { avatarKey, cacheKey, makeDemoLibrary } from './demo-library'
+import {
+  avatarKey,
+  cacheKey,
+  isDemoLibraryCurrent,
+  latestMigrationVersion,
+  makeDemoLibrary,
+} from './demo-library'
 import { openTestDb } from './db'
 import { REPO_ROOT } from './paths'
 import { findFfmpeg } from './synthetic-media'
@@ -90,6 +97,48 @@ describe('make-fixtures', () => {
     expect(first.status, first.stderr).toBe(0)
     expect(first.stdout).toContain('20 éléments')
     expect(run().stdout).toContain('existe déjà')
+
+    // user_version antérieur à la dernière migration : régénération, pas réutilisation.
+    const dbFile = join(out, 'libraries/default/recolt.db')
+    const raw = new Database(dbFile)
+    raw.pragma('user_version = 0')
+    raw.close()
+    expect(isDemoLibraryCurrent(out)).toBe(false)
+    const stale = run()
+    expect(stale.status, stale.stderr).toBe(0)
+    expect(stale.stdout).toContain('périmé')
+    expect(isDemoLibraryCurrent(out)).toBe(true)
+  })
+
+  it('isDemoLibraryCurrent : absent, corrompu ou à jour', () => {
+    expect(isDemoLibraryCurrent(makeTmpDir('demo-current-absent'))).toBe(false)
+
+    const corrupt = makeTmpDir('demo-current-corrupt')
+    mkdirSync(join(corrupt, 'libraries/default'), { recursive: true })
+    writeFileSync(join(corrupt, 'libraries.json'), '{}')
+    writeFileSync(join(corrupt, 'libraries/default/recolt.db'), 'pas une base')
+    expect(isDemoLibraryCurrent(corrupt)).toBe(false)
+
+    const ok = makeTmpDir('demo-current-ok')
+    writeFileSync(join(ok, 'libraries.json'), '{}')
+    openTestDb({ file: join(ok, 'libraries/default/recolt.db') }).close()
+    expect(latestMigrationVersion()).toBeGreaterThan(0)
+    expect(isDemoLibraryCurrent(ok)).toBe(true)
+  })
+
+  it('cache : un .building-<pid> mort (build interrompu) est nettoyé au build suivant', async () => {
+    const opts = { count: 27, collections: 3 }
+    const cache = join(
+      REPO_ROOT,
+      'node_modules/.cache/recoltos-demo',
+      cacheKey({ ...opts, trashed: 0, hidden: 0 }),
+    )
+    const stale = `${cache}.building-999999`
+    mkdirSync(stale, { recursive: true })
+    writeFileSync(join(stale, 'partiel.txt'), 'x')
+    await makeDemoLibrary(makeTmpDir('demo-stale'), opts, true)
+    expect(existsSync(stale)).toBe(false)
+    expect(existsSync(join(cache, 'libraries.json'))).toBe(true)
   })
 })
 

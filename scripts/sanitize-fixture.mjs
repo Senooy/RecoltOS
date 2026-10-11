@@ -238,7 +238,18 @@ if (import.meta.url === new URL(process.argv[1] ?? '', 'file://').href) {
     )
     process.exit(2)
   }
-  const source = JSON.parse(readFileSync(values.in, 'utf8'))
+  // Lecture et analyse protégées : fichier absent, illisible ou JSON invalide → message en français, sortie 1
+  // (pas de trace de pile). Rien n'est écrit dans ce cas.
+  let source
+  try {
+    source = JSON.parse(readFileSync(values.in, 'utf8'))
+  } catch (e) {
+    const reason = e instanceof SyntaxError ? 'JSON invalide' : (e?.code ?? e?.message ?? String(e))
+    console.error(
+      `sanitize-fixture : lecture impossible de ${values.in} (${reason}), rien n'a été écrit`,
+    )
+    process.exit(1)
+  }
   const run = makeSanitizer({
     keepKeys: (values['keep-keys'] ?? '').split(',').filter(Boolean),
   })
@@ -249,7 +260,14 @@ if (import.meta.url === new URL(process.argv[1] ?? '', 'file://').href) {
     console.error(`sanitize-fixture : ÉCHEC, rien n'a été écrit : ${e.message}`)
     process.exit(1)
   }
-  writeFileSync(values.out, `${JSON.stringify(clean, null, 2)}\n`)
+  try {
+    writeFileSync(values.out, `${JSON.stringify(clean, null, 2)}\n`)
+  } catch (e) {
+    console.error(
+      `sanitize-fixture : écriture impossible de ${values.out} (${e?.code ?? e?.message ?? e})`,
+    )
+    process.exit(1)
+  }
   console.log(`sanitize-fixture : ${values.out}`)
   if (run.renamedKeys.size > 0) {
     console.error(

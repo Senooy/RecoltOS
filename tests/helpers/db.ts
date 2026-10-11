@@ -12,6 +12,14 @@ import type { SyntheticLibrary } from './synthetic-items'
 
 export type TestDb = Database.Database
 
+/**
+ * Clé de tri « Nom » (ARCHI §4.3 : `name_key` = NFD sans accents, minuscules). Même règle que la
+ * production : « Lumière » → « lumiere ». Sans titre, la colonne vaut U+FFFF (en dernier), pas cette fonction.
+ */
+export function nameKeyOf(title: string): string {
+  return title.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+}
+
 export interface MigrationFile {
   version: number
   name: string
@@ -143,7 +151,7 @@ export function seedSyntheticLibrary(
         authorId: author?.id ?? null,
         title: it.title,
         titleSource: it.title ? 'import' : null,
-        nameKey: it.title ? it.title.toLocaleLowerCase('fr') : String.fromCharCode(65535),
+        nameKey: it.title ? nameKeyOf(it.title) : String.fromCharCode(65535),
         notes: it.notes,
         mediaCount: Math.max(1, it.media.length),
         palette: it.palette ? JSON.stringify(it.palette) : null,

@@ -2,7 +2,12 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { checkPackage, PNPM_BUILTINS, type PackageJsonLike } from '../../scripts/check-package.mjs'
+import {
+  checkPackage,
+  checkWorkspace,
+  PNPM_BUILTINS,
+  type PackageJsonLike,
+} from '../../scripts/check-package.mjs'
 import { REPO_ROOT } from './paths'
 import { makeTmpDir } from './tmpdir'
 
@@ -125,5 +130,57 @@ describe('check:pkg : overrides et entrée CLI', () => {
     expect(r.stderr).toContain('--file exige un chemin')
     expect(r.stdout).toBe('')
     expect(cli(['--file', '--autre']).status).toBe(2)
+  })
+})
+
+describe('check:pkg : pnpm-workspace.yaml (overrides, catalog, catalogs)', () => {
+  const cli = (file: string) =>
+    spawnSync(
+      join(REPO_ROOT, 'node_modules/.bin/tsx'),
+      ['--tsconfig', 'tsconfig.node.json', 'scripts/check-package.mts', '--file', file],
+      { cwd: REPO_ROOT, encoding: 'utf8' },
+    )
+
+  it('le pnpm-workspace.yaml réel est conforme', () => {
+    expect(checkWorkspace(readFileSync(join(REPO_ROOT, 'pnpm-workspace.yaml'), 'utf8'))).toEqual([])
+  })
+
+  it('refuse un « ^ » sous overrides et sous catalog', () => {
+    const o = checkWorkspace('overrides:\n  zod: ^4.6.5\n')
+    expect(o).toHaveLength(1)
+    expect(o[0]).toContain('overrides.zod')
+    const c = checkWorkspace('catalog:\n  react: ^19.2.0\n')
+    expect(c).toHaveLength(1)
+    expect(c[0]).toContain('catalog.react')
+  })
+
+  it('refuse une plage sous catalogs.<nom>, accepte les versions exactes', () => {
+    const text = "catalogs:\n  default:\n    zod: 4.6.5\n    react: '~19.2.0'\n"
+    const errors = checkWorkspace(text)
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toContain('catalogs.default.react')
+  })
+
+  it('échoue fermé sur une forme non analysable dans une section contrôlée', () => {
+    const errors = checkWorkspace('overrides:\n  - zod\n')
+    expect(errors.length).toBeGreaterThan(0)
+    expect(errors[0]).toContain('pnpm-workspace.yaml ligne')
+  })
+
+  it('ignore les autres réglages (listes, allowBuilds) hors section contrôlée', () => {
+    expect(
+      checkWorkspace(
+        'supportedArchitectures:\n  cpu:\n    - arm64\nallowBuilds:\n  electron: true\n',
+      ),
+    ).toEqual([])
+  })
+
+  it('CLI : un « ^ » dans pnpm-workspace.yaml voisin fait échouer check:pkg', () => {
+    const dir = makeTmpDir('pkg-ws')
+    writeFileSync(join(dir, 'package.json'), JSON.stringify(clone()))
+    writeFileSync(join(dir, 'pnpm-workspace.yaml'), 'overrides:\n  zod: ^4.6.5\n')
+    const r = cli(join(dir, 'package.json'))
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain('overrides.zod')
   })
 })

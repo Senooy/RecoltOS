@@ -53,6 +53,35 @@ export interface AppHandle {
   close: () => Promise<void>
 }
 
+/**
+ * Variables héritées du shell qui changent le comportement d'Electron au lancement. Elles doivent être
+ * ABSENTES (pas vides) de l'environnement passé à `electron.launch` : `ELECTRON_RUN_AS_NODE` est testée
+ * par présence, et son héritage (terminaux, IDE) fait échouer `_electron.launch` de façon opaque.
+ */
+export const INHERITED_ELECTRON_ENV_TO_DROP: readonly string[] = [
+  'ELECTRON_RUN_AS_NODE',
+  'ELECTRON_NO_ATTACH_CONSOLE',
+  'NODE_OPTIONS',
+  'ELECTRON_RENDERER_URL',
+]
+
+/**
+ * Environnement de l'app lancée : celui du processus de test, sans les variables ci-dessus, puis les
+ * réglages de testabilité (QA §2) et enfin `extra` (choix explicite de l'appelant, en dernier).
+ */
+export function buildLaunchEnv(
+  processEnv: NodeJS.ProcessEnv,
+  testability: Record<string, string>,
+  extra: Record<string, string> = {},
+): Record<string, string> {
+  const base: Record<string, string> = {}
+  for (const [key, value] of Object.entries(processEnv)) {
+    if (value === undefined || INHERITED_ELECTRON_ENV_TO_DROP.includes(key)) continue
+    base[key] = value
+  }
+  return { ...base, ...testability, ...extra }
+}
+
 export function electronExecutable(root: string = REPO_ROOT): string {
   return createRequire(join(root, 'package.json'))('electron') as string
 }
@@ -85,18 +114,20 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
         '--disable-backgrounding-occluded-windows',
         ...(options.args ?? []),
       ],
-      env: {
-        ...(process.env as Record<string, string>),
-        RECOLTOS_USER_DATA: userData,
-        RECOLTOS_E2E: '1',
-        RECOLTOS_HOME: home,
-        RECOLTOS_WINDOW: options.windowSize ?? '1280x820',
-        TZ: 'Europe/Paris',
-        LANG: 'fr_FR.UTF-8',
-        // L'app lancée n'hérite jamais de l'environnement d'un autre lot.
-        ELECTRON_RENDERER_URL: '',
-        ...options.env,
-      },
+      // `ELECTRON_RENDERER_URL` et les variables de `INHERITED_ELECTRON_ENV_TO_DROP` ne sont jamais
+      // transmises : l'app lancée n'hérite pas de l'environnement du shell ni d'un autre lot.
+      env: buildLaunchEnv(
+        process.env,
+        {
+          RECOLTOS_USER_DATA: userData,
+          RECOLTOS_E2E: '1',
+          RECOLTOS_HOME: home,
+          RECOLTOS_WINDOW: options.windowSize ?? '1280x820',
+          TZ: 'Europe/Paris',
+          LANG: 'fr_FR.UTF-8',
+        },
+        options.env,
+      ),
     })
   } catch (err) {
     cleanupDirs()

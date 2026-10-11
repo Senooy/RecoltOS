@@ -153,6 +153,22 @@ describe('sanitize-fixture : CLI', () => {
     expect(withReport.stderr).toContain('realuser_dupont')
   })
 
+  it('fichier absent ou JSON invalide : message français, code 1, pas de trace de pile', () => {
+    const dir = makeTmpDir('sanitize-cli-bad')
+    const to = join(dir, 'out.json')
+    const missing = run(['--in', join(dir, 'absent.json'), '--out', to])
+    expect(missing.status).toBe(1)
+    expect(missing.stderr).toContain('sanitize-fixture : lecture impossible')
+    expect(missing.stderr).not.toMatch(/\n\s+at /)
+    const bad = join(dir, 'bad.json')
+    writeFileSync(bad, '{ pas du json')
+    const invalid = run(['--in', bad, '--out', to])
+    expect(invalid.status).toBe(1)
+    expect(invalid.stderr).toContain('JSON invalide')
+    expect(invalid.stderr).not.toMatch(/\n\s+at /)
+    expect(existsSync(to)).toBe(false)
+  })
+
   it('usage sans arguments : code 2 et rien d’écrit', () => {
     const dir = makeTmpDir('sanitize-cli-usage')
     const r = run(['--in', join(dir, 'absent.json')])

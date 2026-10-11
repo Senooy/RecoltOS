@@ -1,7 +1,9 @@
+import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
+import { REPO_ROOT } from './paths'
 import {
   blend,
   isLayoutOnly,
@@ -13,6 +15,11 @@ import {
 } from '../../scripts/visual/compare.mjs'
 import { ALL_SCENES, START_SCENES, selectScenes } from '../../scripts/visual/scenes.mjs'
 import { loadRefMap, mergeManifest, refsFor } from '../../scripts/visual/refs.mjs'
+import {
+  libraryUsageError,
+  realSourceRefusal,
+  themeUsageError,
+} from '../../scripts/visual/shots.mjs'
 import { makeTmpDir } from './tmpdir'
 
 const solid = (w: number, h: number, color: string) =>
@@ -86,6 +93,51 @@ describe('scènes et références', () => {
     const r = refsFor(loadRefMap(), 'settings-ai', 'light')
     expect(r.every((x) => !x.duplicateOf)).toBe(true)
     expect(r.map((x) => x.k)).toEqual([...r.map((x) => x.k)].sort((a, b) => b - a))
+  })
+
+  it("n5yfq0 n'est pas un doublon (octets différents de o8zko5) : elle reste comparée", () => {
+    const ids = refsFor(loadRefMap(), 'settings-ai', 'light').map((x) => x.id)
+    expect(ids).toContain('n5yfq0')
+    expect(ids).not.toContain('n6d6t4')
+    expect(ids).not.toContain('vuaa1a')
+  })
+})
+
+describe('shots : validation des arguments', () => {
+  it('--library et --theme : valeurs connues acceptées, autres refusées avec message', () => {
+    expect(libraryUsageError('demo')).toBeNull()
+    expect(libraryUsageError('real')).toBeNull()
+    expect(libraryUsageError('none')).toBeNull()
+    expect(libraryUsageError('autre')).toMatch(/inconnu/)
+    expect(themeUsageError('both')).toBeNull()
+    expect(themeUsageError('sepia')).toMatch(/inconnu/)
+  })
+
+  it('refuse une source RECOLTOS_REAL_USERDATA qui désigne la référence, accepte RecoltOS', () => {
+    expect(realSourceRefusal('/Users/x/Library/Application Support/la référence')).toMatch(/la référence/)
+    expect(realSourceRefusal('/Users/x/Library/Application Support/legacy/copie')).toMatch(
+      /la référence/,
+    )
+    expect(realSourceRefusal('/tmp/recoltos-real-copie')).toBeNull()
+  })
+
+  it('compare et shots : erreurs d’usage en code 2 avec message français, sans pile', () => {
+    const r = spawnSync(
+      join(REPO_ROOT, 'node_modules/.bin/tsx'),
+      ['--tsconfig', 'tsconfig.node.json', 'scripts/visual/compare.mts', '--ref', 'zzz'],
+      { cwd: REPO_ROOT, encoding: 'utf8' },
+    )
+    expect(r.status).toBe(2)
+    expect(r.stderr).toContain('référence « zzz » inconnue')
+    expect(r.stderr).not.toContain('    at ')
+    const s = spawnSync(
+      join(REPO_ROOT, 'node_modules/.bin/tsx'),
+      ['--tsconfig', 'tsconfig.node.json', 'scripts/visual/shots.mts', '--library', 'foo'],
+      { cwd: REPO_ROOT, encoding: 'utf8' },
+    )
+    expect(s.status).toBe(2)
+    expect(s.stderr).toContain('--library « foo » inconnu')
+    expect(s.stderr).not.toContain('    at ')
   })
 })
 
