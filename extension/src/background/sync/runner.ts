@@ -17,7 +17,15 @@ import type { NativeBridge } from '../native'
 import { hasPermission, platformState } from '../state'
 import { ensureHeaderRules } from './dnr'
 import { backgroundFetch, jitter, sleep, tabFetch, type FetchFn } from './fetcher'
-import { clientFor, InstagramClient, XClient, type PageOutcome } from './platforms'
+import {
+  clientFor,
+  COSMOS_TOKEN_KEY,
+  cosmosTokenUsable,
+  InstagramClient,
+  toCosmosToken,
+  XClient,
+  type PageOutcome,
+} from './platforms'
 import { targetsFor, type ExecTarget } from './policy'
 
 export const SYNC_TICK = 'sync-tick'
@@ -348,7 +356,14 @@ export class SyncRunner {
       case 'content:x-template':
         if (platform === 'x') {
           void XClient.storeTemplate(p)
-          if (typeof p.tid === 'string' && p.tid.length < 200) void setLocal('x.tid', p.tid)
+          // Signature de la page : réutilisable seulement pour le même chemin de requête.
+          if (
+            typeof p.tid === 'string' &&
+            p.tid.length < 200 &&
+            typeof p.path === 'string' &&
+            p.path.length < 300
+          )
+            void setLocal('x.tid', { path: p.path, tid: p.tid })
         }
         break
       case 'content:ig-claim':
@@ -360,10 +375,15 @@ export class SyncRunner {
         }
         break
       case 'content:cosmos-token':
-        if (platform === 'cosmos' && typeof p.token === 'string' && p.token.length < 4096) {
-          void setLocal('cosmos.token', p.token)
-          if (typeof p.query === 'string')
-            void setLocal('cosmos.template', { query: p.query, order: p.order })
+        // Jeton vu passer dans une page cosmos.so : secours du jeton obtenu par `/api/refresh-token`.
+        if (
+          platform === 'cosmos' &&
+          typeof p.token === 'string' &&
+          p.token.length < 4096 &&
+          p.token.split('.').length === 3
+        ) {
+          const t = toCosmosToken(p.token)
+          if (cosmosTokenUsable(t)) void setLocal(COSMOS_TOKEN_KEY, t)
         }
         break
       case 'content:hint':

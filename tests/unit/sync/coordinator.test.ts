@@ -193,15 +193,27 @@ describe('SyncCoordinator', () => {
     fake.cookies.set('csrftoken', 'c')
     fake.cookies.set('sessionid', 's')
     fake.local.set('x.config', {
+      api: 'xweb',
       queryId: 'Q',
+      operationName: 'bookmarksQuery',
       bearer: 'B',
+      providedVariables: {},
       features: {},
       fieldToggles: {},
-      source: 'bundle',
+      source: 'capture',
+      appVersion: null,
       bundleUrl: null,
       at: 0,
     })
     fake.local.set('cosmos.me', { id: '8800001' })
+    // Jeton Cosmos encore valable (JWT factice non signé, expiration lointaine).
+    const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url')
+    fake.local.set('cosmos.token', {
+      token: `${b64({ alg: 'none' })}.${b64({ exp: 4_000_000_000, eid: 8800001 })}.sig`,
+      exp: 4_000_000_000,
+      userId: 8800001,
+      at: 0,
+    })
     const targets: string[] = []
     const pending: Promise<unknown>[] = []
     // eslint-disable-next-line prefer-const -- affecté après la création du port (références croisées)

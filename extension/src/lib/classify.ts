@@ -13,7 +13,7 @@ export interface HookEvent {
 export type ContentMessage =
   | { type: 'content:x-template'; payload: Record<string, unknown> }
   | { type: 'content:ig-claim'; payload: { claim?: string; asbd?: string } }
-  | { type: 'content:cosmos-token'; payload: { token: string; query?: string; order?: unknown } }
+  | { type: 'content:cosmos-token'; payload: { token: string } }
   | { type: 'content:hint'; payload: Record<string, never> }
   | { type: 'content:capture'; payload: { op: string; status: number; json: unknown } }
 
@@ -35,6 +35,17 @@ function parseJsonParam(v: string | null): Record<string, boolean> | undefined {
   }
 }
 
+/** `operationName` du corps JSON d'une requête GraphQL (Cosmos n'utilise pas toujours `?q=`). */
+function cosmosOperation(body: string | null): string | null {
+  if (!body) return null
+  try {
+    const op = (JSON.parse(body) as { operationName?: unknown }).operationName
+    return typeof op === 'string' && op.length <= 80 ? op : null
+  } catch {
+    return null
+  }
+}
+
 /** Nom d'opération GraphQL Instagram (en-tête ou paramètre de corps). */
 export function igFriendlyName(e: HookEvent): string | null {
   const h = e.req.headers['x-fb-friendly-name']
@@ -52,25 +63,34 @@ export function classify(e: HookEvent): ContentMessage[] {
     return out
   }
   const method = e.req.method.toUpperCase()
-  // ---- X
-  const gql = /\/i\/api\/graphql\/([^/]+)\/(\w+)$/.exec(url.pathname)
+  // ---- X (ancien client `Bookmarks` + `features`, client x-web `bookmarksQuery` persisté)
+  const xHost = /(^|\.)(x|twitter)\.com$/.test(url.hostname)
+  const gql = xHost ? /^(?:\/i\/api)?\/graphql\/([^/]+)\/(\w+)$/.exec(url.pathname) : null
   if (gql) {
     const [, queryId, op] = gql
-    if (op === 'Bookmarks' && method === 'GET') {
+    if ((op === 'Bookmarks' || op === 'bookmarksQuery') && method === 'GET') {
       const auth = e.req.headers.authorization ?? ''
+      const features = parseJsonParam(url.searchParams.get('features'))
+      const fieldToggles = parseJsonParam(url.searchParams.get('fieldToggles'))
+      const provided =
+        op === 'bookmarksQuery'
+          ? Object.fromEntries(
+              Object.entries(parseJsonParam(url.searchParams.get('variables')) ?? {}).filter(
+                ([k]) => k.startsWith('__relay_internal__pv__'),
+              ),
+            )
+          : null
       out.push({
         type: 'content:x-template',
         payload: {
           queryId,
-          ...(parseJsonParam(url.searchParams.get('features'))
-            ? { features: parseJsonParam(url.searchParams.get('features')) }
-            : {}),
-          ...(parseJsonParam(url.searchParams.get('fieldToggles'))
-            ? { fieldToggles: parseJsonParam(url.searchParams.get('fieldToggles')) }
-            : {}),
+          operationName: op,
+          ...(features ? { features } : {}),
+          ...(fieldToggles ? { fieldToggles } : {}),
+          ...(provided && Object.keys(provided).length ? { providedVariables: provided } : {}),
           ...(/^Bearer\s+\S+$/i.test(auth) ? { bearer: auth.replace(/^Bearer\s+/i, '') } : {}),
           ...(e.req.headers['x-client-transaction-id']
-            ? { tid: e.req.headers['x-client-transaction-id'] }
+            ? { tid: e.req.headers['x-client-transaction-id'], path: url.pathname }
             : {}),
         },
       })
@@ -80,7 +100,11 @@ export function classify(e: HookEvent): ContentMessage[] {
           payload: { op: 'Bookmarks', status: e.status, json: e.json },
         })
     }
-    if (op === 'CreateBookmark' && method === 'POST' && e.status === 200) {
+    if (
+      (op === 'CreateBookmark' || op === 'bookmarkButtonAddMutation') &&
+      method === 'POST' &&
+      e.status === 200
+    ) {
       out.push({ type: 'content:hint', payload: {} })
     }
     return out
@@ -127,25 +151,14 @@ export function classify(e: HookEvent): ContentMessage[] {
     }
     return out
   }
-  // ---- Cosmos
+  // ---- Cosmos (jeton de la page en secours ; la requête de l'extension est la sienne)
   if (url.hostname === 'api.cosmos.so' && url.pathname === '/graphql') {
-    const op = url.searchParams.get('q') ?? ''
+    const op = url.searchParams.get('q') ?? cosmosOperation(e.req.body) ?? ''
     const auth = e.req.headers.authorization ?? ''
     if (/^Bearer\s+\S+$/i.test(auth)) {
-      let query: string | undefined
-      let order: unknown
-      if (op === 'GetAllElements' && e.req.body) {
-        try {
-          const b = JSON.parse(e.req.body) as { query?: unknown; variables?: { order?: unknown } }
-          if (typeof b.query === 'string') query = b.query
-          order = b.variables?.order
-        } catch {
-          // corps illisible
-        }
-      }
       out.push({
         type: 'content:cosmos-token',
-        payload: { token: auth.replace(/^Bearer\s+/i, ''), ...(query ? { query, order } : {}) },
+        payload: { token: auth.replace(/^Bearer\s+/i, '') },
       })
     }
     if (op === 'GetAllElements' && e.status === 200) {

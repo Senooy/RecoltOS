@@ -2,6 +2,15 @@
  * Parseur X : page GraphQL `Bookmarks` (et `BookmarkFolderTimeline`) → `NormalizedPost[]`
  * (WP-55, SYNC §3.4). Fonction pure, jamais d'exception.
  *
+ * Deux formes acceptées (ERRATA §G.3) :
+ *  - ancien client (`responsive-web`) : `entryId`, `sortIndex`, `content.itemContent.tweet_results`,
+ *    tweet `legacy.{full_text, entities, extended_entities, created_at…}` ;
+ *  - client x-web (requête Relay persistée `bookmarksQuery`, depuis l'automne 2026) : `entry_id`,
+ *    `sort_index`, `content.__typename` + `content.content.tweet_results`, curseur `cursor_type`, tweet
+ *    `details.{full_text, display_text_range, created_at_ms}`, `media_entities2`, `url_entities`,
+ *    `quoted_tweet_results`, `legacy.retweeted_status_results`, `reply_to_results`. Chaque entrée et
+ *    chaque tweet x-web sont d'abord ramenés à la forme ancienne (`normalizeEntry`, `fromXWeb`).
+ *
  * Choix (documentés dans le rapport de WP-55) :
  *  - repost en favori : contenu, clé et URL de l'ORIGINAL ; le reposteur va dans `extra.retweetedBy` ;
  *  - fil : la page ne contient que le tweet mis en favori, pas son parent. Le lien de réponse est
@@ -98,11 +107,58 @@ function findInstructions(data: Json): unknown[] | null {
   return null
 }
 
+/**
+ * Entrée x-web (`entry_id`, `sort_index`, `content.__typename`) → forme ancienne (`entryId`,
+ * `sortIndex`, `content.itemContent` / curseur `cursorType`). Une entrée ancienne est rendue telle quelle.
+ */
+export function normalizeEntry(e: Json): Json {
+  if (e.entry_id === undefined && e.sort_index === undefined) return e
+  return {
+    entryId: e.entry_id,
+    sortIndex: e.sort_index,
+    content: normalizeContent(obj(e.content)),
+  }
+}
+
+function normalizeContent(c: Json): Json {
+  const tn = str(c.__typename)
+  if (tn === 'TimelineTimelineCursor' || c.cursor_type !== undefined) {
+    return { __typename: 'TimelineTimelineCursor', cursorType: c.cursor_type, value: c.value }
+  }
+  if (Array.isArray(c.items)) {
+    // Module x-web : `items[].{entry_id, item.content}`.
+    return {
+      items: c.items.map((it) => {
+        const io = obj(it)
+        return {
+          entryId: io.entry_id ?? io.entryId,
+          item: {
+            itemContent: itemContentOf(obj(obj(io.item).content ?? obj(io.item).itemContent)),
+          },
+        }
+      }),
+    }
+  }
+  if (isObj(c.content)) return { itemContent: itemContentOf(c.content) }
+  return c
+}
+
+/** Contenu d'élément x-web (`TimelineTweet`) → `itemContent` ancien. */
+function itemContentOf(ic: Json): Json {
+  if (ic.itemType !== undefined || ic.tweetResult !== undefined) return ic
+  return {
+    ...ic,
+    itemType: ic.__typename,
+    ...(isObj(ic.promoted_metadata) ? { promotedMetadata: ic.promoted_metadata } : {}),
+  }
+}
+
 /** Entrées à plat : `TimelineAddEntries`, `TimelineReplaceEntry`, modules et `AddToModule`. */
 function flattenEntries(instructions: unknown[]): Json[] {
   const out: Json[] = []
-  const push = (e: unknown) => {
-    if (!isObj(e) || out.length >= MAX_ENTRIES) return
+  const push = (raw: unknown) => {
+    if (!isObj(raw) || out.length >= MAX_ENTRIES) return
+    const e = normalizeEntry(raw)
     const content = obj(e.content)
     const items = content.items
     if (Array.isArray(items)) {
@@ -123,11 +179,22 @@ function flattenEntries(instructions: unknown[]): Json[] {
     const i = obj(ins)
     if (Array.isArray(i.entries)) for (const e of i.entries) push(e)
     if (isObj(i.entry)) push(i.entry)
-    if (Array.isArray(i.moduleItems)) {
-      for (const mi of i.moduleItems) {
-        const m = obj(mi)
-        push({ entryId: m.entryId, content: { itemContent: obj(m.item).itemContent } })
-      }
+    const moduleItems = Array.isArray(i.moduleItems)
+      ? i.moduleItems
+      : Array.isArray(i.module_items)
+        ? i.module_items
+        : []
+    for (const mi of moduleItems) {
+      const m = obj(mi)
+      const item = obj(m.item)
+      push({
+        entryId: m.entryId ?? m.entry_id,
+        content: {
+          itemContent: isObj(item.itemContent)
+            ? item.itemContent
+            : itemContentOf(obj(item.content)),
+        },
+      })
     }
   }
   return out
@@ -154,14 +221,73 @@ type Unwrapped = { tweet: Json } | { unavailable: string } | null
 function unwrap(r: unknown, depth = 0): Unwrapped {
   if (!isObj(r) || depth > 3) return null
   const tn = str(r.__typename)
-  if (tn === 'TweetWithVisibilityResults' || (tn === null && isObj(r.tweet) && !isObj(r.legacy))) {
+  if (
+    tn === 'TweetWithVisibilityResults' ||
+    tn === 'TweetPreviewDisplay' ||
+    (tn === null && isObj(r.tweet) && !isObj(r.legacy) && !isObj(r.details))
+  ) {
     return unwrap(r.tweet, depth + 1)
   }
   if (tn === 'TweetTombstone' || tn === 'TweetUnavailable' || isObj(r.tombstone)) {
     return { unavailable: tn ?? 'TweetTombstone' }
   }
   if (tn !== null && tn !== 'Tweet') return { unavailable: tn }
-  return { tweet: r }
+  return { tweet: fromXWeb(r) }
+}
+
+/** Tweet du client x-web ? (`details`, `media_entities2` ou `url_entities`, sans `legacy.full_text`). */
+function isXWebTweet(t: Json): boolean {
+  const legacy = obj(t.legacy)
+  return (
+    (isObj(t.details) || Array.isArray(t.media_entities2) || Array.isArray(t.url_entities)) &&
+    legacy.full_text === undefined &&
+    legacy.text === undefined
+  )
+}
+
+/**
+ * Tweet x-web → forme ancienne (`legacy.full_text`, `entities.urls`, `extended_entities.media`,
+ * `created_at_ms`, réponse, repost, citation). Le lien `t.co` d'un média (absent de `media_entities2`)
+ * est relu dans le texte par ses `indices` (points de code) pour être retiré comme avant.
+ */
+export function fromXWeb(t: Json): Json {
+  if (!isXWebTweet(t)) return t
+  const details = obj(t.details)
+  const legacy = obj(t.legacy)
+  const full = str(details.full_text)
+  const cps = full !== null ? Array.from(full) : []
+  const media = arr(t.media_entities2).map((m) => {
+    const o = obj(m)
+    if (str(o.url) !== null) return o
+    const [a, b] = arr(o.indices).map(num)
+    const slice =
+      a !== null && a !== undefined && b !== null && b !== undefined && b > a && b <= cps.length
+        ? cps.slice(a, b).join('')
+        : null
+    return slice !== null && /^https?:\/\/t\.co\/\w+$/.test(slice) ? { ...o, url: slice } : o
+  })
+  const replyUser = obj(obj(t.reply_to_user_results).result)
+  const quoted = obj(t.quoted_tweet_results)
+  const rt = obj(legacy.retweeted_status_results)
+  return {
+    ...t,
+    legacy: {
+      ...legacy,
+      ...(full !== null ? { full_text: full } : {}),
+      ...(Array.isArray(details.display_text_range)
+        ? { display_text_range: details.display_text_range }
+        : {}),
+      created_at_ms: details.created_at_ms,
+      entities: { urls: arr(t.url_entities), media },
+      extended_entities: { media },
+      in_reply_to_status_id_str: obj(t.reply_to_results).rest_id ?? null,
+      in_reply_to_user_id_str: obj(t.reply_to_user_results).rest_id ?? replyUser.rest_id ?? null,
+      in_reply_to_screen_name: obj(replyUser.core).screen_name ?? null,
+      ...(rt.result !== undefined ? { retweeted_status_result: { result: rt.result } } : {}),
+      ...(quoted.rest_id !== undefined ? { quoted_status_id_str: quoted.rest_id } : {}),
+    },
+    ...(quoted.result !== undefined ? { quoted_status_result: { result: quoted.result } } : {}),
+  }
 }
 
 function tweetId(t: Json): string | null {
@@ -205,6 +331,12 @@ export function parseXDate(v: unknown): number | null {
   const offset = (m[6] === '-' ? -1 : 1) * (Number(m[7]) * 60 + Number(m[8])) * 60_000
   const t = Date.UTC(Number(m[9]), month, Number(m[2]), Number(m[3]), Number(m[4]), Number(m[5]))
   return Number.isFinite(t) ? t - offset : null
+}
+
+/** `created_at_ms` du client x-web (nombre, ou chaîne de chiffres). */
+function msOf(v: unknown): number | null {
+  if (typeof v === 'string' && /^\d{10,16}$/.test(v)) return Number(v)
+  return posInt(v)
 }
 
 /** Date d'un identifiant snowflake (repli si `created_at` manque). */
@@ -428,7 +560,7 @@ function toPost(
   const { text, note } = xText(t, q.id)
   const media = xMediaList(t, onDrop)
   const sourceUrl = canonicalUrl(author?.handle ?? null, id)
-  const postedAt = parseXDate(legacy.created_at) ?? snowflakeMs(id)
+  const postedAt = parseXDate(legacy.created_at) ?? msOf(legacy.created_at_ms) ?? snowflakeMs(id)
   const inReplyToHandle = cleanHandle(legacy.in_reply_to_screen_name)
   const inReplyToId = idStr(legacy.in_reply_to_status_id_str, DIGITS)
   const authorUserId = author?.id ?? null

@@ -26,6 +26,9 @@ const PROD: Record<BridgePlatform, PlatformEndpoints & Record<string, string | s
   x: {
     origin: 'https://x.com',
     home: 'https://x.com/',
+    /** Service worker public : contient le jeton du client web. */
+    sw: 'https://x.com/sw.js',
+    /** Passerelle GraphQL (accepte aussi les requêtes persistées du client x-web). */
     graphql: 'https://x.com/i/api/graphql',
     referer: 'https://x.com/i/bookmarks',
     tabPatterns: ['https://x.com/*', 'https://twitter.com/*'],
@@ -43,6 +46,8 @@ const PROD: Record<BridgePlatform, PlatformEndpoints & Record<string, string | s
   cosmos: {
     origin: 'https://www.cosmos.so',
     graphql: 'https://api.cosmos.so/graphql',
+    /** Jeton d'accès (JWT) à partir du cookie httpOnly de la session. */
+    refresh: 'https://www.cosmos.so/api/refresh-token',
     referer: 'https://www.cosmos.so/',
     tabPatterns: ['https://www.cosmos.so/*', 'https://cosmos.so/*'],
     domains: ['api.cosmos.so', 'www.cosmos.so'],
@@ -58,6 +63,7 @@ function testEndpoints(base: string): typeof PROD {
     x: {
       origin: base,
       home: `${p('x')}/`,
+      sw: `${p('x')}/sw.js`,
       graphql: `${p('x')}/i/api/graphql`,
       referer: `${p('x')}/i/bookmarks`,
       tabPatterns: [pat],
@@ -75,6 +81,7 @@ function testEndpoints(base: string): typeof PROD {
     cosmos: {
       origin: base,
       graphql: `${p('cosmos')}/graphql`,
+      refresh: `${p('cosmos')}/api/refresh-token`,
       referer: `${p('cosmos')}/`,
       tabPatterns: [pat],
       domains: [host],

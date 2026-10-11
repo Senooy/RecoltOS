@@ -66,8 +66,12 @@ Recette avec tes comptes réels (l'agent n'a fait aucun appel réel). Procédure
       depuis le téléphone apparaît en moins de 15 min, onglets x.com fermés, navigateur ouvert.
 - [ ] Instagram : activer (avertissement GatherOS si encore détecté › « C'est fait »). Un carrousel de
       10 éléments donne un élément avec le badge 1/10. Aucun « checkpoint » Instagram.
-- [ ] Cosmos : activer ; si « Connecte-toi à Cosmos » persiste alors que tu es connecté, ouvrir
-      cosmos.so une fois (capture du jeton) puis « Synchroniser maintenant ».
+- [ ] Cosmos : activer (être connecté sur cosmos.so dans Firefox suffit : l'extension obtient le
+      jeton par `www.cosmos.so/api/refresh-token`, sans visite). Si « Connecte-toi à Cosmos » persiste
+      alors que tu es connecté : noter le message du journal dans `docs/contrats/CHANGELOG.md`.
+- [ ] X : si la ligne indique « X refuse la requête de l'extension », ouvrir x.com/i/bookmarks une
+      fois (les favoris affichés sont récupérés par capture passive) et noter le message du journal
+      (signature `x-client-transaction-id` probablement exigée, ERRATA §G.3).
 - [ ] Navigateur quitté : la ligne affiche « Navigateur fermé : la synchro reprendra à son ouverture ».
 - [ ] Si un site refuse la lecture (« … refuse la requête de l'extension ») : noter la source et le
       message dans `docs/contrats/CHANGELOG.md` ; essayer le repli « Ouvrir un onglet en arrière-plan si

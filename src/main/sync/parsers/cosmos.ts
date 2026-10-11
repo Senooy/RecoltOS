@@ -7,6 +7,12 @@
  *  - vidéo : `mux.downloadableUrl ?? mux.mp4Url ?? video.url`, poster `video.thumbnailUrl` ;
  *  - site web : `kind = 'url'`, `extra.linkUrl = source.url`, la vignette de la tuile en média ;
  *  - tuile texte : ignorée en V1 et comptée (`stats.ignored`).
+ *
+ * Deux formes acceptées (ERRATA §G.3) : l'ancienne (`video` / `mux` au niveau de l'élément,
+ * `source.author` chaîne) et celle du schéma relevé le 2026-10-12 (requête de l'extension) : médias
+ * typés (`__typename` `StaticImage` / `AnimatedImage` / `Video`) avec `Video.mux.mp4Url`,
+ * `Video.thumbnail.url`, `AnimatedImage.video.{url, thumbnailUrl}` ; `source.author` objet
+ * (`fullName`, `username`) ; tuile typée (`TextElementTile` → texte).
  */
 import {
   arr,
@@ -121,12 +127,31 @@ function cosmosPost(
     seenUrls.add(img.url!)
     images.push(img)
   }
-  addImage(el.media, 'media')
-  arr(el.multipleMedia).forEach((m, i) => addImage(m, `multipleMedia[${i}]`))
+  const typed = [el.media, ...arr(el.multipleMedia)].filter(isObj)
+  const isVideoMedia = (m: Json) => m.__typename === 'Video' || m.__typename === 'AnimatedImage'
+  const firstVideo = typed.find(isVideoMedia) ?? null
+  if (!isObj(el.media) || !isVideoMedia(el.media)) addImage(el.media, 'media')
+  arr(el.multipleMedia).forEach((m, i) => {
+    if (!isObj(m) || !isVideoMedia(m)) addImage(m, `multipleMedia[${i}]`)
+  })
 
   const mux = obj(el.mux)
   const video = obj(el.video)
-  const videoUrl = webUrl(mux.downloadableUrl) ?? webUrl(mux.mp4Url) ?? webUrl(video.url)
+  // Média vidéo typé (schéma actuel) : mp4 de Mux, sinon URL du média ; GIF animé : sa vidéo.
+  const typedVideoUrl =
+    firstVideo === null
+      ? null
+      : firstVideo.__typename === 'Video'
+        ? (webUrl(obj(firstVideo.mux).mp4Url) ?? webUrl(firstVideo.url))
+        : webUrl(obj(firstVideo.video).url)
+  const typedPoster =
+    firstVideo === null
+      ? null
+      : firstVideo.__typename === 'Video'
+        ? webUrl(obj(firstVideo.thumbnail).url)
+        : (webUrl(obj(firstVideo.video).thumbnailUrl) ?? webUrl(firstVideo.url))
+  const videoUrl =
+    webUrl(mux.downloadableUrl) ?? webUrl(mux.mp4Url) ?? webUrl(video.url) ?? typedVideoUrl
   const websiteTitle = cleanText(el.websiteTitle)
   const source = obj(el.source)
   const linkUrl = webUrl(source.url, true)
@@ -139,9 +164,11 @@ function cosmosPost(
       {
         ...emptyMedia('video'),
         url: videoUrl,
-        posterUrl: cosmosOriginal(webUrl(video.thumbnailUrl)) ?? images[0]?.url ?? null,
-        width: images[0]?.width ?? null,
-        height: images[0]?.height ?? null,
+        posterUrl:
+          cosmosOriginal(webUrl(video.thumbnailUrl) ?? typedPoster) ?? images[0]?.url ?? null,
+        width: posInt(firstVideo?.width) ?? images[0]?.width ?? null,
+        height: posInt(firstVideo?.height) ?? images[0]?.height ?? null,
+        gif: firstVideo?.__typename === 'AnimatedImage',
       },
     ]
   } else if (websiteTitle !== null && linkUrl !== null) {
@@ -150,15 +177,20 @@ function cosmosPost(
   } else if (images.length > 0) {
     kind = 'image'
     media = images
-  } else if (nonEmpty(el.text) !== null) {
+  } else if (nonEmpty(el.text) !== null || el.__typename === 'TextElementTile') {
     return 'text'
   } else {
     fail('élément sans média ni lien')
   }
 
-  const name = cleanText(source.author)
+  // `source.author` : chaîne (ancienne forme) ou objet `{ fullName, username }`.
+  const authorObj = obj(source.author)
+  const name = isObj(source.author)
+    ? cleanText(nonEmpty(authorObj.fullName) ?? authorObj.username)
+    : cleanText(source.author)
+  const handle = isObj(source.author) ? cleanText(authorObj.username) : null
   const author: NormalizedAuthor | null =
-    name !== null ? { id: null, name, handle: null, avatarUrl: null } : null
+    name !== null ? { id: null, name, handle, avatarUrl: null } : null
   const sourceUrl = `https://www.cosmos.so/e/${encodeURIComponent(id)}`
   const text = kind === 'url' ? websiteTitle : null
   const extra: CosmosPostExtra = {

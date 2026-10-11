@@ -1,17 +1,22 @@
 /**
- * Clients de sync par plateforme, exécutés depuis l'ARRIÈRE-PLAN (ERRATA §G.2) :
- * - X : GraphQL `Bookmarks` (cookie `ct0` → `x-csrf-token`), `queryId` / jeton public du client web /
- *   `features` résolus dans l'ordre : gabarit capturé → cache `storage.local` → lecture du bundle web ;
- *   auto-réparation des `features` (400 « cannot be null ») et UNE redécouverte sur 400/404/422 ;
+ * Clients de sync par plateforme, exécutés depuis l'ARRIÈRE-PLAN (ERRATA §G.2, §G.3) :
+ * - X : client web « x-web » (requêtes Relay persistées) : `GET x.com/i/api/graphql/<id>/bookmarksQuery
+ *   ?variables=…` (cookie `ct0` → `x-csrf-token`, jeton public du client web). Configuration résolue
+ *   dans l'ordre : gabarit capturé par le hook → cache `storage.local` (revalidé par la version du
+ *   client) → découverte dans le code public (`x-discovery.ts`). Réparation des variables manquantes
+ *   (422), UNE redécouverte par run sur 404 « Query not found » / 400 / 422. Le client historique
+ *   (`responsive-web` `main.<hash>.js`, opération `Bookmarks` + `features`) reste un repli ;
  * - Instagram : `feed/saved/posts` (cookie `csrftoken` → `x-csrftoken`), `x-ig-app-id` public ;
- * - Cosmos : GraphQL `GetAllElements` (jeton capturé ou cookie JWT), utilisateur par `me`.
+ * - Cosmos : jeton d'accès (JWT) obtenu par `GET www.cosmos.so/api/refresh-token` (cookie httpOnly du
+ *   site), puis GraphQL `GetAllElements` sur `api.cosmos.so/graphql` (`authorization: Bearer`).
  * Chaque client rend une page brute (le parsing est fait par l'app) ou une issue classée.
  */
 import type { BridgePlatform } from '../../../../src/shared/bridge/constants'
 import type { SyncOutcome } from '../../../../src/shared/bridge/sync'
 import { endpoint } from '../../lib/endpoints'
-import { cosmosToken, getLocal, readCookie, removeLocal, setLocal } from '../creds'
+import { getLocal, readCookie, removeLocal, setLocal } from '../creds'
 import type { FetchFn, FetchResult } from './fetcher'
+import { discoverXWeb, isQueryNotFound, missingVariables, providedDefaults } from './x-discovery'
 
 export type PageOutcome =
   | { kind: 'page'; status: number; headers: Record<string, string>; json: unknown }
@@ -22,7 +27,9 @@ export interface PlatformClient {
   fetchPage(cursor: string | null, fetch: FetchFn): Promise<PageOutcome>
 }
 
-const err = (outcome: SyncOutcome, error: string, resetAt?: number): PageOutcome => ({
+type ErrorOutcome = Extract<PageOutcome, { kind: 'error' }>
+
+const err = (outcome: SyncOutcome, error: string, resetAt?: number): ErrorOutcome => ({
   kind: 'error',
   outcome,
   error,
@@ -43,20 +50,30 @@ export function classifyHttp(r: FetchResult): PageOutcome | null {
 // ---------------------------------------------------------------------------------------- X
 
 export interface XConfig {
+  /** `xweb` : requête persistée Relay ; `legacy` : ancien client (`Bookmarks` + `features`). */
+  api: 'xweb' | 'legacy'
   queryId: string
+  operationName: string
   bearer: string
+  /** x-web : « provided variables » Relay ajoutées aux variables. */
+  providedVariables: Record<string, boolean>
+  /** legacy : `features` / `fieldToggles` de l'opération. */
   features: Record<string, boolean>
   fieldToggles: Record<string, boolean>
   source: 'capture' | 'bundle'
+  /** Version du client web (`data-app-version`) au moment de la découverte. */
+  appVersion: string | null
   bundleUrl: string | null
   at: number
 }
 
 export const X_CONFIG_KEY = 'x.config'
+/** Au-delà, la version du client web est revérifiée (une requête) avant d'utiliser le cache. */
+export const X_CONFIG_REVALIDATE_MS = 6 * 3_600_000
 
-/** Repère le bundle `main.<hash>.js` dans le HTML de x.com. */
+/** Ancien client : repère le bundle `main.<hash>.js` dans le HTML de x.com. */
 export function findMainBundle(html: string, base: string): string | null {
-  const m = /(?:src|href)="([^"]*\/main\.[a-z0-9]+\.js)"/i.exec(html)
+  const m = /(?:src|href)=["']([^"']*\/main\.[a-z0-9]+\.js)["']/i.exec(html)
   if (!m?.[1]) return null
   try {
     return new URL(m[1], base).href
@@ -65,8 +82,10 @@ export function findMainBundle(html: string, base: string): string | null {
   }
 }
 
-/** `queryId`, jeton public et `featureSwitches` de l'opération `Bookmarks` dans le bundle web. */
-export function parseBundle(js: string): Omit<XConfig, 'source' | 'bundleUrl' | 'at'> | null {
+/** Ancien client : `queryId`, jeton public et `featureSwitches` de l'opération `Bookmarks`. */
+export function parseBundle(
+  js: string,
+): Pick<XConfig, 'queryId' | 'bearer' | 'features' | 'fieldToggles'> | null {
   const q = /queryId:"([\w-]+)",operationName:"Bookmarks"/.exec(js)
   const bearer = /"(AAAAAAAAAAAAAAAAAAAAA[A-Za-z0-9%]{20,})"/.exec(js)
   if (!q?.[1] || !bearer?.[1]) return null
@@ -87,7 +106,7 @@ export function parseBundle(js: string): Omit<XConfig, 'source' | 'bundleUrl' | 
   }
 }
 
-/** Noms tirés de « The following features cannot be null: a, b ». */
+/** Ancien client : noms tirés de « The following features cannot be null: a, b ». */
 export function missingFeatures(json: unknown): string[] {
   const errors = (json as { errors?: { message?: string }[] } | null)?.errors ?? []
   for (const e of errors) {
@@ -101,17 +120,96 @@ export function missingFeatures(json: unknown): string[] {
   return []
 }
 
+/** Cache utilisable : forme actuelle (champ `api`), identifiant et jeton présents. */
+function validConfig(c: Partial<XConfig> | undefined): c is XConfig {
+  return (
+    !!c &&
+    (c.api === 'xweb' || c.api === 'legacy') &&
+    typeof c.queryId === 'string' &&
+    typeof c.operationName === 'string' &&
+    typeof c.bearer === 'string'
+  )
+}
+
+/** Signature de requête capturée (valable pour un chemin donné seulement). */
+interface CapturedTid {
+  path: string
+  tid: string
+}
+
 export class XClient implements PlatformClient {
   readonly platform = 'x' as const
   private rediscovered = false
+  /** Dernière erreur de découverte (message précis remonté à l'app). */
+  lastDiscoveryError: string | null = null
 
+  /** Configuration en cache, revalidée par la version du client web, sinon découverte. */
   async config(fetch: FetchFn, force = false): Promise<XConfig | null> {
     if (!force) {
-      const cached = await getLocal<XConfig>(X_CONFIG_KEY)
-      if (cached?.queryId && cached.bearer) return cached
+      const cached = await getLocal<Partial<XConfig>>(X_CONFIG_KEY)
+      if (validConfig(cached)) {
+        if (
+          cached.source === 'capture' ||
+          !cached.appVersion ||
+          Date.now() - cached.at < X_CONFIG_REVALIDATE_MS
+        )
+          return cached
+        const version = await this.homeVersion(fetch)
+        if (version === null || version === cached.appVersion) {
+          const fresh = { ...cached, at: Date.now() }
+          await setLocal(X_CONFIG_KEY, fresh)
+          return fresh
+        }
+      }
     }
+    const cfg = (await this.discover(fetch)) ?? (await this.discoverLegacy(fetch))
+    if (cfg) {
+      this.lastDiscoveryError = null
+      await setLocal(X_CONFIG_KEY, cfg)
+    }
+    return cfg
+  }
+
+  private async homeVersion(fetch: FetchFn): Promise<string | null> {
+    const r = await fetch(endpoint('x', 'home'), {
+      method: 'GET',
+      credentials: 'omit',
+      headers: { accept: 'text/html' },
+    })
+    const m = r.text ? /\bdata-app-version=["']([\w.-]{6,80})["']/.exec(r.text) : null
+    return m?.[1] ?? null
+  }
+
+  private async discover(fetch: FetchFn): Promise<XConfig | null> {
+    const res = await discoverXWeb(fetch, {
+      homeUrl: endpoint('x', 'home'),
+      swUrl: endpoint('x', 'sw'),
+    })
+    if (!res.ok) {
+      this.lastDiscoveryError = res.error
+      return null
+    }
+    const d = res.value
+    return {
+      api: 'xweb',
+      queryId: d.queryId,
+      operationName: d.operationName,
+      bearer: d.bearer,
+      providedVariables: d.providedVariables,
+      features: {},
+      fieldToggles: {},
+      source: 'bundle',
+      appVersion: d.appVersion,
+      bundleUrl: d.bundleUrl,
+      at: Date.now(),
+    }
+  }
+
+  /** Repli : ancien client `responsive-web` (`main.<hash>.js`), si x.com le sert encore. */
+  private async discoverLegacy(fetch: FetchFn): Promise<XConfig | null> {
     const home = await fetch(endpoint('x', 'home'), {
       method: 'GET',
+      credentials: 'omit',
       headers: { accept: 'text/html' },
     })
     const bundle = home.text ? findMainBundle(home.text, endpoint('x', 'home')) : null
@@ -119,29 +217,49 @@ export class XClient implements PlatformClient {
     const js = await fetch(bundle, { method: 'GET', credentials: 'omit' })
     const parsed = js.text ? parseBundle(js.text) : null
     if (!parsed) return null
-    const cfg: XConfig = { ...parsed, source: 'bundle', bundleUrl: bundle, at: Date.now() }
-    await setLocal(X_CONFIG_KEY, cfg)
-    return cfg
+    return {
+      api: 'legacy',
+      operationName: 'Bookmarks',
+      providedVariables: {},
+      ...parsed,
+      source: 'bundle',
+      appVersion: null,
+      bundleUrl: bundle,
+      at: Date.now(),
+    }
   }
 
   /** Gabarit capturé par le hook lors d'une visite de /i/bookmarks (prioritaire). */
   static async storeTemplate(t: Partial<XConfig>): Promise<void> {
-    if (!t.queryId) return
-    const prev = await getLocal<XConfig>(X_CONFIG_KEY)
+    if (typeof t.queryId !== 'string' || !/^[\w-]{6,64}$/.test(t.queryId)) return
+    const op = typeof t.operationName === 'string' ? t.operationName : 'Bookmarks'
+    if (!/^\w{1,80}$/.test(op)) return
+    const prev = await getLocal<Partial<XConfig>>(X_CONFIG_KEY)
     const bearer = t.bearer ?? prev?.bearer
     if (!bearer) return
+    const api: XConfig['api'] = op === 'Bookmarks' ? 'legacy' : 'xweb'
     await setLocal(X_CONFIG_KEY, {
+      api,
       queryId: t.queryId,
+      operationName: op,
       bearer,
-      features: t.features ?? prev?.features ?? {},
-      fieldToggles: t.fieldToggles ?? prev?.fieldToggles ?? {},
+      providedVariables:
+        t.providedVariables ?? (api === 'xweb' ? (prev?.providedVariables ?? {}) : {}),
+      features: t.features ?? (api === 'legacy' ? (prev?.features ?? {}) : {}),
+      fieldToggles: t.fieldToggles ?? (api === 'legacy' ? (prev?.fieldToggles ?? {}) : {}),
       source: 'capture',
+      appVersion: prev?.appVersion ?? null,
       bundleUrl: prev?.bundleUrl ?? null,
       at: Date.now(),
     } satisfies XConfig)
   }
 
   buildUrl(cfg: XConfig, cursor: string | null): string {
+    const base = `${endpoint('x', 'graphql')}/${cfg.queryId}/${cfg.operationName}`
+    if (cfg.api === 'xweb') {
+      const variables = { count: 20, ...(cursor ? { cursor } : {}), ...cfg.providedVariables }
+      return `${base}?${new URLSearchParams({ variables: JSON.stringify(variables) }).toString()}`
+    }
     const variables = { count: 20, includePromotedContent: true, ...(cursor ? { cursor } : {}) }
     const q = new URLSearchParams({
       variables: JSON.stringify(variables),
@@ -149,17 +267,44 @@ export class XClient implements PlatformClient {
     })
     if (Object.keys(cfg.fieldToggles).length)
       q.set('fieldToggles', JSON.stringify(cfg.fieldToggles))
-    return `${endpoint('x', 'graphql')}/${cfg.queryId}/Bookmarks?${q.toString()}`
+    return `${base}?${q.toString()}`
+  }
+
+  /** Variables (x-web) ou `features` (ancien client) manquantes, ajoutées au gabarit. */
+  private repair(cfg: XConfig, json: unknown): XConfig | null {
+    if (cfg.api === 'xweb') {
+      const names = missingVariables(json).filter((n) => n.startsWith('__relay_internal__pv__'))
+      const fresh = names.filter((n) => !(n in cfg.providedVariables))
+      if (!fresh.length) return null
+      return { ...cfg, providedVariables: { ...cfg.providedVariables, ...providedDefaults(fresh) } }
+    }
+    const missing = missingFeatures(json)
+    if (!missing.length) return null
+    return {
+      ...cfg,
+      features: { ...cfg.features, ...Object.fromEntries(missing.map((f) => [f, false])) },
+    }
+  }
+
+  private async rediscover(fetch: FetchFn): Promise<XConfig | null> {
+    this.rediscovered = true
+    await removeLocal(X_CONFIG_KEY)
+    return this.config(fetch, true)
   }
 
   async fetchPage(cursor: string | null, fetch: FetchFn): Promise<PageOutcome> {
     const ct0 = await readCookie('x', 'ct0')
     if (!ct0) return err('auth_required', 'session X absente')
     let cfg = await this.config(fetch)
-    if (!cfg) return err('api_changed', 'configuration de X introuvable')
-    let repaired = false
+    if (!cfg) return err('api_changed', this.lastDiscoveryError ?? 'configuration de X introuvable')
+    let repairs = 0
     for (;;) {
-      const tid = await getLocal<string>('x.tid')
+      const url = this.buildUrl(cfg, cursor)
+      const captured = await getLocal<CapturedTid>('x.tid')
+      const tid =
+        captured && typeof captured === 'object' && captured.path === new URL(url).pathname
+          ? captured.tid
+          : null
       const headers: Record<string, string> = {
         authorization: `Bearer ${cfg.bearer}`,
         'x-csrf-token': ct0,
@@ -169,31 +314,45 @@ export class XClient implements PlatformClient {
         'content-type': 'application/json',
         ...(tid ? { 'x-client-transaction-id': tid } : {}),
       }
-      const r = await fetch(this.buildUrl(cfg, cursor), { method: 'GET', headers })
-      const missing = r.status === 400 ? missingFeatures(r.json) : []
-      if (missing.length && !repaired) {
-        repaired = true
-        cfg = {
-          ...cfg,
-          features: { ...cfg.features, ...Object.fromEntries(missing.map((f) => [f, false])) },
+      const r = await fetch(url, { method: 'GET', headers })
+      if ((r.status === 400 || r.status === 422) && repairs < 2) {
+        const fixed = this.repair(cfg, r.json)
+        if (fixed) {
+          repairs += 1
+          cfg = fixed
+          await setLocal(X_CONFIG_KEY, cfg)
+          continue
         }
-        await setLocal(X_CONFIG_KEY, cfg)
-        continue
       }
       const http = classifyHttp(r)
       if (http) return http
-      const codes = ((r.json as { errors?: { code?: number }[] } | null)?.errors ?? []).map(
+      const codes = ((r.json as { errors?: { code?: unknown }[] } | null)?.errors ?? []).map(
         (e) => e.code,
       )
       if (codes.includes(88)) return err('rate_limited', 'limite atteinte')
       if ([400, 404, 422].includes(r.status)) {
-        if (this.rediscovered) return err('api_changed', `X a changé son API (${r.status})`)
-        this.rediscovered = true
-        await removeLocal(X_CONFIG_KEY)
-        const fresh = await this.config(fetch, true)
-        if (!fresh) return err('api_changed', 'configuration de X introuvable')
-        cfg = fresh
-        continue
+        const notFound = r.status === 404 && isQueryNotFound(r.json)
+        if (!this.rediscovered) {
+          const fresh = await this.rediscover(fetch)
+          if (!fresh)
+            return err('api_changed', this.lastDiscoveryError ?? 'configuration de X introuvable')
+          cfg = fresh
+          continue
+        }
+        if (r.status === 404 && !notFound) {
+          // Identifiant reconnu mais requête refusée sans corps : X exige peut-être désormais la
+          // signature `x-client-transaction-id` (non reproduite). Repli : capture passive.
+          return err(
+            'blocked',
+            'X refuse la requête d’arrière-plan (404 sans corps) : signature x-client-transaction-id probablement exigée ; ouvre x.com/i/bookmarks dans le navigateur',
+          )
+        }
+        return err(
+          'api_changed',
+          notFound
+            ? `X ne reconnaît plus l’opération ${cfg.operationName} (Query not found)`
+            : `X a changé son API (${r.status})`,
+        )
       }
       if (r.status !== 200) return err('api_changed', `réponse ${r.status}`)
       return { kind: 'page', status: r.status, headers: r.headers, json: r.json }
@@ -278,77 +437,204 @@ export class InstagramClient implements PlatformClient {
 
 // ---------------------------------------------------------------------------------- Cosmos
 
-export const COSMOS_ELEMENTS_QUERY = `query GetAllElements($userId: UserId!, $filters: AllElementsFilters, $order: ElementOrder, $pageCursor: String, $pageSize: Int = 40, $isLoggedIn: Boolean!) {
-  allElementsV2(userId: $userId, filters: $filters, order: $order, meta: { pageSize: $pageSize, pageCursor: $pageCursor }) {
-    items { id createdAt shareUrl ownerId generatedCaption { text } source { url author } media { url width height } multipleMedia { url width height } video { url thumbnailUrl } mux { mp4Url downloadableUrl } websiteTitle text }
+/**
+ * Requête des éléments enregistrés, validée contre le schéma public de `api.cosmos.so` le 2026-10-12
+ * (le serveur valide le document avant l'authentification). Médias sous fragments (`ElementTile` est
+ * une interface : `MediaElementTile`, `WebsiteElementTile`, `ProductElementTile`, `TextElementTile`).
+ */
+export const COSMOS_ELEMENTS_QUERY = `query GetAllElements($userId: UserId!, $pageCursor: String, $pageSize: Int = 40) {
+  allElementsV2(userId: $userId, meta: { pageSize: $pageSize, pageCursor: $pageCursor }) {
+    items {
+      __typename id createdAt shareUrl ownerId
+      generatedCaption { text }
+      source { url author { username fullName } }
+      ... on MediaElementTile { media { ...RecoltMedia } multipleMedia { ...RecoltMedia } }
+      ... on ProductElementTile { media { ...RecoltMedia } }
+      ... on WebsiteElementTile { media { ...RecoltMedia } websiteTitle: title }
+      ... on TextElementTile { text }
+    }
     meta { nextPageCursor count }
   }
+}
+fragment RecoltMedia on Media {
+  __typename url width height
+  ... on AnimatedImage { video { url thumbnailUrl } }
+  ... on Video { thumbnail { url } mux { playbackUrl mp4Url(quality: HIGH) } }
 }`
+
+export const COSMOS_ME_QUERY = 'query Me { me { id username } }'
+
+export const COSMOS_TOKEN_KEY = 'cosmos.token'
+
+/** Jeton d'accès Cosmos (JWT) gardé dans `storage.local`, avec son expiration décodée. */
+export interface CosmosToken {
+  token: string
+  /** Expiration (s, epoch) lue dans le JWT ; `null` si illisible. */
+  exp: number | null
+  /** Identifiant d'utilisateur (`eid` du JWT) ; `null` si absent. */
+  userId: string | number | null
+  at: number
+}
+
+/** Charge utile d'un JWT, SANS vérification (lecture de `exp` / `eid`). */
+export function jwtPayload(token: string): Record<string, unknown> | null {
+  const part = token.split('.')[1]
+  if (!part) return null
+  try {
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/')
+    const json = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
+    const o = JSON.parse(json) as unknown
+    return o && typeof o === 'object' ? (o as Record<string, unknown>) : null
+  } catch {
+    return null
+  }
+}
+
+export function toCosmosToken(token: string, now = Date.now()): CosmosToken {
+  const p = jwtPayload(token)
+  const exp = typeof p?.exp === 'number' ? p.exp : null
+  const eid = p?.eid
+  return {
+    token,
+    exp,
+    userId: typeof eid === 'number' || (typeof eid === 'string' && eid) ? eid : null,
+    at: now,
+  }
+}
+
+/** Jeton encore valable au moins 60 s (même marge que le site). */
+export function cosmosTokenUsable(t: CosmosToken | null | undefined, now = Date.now()): boolean {
+  if (!t?.token) return false
+  return t.exp === null || t.exp - now / 1000 > 60
+}
+
+/** Jeton stocké (forme actuelle, ou chaîne brute d'une version précédente). */
+export async function storedCosmosToken(): Promise<CosmosToken | null> {
+  const v = await getLocal<CosmosToken | string>(COSMOS_TOKEN_KEY)
+  if (typeof v === 'string') return v ? toCosmosToken(v, 0) : null
+  return v && typeof v.token === 'string' ? v : null
+}
+
+type GqlError = { message?: string; extensions?: { code?: string } }
+
+function gqlErrors(json: unknown): GqlError[] {
+  const e = (json as { errors?: unknown } | null)?.errors
+  return Array.isArray(e) ? (e as GqlError[]) : []
+}
+
+const isAuthError = (errors: GqlError[]) =>
+  errors.some((e) => /UNAUTHENTICATED|AUTHENTICATION/i.test(e.extensions?.code ?? ''))
 
 export class CosmosClient implements PlatformClient {
   readonly platform = 'cosmos' as const
 
-  private async headers(): Promise<Record<string, string>> {
-    const token = await cosmosToken()
+  /**
+   * Jeton d'accès : celui du stockage s'il est encore valable, sinon `GET /api/refresh-token` sur
+   * www.cosmos.so (le navigateur envoie le cookie httpOnly de la session ; réponse `{accessToken}`).
+   */
+  async token(fetch: FetchFn, force = false): Promise<CosmosToken | ErrorOutcome> {
+    const stored = await storedCosmosToken()
+    if (!force && cosmosTokenUsable(stored)) return stored!
+    const r = await fetch(endpoint('cosmos', 'refresh'), {
+      method: 'GET',
+      headers: { accept: 'application/json', 'x-cosmos-refresh-trigger': 'proactive' },
+    })
+    if (r.status === 0) return err('network', r.text === 'timeout' ? 'délai dépassé' : 'réseau')
+    if (r.status === 401 || r.status === 403) {
+      await removeLocal(COSMOS_TOKEN_KEY)
+      await removeLocal('cosmos.me')
+      return err(
+        'auth_required',
+        'session Cosmos absente : connecte-toi sur cosmos.so dans ce navigateur',
+      )
+    }
+    const http = classifyHttp(r)
+    if (http?.kind === 'error') return http
+    const at = (r.json as { accessToken?: unknown } | null)?.accessToken
+    if (r.status !== 200 || typeof at !== 'string' || at.split('.').length !== 3) {
+      return err('api_changed', `jeton Cosmos illisible (/api/refresh-token, réponse ${r.status})`)
+    }
+    const t = toCosmosToken(at)
+    await setLocal(COSMOS_TOKEN_KEY, t)
+    return t
+  }
+
+  private headers(t: CosmosToken): Record<string, string> {
     return {
       'content-type': 'application/json',
       accept: 'application/graphql-response+json, application/json',
       'x-client-name': 'cosmos-web',
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      authorization: `Bearer ${t.token}`,
     }
   }
 
-  private async gql(op: string, body: unknown, fetch: FetchFn): Promise<FetchResult> {
-    return fetch(`${endpoint('cosmos', 'graphql')}?q=${op}`, {
+  private gql(op: string, query: string, variables: unknown, t: CosmosToken, fetch: FetchFn) {
+    return fetch(endpoint('cosmos', 'graphql'), {
       method: 'POST',
-      headers: await this.headers(),
-      body: JSON.stringify(body),
+      headers: this.headers(t),
+      body: JSON.stringify({ operationName: op, query, variables }),
     })
   }
 
-  async me(fetch: FetchFn): Promise<{ id: string; username?: string } | null> {
-    const r = await this.gql(
-      'Me',
-      { operationName: 'Me', query: 'query Me { me { id username } }', variables: {} },
-      fetch,
-    )
+  /** `me` (identifiant numérique ou chaîne, transmis tel quel à `userId`). */
+  async me(
+    t: CosmosToken,
+    fetch: FetchFn,
+  ): Promise<{ id: string | number; username?: string } | null> {
+    const r = await this.gql('Me', COSMOS_ME_QUERY, {}, t, fetch)
     const me = (r.json as { data?: { me?: { id?: unknown; username?: unknown } | null } } | null)
       ?.data?.me
-    if (!me || typeof me.id !== 'string') return null
+    if (!me || (typeof me.id !== 'string' && typeof me.id !== 'number')) return null
     const out = { id: me.id, ...(typeof me.username === 'string' ? { username: me.username } : {}) }
     await setLocal('cosmos.me', out)
     return out
   }
 
   async fetchPage(cursor: string | null, fetch: FetchFn): Promise<PageOutcome> {
-    const me = (await getLocal<{ id: string }>('cosmos.me')) ?? (await this.me(fetch))
-    if (!me) return err('auth_required', 'session Cosmos absente')
-    const tpl = await getLocal<{ query?: string; order?: unknown }>('cosmos.template')
-    const r = await this.gql(
-      'GetAllElements',
-      {
-        operationName: 'GetAllElements',
-        query: tpl?.query ?? COSMOS_ELEMENTS_QUERY,
-        variables: {
-          userId: me.id,
-          pageSize: 40,
-          pageCursor: cursor,
-          isLoggedIn: true,
-          ...(tpl?.order ? { order: tpl.order } : {}),
-        },
-      },
-      fetch,
-    )
-    const errors =
-      (r.json as { errors?: { extensions?: { code?: string } }[] } | null)?.errors ?? []
-    if (errors.some((e) => /UNAUTHENTICATED|AUTHENTICATION/i.test(e.extensions?.code ?? ''))) {
-      await removeLocal('cosmos.me')
-      return err('auth_required', 'session Cosmos expirée')
+    let t = await this.token(fetch)
+    if ('kind' in t) return t
+    for (let attempt = 0; ; attempt++) {
+      const cachedMe = await getLocal<{ id: string | number }>('cosmos.me')
+      const userId = t.userId ?? cachedMe?.id ?? (await this.me(t, fetch))?.id ?? null
+      if (userId === null) {
+        if (attempt === 0) {
+          const again = await this.token(fetch, true)
+          if ('kind' in again) return again
+          t = again
+          continue
+        }
+        return err('auth_required', 'session Cosmos absente : utilisateur introuvable (me)')
+      }
+      const r = await this.gql(
+        'GetAllElements',
+        COSMOS_ELEMENTS_QUERY,
+        { userId, pageSize: 40, pageCursor: cursor },
+        t,
+        fetch,
+      )
+      const errors = gqlErrors(r.json)
+      if (isAuthError(errors)) {
+        if (attempt === 0) {
+          // Jeton expiré ou révoqué : un rafraîchissement, puis une seule nouvelle tentative.
+          const again = await this.token(fetch, true)
+          if ('kind' in again) return again
+          t = again
+          continue
+        }
+        await removeLocal(COSMOS_TOKEN_KEY)
+        return err('auth_required', 'session Cosmos expirée')
+      }
+      const http = classifyHttp(r)
+      if (http) return http
+      if (r.status !== 200) {
+        const msg = errors[0]?.message
+        return err(
+          'api_changed',
+          msg ? `Cosmos a changé son API : ${msg.slice(0, 200)}` : `réponse ${r.status}`,
+        )
+      }
+      return { kind: 'page', status: r.status, headers: r.headers, json: r.json }
     }
-    const http = classifyHttp(r)
-    if (http) return http
-    if (r.status !== 200) return err('api_changed', `réponse ${r.status}`)
-    return { kind: 'page', status: r.status, headers: r.headers, json: r.json }
   }
 }
 

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "bookmark_timeline_v2": {
+      "timeline": {
+        "id": "VGltZWxpbmU6Ym9va21hcmtz",
+        "instructions": [
+          {
+            "__typename": "TimelineAddEntries",
+            "entries": [
+              {
+                "entry_id": "cursor-top-1889999999999000099",
+                "sort_index": "1889999999999000099",
+                "content": {
+                  "__typename": "TimelineTimelineCursor",
+                  "cursor_type": "Top",
+                  "value": "WEVXRUItaGF1dDI"
+                }
+              },
+              {
+                "entry_id": "cursor-bottom-1889999999999000098",
+                "sort_index": "1889999999999000098",
+                "content": {
+                  "__typename": "TimelineTimelineCursor",
+                  "cursor_type": "Bottom",
+                  "value": "WEVXRUItZmlu"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "id": "VGltZWxpbmU6"
+    }
+  }
+}

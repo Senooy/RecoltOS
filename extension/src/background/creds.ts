@@ -1,8 +1,9 @@
 /**
  * Identifiants (SYNC §1.6 n°4, ERRATA §G.2) : cookies lus À LA DEMANDE par l'API `cookies`, jamais
  * stockés ni envoyés à l'app (seuls des identifiants de compte non secrets le sont). Gabarits et
- * constantes publiques dans `storage.local` ; jetons capturés (Cosmos) dans `storage.local` aussi,
- * pour que la sync en arrière-plan survive au redémarrage du navigateur.
+ * constantes publiques dans `storage.local` ; jeton d'accès Cosmos (obtenu par `/api/refresh-token`,
+ * voir `sync/platforms.ts`) dans `storage.local` aussi, pour que la sync en arrière-plan survive au
+ * redémarrage du navigateur.
  */
 import type { BridgePlatform } from '../../../src/shared/bridge/constants'
 import { api } from '../lib/api'
@@ -51,17 +52,4 @@ export async function setLocal(key: string, value: unknown): Promise<void> {
 
 export async function removeLocal(key: string): Promise<void> {
   await api().storage.local.remove(key)
-}
-
-/** Jeton Cosmos capturé lors d'une visite (hook), ou cookie au format JWT de cosmos.so. */
-export async function cosmosToken(): Promise<string | null> {
-  const captured = await getLocal<string>('cosmos.token')
-  if (captured) return captured
-  try {
-    const all = await api().cookies.getAll({ url: ENDPOINTS.cosmos.origin })
-    const jwt = all.find((c) => /^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(c.value))
-    return jwt?.value ?? null
-  } catch {
-    return null
-  }
 }

@@ -80,6 +80,14 @@ Réglages › Synchronisation l'indique pour chaque source.
 - Les médias sont téléchargés **par l'app** (sans cookie).
 - « Ouvrir un onglet en arrière-plan si besoin » (menu « … » de chaque source) est un repli,
   **désactivé par défaut**, utilisé seulement si le site refuse la requête d'arrière-plan.
+- **X** (client web « x-web », ERRATA §G.3) : l'extension lit, sans cookie, le code public de x.com
+  pour trouver l'identifiant de la requête persistée `bookmarksQuery` (accueil → script d'entrée →
+  routes → `bookmarks-*.js`), le garde en cache et le revérifie quand x.com change de version. Si X
+  exige un jour la signature `x-client-transaction-id` (non reproduite), la ligne indique « X refuse la
+  requête de l'extension » : ouvrir x.com/i/bookmarks récupère les favoris affichés (capture passive).
+- **Cosmos** : être connecté sur cosmos.so dans le navigateur suffit. L'extension obtient le jeton
+  d'accès par `www.cosmos.so/api/refresh-token` (cookie de session du site, jamais lu ni transmis à
+  l'app) et le renouvelle avant expiration ; aucune visite du site n'est nécessaire.
 
 ## Tests
 

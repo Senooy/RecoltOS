@@ -1,7 +1,9 @@
 /**
- * Sync en arrière-plan de l'extension (WP-54) : politique de cible (aucun onglet sans option),
- * découverte du `queryId` X sur le bundle, auto-réparation des `features`, en-têtes CSRF, classement
- * des erreurs, boucle de pages pilotée par `sync.ack`, captures sans en-têtes.
+ * Sync en arrière-plan de l'extension (WP-54, ERRATA §G.3) : politique de cible (aucun onglet sans
+ * option), découverte de la configuration X sur le client web x-web (extraits RÉELS minimaux relevés
+ * sans cookie le 2026-10-12 : `fixtures/sync/x/xweb/`) et sur l'ancien bundle, réparation des
+ * variables / `features`, en-têtes CSRF, jeton Cosmos par `/api/refresh-token`, classement des
+ * erreurs, boucle de pages pilotée par `sync.ack`, captures sans en-têtes.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -9,15 +11,30 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { FetchFn, FetchResult } from '../../../extension/src/background/sync/fetcher'
 import {
   classifyHttp,
+  COSMOS_ELEMENTS_QUERY,
   CosmosClient,
+  cosmosTokenUsable,
   findMainBundle,
   igAuthProblem,
   InstagramClient,
+  jwtPayload,
   missingFeatures,
   parseBundle,
   shortcodeToPk,
   XClient,
+  type XConfig,
 } from '../../../extension/src/background/sync/platforms'
+import {
+  appVersion,
+  chunkPriority,
+  discoverXWeb,
+  findBearer,
+  findEntryScripts,
+  isQueryNotFound,
+  missingVariables,
+  parsePersistedOps,
+  X_PUBLIC_BEARER,
+} from '../../../extension/src/background/sync/x-discovery'
 import { targetsFor } from '../../../extension/src/background/sync/policy'
 import { SyncRunner } from '../../../extension/src/background/sync/runner'
 import { classify } from '../../../extension/src/lib/classify'
@@ -39,6 +56,70 @@ const ok = (json: unknown, headers: Record<string, string> = {}): FetchResult =>
   json,
   text: null,
 })
+
+const XWEB = 'https://abs.twimg.com/x-web/x-web/'
+/**
+ * Jeton public des extraits, anonymisé (même forme, valeur factice, préfixe d'en-tête retiré : la garde
+ * `fixtures.test.ts` refuse tout jeton dans les fixtures).
+ */
+const FIXTURE_BEARER =
+  'AAAAAAAAAAAAAAAAAAAAAFaKeXwEbPuBlIcToKeN%3DfIxTuReSaNoNyMiSeEs0000000000000000000000000000000000000000'
+const PV_LOGGED = '__relay_internal__pv__xclientsfeaturesappviewerisloggedinrelayprovider'
+const PV_TRANSLATION =
+  '__relay_internal__pv__xclientsfeaturestranslationnoteautotranslationenabledrelayprovider'
+
+/** Faux réseau du client web x-web servi depuis les extraits réels (`x/xweb/`). */
+function xwebSite(overrides: Record<string, string | null> = {}): FetchFn & { urls: string[] } {
+  const urls: string[] = []
+  const serve = (name: string): FetchResult => {
+    const body =
+      name in overrides
+        ? overrides[name]
+        : (() => {
+            try {
+              return text(`x/xweb/${name}`)
+            } catch {
+              return null
+            }
+          })()
+    return body === null || body === undefined
+      ? { status: 404, headers: {}, json: null, text: '' }
+      : { status: 200, headers: {}, json: null, text: body }
+  }
+  const f: FetchFn = (url) => {
+    urls.push(url)
+    if (url === 'https://x.com/') return Promise.resolve(serve('accueil.html'))
+    if (url === 'https://x.com/sw.js') return Promise.resolve(serve('sw.js'))
+    if (url.startsWith(XWEB)) return Promise.resolve(serve(url.slice(url.lastIndexOf('/') + 1)))
+    return Promise.resolve(serve(''))
+  }
+  return Object.assign(f, { urls })
+}
+
+/** JWT factice (non signé) : `{exp, eid}` lisibles comme ceux de Cosmos. */
+function fakeJwt(payload: Record<string, unknown>): string {
+  const b64 = (o: unknown) =>
+    Buffer.from(JSON.stringify(o))
+      .toString('base64')
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+  return `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64(payload)}.c2lnbmF0dXJl`
+}
+
+const XWEB_CONFIG: XConfig = {
+  api: 'xweb',
+  queryId: 'S0GjncHMwHQK1YOfxslymQ',
+  operationName: 'bookmarksQuery',
+  bearer: 'B',
+  providedVariables: { [PV_LOGGED]: true },
+  features: {},
+  fieldToggles: {},
+  source: 'bundle',
+  appVersion: 'v1',
+  bundleUrl: null,
+  at: Date.now(),
+}
 
 describe('politique de cible', () => {
   it('arrière-plan d’abord ; jamais d’onglet créé sans l’option (5 déclencheurs × 3 plateformes)', () => {
@@ -81,7 +162,7 @@ describe('X', () => {
     ])
   })
 
-  it('page : csrf = cookie ct0, auto-réparation puis redécouverte unique, puis api_changed', async () => {
+  it('ancien client (repli) : csrf = cookie ct0, auto-réparation des features, puis redécouverte unique', async () => {
     fake.cookies.set('ct0', 'jeton-csrf')
     const calls: { url: string; headers: Record<string, string> }[] = []
     let bookmarksCalls = 0
@@ -101,6 +182,8 @@ describe('X', () => {
           json: null,
           text: text('x/bundle/main.js'),
         })
+      if (!url.includes('/i/api/graphql/'))
+        return Promise.resolve({ status: 404, headers: {}, json: null, text: '' })
       bookmarksCalls += 1
       if (bookmarksCalls === 1)
         return Promise.resolve({
@@ -124,9 +207,10 @@ describe('X', () => {
       boolean
     >
     expect(f2.rweb_tipjar_consumption_enabled).toBe(false)
-    // 404 persistant : une redécouverte puis api_changed (pas de boucle).
+    // 404 persistant : une redécouverte puis échec classé (pas de boucle).
     const again = await c.fetchPage('C', fetch)
-    expect(again).toMatchObject({ kind: 'error', outcome: 'api_changed' })
+    expect(again.kind).toBe('error')
+    expect(calls.filter((x) => x.url.includes('/Bookmarks?')).length).toBeLessThanOrEqual(5)
   })
 
   it('sans cookie ct0 : auth_required sans requête', async () => {
@@ -158,6 +242,277 @@ describe('X', () => {
       outcome: 'network',
     })
     expect(classifyHttp(ok({}))).toBeNull()
+  })
+})
+
+describe('X — client x-web (extraits réels)', () => {
+  it('HTML : version du client et script d’entrée module, quel que soit l’ordre des attributs', () => {
+    const html = text('x/xweb/accueil.html')
+    expect(appVersion(html)).toBe('3baf5ddf7cf0fe60635f3681052c1f9cbd982a38')
+    expect(findEntryScripts(html, 'https://x.com/')).toEqual([
+      `${XWEB}entry-client-logged-out-Cyu8aWGq.js`,
+    ])
+    expect(
+      findEntryScripts(
+        '<script nonce="n" src="https://abs.twimg.com/x-web/x-web/entry-client-logged-in-Zz9.js" type="module" async></script>',
+        'https://x.com/',
+      ),
+    ).toEqual([`${XWEB}entry-client-logged-in-Zz9.js`])
+    // L'ancien bundle n'est pas une entrée x-web.
+    expect(findEntryScripts(text('x/bundle/accueil.html'), 'https://x.com/')).toEqual([])
+  })
+
+  it('params Relay persistés : nom, id, provided variables ; mutation et AST ignorés', () => {
+    const ops = parsePersistedOps(text('x/xweb/bookmarks-CXtFauZD.js'))
+    expect(ops).toEqual([
+      {
+        id: 'S0GjncHMwHQK1YOfxslymQ',
+        name: 'bookmarksQuery',
+        providedVariables: [PV_LOGGED, PV_TRANSLATION],
+      },
+    ])
+    expect(parsePersistedOps(text('x/xweb/bookmarks-folder-modals-Czv1HVNa.js'))).toEqual([])
+    expect(parsePersistedOps(text('x/xweb/bookmark-folders-BF_gvkt4.js'))[0]?.name).toBe(
+      'bookmarkFoldersQuery',
+    )
+    // Guillemets ordinaires et ordre des clés différent.
+    expect(
+      parsePersistedOps(
+        'x={params:{"name":"bookmarksQuery","operationKind":"query","id":"AbCdEf123456","metadata":{},"text":null}}',
+      ),
+    ).toEqual([{ id: 'AbCdEf123456', name: 'bookmarksQuery', providedVariables: [] }])
+  })
+
+  it('jeton public, priorités de parcours, erreurs de la passerelle', () => {
+    expect(findBearer(text('x/xweb/sw.js'))).toBe(FIXTURE_BEARER)
+    expect(findBearer(text('x/xweb/guest-token-RWAebql4.js'))).toBe(FIXTURE_BEARER)
+    // Forme réelle : `n.set(\`Authorization\`,\`Bearer AAAA…\`)`.
+    expect(findBearer(`n.set(\`Authorization\`,\`Bearer ${X_PUBLIC_BEARER}\`)`)).toBe(
+      X_PUBLIC_BEARER,
+    )
+    expect(chunkPriority(`${XWEB}assets/bookmarks-CXtFauZD.js`)).toBe(0)
+    expect(chunkPriority(`${XWEB}assets/history-DtLSeQQ0.js`)).toBe(1)
+    expect(chunkPriority(`${XWEB}assets/icon-bookmarks-DM1mZAb_.js`)).toBeNull()
+    expect(chunkPriority(`${XWEB}assets/sentry-filter-BY-NuQPN.js`)).toBe(2)
+    // Réponses relevées sur la passerelle (requête invitée publique).
+    expect(
+      missingVariables({
+        errors: [
+          {
+            code: 'GRAPHQL_VALIDATION_FAILED',
+            extensions: { code: 'GRAPHQL_VALIDATION_FAILED' },
+            message: 'must be defined',
+            path: ['variable', PV_LOGGED],
+          },
+        ],
+      }),
+    ).toEqual([PV_LOGGED])
+    expect(isQueryNotFound({ message: 'Query not found' })).toBe(true)
+    expect(isQueryNotFound(null)).toBe(false)
+  })
+
+  it('découverte : accueil → entrée → arbre de routes → history → bookmarks, sans cookie', async () => {
+    const site = xwebSite()
+    const calls: RequestInit[] = []
+    const fetch: FetchFn = (url, init) => {
+      calls.push(init)
+      return site(url, init)
+    }
+    const r = await discoverXWeb(fetch, { homeUrl: 'https://x.com/', swUrl: 'https://x.com/sw.js' })
+    expect(r).toMatchObject({
+      ok: true,
+      value: {
+        queryId: 'S0GjncHMwHQK1YOfxslymQ',
+        operationName: 'bookmarksQuery',
+        providedVariables: { [PV_LOGGED]: true, [PV_TRANSLATION]: false },
+        bearer: FIXTURE_BEARER,
+        bearerSource: 'bundle',
+        appVersion: '3baf5ddf7cf0fe60635f3681052c1f9cbd982a38',
+        bundleUrl: `${XWEB}assets/bookmarks-CXtFauZD.js`,
+      },
+    })
+    expect(calls.every((c) => c.credentials === 'omit')).toBe(true)
+    expect(site.urls).toContain(`${XWEB}assets/history-DtLSeQQ0.js`)
+    expect(site.urls.some((u) => u.includes('icon-'))).toBe(false)
+    expect(site.urls.length).toBeLessThan(20)
+  })
+
+  it('découverte : jeton lu dans sw.js, sinon constante ; erreurs précises à chaque étape', async () => {
+    const opts = { homeUrl: 'https://x.com/', swUrl: 'https://x.com/sw.js' }
+    const noGuest = await discoverXWeb(xwebSite({ 'guest-token-RWAebql4.js': null }), opts)
+    expect(noGuest).toMatchObject({ ok: true, value: { bearerSource: 'sw' } })
+    const none = await discoverXWeb(
+      xwebSite({ 'guest-token-RWAebql4.js': null, 'sw.js': null }),
+      opts,
+    )
+    expect(none).toMatchObject({
+      ok: true,
+      value: { bearer: X_PUBLIC_BEARER, bearerSource: 'constant' },
+    })
+    const noEntry = await discoverXWeb(xwebSite({ 'accueil.html': '<html></html>' }), opts)
+    expect(noEntry).toEqual({
+      ok: false,
+      error: expect.stringMatching(/aucun script x-web \(entry-client\)/) as unknown,
+    })
+    const noOp = await discoverXWeb(xwebSite({ 'bookmarks-CXtFauZD.js': 'export{}' }), opts)
+    expect(noOp).toEqual({
+      ok: false,
+      error: expect.stringMatching(
+        /opération GraphQL « bookmarksQuery » absente des \d+ scripts/,
+      ) as unknown,
+    })
+    const down = await discoverXWeb(
+      () => Promise.resolve({ status: 0, headers: {}, json: null, text: 'network' }),
+      opts,
+    )
+    expect(down).toMatchObject({
+      ok: false,
+      error: expect.stringMatching(/injoignable/) as unknown,
+    })
+  })
+
+  it('page : découverte, GET persisté (variables + provided variables), réparation 422, en-têtes', async () => {
+    fake.cookies.set('ct0', 'jeton-csrf')
+    const site = xwebSite()
+    const gql: { url: string; headers: Record<string, string> }[] = []
+    const fetch: FetchFn = (url, init) => {
+      if (url.startsWith('https://x.com/i/api/graphql/')) {
+        gql.push({ url, headers: (init.headers ?? {}) as Record<string, string> })
+        const vars = JSON.parse(new URL(url).searchParams.get('variables') ?? '{}') as Record<
+          string,
+          unknown
+        >
+        if (!('__relay_internal__pv__nouvelle' in vars))
+          return Promise.resolve({
+            status: 422,
+            headers: {},
+            json: {
+              errors: [
+                {
+                  code: 'GRAPHQL_VALIDATION_FAILED',
+                  message: 'must be defined',
+                  path: ['variable', '__relay_internal__pv__nouvelle'],
+                },
+              ],
+            },
+            text: null,
+          })
+        return Promise.resolve(ok(fx('x/xweb-page-1.json')))
+      }
+      return site(url, init)
+    }
+    const page = await new XClient().fetchPage('CURSEUR', fetch)
+    expect(page.kind).toBe('page')
+    expect(gql).toHaveLength(2)
+    const u = new URL(gql[1]!.url)
+    expect(u.pathname).toBe('/i/api/graphql/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery')
+    expect(u.searchParams.get('features')).toBeNull()
+    expect(JSON.parse(u.searchParams.get('variables')!)).toEqual({
+      count: 20,
+      cursor: 'CURSEUR',
+      [PV_LOGGED]: true,
+      [PV_TRANSLATION]: false,
+      __relay_internal__pv__nouvelle: false,
+    })
+    expect(gql[1]!.headers).toMatchObject({
+      authorization: `Bearer ${FIXTURE_BEARER}`,
+      'x-csrf-token': 'jeton-csrf',
+      'x-twitter-auth-type': 'OAuth2Session',
+    })
+    expect(gql[1]!.headers['x-client-transaction-id']).toBeUndefined()
+    // Configuration réparée gardée en cache.
+    const cached = fake.local.get('x.config') as XConfig
+    expect(cached.providedVariables.__relay_internal__pv__nouvelle).toBe(false)
+  })
+
+  it('« Query not found » → une redécouverte ; 404 sans corps persistant → blocked (signature)', async () => {
+    fake.cookies.set('ct0', 'c')
+    fake.local.set('x.config', { ...XWEB_CONFIG, queryId: 'PeRiMe000000' })
+    const site = xwebSite()
+    const ids: string[] = []
+    const notFound: FetchFn = (url, init) => {
+      if (url.startsWith('https://x.com/i/api/graphql/')) {
+        ids.push(new URL(url).pathname.split('/')[4]!)
+        return Promise.resolve({
+          status: 404,
+          headers: {},
+          json: { message: 'Query not found' },
+          text: null,
+        })
+      }
+      return site(url, init)
+    }
+    const r = await new XClient().fetchPage(null, notFound)
+    expect(ids).toEqual(['PeRiMe000000', 'S0GjncHMwHQK1YOfxslymQ'])
+    expect(r).toMatchObject({ kind: 'error', outcome: 'api_changed' })
+    expect((r as { error: string }).error).toMatch(/Query not found/)
+
+    const empty: FetchFn = (url, init) =>
+      url.startsWith('https://x.com/i/api/graphql/')
+        ? Promise.resolve({ status: 404, headers: {}, json: null, text: '' })
+        : site(url, init)
+    const b = await new XClient().fetchPage(null, empty)
+    expect(b).toMatchObject({ kind: 'error', outcome: 'blocked' })
+    expect((b as { error: string }).error).toMatch(/x-client-transaction-id/)
+  })
+
+  it('cache : revalidé par la version du client (une requête), sinon redécouvert', async () => {
+    fake.cookies.set('ct0', 'c')
+    const old = Date.now() - 7 * 3_600_000
+    fake.local.set('x.config', {
+      ...XWEB_CONFIG,
+      appVersion: '3baf5ddf7cf0fe60635f3681052c1f9cbd982a38',
+      at: old,
+    })
+    const site = xwebSite()
+    const fetch: FetchFn = (url, init) =>
+      url.startsWith('https://x.com/i/api/graphql/')
+        ? Promise.resolve(ok(fx('x/xweb-page-1.json')))
+        : site(url, init)
+    expect((await new XClient().fetchPage(null, fetch)).kind).toBe('page')
+    expect(site.urls).toEqual(['https://x.com/'])
+    expect((fake.local.get('x.config') as XConfig).at).toBeGreaterThan(old)
+    // Nouvelle version du client : redécouverte complète.
+    fake.local.set('x.config', {
+      ...XWEB_CONFIG,
+      queryId: 'AnCiEn000000',
+      appVersion: 'ancienne',
+      at: old,
+    })
+    const site2 = xwebSite()
+    const ids: string[] = []
+    await new XClient().fetchPage(null, (url, init) => {
+      if (url.startsWith('https://x.com/i/api/graphql/')) {
+        ids.push(new URL(url).pathname.split('/')[4]!)
+        return Promise.resolve(ok(fx('x/xweb-page-1.json')))
+      }
+      return site2(url, init)
+    })
+    expect(ids).toEqual(['S0GjncHMwHQK1YOfxslymQ'])
+    // Ancien format de cache (sans `api`) : ignoré.
+    fake.local.set('x.config', {
+      queryId: 'Q',
+      bearer: 'B',
+      features: {},
+      fieldToggles: {},
+      source: 'bundle',
+      bundleUrl: null,
+      at: Date.now(),
+    })
+    const site3 = xwebSite()
+    await new XClient().fetchPage(null, (url, init) =>
+      url.startsWith('https://x.com/i/api/graphql/')
+        ? Promise.resolve(ok(fx('x/xweb-page-1.json')))
+        : site3(url, init),
+    )
+    expect(site3.urls.some((u) => u.endsWith('bookmarks-CXtFauZD.js'))).toBe(true)
+  })
+
+  it('échec de découverte : message précis remonté (api_changed)', async () => {
+    fake.cookies.set('ct0', 'c')
+    const r = await new XClient().fetchPage(null, xwebSite({ 'accueil.html': '<html></html>' }))
+    expect(r).toMatchObject({ kind: 'error', outcome: 'api_changed' })
+    expect((r as { error: string }).error).toMatch(/aucun script x-web/)
   })
 })
 
@@ -213,37 +568,99 @@ describe('Instagram', () => {
 })
 
 describe('Cosmos', () => {
-  it('me puis GetAllElements avec le jeton capturé ; non connecté → auth_required', async () => {
-    fake.local.set('cosmos.token', 'eyJ.abc.def')
-    const calls: { url: string; headers: Record<string, string>; body: string }[] = []
+  const NOW_S = Math.floor(Date.now() / 1000)
+
+  it('jeton par /api/refresh-token (cookie du site), puis GetAllElements valide, userId du JWT', async () => {
+    const jwt = fakeJwt({ exp: NOW_S + 3600, iat: NOW_S, eid: 8800001 })
+    const calls: { url: string; init: RequestInit }[] = []
     const fetch: FetchFn = (url, init) => {
-      calls.push({
-        url,
-        headers: (init.headers ?? {}) as Record<string, string>,
-        body: init.body as string,
+      calls.push({ url, init })
+      if (url === 'https://www.cosmos.so/api/refresh-token')
+        return Promise.resolve(ok({ accessToken: jwt }))
+      return Promise.resolve(ok(fx('cosmos/schema-2026.json')))
+    }
+    const page = await new CosmosClient().fetchPage('CURSEUR', fetch)
+    expect(page.kind).toBe('page')
+    expect(calls.map((c) => c.url)).toEqual([
+      'https://www.cosmos.so/api/refresh-token',
+      'https://api.cosmos.so/graphql',
+    ])
+    expect(calls[0]!.init.method).toBe('GET')
+    expect(calls[0]!.init.headers).toMatchObject({ 'x-cosmos-refresh-trigger': 'proactive' })
+    expect(calls[1]!.init.headers).toMatchObject({
+      authorization: `Bearer ${jwt}`,
+      'x-client-name': 'cosmos-web',
+    })
+    const body = JSON.parse(calls[1]!.init.body as string) as Record<string, unknown>
+    expect(body).toEqual({
+      operationName: 'GetAllElements',
+      query: COSMOS_ELEMENTS_QUERY,
+      variables: { userId: 8800001, pageSize: 40, pageCursor: 'CURSEUR' },
+    })
+    // Le jeton est gardé (expiration décodée) et resservi sans nouveau rafraîchissement.
+    expect(fake.local.get('cosmos.token')).toMatchObject({ token: jwt, exp: NOW_S + 3600 })
+    calls.length = 0
+    await new CosmosClient().fetchPage(null, fetch)
+    expect(calls.map((c) => c.url)).toEqual(['https://api.cosmos.so/graphql'])
+  })
+
+  it('refresh 401 (non connecté) → auth_required sans requête GraphQL', async () => {
+    const urls: string[] = []
+    const r = await new CosmosClient().fetchPage(null, (url) => {
+      urls.push(url)
+      return Promise.resolve({
+        status: 401,
+        headers: {},
+        json: { message: 'Token refresh failed' },
+        text: null,
       })
+    })
+    expect(r).toMatchObject({ kind: 'error', outcome: 'auth_required' })
+    expect((r as { error: string }).error).toMatch(/connecte-toi sur cosmos\.so/)
+    expect(urls).toEqual(['https://www.cosmos.so/api/refresh-token'])
+  })
+
+  it('AUTHENTICATION → un rafraîchissement forcé puis nouvelle tentative ; sans eid → me (id numérique)', async () => {
+    fake.local.set('cosmos.token', {
+      token: fakeJwt({ exp: NOW_S + 3600 }),
+      exp: NOW_S + 3600,
+      userId: null,
+      at: 0,
+    })
+    const fresh = fakeJwt({ exp: NOW_S + 7200 })
+    let elements = 0
+    const urls: string[] = []
+    const fetch: FetchFn = (url, init) => {
+      urls.push(url)
+      if (url.endsWith('/api/refresh-token')) return Promise.resolve(ok({ accessToken: fresh }))
+      const op = (JSON.parse(init.body as string) as { operationName: string }).operationName
+      if (op === 'Me')
+        return Promise.resolve(ok({ data: { me: { id: 8800001, username: 'compte.test' } } }))
+      elements += 1
       return Promise.resolve(
-        ok(url.includes('q=Me') ? fx('cosmos/me.json') : fx('cosmos/page-1.json')),
+        elements === 1
+          ? { status: 401, headers: {}, json: fx('cosmos/non-connecte.json'), text: null }
+          : ok(fx('cosmos/page-1.json')),
       )
     }
     const page = await new CosmosClient().fetchPage(null, fetch)
     expect(page.kind).toBe('page')
-    expect(calls.map((c) => c.url)).toEqual([
-      'https://api.cosmos.so/graphql?q=Me',
-      'https://api.cosmos.so/graphql?q=GetAllElements',
-    ])
-    expect(calls[1]!.headers).toMatchObject({
-      authorization: 'Bearer eyJ.abc.def',
-      'x-client-name': 'cosmos-web',
-    })
-    expect(JSON.parse(calls[1]!.body)).toMatchObject({
-      variables: { userId: '8800001', pageSize: 40 },
-    })
-    fake.local.clear()
-    const r = await new CosmosClient().fetchPage(null, () =>
-      Promise.resolve(ok(fx('cosmos/non-connecte.json'))),
-    )
-    expect(r).toMatchObject({ outcome: 'auth_required' })
+    expect(urls.filter((u) => u.endsWith('/api/refresh-token'))).toHaveLength(1)
+    expect(fake.local.get('cosmos.me')).toEqual({ id: 8800001, username: 'compte.test' })
+    expect((fake.local.get('cosmos.token') as { token: string }).token).toBe(fresh)
+  })
+
+  it('JWT : expiration et marge de 60 s', () => {
+    const t = fakeJwt({ exp: 2_000_000_000, eid: '42' })
+    expect(jwtPayload(t)).toMatchObject({ exp: 2_000_000_000, eid: '42' })
+    expect(jwtPayload('pas-un-jwt')).toBeNull()
+    expect(
+      cosmosTokenUsable({ token: t, exp: 2_000_000_000, userId: '42', at: 0 }, 1_999_999_000_000),
+    ).toBe(true)
+    expect(
+      cosmosTokenUsable({ token: t, exp: 2_000_000_000, userId: '42', at: 0 }, 1_999_999_950_000),
+    ).toBe(false)
+    expect(cosmosTokenUsable(null)).toBe(false)
   })
 })
 
@@ -271,10 +688,73 @@ describe('captures du hook', () => {
     )
     expect(out[0]).toEqual({
       type: 'content:x-template',
-      payload: { queryId: 'QiD123', features: { a: true }, bearer: 'PUBLIC', tid: 'tid' },
+      payload: {
+        queryId: 'QiD123',
+        operationName: 'Bookmarks',
+        features: { a: true },
+        bearer: 'PUBLIC',
+        tid: 'tid',
+        path: '/i/api/graphql/QiD123/Bookmarks',
+      },
     })
     expect(out[1]?.type).toBe('content:capture')
     expect(JSON.stringify(out[1])).not.toMatch(/PUBLIC|tid|authorization/)
+  })
+
+  it('X x-web : bookmarksQuery sur api.x.com → gabarit (provided variables) et capture ; ajout natif → indice', () => {
+    const vars = encodeURIComponent(
+      JSON.stringify({ count: 20, [PV_LOGGED]: true, [PV_TRANSLATION]: false }),
+    )
+    const out = classify(
+      ev(
+        `https://api.x.com/graphql/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery?variables=${vars}`,
+        'GET',
+        { authorization: 'Bearer PUBLIC', 'x-client-transaction-id': 'signature' },
+        fx('x/xweb-page-1.json'),
+      ),
+    )
+    expect(out[0]).toEqual({
+      type: 'content:x-template',
+      payload: {
+        queryId: 'S0GjncHMwHQK1YOfxslymQ',
+        operationName: 'bookmarksQuery',
+        providedVariables: { [PV_LOGGED]: true, [PV_TRANSLATION]: false },
+        bearer: 'PUBLIC',
+        tid: 'signature',
+        path: '/graphql/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery',
+      },
+    })
+    expect(out[1]).toMatchObject({ type: 'content:capture', payload: { op: 'Bookmarks' } })
+    expect(JSON.stringify(out[1])).not.toMatch(/PUBLIC|signature/)
+    expect(
+      classify(
+        ev(
+          'https://api.x.com/graphql/d5cUgGn90np33i-G4PE12w/bookmarkButtonAddMutation',
+          'POST',
+          {},
+        ),
+      )[0]?.type,
+    ).toBe('content:hint')
+    // Une autre requête GraphQL d'un autre site n'est jamais lue comme X.
+    expect(classify(ev('https://example.com/graphql/abc/bookmarksQuery', 'GET', {}))).toEqual([])
+  })
+
+  it('Cosmos : jeton de la page transmis à l’arrière-plan, capture de GetAllElements', () => {
+    const out = classify({
+      req: {
+        url: 'https://api.cosmos.so/graphql',
+        method: 'POST',
+        headers: { authorization: 'Bearer eyJ.abc.def' },
+        body: JSON.stringify({
+          operationName: 'GetAllElements',
+          query: 'query GetAllElements {…}',
+        }),
+      },
+      status: 200,
+      json: fx('cosmos/schema-2026.json'),
+    })
+    expect(out[0]).toEqual({ type: 'content:cosmos-token', payload: { token: 'eyJ.abc.def' } })
+    expect(out[1]).toMatchObject({ type: 'content:capture', payload: { op: 'GetAllElements' } })
   })
 
   it('enregistrements natifs → indice ; retraits ignorés', () => {
@@ -340,15 +820,7 @@ describe('SyncRunner', () => {
   beforeEach(() => {
     fake.cookies.set('ct0', 'c')
     fake.cookies.set('auth_token', 'a')
-    fake.local.set('x.config', {
-      queryId: 'Q',
-      bearer: 'B',
-      features: {},
-      fieldToggles: {},
-      source: 'bundle',
-      bundleUrl: null,
-      at: 0,
-    })
+    fake.local.set('x.config', { ...XWEB_CONFIG, source: 'capture' })
   })
 
   it('suit le curseur de l’app puis s’arrête sur stop ; sync.finished ok, cible arrière-plan', async () => {

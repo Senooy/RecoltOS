@@ -1,0 +1,605 @@
+{
+  "data": {
+    "bookmark_timeline_v2": {
+      "timeline": {
+        "id": "VGltZWxpbmU6Ym9va21hcmtz",
+        "instructions": [
+          {
+            "__typename": "TimelineAddEntries",
+            "entries": [
+              {
+                "entry_id": "tweet-1870000000000000101",
+                "sort_index": "1889999999999000101",
+                "content": {
+                  "__typename": "TimelineTimelineItem",
+                  "content": {
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "rest_id": "1870000000000000101",
+                      "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1870000000000000101",
+                        "id": "VHdlZXQ61870000000000000101",
+                        "core": {
+                          "user_results": {
+                            "result": {
+                              "__typename": "User",
+                              "rest_id": "9100000001",
+                              "id": "VXNlclJlc3VsdHM69100000001",
+                              "core": {
+                                "name": "Studio Lumen",
+                                "screen_name": "studiolumen"
+                              },
+                              "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/9100000001/a1_normal.jpg"
+                              }
+                            },
+                            "id": "VXNlclJlc3VsdHM69100000001"
+                          }
+                        },
+                        "details": {
+                          "full_text": "Deux affiches de la saison https://t.co/LiEn01 https://t.co/MeDiA1",
+                          "display_text_range": [
+                            0,
+                            46
+                          ],
+                          "created_at_ms": 1791460800000
+                        },
+                        "url_entities": [
+                          {
+                            "__typename": "ApiUrlEntity",
+                            "url": "https://t.co/LiEn01",
+                            "expanded_url": "https://example.com/affiches",
+                            "display_url": "example.com/affiches",
+                            "indices": [
+                              27,
+                              46
+                            ]
+                          }
+                        ],
+                        "media_entities2": [
+                          {
+                            "id_str": "3300000000000000101",
+                            "type": "photo",
+                            "media_url_https": "https://pbs.twimg.com/media/XwEbPhOtO1.jpg",
+                            "expanded_url": "https://x.com/studiolumen/status/1870000000000000101/photo/1",
+                            "indices": [
+                              47,
+                              66
+                            ],
+                            "original_info": {
+                              "width": 1600,
+                              "height": 2000
+                            },
+                            "ext_alt_text": null
+                          },
+                          {
+                            "id_str": "3300000000000000102",
+                            "type": "photo",
+                            "media_url_https": "https://pbs.twimg.com/media/XwEbPhOtO2.png",
+                            "expanded_url": "https://x.com/studiolumen/status/1870000000000000101/photo/2",
+                            "indices": [
+                              47,
+                              66
+                            ],
+                            "original_info": {
+                              "width": 1200,
+                              "height": 1200
+                            },
+                            "ext_alt_text": null
+                          }
+                        ],
+                        "mention_entities": [],
+                        "legacy": {
+                          "lang": "fr",
+                          "possibly_sensitive": false
+                        },
+                        "counts": {
+                          "favorite_count": 3,
+                          "retweet_count": 0,
+                          "reply_count": 0,
+                          "quote_count": 0,
+                          "bookmark_count": 1
+                        },
+                        "perspective": {
+                          "bookmarked": true,
+                          "favorited": false,
+                          "retweeted": false
+                        }
+                      },
+                      "id": "VHdlZXRSZXN1bHRzOg=="
+                    }
+                  }
+                }
+              },
+              {
+                "entry_id": "tweet-1870000000000000102",
+                "sort_index": "1889999999999000102",
+                "content": {
+                  "__typename": "TimelineTimelineItem",
+                  "content": {
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "rest_id": "1870000000000000102",
+                      "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1870000000000000102",
+                        "id": "VHdlZXQ61870000000000000102",
+                        "core": {
+                          "user_results": {
+                            "result": {
+                              "__typename": "User",
+                              "rest_id": "9100000002",
+                              "id": "VXNlclJlc3VsdHM69100000002",
+                              "core": {
+                                "name": "Atelier Nord",
+                                "screen_name": "ateliernord"
+                              },
+                              "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/9100000002/a1_normal.jpg"
+                              }
+                            },
+                            "id": "VXNlclJlc3VsdHM69100000002"
+                          }
+                        },
+                        "details": {
+                          "full_text": "Making-of du tournage https://t.co/ViDeO2",
+                          "display_text_range": [
+                            0,
+                            41
+                          ],
+                          "created_at_ms": 1791457200000
+                        },
+                        "url_entities": [],
+                        "media_entities2": [
+                          {
+                            "id_str": "3300000000000000201",
+                            "type": "video",
+                            "media_url_https": "https://pbs.twimg.com/amplify_video_thumb/3300000000000000201/img/PoStEr.jpg",
+                            "indices": [
+                              22,
+                              41
+                            ],
+                            "original_info": {
+                              "width": 1920,
+                              "height": 1080
+                            },
+                            "video_info": {
+                              "aspect_ratio": [
+                                16,
+                                9
+                              ],
+                              "duration_millis": 12500,
+                              "variants": [
+                                {
+                                  "content_type": "application/x-mpegURL",
+                                  "url": "https://video.twimg.com/amplify_video/3300000000000000201/pl/playlist.m3u8"
+                                },
+                                {
+                                  "bitrate": 832000,
+                                  "content_type": "video/mp4",
+                                  "url": "https://video.twimg.com/amplify_video/3300000000000000201/vid/avc1/640x360/basse.mp4"
+                                },
+                                {
+                                  "bitrate": 2176000,
+                                  "content_type": "video/mp4",
+                                  "url": "https://video.twimg.com/amplify_video/3300000000000000201/vid/avc1/1280x720/haute.mp4"
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "mention_entities": [],
+                        "legacy": {
+                          "lang": "fr",
+                          "possibly_sensitive": false
+                        },
+                        "counts": {
+                          "favorite_count": 3,
+                          "retweet_count": 0,
+                          "reply_count": 0,
+                          "quote_count": 0,
+                          "bookmark_count": 1
+                        },
+                        "perspective": {
+                          "bookmarked": true,
+                          "favorited": false,
+                          "retweeted": false
+                        }
+                      },
+                      "id": "VHdlZXRSZXN1bHRzOg=="
+                    }
+                  }
+                }
+              },
+              {
+                "entry_id": "tweet-1870000000000000103",
+                "sort_index": "1889999999999000103",
+                "content": {
+                  "__typename": "TimelineTimelineItem",
+                  "content": {
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "rest_id": "1870000000000000103",
+                      "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1870000000000000103",
+                        "id": "VHdlZXQ61870000000000000103",
+                        "core": {
+                          "user_results": {
+                            "result": {
+                              "__typename": "User",
+                              "rest_id": "9100000001",
+                              "id": "VXNlclJlc3VsdHM69100000001",
+                              "core": {
+                                "name": "Studio Lumen",
+                                "screen_name": "studiolumen"
+                              },
+                              "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/9100000001/a1_normal.jpg"
+                              }
+                            },
+                            "id": "VXNlclJlc3VsdHM69100000001"
+                          }
+                        },
+                        "details": {
+                          "full_text": "@studiolumen Suite du fil, avec la version finale https://t.co/QuOtE3",
+                          "display_text_range": [
+                            13,
+                            69
+                          ],
+                          "created_at_ms": 1791453600000
+                        },
+                        "url_entities": [
+                          {
+                            "url": "https://t.co/QuOtE3",
+                            "expanded_url": "https://x.com/ateliernord/status/1870000000000000090",
+                            "display_url": "x.com/ateliernord/st…",
+                            "indices": [
+                              50,
+                              69
+                            ]
+                          }
+                        ],
+                        "media_entities2": [],
+                        "mention_entities": [],
+                        "legacy": {
+                          "lang": "fr",
+                          "possibly_sensitive": false
+                        },
+                        "counts": {
+                          "favorite_count": 3,
+                          "retweet_count": 0,
+                          "reply_count": 0,
+                          "quote_count": 0,
+                          "bookmark_count": 1
+                        },
+                        "perspective": {
+                          "bookmarked": true,
+                          "favorited": false,
+                          "retweeted": false
+                        },
+                        "reply_to_results": {
+                          "rest_id": "1870000000000000101",
+                          "id": "VHdlZXRSZXN1bHRzOg==",
+                          "__typename": "TweetResults"
+                        },
+                        "reply_to_user_results": {
+                          "rest_id": "9100000001",
+                          "id": "VXNlclJlc3VsdHM6OTEwMDAwMDAwMQ==",
+                          "result": {
+                            "__typename": "User",
+                            "rest_id": "9100000001",
+                            "core": {
+                              "screen_name": "studiolumen"
+                            },
+                            "id": "x"
+                          }
+                        },
+                        "quoted_tweet_results": {
+                          "rest_id": "1870000000000000090",
+                          "result": {
+                            "__typename": "Tweet",
+                            "rest_id": "1870000000000000090",
+                            "id": "VHdlZXQ61870000000000000090",
+                            "core": {
+                              "user_results": {
+                                "result": {
+                                  "__typename": "User",
+                                  "rest_id": "9100000002",
+                                  "id": "VXNlclJlc3VsdHM69100000002",
+                                  "core": {
+                                    "name": "Atelier Nord",
+                                    "screen_name": "ateliernord"
+                                  },
+                                  "avatar": {
+                                    "image_url": "https://pbs.twimg.com/profile_images/9100000002/a1_normal.jpg"
+                                  }
+                                },
+                                "id": "VXNlclJlc3VsdHM69100000002"
+                              }
+                            },
+                            "details": {
+                              "full_text": "La grille d’origine",
+                              "display_text_range": [
+                                0,
+                                19
+                              ],
+                              "created_at_ms": 1791374400000
+                            },
+                            "url_entities": [],
+                            "media_entities2": [],
+                            "mention_entities": [],
+                            "legacy": {
+                              "lang": "fr",
+                              "possibly_sensitive": false
+                            },
+                            "counts": {
+                              "favorite_count": 3,
+                              "retweet_count": 0,
+                              "reply_count": 0,
+                              "quote_count": 0,
+                              "bookmark_count": 1
+                            },
+                            "perspective": {
+                              "bookmarked": true,
+                              "favorited": false,
+                              "retweeted": false
+                            }
+                          },
+                          "id": "VHdlZXRSZXN1bHRzOg=="
+                        }
+                      },
+                      "id": "VHdlZXRSZXN1bHRzOg=="
+                    }
+                  }
+                }
+              },
+              {
+                "entry_id": "tweet-1870000000000000104",
+                "sort_index": "1889999999999000104",
+                "content": {
+                  "__typename": "TimelineTimelineItem",
+                  "content": {
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "rest_id": "1870000000000000104",
+                      "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1870000000000000104",
+                        "id": "VHdlZXQ61870000000000000104",
+                        "core": {
+                          "user_results": {
+                            "result": {
+                              "__typename": "User",
+                              "rest_id": "9100000001",
+                              "id": "VXNlclJlc3VsdHM69100000001",
+                              "core": {
+                                "name": "Studio Lumen",
+                                "screen_name": "studiolumen"
+                              },
+                              "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/9100000001/a1_normal.jpg"
+                              }
+                            },
+                            "id": "VXNlclJlc3VsdHM69100000001"
+                          }
+                        },
+                        "details": {
+                          "full_text": "RT @ateliernord: Palette d’automne",
+                          "display_text_range": [
+                            0,
+                            34
+                          ],
+                          "created_at_ms": 1791450000000
+                        },
+                        "url_entities": [],
+                        "media_entities2": [],
+                        "mention_entities": [],
+                        "legacy": {
+                          "lang": "fr",
+                          "possibly_sensitive": false,
+                          "retweeted_status_results": {
+                            "rest_id": "1870000000000000080",
+                            "result": {
+                              "__typename": "Tweet",
+                              "rest_id": "1870000000000000080",
+                              "id": "VHdlZXQ61870000000000000080",
+                              "core": {
+                                "user_results": {
+                                  "result": {
+                                    "__typename": "User",
+                                    "rest_id": "9100000002",
+                                    "id": "VXNlclJlc3VsdHM69100000002",
+                                    "core": {
+                                      "name": "Atelier Nord",
+                                      "screen_name": "ateliernord"
+                                    },
+                                    "avatar": {
+                                      "image_url": "https://pbs.twimg.com/profile_images/9100000002/a1_normal.jpg"
+                                    }
+                                  },
+                                  "id": "VXNlclJlc3VsdHM69100000002"
+                                }
+                              },
+                              "details": {
+                                "full_text": "Palette d’automne",
+                                "display_text_range": [
+                                  0,
+                                  17
+                                ],
+                                "created_at_ms": 1791201600000
+                              },
+                              "url_entities": [],
+                              "media_entities2": [],
+                              "mention_entities": [],
+                              "legacy": {
+                                "lang": "fr",
+                                "possibly_sensitive": false
+                              },
+                              "counts": {
+                                "favorite_count": 3,
+                                "retweet_count": 0,
+                                "reply_count": 0,
+                                "quote_count": 0,
+                                "bookmark_count": 1
+                              },
+                              "perspective": {
+                                "bookmarked": true,
+                                "favorited": false,
+                                "retweeted": false
+                              }
+                            },
+                            "id": "VHdlZXRSZXN1bHRzOg=="
+                          }
+                        },
+                        "counts": {
+                          "favorite_count": 3,
+                          "retweet_count": 0,
+                          "reply_count": 0,
+                          "quote_count": 0,
+                          "bookmark_count": 1
+                        },
+                        "perspective": {
+                          "bookmarked": true,
+                          "favorited": false,
+                          "retweeted": false
+                        }
+                      },
+                      "id": "VHdlZXRSZXN1bHRzOg=="
+                    }
+                  }
+                }
+              },
+              {
+                "entry_id": "tweet-1870000000000000105",
+                "sort_index": "1889999999999000105",
+                "content": {
+                  "__typename": "TimelineTimelineItem",
+                  "content": {
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "rest_id": "1870000000000000105",
+                      "result": {
+                        "__typename": "TweetWithVisibilityResults",
+                        "tweet": {
+                          "__typename": "Tweet",
+                          "rest_id": "1870000000000000105",
+                          "id": "VHdlZXQ61870000000000000105",
+                          "core": {
+                            "user_results": {
+                              "result": {
+                                "__typename": "User",
+                                "rest_id": "9100000002",
+                                "id": "VXNlclJlc3VsdHM69100000002",
+                                "core": {
+                                  "name": "Atelier Nord",
+                                  "screen_name": "ateliernord"
+                                },
+                                "avatar": {
+                                  "image_url": "https://pbs.twimg.com/profile_images/9100000002/a1_normal.jpg"
+                                }
+                              },
+                              "id": "VXNlclJlc3VsdHM69100000002"
+                            }
+                          },
+                          "details": {
+                            "full_text": "Note longue tronquée",
+                            "display_text_range": [
+                              0,
+                              20
+                            ],
+                            "created_at_ms": 1791446400000
+                          },
+                          "url_entities": [],
+                          "media_entities2": [],
+                          "mention_entities": [],
+                          "legacy": {
+                            "lang": "fr",
+                            "possibly_sensitive": false
+                          },
+                          "counts": {
+                            "favorite_count": 3,
+                            "retweet_count": 0,
+                            "reply_count": 0,
+                            "quote_count": 0,
+                            "bookmark_count": 1
+                          },
+                          "perspective": {
+                            "bookmarked": true,
+                            "favorited": false,
+                            "retweeted": false
+                          },
+                          "note_tweet": {
+                            "is_expandable": true,
+                            "note_tweet_results": {
+                              "result": {
+                                "__typename": "NoteTweet",
+                                "id": "Tm90ZQ==",
+                                "rest_id": "1",
+                                "text": "Note longue complète, avec tous ses paragraphes.",
+                                "entity_set": {
+                                  "urls": []
+                                }
+                              },
+                              "id": "Tm90ZQ=="
+                            }
+                          }
+                        }
+                      },
+                      "id": "VHdlZXRSZXN1bHRzOg=="
+                    }
+                  }
+                }
+              },
+              {
+                "entry_id": "tweet-1870000000000000106",
+                "sort_index": "1889999999999000106",
+                "content": {
+                  "__typename": "TimelineTimelineItem",
+                  "content": {
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "rest_id": "1870000000000000106",
+                      "result": {
+                        "__typename": "TweetTombstone",
+                        "tombstone": {
+                          "__typename": "TextTombstone",
+                          "text": {
+                            "text": "Ce post n’est plus disponible."
+                          }
+                        }
+                      },
+                      "id": "VHdlZXRSZXN1bHRzOg=="
+                    }
+                  }
+                }
+              },
+              {
+                "entry_id": "cursor-top-1889999999999000107",
+                "sort_index": "1889999999999000107",
+                "content": {
+                  "__typename": "TimelineTimelineCursor",
+                  "cursor_type": "Top",
+                  "value": "WEVXRUItaGF1dA",
+                  "stop_on_empty_response": null
+                }
+              },
+              {
+                "entry_id": "cursor-bottom-1889999999999000100",
+                "sort_index": "1889999999999000100",
+                "content": {
+                  "__typename": "TimelineTimelineCursor",
+                  "cursor_type": "Bottom",
+                  "value": "WEVXRUItc3VpdGU",
+                  "stop_on_empty_response": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "id": "VGltZWxpbmU6"
+    }
+  }
+}

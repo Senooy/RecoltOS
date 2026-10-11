@@ -11,7 +11,9 @@
   if (w.__recoltosHooked) return
   w.__recoltosHooked = true
   const WATCH = [
-    /\/i\/api\/graphql\/[^/]+\/(Bookmarks|CreateBookmark|TweetDetail|HomeTimeline|HomeLatestTimeline)\b/,
+    // X : ancien client (`x.com/i/api/graphql/<id>/Bookmarks`) et client x-web (requêtes Relay
+    // persistées sur `api.x.com/graphql/<id>/<nom>` ou `x.com/i/api/graphql/…`).
+    /\/graphql\/[^/?]+\/(Bookmarks|bookmarksQuery|CreateBookmark|bookmarkButtonAddMutation|TweetDetail|TweetResultByRestId|HomeTimeline(?:Query)?|HomeLatestTimeline(?:Query)?|UserTweets)\b/,
     /\/api\/v1\/feed\/saved\/posts\//,
     /\/api\/v1\/web\/save\/\d+\/(save|unsave)\//,
     /^https:\/\/www\.instagram\.com\/(graphql\/query|api\/graphql)\/?(\?|$)/,

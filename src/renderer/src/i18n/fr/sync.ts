@@ -33,7 +33,9 @@ export const sync = {
       permissions: (p: SyncPlatformKey) =>
         `Autorise l’accès à ${SITE[p]} dans l’extension (bouton de l’extension › « Autoriser l’accès aux sites »)`,
       blocked: (p: SyncPlatformKey) =>
-        `${NAME[p]} refuse la requête de l’extension : ouvre ${SITE[p]} pour te reconnecter, puis « Synchroniser maintenant »`,
+        p === 'x'
+          ? 'X refuse la requête de l’extension : ouvre x.com/i/bookmarks (tes favoris y sont aussi récupérés), puis « Synchroniser maintenant »'
+          : `${NAME[p]} refuse la requête de l’extension : ouvre ${SITE[p]} pour te reconnecter, puis « Synchroniser maintenant »`,
       authRequired: (p: SyncPlatformKey, browser: string | null) =>
         p === 'instagram'
           ? `Instagram demande une vérification : ouvre instagram.com dans ${browser ?? 'ton navigateur'}`

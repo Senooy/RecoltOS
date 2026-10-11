@@ -124,13 +124,23 @@ test('sync en arrière-plan sans onglet : cookies de session, CSRF et Origin ré
   const pagesBefore = ctx.pages().length
   const x = await ev<{ kind: string; json: { data?: unknown } }>(`.fetchPage('x', null)`)
   expect(x.kind).toBe('page')
-  const bm = srv.log.find((l) => l.path.includes('/Bookmarks?'))!
+  const bm = srv.log.find((l) => l.path.includes('/bookmarksQuery?'))!
   expect(bm.csrf).toBe('csrf-test')
   expect(bm.cookie).toContain('ct0=csrf-test')
   expect(bm.cookie).toContain('auth_token=session-test')
   expect(bm.origin).toBe(srv.base)
-  // queryId découvert dans le bundle factice (accueil puis main.js), depuis l'arrière-plan.
-  expect(bm.path).toContain('/BoOkMaRkSqUeRy0001/Bookmarks')
+  // Identifiant persisté découvert dans les extraits x-web (accueil → entrée → routes → chunk).
+  expect(bm.path).toContain('/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery')
+  // Découverte du client web sans cookie.
+  const entry = srv.log.find((l) => l.path.includes('/entry-client-'))!
+  expect(entry.cookie).toBe('')
+  // Cosmos : jeton par /api/refresh-token (cookies du site), puis GraphQL avec Authorization.
+  const cos = await ev<{ kind: string }>(`.fetchPage('cosmos', null)`)
+  expect(cos.kind).toBe('page')
+  expect(srv.log.some((l) => l.path === '/cosmos/api/refresh-token')).toBe(true)
+  const gql = srv.log.find((l) => l.path === '/cosmos/graphql')!
+  expect(gql.auth).toBe('présent')
+  expect(gql.origin).toBe(srv.base)
   const ig = await ev<{ kind: string }>(`.fetchPage('instagram', 'QVFD')`)
   expect(ig.kind).toBe('page')
   const igLog = srv.log.find((l) =>

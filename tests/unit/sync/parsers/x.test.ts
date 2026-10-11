@@ -420,3 +420,74 @@ describe('outils X', () => {
     expect(bestMp4(undefined)).toBeNull()
   })
 })
+
+describe('parseXBookmarksPage — client x-web (bookmarksQuery)', () => {
+  // Fixture SYNTHÉTIQUE dont la forme suit l'AST Relay public de `bookmarksQuery` (relevé du
+  // 2026-10-12 : `entry_id`, `sort_index`, `content.content.tweet_results`, `details`,
+  // `media_entities2`, `url_entities`, `quoted_tweet_results`, `legacy.retweeted_status_results`).
+  it('entrées, curseur, texte, médias, réponse, citation, repost, note et tombstone', () => {
+    const r = parse('xweb-page-1.json')
+    expect(r.nextCursor).toBe('WEVXRUItc3VpdGU')
+    expect(r.stats).toMatchObject({ entries: 6, parsed: 5, unavailable: 1 })
+    const [photos, video, reply, repost, note] = r.posts
+    expect(photos).toMatchObject({
+      externalId: '1870000000000000101',
+      kind: 'image',
+      sourceUrl: 'https://x.com/studiolumen/status/1870000000000000101',
+      remoteSort: '1889999999999000101',
+      postedAt: OCT_8,
+      text: 'Deux affiches de la saison https://example.com/affiches',
+    })
+    expect(photos!.author).toEqual({
+      id: '9100000001',
+      name: 'Studio Lumen',
+      handle: 'studiolumen',
+      avatarUrl: 'https://pbs.twimg.com/profile_images/9100000001/a1_400x400.jpg',
+    })
+    expect(photos!.media.map((m) => [m.url, m.width, m.height])).toEqual([
+      ['https://pbs.twimg.com/media/XwEbPhOtO1?format=jpg&name=orig', 1600, 2000],
+      ['https://pbs.twimg.com/media/XwEbPhOtO2?format=png&name=orig', 1200, 1200],
+    ])
+    expect(video).toMatchObject({ kind: 'video', text: 'Making-of du tournage' })
+    expect(video!.media[0]).toMatchObject({
+      url: 'https://video.twimg.com/amplify_video/3300000000000000201/vid/avc1/1280x720/haute.mp4',
+      hlsUrl: 'https://video.twimg.com/amplify_video/3300000000000000201/pl/playlist.m3u8',
+      posterUrl: 'https://pbs.twimg.com/amplify_video_thumb/3300000000000000201/img/PoStEr.jpg',
+      durationMs: 12500,
+    })
+    expect(reply!.text).toBe('Suite du fil, avec la version finale')
+    expect(xExtra(reply!.extra)).toMatchObject({
+      inReplyToId: '1870000000000000101',
+      inReplyToHandle: 'studiolumen',
+      selfReply: true,
+    })
+    expect(reply!.postMeta.quoted).toMatchObject({
+      url: 'https://x.com/ateliernord/status/1870000000000000090',
+      text: 'La grille d’origine',
+    })
+    expect(repost).toMatchObject({ externalId: '1870000000000000080', text: 'Palette d’automne' })
+    expect(xExtra(repost!.extra).retweetedBy?.handle).toBe('studiolumen')
+    expect(note).toMatchObject({ text: 'Note longue complète, avec tous ses paragraphes.' })
+    expect(xExtra(note!.extra).noteTweet).toBe(true)
+  })
+
+  it('page sans tweet → curseur nul ; sponsorisé et module de conversation x-web', () => {
+    expect(parse('xweb-page-fin.json')).toMatchObject({ posts: [], nextCursor: null })
+    const page = mutable('x', 'xweb-page-1.json')
+    const entries = page.data.bookmark_timeline_v2.timeline.instructions[0].entries
+    entries[1].content.content.promoted_metadata = { impression_id: 'pub' }
+    const tweet = entries[0]
+    entries.splice(0, 1, {
+      entry_id: 'conversation-1',
+      sort_index: '1889999999999000101',
+      content: {
+        __typename: 'TimelineTimelineModule',
+        items: [{ entry_id: 'conversation-1-tweet-1', item: { content: tweet.content.content } }],
+      },
+    })
+    const r = expectOk(parseXBookmarksPage(page))
+    expect(r.posts.map((p) => p.externalId)).toContain('1870000000000000101')
+    expect(r.posts.map((p) => p.externalId)).not.toContain('1870000000000000102')
+    expect(r.issues.some((i) => i.reason === 'contenu sponsorisé')).toBe(true)
+  })
+})

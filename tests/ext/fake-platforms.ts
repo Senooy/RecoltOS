@@ -3,7 +3,7 @@
  * endpoints de sync X / Instagram / Cosmos rejoués depuis les fixtures SYNTHÉTIQUES. Journalise les
  * requêtes (méthode, chemin, en-têtes utiles) pour vérifier cookies, CSRF et `Origin`.
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { join } from 'node:path'
@@ -96,18 +96,31 @@ export async function startFakePlatforms(port = 0, hostName = '127.0.0.1'): Prom
         '<!doctype html><html><head><title>Page de test</title><meta property="og:image" content="/img.png"></head><body><img id="i" src="/img.png" width="64" height="64"></body></html>',
       )
     }
-    // ---- X
+    // ---- X : client x-web (extraits réels minimaux), passerelle des requêtes persistées
     if (p === '/x/') {
       res.writeHead(200, { 'content-type': 'text/html' })
       return res.end(
-        fixture('x/bundle/accueil.html')
+        fixture('x/xweb/accueil.html')
           .toString()
-          .replace(/https:\/\/abs\.twimg\.com\/responsive-web\/client-web\//g, `${base}/abs/`),
+          .replace(/https:\/\/abs\.twimg\.com\//g, `${base}/abs/`),
       )
     }
-    if (p.startsWith('/abs/main.')) {
+    if (p === '/x/sw.js') {
       res.writeHead(200, { 'content-type': 'application/javascript' })
-      return res.end(fixture('x/bundle/main.js'))
+      return res.end(fixture('x/xweb/sw.js'))
+    }
+    if (p.startsWith('/abs/x-web/')) {
+      const name = p.slice(p.lastIndexOf('/') + 1)
+      if (/^[\w.-]+\.js$/.test(name) && existsSync(join(FIX, 'x/xweb', name))) {
+        res.writeHead(200, { 'content-type': 'application/javascript' })
+        return res.end(fixture(`x/xweb/${name}`))
+      }
+      res.writeHead(404)
+      return res.end()
+    }
+    if (/^\/x\/i\/api\/graphql\/[^/]+\/bookmarksQuery$/.test(p)) {
+      const vars = JSON.parse(url.searchParams.get('variables') ?? '{}') as { cursor?: string }
+      return json(200, fixture(vars.cursor ? 'x/xweb-page-fin.json' : 'x/xweb-page-1.json'))
     }
     if (/^\/x\/i\/api\/graphql\/[^/]+\/Bookmarks$/.test(p)) {
       const vars = JSON.parse(url.searchParams.get('variables') ?? '{}') as { cursor?: string }
@@ -122,12 +135,14 @@ export async function startFakePlatforms(port = 0, hostName = '127.0.0.1'): Prom
         ),
       )
     }
-    // ---- Cosmos
-    if (p === '/cosmos/graphql') {
-      const q = url.searchParams.get('q')
-      if (q === 'Me') return json(200, fixture('cosmos/me.json'))
-      return json(200, fixture('cosmos/page-fin.json'))
+    // ---- Cosmos : jeton d'accès (JWT factice non signé) puis GraphQL
+    if (p === '/cosmos/api/refresh-token') {
+      const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url')
+      return json(200, {
+        accessToken: `${b64({ alg: 'none' })}.${b64({ exp: 4_000_000_000, eid: 8800001 })}.sig`,
+      })
     }
+    if (p === '/cosmos/graphql') return json(200, fixture('cosmos/page-fin.json'))
     res.writeHead(404)
     res.end()
   })

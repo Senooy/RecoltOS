@@ -1,0 +1,141 @@
+{
+  "data": {
+    "allElementsV2": {
+      "items": [
+        {
+          "__typename": "MediaElementTile",
+          "id": "1500000001",
+          "createdAt": "2026-10-01T07:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1500000001",
+          "ownerId": 8800001,
+          "generatedCaption": {
+            "text": "Description générée 1"
+          },
+          "source": {
+            "url": "https://example.com/source/1",
+            "author": {
+              "username": "auteur.source",
+              "fullName": "Auteur Source"
+            }
+          },
+          "media": {
+            "__typename": "StaticImage",
+            "url": "https://cdn.cosmos.so/1a2b3c4d-1111-4b3a-9f8e-7d6c5b4a3001?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": [
+            {
+              "__typename": "StaticImage",
+              "url": "https://cdn.cosmos.so/1a2b3c4d-1111-4b3a-9f8e-7d6c5b4a3001?format=webp",
+              "width": 1200,
+              "height": 1500
+            },
+            {
+              "__typename": "StaticImage",
+              "url": "https://cdn.cosmos.so/1a2b3c4d-2222-4b3a-9f8e-7d6c5b4a3002?format=webp",
+              "width": 800,
+              "height": 600
+            }
+          ]
+        },
+        {
+          "__typename": "MediaElementTile",
+          "id": "1500000002",
+          "createdAt": "2026-10-02T07:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1500000002",
+          "ownerId": 8800001,
+          "generatedCaption": {
+            "text": "Description générée 2"
+          },
+          "source": {
+            "url": null,
+            "author": null
+          },
+          "media": {
+            "__typename": "Video",
+            "url": "https://cdn.cosmos.so/1a2b3c4d-3333-4b3a-9f8e-7d6c5b4a3003",
+            "width": 1080,
+            "height": 1920,
+            "thumbnail": {
+              "url": "https://cdn.cosmos.so/1a2b3c4d-3334-4b3a-9f8e-7d6c5b4a3003?format=webp"
+            },
+            "mux": {
+              "playbackUrl": "https://stream.mux.com/syntheticPlayback2.m3u8",
+              "mp4Url": "https://stream.mux.com/syntheticPlayback2/high.mp4"
+            }
+          },
+          "multipleMedia": null
+        },
+        {
+          "__typename": "MediaElementTile",
+          "id": "1500000003",
+          "createdAt": "2026-10-03T07:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1500000003",
+          "ownerId": 8800001,
+          "generatedCaption": {
+            "text": "Description générée 3"
+          },
+          "source": {
+            "url": null,
+            "author": null
+          },
+          "media": {
+            "__typename": "AnimatedImage",
+            "url": "https://cdn.cosmos.so/1a2b3c4d-4444-4b3a-9f8e-7d6c5b4a3004?format=webp",
+            "width": 480,
+            "height": 480,
+            "video": {
+              "url": "https://cdn.cosmos.so/1a2b3c4d-4444-4b3a-9f8e-7d6c5b4a3004.mp4",
+              "thumbnailUrl": "https://cdn.cosmos.so/1a2b3c4d-4444-4b3a-9f8e-7d6c5b4a3004?format=jpeg"
+            }
+          },
+          "multipleMedia": []
+        },
+        {
+          "__typename": "WebsiteElementTile",
+          "id": "1500000004",
+          "createdAt": "2026-10-04T07:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1500000004",
+          "ownerId": 8800001,
+          "generatedCaption": {
+            "text": "Description générée 4"
+          },
+          "source": {
+            "url": "https://example.com/article",
+            "author": {
+              "username": "redaction",
+              "fullName": null
+            }
+          },
+          "media": {
+            "__typename": "StaticImage",
+            "url": "https://cdn.cosmos.so/1a2b3c4d-5555-4b3a-9f8e-7d6c5b4a3005?format=webp",
+            "width": 1200,
+            "height": 630
+          },
+          "websiteTitle": "Un article de référence"
+        },
+        {
+          "__typename": "TextElementTile",
+          "id": "1500000005",
+          "createdAt": "2026-10-05T07:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1500000005",
+          "ownerId": 8800001,
+          "generatedCaption": {
+            "text": "Description générée 5"
+          },
+          "source": {
+            "url": null,
+            "author": null
+          },
+          "text": "Une citation enregistrée"
+        }
+      ],
+      "meta": {
+        "nextPageCursor": "Y3Vyc2V1ci0y",
+        "count": 5
+      }
+    }
+  }
+}

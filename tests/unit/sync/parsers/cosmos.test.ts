@@ -145,3 +145,40 @@ describe('parseCosmosSavesPage — robustesse', () => {
     }
   })
 })
+
+describe('parseCosmosSavesPage — schéma relevé le 2026-10-12', () => {
+  // Fixture SYNTHÉTIQUE dont la forme suit la requête de l'extension, validée contre le schéma
+  // public d'api.cosmos.so (médias typés, `source.author` objet, tuiles typées).
+  it('image, vidéo Mux, GIF animé, site web, tuile texte ignorée', () => {
+    const r = parse('schema-2026.json')
+    expect(r.nextCursor).toBe('Y3Vyc2V1ci0y')
+    expect(r.stats).toMatchObject({ entries: 5, parsed: 4, ignored: 1 })
+    const [image, video, gif, site] = r.posts
+    expect(image!.media.map((m) => m.url)).toEqual([
+      'https://cdn.cosmos.so/1a2b3c4d-1111-4b3a-9f8e-7d6c5b4a3001',
+      'https://cdn.cosmos.so/1a2b3c4d-2222-4b3a-9f8e-7d6c5b4a3002',
+    ])
+    expect(image!.author).toEqual({
+      id: null,
+      name: 'Auteur Source',
+      handle: 'auteur.source',
+      avatarUrl: null,
+    })
+    expect(cExtra(image!.extra).ownerId).toBe('8800001')
+    expect(video).toMatchObject({ kind: 'video' })
+    expect(video!.media[0]).toMatchObject({
+      url: 'https://stream.mux.com/syntheticPlayback2/high.mp4',
+      posterUrl: 'https://cdn.cosmos.so/1a2b3c4d-3334-4b3a-9f8e-7d6c5b4a3003',
+      width: 1080,
+      height: 1920,
+      gif: false,
+    })
+    expect(gif!.media[0]).toMatchObject({
+      type: 'video',
+      url: 'https://cdn.cosmos.so/1a2b3c4d-4444-4b3a-9f8e-7d6c5b4a3004.mp4',
+      gif: true,
+    })
+    expect(site).toMatchObject({ kind: 'url', text: 'Un article de référence' })
+    expect(cExtra(site!.extra).linkUrl).toBe('https://example.com/article')
+  })
+})

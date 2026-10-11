@@ -10,7 +10,8 @@ import {
 import type { PayloadOf, PlatformState, PlatformsState } from '../../../src/shared/bridge/messages'
 import { api, TARGET } from '../lib/api'
 import { ENDPOINTS } from '../lib/endpoints'
-import { accountFromTwid, cookieNames, cosmosToken, getLocal, readCookie, setLocal } from './creds'
+import { accountFromTwid, cookieNames, getLocal, readCookie, setLocal } from './creds'
+import { cosmosTokenUsable, storedCosmosToken } from './sync/platforms'
 
 export async function hasPermission(p: BridgePlatform): Promise<boolean> {
   try {
@@ -33,12 +34,14 @@ export async function platformState(p: BridgePlatform): Promise<PlatformState> {
     ])
     return { loggedIn: !!sid, accountId: sid ? uid : null, permission }
   }
-  const token = await cosmosToken()
-  const names = token ? [] : await cookieNames('cosmos')
-  const me = await getLocal<{ id: string; username?: string }>('cosmos.me')
+  // Cosmos : jeton d'accès encore valable, sinon un cookie de session du site (le cookie de
+  // rafraîchissement est httpOnly : seul son nom est lu, jamais sa valeur).
+  const usable = cosmosTokenUsable(await storedCosmosToken())
+  const names = usable ? [] : await cookieNames('cosmos')
+  const me = await getLocal<{ id: string | number; username?: string }>('cosmos.me')
   return {
-    loggedIn: !!token || names.some((n) => /session|token|auth/i.test(n)),
-    accountId: me?.id ?? null,
+    loggedIn: usable || names.some((n) => /session|token|auth|refresh|jwt|csms_account/i.test(n)),
+    accountId: me?.id !== undefined ? String(me.id) : null,
     handle: me?.username ?? null,
     permission,
   }
