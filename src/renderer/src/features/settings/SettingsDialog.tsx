@@ -1,7 +1,8 @@
 /**
  * Réglages (DESIGN §3.10, WP-16) : modale 750×570 (rayon 14), barre latérale de 196 px (9 sections,
  * sans Compte / Abonnement / Mises à jour), gabarit `SettingsRow`. Sections livrées en M1 :
- * Apparence, Bibliothèques (avec l'import GatherOS), À propos ; les autres affichent un message.
+ * Apparence, Bibliothèques (avec l'import GatherOS), À propos ; M2 (WP-24) : Tags, Stockage, Données.
+ * IA, Capture et Synchronisation affichent un message jusqu'à leurs jalons.
  */
 import {
   Camera,
@@ -23,7 +24,10 @@ import { cn } from '../../lib/cn'
 import { useUi, type SettingsSection } from '../../state/ui'
 import { AboutSection } from './sections/About'
 import { AppearanceSection } from './sections/Appearance'
+import { DataSection } from './sections/Data'
 import { LibrariesSection } from './sections/Libraries'
+import { StorageSection } from './sections/Storage'
+import { TagsSection } from './sections/Tags'
 
 const NAV: { key: SettingsSection; label: string; Icon: typeof Palette }[] = [
   { key: 'appearance', label: fr.settings.nav.appearance, Icon: Palette },
@@ -138,6 +142,12 @@ export default function SettingsDialog() {
               <AppearanceSection />
             ) : section === 'libraries' ? (
               <LibrariesSection />
+            ) : section === 'tags' ? (
+              <TagsSection />
+            ) : section === 'storage' ? (
+              <StorageSection />
+            ) : section === 'data' ? (
+              <DataSection />
             ) : section === 'about' ? (
               <AboutSection />
             ) : (

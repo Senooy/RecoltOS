@@ -6,6 +6,7 @@ import { rpc } from '../../../lib/rpc'
 
 export function AboutSection() {
   const [version, setVersion] = useState<string | null>(null)
+  const [licenses, setLicenses] = useState(false)
   useEffect(() => {
     void rpc('system.appInfo')
       .then((i) => setVersion(i.version))
@@ -23,13 +24,29 @@ export function AboutSection() {
       <p className="select-text max-w-[470px] text-[13.5px] leading-[19.5px] text-fg-muted">
         {fr.settings.about.body}
       </p>
-      <button
-        type="button"
-        className="text-small text-fg underline-offset-2 hover:underline"
-        onClick={() => void rpc('system.openLogs').catch(() => undefined)}
-      >
-        {fr.settings.about.logs}
-      </button>
+      <div className="flex gap-4">
+        <button
+          type="button"
+          className="text-small text-fg underline-offset-2 hover:underline"
+          onClick={() => void rpc('system.openLogs').catch(() => undefined)}
+        >
+          {fr.settings.about.logs}
+        </button>
+        <button
+          type="button"
+          data-testid="about-licenses"
+          aria-expanded={licenses}
+          className="text-small text-fg underline-offset-2 hover:underline"
+          onClick={() => setLicenses((v) => !v)}
+        >
+          {fr.settings.about.licenses}
+        </button>
+      </div>
+      {licenses ? (
+        <p className="select-text max-w-[470px] rounded-[10px] border border-[#e3e3e3] bg-[var(--surface-info)] px-4 py-3 text-[12.5px] leading-[18px] text-fg-muted dark:border-border">
+          {fr.settingsMoreUi.licensesBody}
+        </p>
+      ) : null}
     </div>
   )
 }

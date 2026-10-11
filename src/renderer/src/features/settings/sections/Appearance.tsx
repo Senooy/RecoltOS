@@ -3,6 +3,7 @@ import type { SortMode } from '../../../../../shared/enums'
 import { SegmentedSmall, Slider, Switch } from '../../../components/ui'
 import { fr } from '../../../i18n/fr'
 import { usePrefs } from '../../../state/prefs'
+import { useUi } from '../../../state/ui'
 import { SettingsRow, SettingsTitle } from '../SettingsDialog'
 
 const SORTS: { value: SortMode; label: string }[] = [
@@ -50,7 +51,10 @@ export function AppearanceSection() {
                 min={2}
                 max={8}
                 value={prefs.defaultColumns}
-                onValueChange={(defaultColumns) => update({ defaultColumns })}
+                onValueChange={(defaultColumns) => {
+                  useUi.getState().resetColumns()
+                  update({ defaultColumns })
+                }}
               />
               <span className="w-4 text-right text-small tnum">{prefs.defaultColumns}</span>
             </div>

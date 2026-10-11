@@ -21,6 +21,8 @@ export const tagsContract = {
     input: z.object({ itemUuids: z.array(Uuid).min(1), tagUuids: z.array(Uuid).min(1) }),
     output: Count,
   },
+  /** « Nouveau tag » (Réglages › Tags) : tag sans élément ; nom existant → le tag existant. */
+  'tags.create': { input: z.object({ name: TagName }), output: TagInfo },
   'tags.rename': { input: z.object({ uuid: Uuid, name: TagName }), output: TagInfo },
   'tags.delete': { input: z.object({ uuid: Uuid }), output: Void },
   'tags.merge': {

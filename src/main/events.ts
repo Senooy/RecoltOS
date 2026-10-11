@@ -29,3 +29,8 @@ export function emitCollectionsChanged(uuids: readonly string[]): void {
   if (lib) invalidateCounts(lib.db)
   emitFn?.('collections.changed', { uuids: [...uuids] })
 }
+
+/** Émission d'un autre événement métier (`export.progress`…) ; sans effet hors Electron. */
+export function emitEvent<E extends EventName>(event: E, payload: EventPayload<E>): void {
+  emitFn?.(event, payload)
+}

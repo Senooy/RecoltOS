@@ -58,6 +58,13 @@ export const tagsHandlers: DomainHandlers<'tags'> = {
     emitItemsChanged(itemUuids, 'updated')
     return { count }
   },
+  'tags.create': ({ name }) => {
+    const lib = requireLibrary()
+    const t = lib.repos.tags.ensure(name)
+    const row = lib.repos.tags.getById(t.id)
+    if (!row) throw new AppError('not_found', 'Tag introuvable.')
+    return info(lib, row)
+  },
   'tags.rename': ({ uuid, name }) => {
     const lib = requireLibrary()
     return info(lib, lib.repos.tags.rename(tagId(lib, uuid), name))

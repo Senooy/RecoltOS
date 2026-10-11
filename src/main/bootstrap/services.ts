@@ -6,6 +6,7 @@
 import { initAi } from '../ai/init'
 import { initBridge } from '../bridge/init'
 import { initCapture } from '../capture/init'
+import { initData } from '../data/init'
 import { initImportUx } from '../import-ux/init'
 import { initJobs } from '../jobs/init'
 import { initLibrary } from '../library/init'
@@ -22,6 +23,7 @@ export const SERVICE_DOMAINS = [
   'protocol',
   'menu',
   'jobs',
+  'data',
   'spaces',
   'ai',
   'sync',
@@ -37,6 +39,7 @@ export const SERVICES: readonly { domain: ServiceDomain; init: InitFn }[] = [
   { domain: 'protocol', init: initProtocol },
   { domain: 'menu', init: initMenu },
   { domain: 'jobs', init: initJobs },
+  { domain: 'data', init: initData },
   { domain: 'spaces', init: initSpaces },
   { domain: 'ai', init: initAi },
   { domain: 'sync', init: initSync },

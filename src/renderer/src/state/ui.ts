@@ -59,6 +59,8 @@ export interface UiState {
   openSearch: (seed?: SearchSeed) => void
   setColumns: (viewKey: string, n: number) => void
   setSort: (viewKey: string, sort: SortMode) => void
+  /** Réglages › Colonnes par défaut : les colonnes choisies vue par vue sont oubliées. */
+  resetColumns: () => void
 }
 
 /** Colonnes et tris par vue, mémorisés localement (confort par poste, jamais critique). */
@@ -136,6 +138,10 @@ export const useUi = create<UiState>()((set, get) => ({
     const columns = { ...get().columns, [viewKey]: clampColumns(n) }
     set({ columns })
     writeViewPrefs(columns, get().sorts)
+  },
+  resetColumns: () => {
+    set({ columns: {} })
+    writeViewPrefs({}, get().sorts)
   },
   setSort: (viewKey, sort) => {
     const sorts = { ...get().sorts, [viewKey]: sort }
