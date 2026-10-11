@@ -44,7 +44,7 @@
     "shots:compare": "tsx --tsconfig tsconfig.node.json scripts/visual/compare.mts",
     "fixtures": "tsx --tsconfig tsconfig.node.json scripts/make-fixtures.mts",
     "icon": "tsx --tsconfig tsconfig.node.json scripts/make-icon.mts && sh scripts/make-icns.sh",
-    "pack": "electron-builder --config electron-builder.config.cjs --mac dir --arm64",
+    "pack": "pnpm run build && electron-builder --config electron-builder.config.cjs --mac dir --arm64",
     "check:dist": "tsx --tsconfig tsconfig.node.json scripts/check-dist.mts",
     "dist": "run-s verify:fast build build:ext pack check:dist",
     "app:install": "sh scripts/install-local.sh",
