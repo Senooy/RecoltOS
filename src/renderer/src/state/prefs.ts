@@ -3,14 +3,15 @@
  * application du thème (`<html data-theme>`) et du mouvement réduit.
  */
 import { create } from 'zustand'
-import { DEFAULT_PREFS, mergePrefs, type Prefs, type PrefsPatch } from '../../../shared/prefs'
+import type { UserPrefsPatch } from '../../../shared/ipc/prefs'
+import { DEFAULT_PREFS, mergePrefs, type Prefs } from '../../../shared/prefs'
 import { isNotImplemented, rpc, subscribe } from '../lib/rpc'
 
 export interface PrefsState {
   prefs: Prefs
   loaded: boolean
   load(): Promise<void>
-  update(patch: PrefsPatch): Promise<void>
+  update(patch: UserPrefsPatch): Promise<void>
 }
 
 export function effectiveTheme(theme: Prefs['theme']): 'light' | 'dark' {
