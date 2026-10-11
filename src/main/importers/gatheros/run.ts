@@ -33,6 +33,8 @@ import {
   type PlannedFile,
 } from './map'
 import { readGatheros } from './read'
+import Database from 'better-sqlite3'
+import { importGatherosBoards } from '../../spaces/migrate-gatheros'
 
 export interface ImportDeps {
   lib: LibraryContext
@@ -370,6 +372,26 @@ export async function runGatherosImport(
         inc('sync_items')
       }
     })()
+
+    // 8 bis. boards → spaces (SPACES §1.10) : tolérant, idempotent par `origin_id`.
+    {
+      const legacy = new Database(snap.path, { readonly: true, fileMustExist: true })
+      try {
+        const b = importGatherosBoards(legacy, lib, {
+          itemIdOf: (saveId) => itemIds.get(saveId),
+          now,
+          log: (m) => log.warn(m),
+        })
+        if (b.spaces > 0) inc('spaces', b.spaces)
+        if (b.nodes > 0) inc('space_nodes', b.nodes)
+        if (b.skipped > 0) {
+          inc('space_nodes_skipped', b.skipped)
+          warnings.push(`${b.skipped} élément(s) de board ignoré(s)`)
+        }
+      } finally {
+        legacy.close()
+      }
+    }
 
     // 9. jobs (sans IA) : téléchargements distants et avatars en priorité haute, dérivés ensuite.
     setPhase('jobs')

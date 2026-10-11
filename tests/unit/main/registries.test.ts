@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { makeTmpDir } from '../../helpers/tmpdir'
 import { AppError } from '../../../src/shared/errors'
-import { CHANNELS, DOMAINS, domainOf } from '../../../src/shared/ipc'
+import { CHANNELS, DOMAINS, contract, domainOf } from '../../../src/shared/ipc'
 import { JOB_TYPES, type JobRecord } from '../../../src/shared/jobs'
 import { SERVICES, SERVICE_DOMAINS, initServices } from '../../../src/main/bootstrap/services'
 import type { ServiceContext } from '../../../src/main/bootstrap/context'
@@ -26,6 +26,7 @@ const IMPLEMENTED_DOMAINS: readonly string[] = [
   'capture',
   'ai',
   'bridge',
+  'spaces',
 ]
 /** Jobs IA : `not_implemented` tant qu'aucun service IA n'est enregistré (hors Electron). */
 const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']
@@ -67,10 +68,14 @@ describe('registre des handlers IPC', () => {
   })
 
   it('via dispatch, un canal stub renvoie { ok:false, code:not_implemented }', async () => {
-    const r = await dispatch('spaces.list', {}, {}, { handlers, validateOutput: true })
+    const stub = CHANNELS.find(
+      (c) => !IMPLEMENTED_DOMAINS.includes(domainOf(c)) && contract[c].input.safeParse({}).success,
+    )
+    if (!stub) return // tous les domaines sont livrés
+    const r = await dispatch(stub, {}, {}, { handlers, validateOutput: true })
     expect(r).toEqual({
       ok: false,
-      error: { code: 'not_implemented', message: "spaces.list n'est pas encore implémenté" },
+      error: { code: 'not_implemented', message: `${stub} n'est pas encore implémenté` },
     })
   })
 })
