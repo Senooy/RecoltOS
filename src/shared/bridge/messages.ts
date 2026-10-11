@@ -32,6 +32,7 @@ import {
   SyncPageMessage,
   SyncRequestMessage,
   SyncRunMessage,
+  SyncStateMessage,
 } from './sync'
 
 export const HostHello = z.object({
@@ -122,6 +123,7 @@ export const MESSAGE_SCHEMAS = {
   'sync.request': SyncRequestMessage,
   'sync.finished': SyncFinishedMessage,
   'sync.cancel': SyncCancelMessage,
+  'sync.state': SyncStateMessage,
   'capture.passive': CapturePassiveMessage,
   'item.refresh': ItemRefreshMessage,
   'item.data': ItemDataMessage,

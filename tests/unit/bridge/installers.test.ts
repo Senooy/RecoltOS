@@ -2,7 +2,7 @@
  * Wrappers, manifests natifs (Chromium + Firefox), extension en chemin fixe, coexistence GatherOS
  * (WP-52). Tout se passe dans un HOME temporaire : jamais dans `~/Library`.
  */
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
@@ -19,7 +19,6 @@ import {
   installNativeHosts,
   isOwnManifest,
   uninstallNativeHosts,
-  wrapperScript,
 } from '../../../src/main/bridge/native-host-installer'
 import { makeTmpDir } from '../../helpers/tmpdir'
 
@@ -29,12 +28,8 @@ function fakeHome(dirs: string[]): string {
   return home
 }
 
-const env = (userData: string) => ({
-  userData,
-  hostExe: '/Applications/RecoltOS.app/Contents/Resources/native-host/recolt-host',
-  socket: '/tmp/recolt-0123456789.sock',
-  inbox: join(userData, 'inbox'),
-})
+const HOST_EXE = '/Applications/RecoltOS.app/Contents/Resources/native-host/recolt-host'
+const env = (userData: string) => ({ userData, hostExe: HOST_EXE })
 
 describe('manifests natifs', () => {
   it('Chromium : allowed_origins ; Firefox : allowed_extensions ; seulement si le dossier existe', () => {
@@ -56,7 +51,7 @@ describe('manifests natifs', () => {
       name: NATIVE_HOST_NAME_DEV,
       type: 'stdio',
       allowed_origins: [EXTENSION_ORIGIN],
-      path: join(userData, 'native-host', 'recoltos-host-chrome'),
+      path: HOST_EXE,
     })
     const ff = JSON.parse(
       readFileSync(
@@ -81,16 +76,16 @@ describe('manifests natifs', () => {
     expect(r.installed).toEqual(['firefox'])
   })
 
-  it('wrapper exécutable : exporte socket, spool et navigateur, code 3 sans exécutable', () => {
+  it('plus de wrapper sh : le manifest vise l’exécutable, anciens wrappers retirés', () => {
     const userData = makeTmpDir('ud')
-    installNativeHosts({ ...env(userData), home: fakeHome([]), name: NATIVE_HOST_NAME })
-    const w = join(userData, 'native-host', 'recoltos-host-firefox')
-    expect(statSync(w).mode & 0o777).toBe(0o755)
-    const sh = readFileSync(w, 'utf8')
-    expect(sh).toBe(wrapperScript('firefox', env(userData)))
-    expect(sh).toContain("export RECOLTOS_SOCKET='/tmp/recolt-0123456789.sock'")
-    expect(sh).toContain('exit 3')
-    expect(sh).not.toContain('ELECTRON_RUN_AS_NODE')
+    mkdirSync(join(userData, 'native-host'), { recursive: true })
+    writeFileSync(join(userData, 'native-host', 'recoltos-host-chrome'), '#!/bin/sh\n')
+    installNativeHosts({
+      ...env(userData),
+      home: fakeHome(['Google/Chrome']),
+      name: NATIVE_HOST_NAME,
+    })
+    expect(existsSync(join(userData, 'native-host'))).toBe(false)
   })
 
   it('désinstallation : retire nos manifests, laisse co.gatheros.host.json intact', () => {

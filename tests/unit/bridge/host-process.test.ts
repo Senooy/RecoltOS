@@ -45,7 +45,7 @@ interface Run {
 
 function run(args: string[], env: Record<string, string>): Run {
   const proc = spawn(process.execPath, [hostJs, ...args], {
-    env: { PATH: '/usr/bin:/bin', ...env },
+    env: { PATH: '/usr/bin:/bin', RECOLTOS_USER_DATA: makeTmpDir('host-ud'), ...env },
     cwd: os.tmpdir(),
   })
   procs.push(proc)
@@ -198,6 +198,23 @@ describe('hôte natif (processus)', () => {
       browser: 'firefox',
       origin: EXTENSION_ORIGIN,
     })
+  })
+
+  it('sans variables : socket et spool lus dans host.json de l’app', async () => {
+    const userData = makeTmpDir('host-json')
+    const { writeFileSync } = await import('node:fs')
+    const sock = socketPath(userData)
+    const server = net.createServer((s) => s.on('data', () => undefined))
+    servers.push(server)
+    await new Promise<void>((r) => server.listen(sock, r))
+    writeFileSync(
+      join(userData, 'host.json'),
+      JSON.stringify({ socket: sock, inbox: join(userData, 'inbox') }),
+    )
+    const r = run([EXTENSION_ORIGIN], { RECOLTOS_USER_DATA: userData })
+    await r.waitFor(
+      (m) => m.type === 'app.status' && (m.payload as { connected: boolean }).connected,
+    )
   })
 
   it('le bundle ne requiert que des modules intégrés', () => {

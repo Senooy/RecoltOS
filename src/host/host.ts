@@ -7,8 +7,10 @@
  *
  * stdout est réservé au protocole ; les journaux vont sur stderr.
  */
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import net from 'node:net'
+import os from 'node:os'
 import path from 'node:path'
 import {
   BRIDGE_PROTOCOL_VERSION,
@@ -24,6 +26,10 @@ export const HOST_VERSION = '1.0.0'
 
 export interface HostIo {
   argv: readonly string[]
+  /** Chemin de l'exécutable (choix du dossier de l'app : packagée ou développement). */
+  execPath?: string
+  home?: string
+  ppid?: number
   env: Record<string, string | undefined>
   stdin: NodeJS.ReadableStream
   stdout: { write(b: Buffer): boolean }
@@ -51,6 +57,55 @@ export function callerOrigin(argv: readonly string[], allowed: readonly string[]
 
 export const DEFAULT_ALLOWED = [EXTENSION_ORIGIN, GECKO_ID]
 
+/**
+ * Dossier de données de l'app qui a installé l'hôte : `RECOLTOS_USER_DATA`, sinon
+ * `~/Library/Application Support/RecoltOS` (exécutable dans un `.app`) ou `RecoltOS-dev`.
+ */
+export function appUserData(env: HostIo['env'], execPath: string, home: string): string {
+  if (env.RECOLTOS_USER_DATA) return env.RECOLTOS_USER_DATA
+  const name = /\.app\/Contents\//.test(execPath) ? 'RecoltOS' : 'RecoltOS-dev'
+  return path.join(home, 'Library', 'Application Support', name)
+}
+
+/**
+ * Socket et spool : variables d'environnement (tests), sinon `host.json` écrit par l'app à chaque
+ * lancement. Le navigateur lance l'exécutable DIRECTEMENT (S5 : Chromium ne lance pas un script shell).
+ */
+export function hostConfig(
+  env: HostIo['env'],
+  execPath: string,
+  home: string,
+): { socket: string; inbox: string } {
+  const dir = appUserData(env, execPath, home)
+  let fromFile: { socket?: unknown; inbox?: unknown } = {}
+  try {
+    fromFile = JSON.parse(fs.readFileSync(path.join(dir, 'host.json'), 'utf8')) as typeof fromFile
+  } catch {
+    // app jamais lancée : l'extension saura qu'elle est fermée
+  }
+  return {
+    socket: env.RECOLTOS_SOCKET ?? (typeof fromFile.socket === 'string' ? fromFile.socket : ''),
+    inbox:
+      env.RECOLTOS_INBOX ??
+      (typeof fromFile.inbox === 'string' ? fromFile.inbox : path.join(dir, 'inbox')),
+  }
+}
+
+/** Nom du processus parent (le navigateur), pour l'affichage dans les Réglages. */
+export function parentName(ppid: number | undefined): string {
+  if (!ppid) return 'unknown'
+  try {
+    const comm = execFileSync('/bin/ps', ['-o', 'comm=', '-p', String(ppid)], {
+      encoding: 'utf8',
+      timeout: 2_000,
+    }).trim()
+    const app = /\/([^/]+)\.app\/Contents\/MacOS\//.exec(comm)?.[1]
+    return (app ?? path.basename(comm)).slice(0, 40) || 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
 export function startHost(io: HostIo): { stop(): void } {
   const log = (s: string) => io.stderr.write(`[recoltos-host] ${s}\n`)
   const allowed = io.env.RECOLTOS_ALLOWED_ORIGINS
@@ -62,9 +117,10 @@ export function startHost(io: HostIo): { stop(): void } {
     io.exit(2)
     return { stop() {} }
   }
-  const sockPath = io.env.RECOLTOS_SOCKET ?? ''
-  const inbox = io.env.RECOLTOS_INBOX ?? ''
-  const browser = io.env.RECOLTOS_BROWSER ?? 'unknown'
+  const cfg = hostConfig(io.env, io.execPath ?? io.argv[0] ?? '', io.home ?? os.homedir())
+  const sockPath = cfg.socket
+  const inbox = cfg.inbox
+  const browser = io.env.RECOLTOS_BROWSER ?? parentName(io.ppid)
   const now = io.now ?? Date.now
   let stopped = false
 

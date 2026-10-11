@@ -25,6 +25,7 @@ export const MESSAGE_TYPES = [
   'sync.request',
   'sync.finished',
   'sync.cancel',
+  'sync.state',
   'capture.passive',
   'item.refresh',
   'item.data',

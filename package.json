@@ -18,6 +18,8 @@
     "build:app": "electron-vite build",
     "build:host": "tsx --tsconfig tsconfig.node.json scripts/build-host.mts",
     "build:ext": "tsx --tsconfig tsconfig.node.json scripts/build-ext.mts",
+    "lint:ext": "web-ext lint --source-dir dist-extension/firefox",
+    "sign:firefox": "tsx --tsconfig tsconfig.node.json scripts/sign-firefox.mts",
     "gen:bridge-schema": "tsx --tsconfig tsconfig.node.json scripts/gen-bridge-schema.mts",
     "preview": "electron-vite preview",
     "typecheck": "tsc -b",

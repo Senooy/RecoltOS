@@ -121,3 +121,15 @@ export const AuthorSeenMessage = z.object({
   name: z.string().max(200).nullable().optional(),
   avatarUrl: z.string().max(4096).nullable().optional(),
 })
+
+/** État de la sync par plateforme, poussé par l'app (popup de l'extension). */
+export const SyncSourceState = z.object({
+  enabled: z.boolean(),
+  status: z.string().max(40),
+  lastSuccessAt: z.number().int().nullable(),
+  detail: z.string().max(80).nullable(),
+})
+export const SyncStateMessage = z.object({
+  sources: z.object({ x: SyncSourceState, instagram: SyncSourceState, cosmos: SyncSourceState }),
+})
+export type SyncStateMessage = z.output<typeof SyncStateMessage>

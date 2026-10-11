@@ -6,6 +6,8 @@ import { startHost } from './host'
 
 startHost({
   argv: process.argv,
+  execPath: process.execPath,
+  ppid: process.ppid,
   env: process.env,
   stdin: process.stdin,
   stdout: process.stdout,

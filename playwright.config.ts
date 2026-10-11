@@ -56,6 +56,11 @@ export default defineConfig({
       dependencies: ['build'],
     },
     { name: 'packaged', testDir: 'tests/packaged', testMatch: /.*\.spec\.ts$/ },
-    { name: 'ext-smoke', testDir: 'tests/ext', testMatch: /.*\.spec\.ts$/ },
+    {
+      name: 'ext-smoke',
+      testDir: 'tests/ext',
+      testMatch: /.*\.spec\.ts$/,
+      dependencies: ['build'],
+    },
   ],
 })

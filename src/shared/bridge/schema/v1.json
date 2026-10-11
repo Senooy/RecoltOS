@@ -1169,6 +1169,126 @@
         },
         "required": ["runId"]
       },
+      "sync.state": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "lastSuccessAt": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "detail": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["enabled", "status", "lastSuccessAt", "detail"]
+              },
+              "instagram": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "lastSuccessAt": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "detail": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["enabled", "status", "lastSuccessAt", "detail"]
+              },
+              "cosmos": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "lastSuccessAt": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "detail": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 80
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["enabled", "status", "lastSuccessAt", "detail"]
+              }
+            },
+            "required": ["x", "instagram", "cosmos"]
+          }
+        },
+        "required": ["sources"]
+      },
       "capture.passive": {
         "type": "object",
         "properties": {

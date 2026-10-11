@@ -50,9 +50,13 @@ describe('build-ext', () => {
     expect(await buildExt({ root: makeTmpDir('ext-none') })).toBeNull()
   })
 
-  it('content scripts IIFE sans import, service worker ESM, manifest et icônes copiés', async () => {
+  it('par cible : scripts IIFE sans import, alias @shared, manifest généré, icônes copiées', async () => {
     const root = makeTmpDir('ext')
-    write(root, 'extension/manifest.json', '{"manifest_version":3}\n')
+    write(
+      root,
+      'extension/manifest.ts',
+      'export function buildManifest(t: string) { return { manifest_version: 3, cible: t } }\n',
+    )
     write(root, 'extension/icons/16.png', 'png')
     write(
       root,
@@ -63,12 +67,21 @@ describe('build-ext', () => {
     write(root, 'src/shared/a.ts', 'export const A = 1\n')
     const out = await buildExt({ root, logLevel: 'silent' })
     expect(out).toBe(join(root, 'dist-extension'))
-    const content = readFileSync(join(root, 'dist-extension/content/x.js'), 'utf8')
-    expect(content).not.toMatch(/^\s*import\s/m)
-    expect(content).not.toMatch(/^\s*export\s/m)
-    expect(readFileSync(join(root, 'dist-extension/background.js'), 'utf8')).toMatch(/export\s*\{/)
-    expect(existsSync(join(root, 'dist-extension/manifest.json'))).toBe(true)
-    expect(existsSync(join(root, 'dist-extension/icons/16.png'))).toBe(true)
+    for (const t of ['chromium', 'firefox']) {
+      const content = readFileSync(join(root, `dist-extension/${t}/content/x.js`), 'utf8')
+      expect(content).not.toMatch(/^\s*import\s/m)
+      expect(content).not.toMatch(/^\s*export\s/m)
+      expect(readFileSync(join(root, `dist-extension/${t}/background.js`), 'utf8')).not.toMatch(
+        /^\s*export\s/m,
+      )
+      const m = JSON.parse(
+        readFileSync(join(root, `dist-extension/${t}/manifest.json`), 'utf8'),
+      ) as {
+        cible: string
+      }
+      expect(m.cible).toBe(t)
+      expect(existsSync(join(root, `dist-extension/${t}/icons/16.png`))).toBe(true)
+    }
   })
 })
 

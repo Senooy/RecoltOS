@@ -1,6 +1,6 @@
 /**
- * Domaine `bridge` (WP-52, SYNC §1.4-1.9, ERRATA §G.2) : wrappers de l'hôte natif (régénérés à chaque
- * lancement), manifests (app packagée, `RECOLTOS_INSTALL_DEV_HOST=1` ou `RECOLTOS_HOME` de test),
+ * Domaine `bridge` (WP-52, SYNC §1.4-1.9, ERRATA §G.2) : `host.json` (socket et spool lus par l'hôte
+ * natif, réécrit à chaque lancement), manifests (app packagée, `RECOLTOS_INSTALL_DEV_HOST=1` ou `RECOLTOS_HOME` de test),
  * copie de l'extension dans un chemin fixe, `BridgeServer` (socket), spool `inbox/`, enregistrements
  * de l'extension. Désactivé sous `RECOLTOS_E2E=1` sauf `RECOLTOS_BRIDGE=1` (tests du pont).
  * `--uninstall-native-hosts` : retire les manifests puis quitte.
@@ -17,12 +17,7 @@ import { ingestDeps } from '../ipc/handlers/ingest'
 import { BROWSERS, isAppInstalled } from './browsers'
 import { installExtension } from './extension-installer'
 import { Inbox } from './inbox'
-import {
-  hostName,
-  installNativeHosts,
-  uninstallNativeHosts,
-  writeWrappers,
-} from './native-host-installer'
+import { hostName, installNativeHosts, uninstallNativeHosts } from './native-host-installer'
 import {
   bundledExtensionDir,
   hostExecutablePath,
@@ -56,8 +51,6 @@ export async function reinstallHosts(): Promise<string[]> {
     userData: rt.userData,
     home: rt.home,
     hostExe: rt.hostExe,
-    socket: rt.socket,
-    inbox: rt.inbox,
     name: rt.hostName,
     installedApps: await installedBrowserApps(rt.home),
   })
@@ -75,20 +68,19 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
   }
   if (ctx.flags.e2e && process.env.RECOLTOS_BRIDGE !== '1') return
 
-  const appRoot = app.getAppPath()
+  // Hors app packagée : racine du dépôt (`out/main/index.js` → `../..`), quel que soit le lanceur.
+  const appRoot = isPackaged ? app.getAppPath() : path.resolve(__dirname, '..', '..')
   const resourcesPath = process.resourcesPath
   const pathsOpts = { isPackaged, resourcesPath, appRoot }
   const socket = socketPath(ctx.userData)
   const inbox = inboxDir(ctx.userData)
   const hostExe = hostExecutablePath(pathsOpts)
   const name = hostName(!isPackaged)
-  writeWrappers({ userData: ctx.userData, hostExe, socket, inbox })
-
   const server = new BridgeServer(socket, ctx.log)
   await server.start()
   writeFileSync(
     hostJsonPath(ctx.userData),
-    `${JSON.stringify({ socket, protocol: BRIDGE_PROTOCOL_VERSION, pid: process.pid, hostExe }, null, 2)}\n`,
+    `${JSON.stringify({ socket, inbox, protocol: BRIDGE_PROTOCOL_VERSION, pid: process.pid, hostExe }, null, 2)}\n`,
   )
   const saves = new SaveService({ ingestDeps, log: ctx.log })
   setBridgeRuntime({

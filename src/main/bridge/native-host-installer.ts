@@ -1,24 +1,16 @@
 /**
- * Wrappers et manifests native messaging (SYNC §1.4-1.5, PLAN §1.18, ERRATA §G.2). Sans `electron`.
+ * Manifests native messaging (SYNC §1.4-1.5, PLAN §1.18, ERRATA §G.2). Sans `electron`.
  *
- * - Les wrappers `sh` (`<userData>/native-host/recoltos-host-<navigateur>`) sont régénérés à chaque
- *   lancement : ils exportent `RECOLTOS_SOCKET`, `RECOLTOS_INBOX`, `RECOLTOS_BROWSER` puis lancent
- *   l'exécutable SEA (code 3 s'il a disparu : l'extension affiche « RecoltOS introuvable »).
+ * - Le manifest pointe DIRECTEMENT sur l'exécutable SEA (spike S5 : Chromium ne lance pas un script
+ *   shell comme hôte). L'hôte trouve le socket et le spool dans `<userData>/host.json`, réécrit par
+ *   l'app à chaque lancement ; il n'y a plus de wrapper `sh`.
  * - Les manifests ne sont écrits que si l'appelant l'autorise (app packagée, `RECOLTOS_INSTALL_DEV_HOST=1`
  *   ou `RECOLTOS_HOME` de test) et seulement si le dossier de données du navigateur existe (Firefox :
  *   aussi si l'application est installée). Écriture atomique (`.tmp` puis `rename`).
  * - Désinstallation : seuls les fichiers `com.recoltos.host*.json` listés dans `native-hosts.json` ou
  *   présents aux emplacements connus sont supprimés. `co.gatheros.host.json` n'est JAMAIS touché.
  */
-import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  renameSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import {
   EXTENSION_ORIGIN,
@@ -27,40 +19,23 @@ import {
   NATIVE_HOST_NAME_DEV,
 } from '../../shared/bridge/constants'
 import { BROWSERS, browserDataDir, browserHostsDir, type BrowserDef } from './browsers'
-import { installedHostsPath, wrapperDir, wrapperPath } from './paths'
+import { installedHostsPath, wrapperDir } from './paths'
 
-export interface WrapperEnv {
+export interface HostPaths {
   userData: string
+  /** Exécutable SEA de l'hôte (dans l'app packagée ou `out/native-host/`). */
   hostExe: string
-  socket: string
-  inbox: string
-}
-
-const shQuote = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`
-
-export function wrapperScript(browserId: string, env: WrapperEnv): string {
-  return [
-    '#!/bin/sh',
-    `# Généré par RecoltOS — ne pas modifier. Navigateur : ${browserId}`,
-    `export RECOLTOS_BROWSER=${shQuote(browserId)}`,
-    `export RECOLTOS_SOCKET=${shQuote(env.socket)}`,
-    `export RECOLTOS_INBOX=${shQuote(env.inbox)}`,
-    `HOST=${shQuote(env.hostExe)}`,
-    '[ -x "$HOST" ] || { echo "RecoltOS introuvable : $HOST" >&2; exit 3; }',
-    'exec "$HOST" "$@"',
-    '',
-  ].join('\n')
 }
 
 export function manifestFor(
   b: Pick<BrowserDef, 'kind'>,
   name: string,
-  wrapper: string,
+  hostExe: string,
 ): Record<string, unknown> {
   const base = {
     name,
     description: 'RecoltOS : pont entre l’extension et l’application',
-    path: wrapper,
+    path: hostExe,
     type: 'stdio',
   }
   return b.kind === 'firefox'
@@ -68,29 +43,11 @@ export function manifestFor(
     : { ...base, allowed_origins: [EXTENSION_ORIGIN] }
 }
 
-function writeAtomic(file: string, content: string, mode?: number): void {
+function writeAtomic(file: string, content: string): void {
   mkdirSync(path.dirname(file), { recursive: true })
   const tmp = `${file}.tmp-${process.pid}`
-  writeFileSync(tmp, content, mode === undefined ? undefined : { mode })
-  if (mode !== undefined) chmodSync(tmp, mode)
+  writeFileSync(tmp, content)
   renameSync(tmp, file)
-}
-
-/** Régénère les wrappers de tous les navigateurs (contenu identique = pas de réécriture). */
-export function writeWrappers(
-  env: WrapperEnv,
-  browsers: readonly BrowserDef[] = BROWSERS,
-): string[] {
-  mkdirSync(wrapperDir(env.userData), { recursive: true, mode: 0o700 })
-  const out: string[] = []
-  for (const b of browsers) {
-    const p = wrapperPath(env.userData, b.id)
-    const content = wrapperScript(b.id, env)
-    const same = existsSync(p) && readFileSync(p, 'utf8') === content
-    if (!same) writeAtomic(p, content, 0o755)
-    out.push(p)
-  }
-  return out
 }
 
 export interface InstalledHosts {
@@ -106,7 +63,7 @@ function readInstalled(userData: string): InstalledHosts | null {
   }
 }
 
-export interface InstallOptions extends WrapperEnv {
+export interface InstallOptions extends HostPaths {
   home: string
   name: string
   browsers?: readonly BrowserDef[]
@@ -124,7 +81,8 @@ export function installNativeHosts(opts: InstallOptions): {
   skipped: string[]
 } {
   const browsers = opts.browsers ?? BROWSERS
-  writeWrappers(opts, browsers)
+  // Anciens wrappers `sh` (avant S5) : retirés.
+  rmSync(wrapperDir(opts.userData), { recursive: true, force: true })
   const installed: string[] = []
   const skipped: string[] = []
   const manifests: InstalledHosts['manifests'] = []
@@ -136,7 +94,7 @@ export function installNativeHosts(opts: InstallOptions): {
       continue
     }
     const file = path.join(browserHostsDir(opts.home, b), `${opts.name}.json`)
-    const content = `${JSON.stringify(manifestFor(b, opts.name, wrapperPath(opts.userData, b.id)), null, 2)}\n`
+    const content = `${JSON.stringify(manifestFor(b, opts.name, opts.hostExe), null, 2)}\n`
     try {
       if (!(existsSync(file) && readFileSync(file, 'utf8') === content)) writeAtomic(file, content)
       installed.push(b.id)
