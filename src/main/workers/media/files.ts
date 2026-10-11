@@ -5,14 +5,22 @@
 import { createHash } from 'node:crypto'
 import { once } from 'node:events'
 import { constants, createReadStream, createWriteStream } from 'node:fs'
-import { copyFile, lstat, stat } from 'node:fs/promises'
-import { extname, isAbsolute, posix, relative, resolve } from 'node:path'
+import { copyFile, lstat, realpath, stat } from 'node:fs/promises'
+import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import sharp from 'sharp'
 import yazl from 'yazl'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult, ZipEntry } from '../../../shared/worker-protocol'
-import { assertAbs, ioError, writeAtomic, type MediaTools } from './exec'
+import {
+  assertAbs,
+  assertDistinct,
+  ioError,
+  rawError,
+  sameFile,
+  writeAtomic,
+  type MediaTools,
+} from './exec'
 import { withReadable } from './foreign'
 
 /** PNG (première image, orientation appliquée) ; `nativeImage` ne lit pas le webp (PLAN §1.12). */
@@ -39,7 +47,7 @@ export function toPng(
       const { data, info } = await img.png().toBuffer({ resolveWithObject: true })
       return { png: new Uint8Array(data), width: info.width, height: info.height }
     } catch (err) {
-      throw new AppError('decode_failed', `image illisible : ${(err as Error).message}`)
+      throw new AppError('decode_failed', 'image illisible', rawError(err))
     }
   })
 }
@@ -77,9 +85,7 @@ export async function cloneFile(a: {
 }): Promise<MediaResult<'cloneFile'>> {
   const src = assertAbs(a.src, 'src')
   const dst = assertAbs(a.dst, 'dst')
-  if (resolve(src) === resolve(dst)) {
-    throw new AppError('validation', 'la destination doit différer de la source')
-  }
+  await assertDistinct(src, dst)
   try {
     return await writeAtomic(dst, async (tmp) => {
       await copyFile(src, tmp, constants.COPYFILE_FICLONE | constants.COPYFILE_EXCL)
@@ -143,9 +149,54 @@ export function resolveEntryAbs(root: string, abs: string): string {
   return resolved
 }
 
+/** Vrai si `p` (déjà résolu) est strictement sous `root` (lui aussi résolu). */
+function isInside(root: string, p: string): boolean {
+  const rel = relative(root, p)
+  return rel !== '' && rel !== '..' && !rel.startsWith('../') && !isAbsolute(rel)
+}
+
+/**
+ * `realpath` qui tolère un chemin absent : remonte au premier ancêtre existant puis rajoute le
+ * reste (le dossier de sortie peut ne pas exister encore, `writeAtomic` le crée).
+ */
+async function realpathLoose(p: string): Promise<string> {
+  const tail: string[] = []
+  let cur = resolve(p)
+  for (;;) {
+    try {
+      const real = await realpath(cur)
+      return tail.length > 0 ? join(real, ...tail.reverse()) : real
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code
+      if (code !== 'ENOENT' && code !== 'ENOTDIR') throw ioError(err, cur)
+      const parent = dirname(cur)
+      if (parent === cur) return resolve(p)
+      tail.push(basename(cur))
+      cur = parent
+    }
+  }
+}
+
+/**
+ * Une entrée relative doit rester dans la bibliothèque une fois les liens symboliques des
+ * dossiers intermédiaires suivis. `lstat` ne voit que le dernier segment : `dirlink/x` passerait.
+ */
+async function assertEntryContained(realRoot: string, rel: string, abs: string): Promise<void> {
+  let real: string
+  try {
+    real = await realpath(abs)
+  } catch (err) {
+    throw ioError(err, abs)
+  }
+  if (!isInside(realRoot, real)) {
+    throw new AppError('validation', `chemin source hors de la bibliothèque : ${rel}`)
+  }
+}
+
 /**
  * Archive `entries` dans `out` (écriture atomique). `abs` relatif est résolu depuis `root`.
- * Progression émise à chaque entrée lue.
+ * Progression émise à chaque entrée lue. `out` ne peut ni être dans `root` ni être une source :
+ * le rename final remplacerait le fichier de la bibliothèque.
  */
 export async function zipLibrary(
   a: { root: string; entries: ZipEntry[]; out: string },
@@ -156,15 +207,34 @@ export async function zipLibrary(
   const out = assertAbs(a.out, 'out')
   if (!Array.isArray(a.entries)) throw new AppError('validation', 'entries attendu')
   const seen = new Set<string>()
-  const entries = a.entries.map((e) => {
-    const name = safeZipName(e.name)
-    if (seen.has(name)) throw new AppError('validation', `entrée zip en double : ${name}`)
-    seen.add(name)
+  const entries = a.entries.map((raw: unknown) => {
+    // Une entrée malformée (null, nombre, objet sans nom) est une erreur de validation, pas un
+    // TypeError qui remonterait comme `internal`.
+    const e = raw as Partial<ZipEntry> | null
+    if (!e || typeof e !== 'object') throw new AppError('validation', 'entrée zip invalide')
+    const name = safeZipName(e.name as string)
+    // APFS est insensible à la casse : « A.txt » et « a.txt » se combattraient à l'extraction.
+    const key = name.normalize('NFC').toLowerCase()
+    if (seen.has(key)) throw new AppError('validation', `entrée zip en double : ${name}`)
+    seen.add(key)
     if (typeof e.abs !== 'string' || e.abs.length === 0) {
       throw new AppError('validation', 'chemin source manquant')
     }
-    return { name, abs: resolveEntryAbs(root, e.abs) }
+    const isRel = !isAbsolute(e.abs)
+    return { name, abs: resolveEntryAbs(root, e.abs), rel: isRel ? e.abs : null }
   })
+  const realRoot = await realpathLoose(root)
+  // `out` ne doit pas être dans la bibliothèque, ni être une des sources (même fichier, lien dur
+  // compris) : le rename atomique remplacerait l'original.
+  const outReal = join(await realpathLoose(dirname(out)), basename(out))
+  if (isInside(realRoot, outReal)) {
+    throw new AppError('validation', `sortie dans la bibliothèque refusée : ${out}`)
+  }
+  for (const e of entries) {
+    if ((await realpathLoose(e.abs)) === outReal || (await sameFile(out, e.abs))) {
+      throw new AppError('validation', `la sortie est une des sources : ${out}`)
+    }
+  }
   const total = entries.length
   return writeAtomic(
     out,
@@ -187,6 +257,8 @@ export async function zipLibrary(
       let done = 0
       try {
         for (const e of entries) {
+          // Entrée relative : les dossiers intermédiaires ne doivent pas non plus sortir de la racine.
+          if (e.rel !== null) await assertEntryContained(realRoot, e.rel, e.abs)
           // lstat : un lien symbolique n'est pas suivi (il pourrait pointer hors de la bibliothèque).
           let st
           try {

@@ -5,7 +5,7 @@
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { mkdir, rename, rm, stat } from 'node:fs/promises'
-import { basename, dirname, extname, isAbsolute, join } from 'node:path'
+import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path'
 import { AppError } from '../../../shared/errors'
 
 /** Chemins absolus des binaires, résolus par main (`platform/binaries.ts`). */
@@ -41,9 +41,16 @@ export function assertAbs(p: unknown, field: string): string {
   return p
 }
 
+/** Code et message Node d'une erreur, pour le journal (`details`) : jamais affichés tels quels. */
+export function rawError(err: unknown): { code?: string; message: string } {
+  const e = err as NodeJS.ErrnoException | undefined
+  return { code: e?.code, message: e?.message ?? String(err) }
+}
+
 /**
  * Erreur d'E/S Node → AppError typée et en français : ENOENT/ENOTDIR → `not_found`,
- * EISDIR → `validation` (pas un fichier), le reste → `io`. Jamais de message Node brut.
+ * EISDIR → `validation` (pas un fichier), EACCES/EPERM → `io` « accès refusé », le reste → `io`.
+ * Le message Node brut ne sort que dans `details` (journal), jamais dans le texte (PLAN §2.6).
  */
 export function ioError(err: unknown, p: string): AppError {
   if (err instanceof AppError) return err
@@ -52,7 +59,31 @@ export function ioError(err: unknown, p: string): AppError {
     return new AppError('not_found', `fichier introuvable : ${p}`)
   }
   if (e.code === 'EISDIR') return new AppError('validation', `ce n'est pas un fichier : ${p}`)
-  return new AppError('io', `${e.code ?? 'erreur'} : ${e.message}`)
+  if (e.code === 'EACCES' || e.code === 'EPERM') {
+    return new AppError('io', `accès refusé : ${p}`, rawError(err))
+  }
+  return new AppError('io', `erreur d'accès au fichier : ${p}`, rawError(err))
+}
+
+/** `src` et `dst` désignent-ils le même fichier (chemins normalisés, puis inode si `dst` existe) ? */
+export async function sameFile(src: string, dst: string): Promise<boolean> {
+  if (resolve(src) === resolve(dst)) return true
+  try {
+    const [a, b] = await Promise.all([stat(src), stat(dst)])
+    return a.dev === b.dev && a.ino === b.ino
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Refuse une destination qui est la source, quelle que soit son écriture (`/./`, `//`, lien
+ * symbolique, lien dur) : sinon l'écriture atomique écraserait l'original.
+ */
+export async function assertDistinct(src: string, dst: string): Promise<void> {
+  if (await sameFile(src, dst)) {
+    throw new AppError('validation', 'la destination doit différer de la source')
+  }
 }
 
 /** Vérifie que `p` est un fichier régulier ; sinon `not_found` / `validation` / `io`. */
@@ -126,7 +157,7 @@ export function run(cmd: string, args: readonly string[], opts: RunOptions): Pro
         reject(
           err.code === 'ENOENT' || err.code === 'EACCES'
             ? toolMissing(opts.tool)
-            : new AppError('tool_failed', `${basename(cmd)} : ${err.message}`),
+            : new AppError('tool_failed', `${basename(cmd)} n'a pas pu être lancé`, rawError(err)),
         ),
       )
     })

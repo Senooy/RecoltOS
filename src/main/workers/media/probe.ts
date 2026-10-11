@@ -4,7 +4,15 @@
 import sharp, { type Metadata } from 'sharp'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
-import { assertAbs, assertFile, requireTool, run, toolStderr, type MediaTools } from './exec'
+import {
+  assertAbs,
+  assertFile,
+  rawError,
+  requireTool,
+  run,
+  toolStderr,
+  type MediaTools,
+} from './exec'
 import { FOREIGN_MIME, orientedSize, sniffForeign, withReadable } from './foreign'
 
 const MIME_BY_FORMAT: Record<string, string> = {
@@ -40,7 +48,7 @@ async function probeSharp(input: string): Promise<MediaResult<'probeImage'>> {
   try {
     meta = await sharp(input).metadata()
   } catch (err) {
-    throw new AppError('decode_failed', `image illisible : ${(err as Error).message}`)
+    throw new AppError('decode_failed', 'image illisible', rawError(err))
   }
   const format = meta.format === 'heif' && meta.compression === 'av1' ? 'avif' : meta.format
   const mime = MIME_BY_FORMAT[format]

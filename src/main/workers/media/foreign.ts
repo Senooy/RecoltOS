@@ -11,6 +11,7 @@ import { AppError } from '../../../shared/errors'
 import {
   DEFAULT_SIPS,
   assertAbs,
+  assertDistinct,
   assertFile,
   ioError,
   run,
@@ -100,7 +101,7 @@ export async function decodeForeign(
   if (a.format !== 'jpeg' && a.format !== 'png') {
     throw new AppError('validation', 'format attendu : jpeg ou png')
   }
-  if (src === dst) throw new AppError('validation', 'la destination doit différer de la source')
+  await assertDistinct(src, dst)
   await assertFile(src)
   const ext = a.format === 'jpeg' ? '.jpg' : '.png'
   await writeAtomic(

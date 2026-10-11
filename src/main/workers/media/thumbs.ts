@@ -6,7 +6,7 @@
 import sharp, { type ResizeOptions, type WebpOptions } from 'sharp'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
-import { assertAbs, writeAtomic, type MediaTools } from './exec'
+import { assertAbs, assertDistinct, rawError, writeAtomic, type MediaTools } from './exec'
 import { withReadable } from './foreign'
 
 export const THUMB = { width: 800, quality: 80, effort: 4 } as const
@@ -30,7 +30,7 @@ async function resizeToWebp(
 ): Promise<{ width: number; height: number; bytes: number }> {
   const s = assertAbs(src, 'src')
   const d = assertAbs(dst, 'dst')
-  if (s === d) throw new AppError('validation', 'la destination doit différer de la source')
+  await assertDistinct(s, d)
   return withReadable(s, tools, signal, async ({ input }) => {
     try {
       return await writeAtomic(
@@ -47,7 +47,7 @@ async function resizeToWebp(
       )
     } catch (err) {
       if (err instanceof AppError) throw err
-      throw new AppError('decode_failed', `image illisible : ${(err as Error).message}`)
+      throw new AppError('decode_failed', 'image illisible', rawError(err))
     }
   })
 }

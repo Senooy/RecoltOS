@@ -11,7 +11,7 @@ import sharp, { type OutputInfo } from 'sharp'
 import { deltaE76, hexToLab, labToHex, rgbToLab, type Lab } from '../../../shared/color'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
-import { assertAbs, type MediaTools } from './exec'
+import { assertAbs, rawError, type MediaTools } from './exec'
 import { withReadable } from './foreign'
 
 export const PALETTE = {
@@ -239,7 +239,7 @@ export async function palette(
         .raw()
         .toBuffer({ resolveWithObject: true })
     } catch (err) {
-      throw new AppError('decode_failed', `image illisible : ${(err as Error).message}`)
+      throw new AppError('decode_failed', 'image illisible', rawError(err))
     }
     return paletteFromRgba(raw.data, raw.info.channels, k)
   })

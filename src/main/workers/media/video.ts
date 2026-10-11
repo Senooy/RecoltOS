@@ -9,6 +9,7 @@ import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
 import {
   assertAbs,
+  assertDistinct,
   assertFile,
   requireTool,
   run,
@@ -58,6 +59,7 @@ export async function makePoster(
   const src = assertAbs(a.src, 'src')
   const dst = assertAbs(a.dst, 'dst')
   if (!Number.isFinite(a.atMs)) throw new AppError('validation', 'atMs invalide')
+  await assertDistinct(src, dst)
   const ffmpeg = requireTool(tools, 'ffmpeg')
   requireTool(tools, 'ffprobe')
   await assertFile(src)
@@ -154,6 +156,7 @@ export async function makePreview(
   if (a.maxSeconds !== PREVIEW.maxSeconds || a.height !== PREVIEW.height) {
     throw new AppError('validation', 'aperçu attendu : 8 s, 540p')
   }
+  await assertDistinct(src, dst)
   const ffmpeg = requireTool(tools, 'ffmpeg')
   requireTool(tools, 'ffprobe')
   await assertFile(src)

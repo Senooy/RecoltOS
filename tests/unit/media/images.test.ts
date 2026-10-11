@@ -2,8 +2,8 @@
  * WP-03 — critères 1 (images) et 2 : orientation EXIF, webp animé, HEIC/PSD par sips,
  * TIFF par sharp, dérivés webp, originaux intacts.
  */
-import { mkdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, symlinkSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { decodeForeign, sniffForeign } from '../../../src/main/workers/media/foreign'
@@ -177,6 +177,41 @@ describe('dérivés webp', () => {
     expect(d).toEqual({ width: 320, height: 200 })
     expect((await sharp(out('display/tiff.webp')).metadata()).format).toBe('webp')
     expect(sha256(fx.tiff)).toBe(before)
+  })
+
+  it('destination = source sous une autre écriture (/./, //, lien) → validation, original intact', async () => {
+    const dir = out('same')
+    mkdirSync(dir, { recursive: true })
+    const src = join(dir, 'self.webp')
+    await sharp({ create: { width: 300, height: 200, channels: 3, background: '#c03020' } })
+      .webp()
+      .toFile(src)
+    symlinkSync(src, join(dir, 'alias.webp'))
+    const before = sha256(src)
+    const variants = [`${dir}/./self.webp`, `${dir}//self.webp`, join(dir, 'alias.webp')]
+    for (const dst of variants) {
+      await expect(makeThumb({ src, dst, width: 800 }, TOOLS)).rejects.toMatchObject({
+        code: 'validation',
+      })
+      await expect(makeDisplay({ src, dst, maxEdge: 2048 }, TOOLS)).rejects.toMatchObject({
+        code: 'validation',
+      })
+      await expect(makeLarge({ src, dst, width: 1440 }, TOOLS)).rejects.toMatchObject({
+        code: 'validation',
+      })
+    }
+    expect(sha256(src)).toBe(before)
+  })
+
+  it.skipIf(!HAS_SIPS)('source = destination sur un HEIC → refusé avant décodage', async () => {
+    const before = sha256(fx.heic as string)
+    await expect(
+      decodeForeign(
+        { src: fx.heic!, dst: `${dirname(fx.heic!)}/./${basename(fx.heic!)}`, format: 'png' },
+        TOOLS,
+      ),
+    ).rejects.toMatchObject({ code: 'validation' })
+    expect(sha256(fx.heic as string)).toBe(before)
   })
 
   it.skipIf(!HAS_SIPS)('HEIC → décodé par sips → display webp, original intact', async () => {
