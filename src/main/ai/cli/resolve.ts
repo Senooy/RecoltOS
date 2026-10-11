@@ -85,6 +85,25 @@ export interface DetectDeps {
   shell?: ShellRunner
   version?: (bin: string) => Promise<string | undefined>
   isExecutable?: (p: string) => Promise<boolean>
+  /** Dossiers parcourus en plus du shell ; par défaut PATH interactif + dossiers courants (aucun sous Vitest). */
+  searchDirs?: string[]
+}
+
+/**
+ * Dossiers d'installation courants, consultés en plus du shell : `zsh -lc` ne lit pas `.zshrc`,
+ * où beaucoup d'installeurs (npm global, Hermes, bun, volta) ajoutent leur dossier au PATH.
+ */
+export function fallbackDirs(home: string): string[] {
+  return [
+    `${home}/.local/bin`,
+    `${home}/.hermes/node/bin`,
+    `${home}/.claude/local`,
+    `${home}/.npm-global/bin`,
+    `${home}/.bun/bin`,
+    `${home}/.volta/bin`,
+    '/opt/homebrew/bin',
+    '/usr/local/bin',
+  ]
 }
 
 /** Toutes les copies trouvées par le shell de login, dédoublonnées, avec leur version. */
@@ -98,9 +117,20 @@ export async function detectCli(name: AiCliId, deps: DetectDeps = {}): Promise<C
     `whence -ap ${name} 2>/dev/null; command -v ${name} 2>/dev/null`,
     5_000,
   ).catch(() => '')
+  // PATH du shell de login interactif (`zsh -lic`, lit `.zshrc`) puis dossiers courants.
+  // Sous Vitest, rien par défaut : un test ne doit jamais tomber sur le vrai CLI de la machine.
+  const dirs =
+    deps.searchDirs ??
+    (process.env.VITEST
+      ? []
+      : [
+          ...(loginPath ?? '').split(':').filter((d) => d.startsWith('/')),
+          ...fallbackDirs(process.env.HOME ?? ''),
+        ])
+  const lines = [...out.split(/\r?\n/), ...dirs.map((d) => `${d}/${name}`)]
   const seen = new Set<string>()
   const found: CliCandidate[] = []
-  for (const line of out.split(/\r?\n/)) {
+  for (const line of lines) {
     const p = line.trim()
     if (!p.startsWith('/') || !(await isExec(p))) continue
     let realPath = p
