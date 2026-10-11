@@ -10,9 +10,12 @@ import { mediaSrc } from '../../../lib/media-url'
 export function QuotedTweet({
   quoted,
   tone = 'light',
+  full = false,
 }: {
   quoted: QuotedPostView
   tone?: 'light' | 'viewer'
+  /** Texte entier (vue détail). */
+  full?: boolean
 }) {
   const [imgFailed, setImgFailed] = useState(false)
   const img = mediaSrc(quoted.imageUrls[0])
@@ -34,7 +37,12 @@ export function QuotedTweet({
         </div>
       ) : null}
       {quoted.text ? (
-        <p className="quoted-body mt-0.5 whitespace-pre-wrap break-words text-[14px] leading-5">
+        <p
+          className={cn(
+            'mt-0.5 whitespace-pre-wrap break-words text-[14px] leading-5',
+            !full && 'quoted-body',
+          )}
+        >
           {quoted.text}
         </p>
       ) : null}

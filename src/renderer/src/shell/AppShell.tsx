@@ -23,6 +23,7 @@ import { isRouteImplemented, overlays, routes } from './routes'
 import { SelectionBar } from './SelectionBar'
 import type { MenuCommand } from '../../../shared/shortcuts'
 import { importFiles, runMenuCommand, soon, toggleTheme } from './commands'
+import { openViewerByUuid } from '../features/viewer/open'
 
 const navOf = (r: Route): NavValue =>
   r.name === 'search'
@@ -64,6 +65,8 @@ export function AppShell({ dark }: { dark: boolean }) {
     const offs = [
       followCollections(),
       subscribe('menu.command', ({ cmd }) => runMenuCommand(cmd)),
+      // Notification de capture, « Ouvrir avec », import d'un seul fichier : vue détail.
+      subscribe('nav.openItem', ({ uuid }) => openViewerByUuid(uuid)),
       subscribe('library.switched', () => {
         useUi.getState().clearSelection()
         useUndo.getState().clear()

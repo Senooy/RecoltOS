@@ -20,6 +20,17 @@
 [data-e2e='1'] .masonry.reflowing .masonry-card {
   transition: none;
 }
+/* Retour de la vue détail : les cartes visibles réapparaissent en fondu échelonné. */
+.masonry-card.cascade-in {
+  animation-name: card-cascade-in;
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+@keyframes card-cascade-in {
+  from {
+    opacity: 0;
+  }
+}
 .tweet-body {
   display: -webkit-box;
   -webkit-line-clamp: 8;

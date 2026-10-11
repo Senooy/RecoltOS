@@ -1,12 +1,14 @@
 /**
  * `TweetCard` (DESIGN §3.2) : post X / Instagram / Cosmos rendu nativement (suit le thème).
  * Variantes `light` (grille), `overlay` (Redécouvrir, toujours blanc), `cover` (FanStack, étagère :
- * toujours blanche, largeur fixe 300 px réduite par `transform`). Corps tronqué à 8 lignes puis « … ».
+ * toujours blanche, largeur fixe 300 px réduite par `transform`), `detail` (vue détail d'un post sans
+ * média, ERRATA §C : 560 px, blanche, texte complet sélectionnable, post cité et fil entiers).
+ * Corps tronqué à 8 lignes puis « … » (sauf `detail`).
  * Icône de source en haut à droite : logo X / Instagram / Cosmos (jamais une croix de fermeture).
  */
 import { MessageSquareText } from 'lucide-react'
 import type { CSSProperties } from 'react'
-import type { ItemCard } from '../../../../../shared/dto/items'
+import type { ItemCard, PostDetailView } from '../../../../../shared/dto/items'
 import { CosmosGlyph, InstagramGlyph, XGlyph } from '../../../components/icons'
 import { Avatar } from '../../../components/ui'
 import { fr } from '../../../i18n/fr'
@@ -14,7 +16,7 @@ import { cn } from '../../../lib/cn'
 import { mediaSrc } from '../../../lib/media-url'
 import { QuotedTweet } from './QuotedTweet'
 
-export type TweetVariant = 'light' | 'overlay' | 'cover'
+export type TweetVariant = 'light' | 'overlay' | 'cover' | 'detail'
 
 /**
  * Texte d'un post dans la grille : le lien `t.co` final (média ou post cité joints, déjà visibles
@@ -37,16 +39,22 @@ export function TweetCard({
   variant = 'light',
   className,
   style,
+  full,
 }: {
   card: ItemCard
   variant?: TweetVariant
   className?: string
   style?: CSSProperties
+  /** Post complet (variante `detail`) : texte entier et fil. */
+  full?: PostDetailView | null
 }) {
-  const post = card.post
+  const detail = variant === 'detail'
+  const post = (detail ? (full ?? card.post) : card.post) ?? null
   const name = post?.author.name ?? post?.author.handle ?? card.title ?? ''
   const handle = post?.author.handle ?? null
-  const text = gridText(post?.text ?? card.title ?? '')
+  const raw = post?.text ?? card.title ?? ''
+  const text = detail ? raw : gridText(raw)
+  const thread = detail && full ? full.thread : []
   return (
     <article
       data-tweet=""
@@ -54,6 +62,7 @@ export function TweetCard({
         'tweet-card relative flex flex-col rounded-md border px-4 pb-[18px] pt-4 text-left',
         variant === 'light' ? 'border-border-subtle bg-surface text-fg' : 'tweet-overlay',
         variant === 'cover' && 'w-[300px]',
+        detail && 'tweet-detail w-[560px] select-text',
         className,
       )}
       style={style}
@@ -76,12 +85,25 @@ export function TweetCard({
         <SourceGlyph source={card.source} />
       </span>
       {text ? (
-        <p className="tweet-body mt-[14px] whitespace-pre-wrap break-words text-[15px] leading-[21px]">
+        <p
+          className={cn(
+            'mt-[14px] whitespace-pre-wrap break-words text-[15px] leading-[21px]',
+            !detail && 'tweet-body',
+          )}
+        >
           {text}
         </p>
       ) : null}
-      {post?.quoted ? <QuotedTweet quoted={post.quoted} /> : null}
-      {post && post.threadCount > 0 ? (
+      {post?.quoted ? <QuotedTweet quoted={post.quoted} full={detail} /> : null}
+      {thread.map((t, i) => (
+        <p
+          key={i}
+          className="mt-3 whitespace-pre-wrap break-words border-t border-[#ededed] pt-3 text-[15px] leading-[21px]"
+        >
+          {t.text}
+        </p>
+      ))}
+      {post && post.threadCount > 0 && !detail ? (
         <footer className="mt-3 flex items-center gap-1.5 text-caption text-fg-subtle">
           <MessageSquareText size={13} strokeWidth={1.75} />
           {fr.card.thread(post.threadCount + 1)}

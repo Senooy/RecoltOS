@@ -20,6 +20,7 @@ import { useCollections } from '../../state/collections'
 import { usePrefs } from '../../state/prefs'
 import { clampColumns, useUi } from '../../state/ui'
 import { MasonryGrid } from '../grid/MasonryGrid'
+import { openViewer } from '../viewer/open'
 import { TweetCard } from '../grid/cards/TweetCard'
 import { FiltersPopover } from './FiltersPopover'
 import { EMPTY_FILTERS, activeCount, toItemFilters, toggle, type SearchFilters } from './filters'
@@ -543,6 +544,7 @@ export default function SearchPage() {
             />
           ) : (
             <MasonryGrid
+              onOpen={openViewer}
               items={result.items}
               columns={columns}
               scrollRef={scrollRef}

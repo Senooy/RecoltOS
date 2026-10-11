@@ -32,6 +32,7 @@ import { usePrefs } from '../../state/prefs'
 import { clampColumns, useUi } from '../../state/ui'
 import { addToCollection } from '../grid/actions'
 import { MasonryGrid } from '../grid/MasonryGrid'
+import { openViewer } from '../viewer/open'
 import { ColumnSlider } from '../library/ColumnSlider'
 import { SortMenu } from '../library/SortMenu'
 import { useCollectionItems } from '../library/useLibraryItems'
@@ -411,6 +412,7 @@ function CollectionView({ uuid }: { uuid: string }) {
             />
           ) : (
             <MasonryGrid
+              onOpen={openViewer}
               items={items}
               columns={columns}
               scrollRef={scrollRef}

@@ -2,7 +2,9 @@
  * `MasonryGrid` (DESIGN §4.4) : disposition déterministe (`layoutMasonry`), cartes en absolu +
  * `translate`, fenêtrage (recherche binaire, overscan 800 px), posts texte mesurés AVANT le premier
  * rendu (aucun décalage de mise en page), `.reflowing` 300 ms au changement de colonnes, navigation
- * clavier géométrique, `role="list"`, menu contextuel unique, glisser natif.
+ * clavier géométrique, `role="list"`, menu contextuel unique, glisser natif. Vue détail (WP-30) :
+ * `grid.scrollTo` amène la carte courante en vue avant le FLIP de fermeture, `grid.cascade` fait
+ * réapparaître les cartes visibles en fondu échelonné (rafale la référence `bucdra…cx19x3`).
  */
 import {
   useCallback,
@@ -17,7 +19,8 @@ import {
   type RefObject,
 } from 'react'
 import type { ItemCard } from '../../../../shared/dto/items'
-import { Menu } from '../../components/ui'
+import { Menu, isReducedMotion } from '../../components/ui'
+import { on } from '../../lib/bus'
 import { fr } from '../../i18n/fr'
 import { startCardDrag } from '../../lib/dnd'
 import { askConfirm } from '../../state/dialogs'
@@ -39,6 +42,9 @@ import './grid.css'
 export const GRID_GAP = 8
 export const GRID_PAD_X = 18
 export const OVERSCAN = 800
+/** Cascade de réapparition : décalage par carte (ordre de lecture) et durée du fondu. */
+export const CASCADE_STEP_MS = 28
+export const CASCADE_MS = 220
 
 function useWidth(ref: RefObject<HTMLElement | null>): number {
   const [w, setW] = useState(0)
@@ -194,6 +200,61 @@ export function MasonryGrid({
   const visible = useMemo(() => visibleIndices(layout, view.top, view.bottom), [layout, view])
   const byId = useMemo(() => new Map(items.map((c, i) => [c.uuid, i])), [items])
 
+  // Fermeture du Viewer : la carte courante est amenée en vue (si besoin) avant le FLIP inverse.
+  const layoutRef = useRef(layout)
+  layoutRef.current = layout
+  useEffect(
+    () =>
+      on('grid.scrollTo', ({ uuid }) => {
+        const sc = scrollRef.current
+        const root = rootRef.current
+        const i = byId.get(uuid)
+        const p = i === undefined ? undefined : layoutRef.current.placed[i]
+        if (!sc || !root || !p) return
+        const offset =
+          root.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop
+        const top = offset + p.y
+        if (top >= sc.scrollTop && top + p.h <= sc.scrollTop + sc.clientHeight) return
+        sc.scrollTop = Math.max(0, top - Math.max(0, (sc.clientHeight - p.h) / 2))
+      }),
+    [scrollRef, byId],
+  )
+
+  // Cascade : rang de chaque carte visible dans l'ordre de lecture (haut puis gauche).
+  const [cascade, setCascade] = useState<{ except: string | null; key: number } | null>(null)
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const off = on('grid.cascade', ({ except }) => {
+      if (isReducedMotion()) return
+      setCascade({ except, key: Date.now() })
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => setCascade(null), 1400)
+    })
+    return () => {
+      off()
+      if (timer) clearTimeout(timer)
+    }
+  }, [])
+  const cascadeRank = useMemo(() => {
+    if (!cascade) return null
+    const sc = scrollRef.current
+    const root = rootRef.current
+    let top = view.top + OVERSCAN
+    let bottom = view.bottom - OVERSCAN
+    if (sc && root) {
+      const offset =
+        root.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop
+      top = sc.scrollTop - offset
+      bottom = top + sc.clientHeight
+    }
+    const inView = visible
+      .map((i) => layout.placed[i]!)
+      .filter((p) => p.y + p.h > top && p.y < bottom)
+      .sort((a, b) => a.y - b.y || a.x - b.x)
+    return new Map(inView.map((p, rank) => [p.id, rank]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cascade])
+
   // Sélection : ⌘-clic bascule, Maj-clic étend la plage depuis la dernière ancre.
   const anchor = useRef<string | null>(null)
   const onToggleSelect = useCallback(
@@ -297,6 +358,8 @@ export function MasonryGrid({
             ? visible.map((i) => {
                 const p = layout.placed[i]!
                 const card = items[i]!
+                const rank = cascadeRank?.get(card.uuid)
+                const cascading = cascade !== null && card.uuid !== cascade.except
                 return (
                   <SaveCard
                     key={card.uuid}
@@ -304,8 +367,16 @@ export function MasonryGrid({
                     width={p.w}
                     height={p.h}
                     selected={selected.has(card.uuid)}
-                    className="masonry-card"
-                    style={{ transform: `translate(${p.x}px, ${p.y}px)` }}
+                    className={cascading ? 'masonry-card cascade-in' : 'masonry-card'}
+                    style={{
+                      transform: `translate(${p.x}px, ${p.y}px)`,
+                      ...(cascading
+                        ? {
+                            animationDelay: `${(rank ?? 40) * CASCADE_STEP_MS}ms`,
+                            animationDuration: `${CASCADE_MS}ms`,
+                          }
+                        : {}),
+                    }}
                     onActivate={onActivate}
                     onToggleSelect={onToggleSelect}
                     onDragStart={onDragStart}

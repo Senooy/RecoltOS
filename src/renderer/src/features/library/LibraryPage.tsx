@@ -15,6 +15,7 @@ import { askConfirm } from '../../state/dialogs'
 import { usePrefs } from '../../state/prefs'
 import { clampColumns, useUi } from '../../state/ui'
 import { MasonryGrid } from '../grid/MasonryGrid'
+import { openViewer } from '../viewer/open'
 import { CollectionsRow } from './CollectionsRow'
 import { LibraryTabs } from './LibraryTabs'
 import { ColumnSlider } from './ColumnSlider'
@@ -156,6 +157,7 @@ export default function LibraryPage() {
             <EmptyTab tab={tab} libraryEmpty={tab === 'all'} />
           ) : (
             <MasonryGrid
+              onOpen={openViewer}
               items={items}
               columns={columns}
               scrollRef={scrollRef}

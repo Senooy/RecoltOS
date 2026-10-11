@@ -5,6 +5,7 @@ import type { MenuCommand } from '../../../shared/shortcuts'
 import { toast } from '../components/ui'
 import { fr } from '../i18n/fr'
 import { RpcError, rpc } from '../lib/rpc'
+import { emit } from '../lib/bus'
 import { isEditableTarget } from '../lib/shortcuts'
 import { askName } from '../state/dialogs'
 import { effectiveTheme, usePrefs } from '../state/prefs'
@@ -136,6 +137,14 @@ export function runMenuCommand(cmd: MenuCommand): void {
     case 'zoomIn':
     case 'zoomOut':
     case 'zoomReset':
+    case 'toggleDetails':
+      // Zoom et panneau Détails : seulement dans la vue détail (sans effet ailleurs).
+      if (ui.overlay?.type === 'viewer') emit('overlay.command', { cmd })
+      return
+    case 'quickLook':
+      if (ui.overlay?.type === 'viewer') emit('overlay.command', { cmd })
+      else if (ui.selection.length === 1)
+        void rpc('system.quickLook', { itemUuid: ui.selection[0]! }).catch(() => undefined)
       return
     default:
       soon()

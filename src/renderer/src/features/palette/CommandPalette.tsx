@@ -16,9 +16,9 @@ import { fr } from '../../i18n/fr'
 import { cardThumbSrc } from '../../lib/media-url'
 import { rpc } from '../../lib/rpc'
 import { runMenuCommand, soon } from '../../shell/commands'
-import { isOverlayImplemented } from '../../shell/routes'
 import { flattenTree, useCollections } from '../../state/collections'
 import { useUi } from '../../state/ui'
+import { openViewer } from '../viewer/open'
 import { fold, matchCommands, type PaletteCommand } from './commands'
 import './palette.css'
 
@@ -54,16 +54,9 @@ function Keys({ keys }: { keys: readonly string[] }) {
   return <span className="palette-kbd ml-auto">{keys.join('')}</span>
 }
 
-/** Ouvre un élément : vue détail si elle existe (M3), sinon recherche de son titre. */
+/** Ouvre un élément dans la vue détail (liste d'origine = résultats affichés). */
 function openItem(card: ItemCard, list: readonly ItemCard[]) {
-  const ui = useUi.getState()
-  if (isOverlayImplemented('viewer')) {
-    ui.openOverlay({ type: 'viewer', uuid: card.uuid, ids: list.map((c) => c.uuid) })
-    return
-  }
-  ui.closeOverlay()
-  const query = card.title ?? card.post?.text?.split(/\s+/).slice(0, 6).join(' ') ?? ''
-  ui.openSearch({ query })
+  openViewer(card, list)
 }
 
 export default function CommandPalette() {
