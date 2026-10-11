@@ -7,6 +7,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildManifest } from '../../../extension/manifest'
+import { EXTENSION_VERSION } from '../../../src/shared/bridge/constants'
 import { menuItems, parseMenuId } from '../../../extension/src/background/menus'
 import { BridgeError } from '../../../extension/src/background/native'
 import {
@@ -264,7 +265,7 @@ describe('manifests et build', () => {
         expect(readFileSync(join(dir, f), 'utf8'), f).not.toMatch(/^\s*(import|export)\s/m)
       }
       const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { version: string }
-      expect(m.version).toBe('1.0.0')
+      expect(m.version).toBe(EXTENSION_VERSION)
     }
   })
 })

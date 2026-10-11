@@ -6,6 +6,7 @@
  */
 import { MoreHorizontal } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { EXTENSION_VERSION } from '../../../../shared/bridge/constants'
 import type { SyncSourceStatus, SyncStatus } from '../../../../shared/dto/sync'
 import { Menu, Popover, Switch, toast } from '../../components/ui'
 import { fr } from '../../i18n/fr'
@@ -201,7 +202,7 @@ function ExtensionCard({ status, onInstall }: { status: SyncStatus; onInstall: (
       </p>
       <p className="sync-ext-help">{T.extension.supported}</p>
       {stale?.extVersion ? (
-        <p className="sync-ext-warn">{T.extension.stale(stale.extVersion, '1.0.0')}</p>
+        <p className="sync-ext-warn">{T.extension.stale(stale.extVersion, EXTENSION_VERSION)}</p>
       ) : null}
       {status.gatherosConflict ? (
         <p className="sync-ext-warn" data-testid="sync-gatheros">

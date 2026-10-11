@@ -9,7 +9,7 @@ import net from 'node:net'
 import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { socketPath } from '../../src/main/bridge/paths'
-import { EXTENSION_ORIGIN } from '../../src/shared/bridge/constants'
+import { EXTENSION_ORIGIN, EXTENSION_VERSION } from '../../src/shared/bridge/constants'
 import { expect, test } from '../helpers/e2e-fixtures'
 import { REPO_ROOT } from '../helpers/paths'
 
@@ -92,7 +92,7 @@ test.describe('synchronisation (faux hôte)', () => {
       pid: 1,
     })
     const helloId = host.send('hello', {
-      extVersion: '1.0.0',
+      extVersion: EXTENSION_VERSION,
       protocol: 1,
       target: 'firefox',
       browser: { name: 'Firefox', version: '157.0.1' },
