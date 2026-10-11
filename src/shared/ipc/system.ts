@@ -26,6 +26,8 @@ export const systemContract = {
   'system.edit': { input: z.object({ cmd: EditCommand }), output: Void },
   'system.openLogs': { input: Empty, output: Void },
   'system.redetectTools': { input: Empty, output: ToolsPrefs },
+  /** Élément à ouvrir demandé par main avant que la fenêtre écoute (`nav.openItem`, WP-34). */
+  'system.takePendingNav': { input: Empty, output: z.object({ uuid: Uuid }).nullable() },
   'system.appInfo': {
     input: Empty,
     output: z.object({

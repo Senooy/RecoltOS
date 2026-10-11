@@ -28,6 +28,7 @@ import { DataSection } from './sections/Data'
 import { LibrariesSection } from './sections/Libraries'
 import { StorageSection } from './sections/Storage'
 import { TagsSection } from './sections/Tags'
+import { CaptureSettings } from '../capture/CaptureSettings'
 
 const NAV: { key: SettingsSection; label: string; Icon: typeof Palette }[] = [
   { key: 'appearance', label: fr.settings.nav.appearance, Icon: Palette },
@@ -52,7 +53,7 @@ export function SettingsTitle({
     <>
       <h2 className="text-display font-bold">{children}</h2>
       {description ? (
-        <p className="mt-2.5 max-w-[470px] text-[13.5px] leading-[19.5px] text-fg-muted">
+        <p className="mt-2 max-w-[470px] text-[13.5px] leading-[18px] text-fg-muted">
           {description}
         </p>
       ) : null}
@@ -112,7 +113,7 @@ export default function SettingsDialog() {
             aria-label={fr.settings.title}
             className="absolute bottom-[11px] left-[11px] top-[11px] flex w-[196px] flex-col rounded-xl border border-[#eeeeee] px-2 py-3 dark:border-border"
           >
-            <div className="px-2.5 pb-3 pt-2.5 text-[12.5px] text-[#909090]">
+            <div className="px-2.5 pb-3 pt-px text-[12.5px] text-[#909090]">
               {fr.settings.title}
             </div>
             {NAV.map(({ key, label, Icon }) => (
@@ -135,7 +136,7 @@ export default function SettingsDialog() {
             ))}
           </nav>
           <div
-            className="ml-[239px] min-w-0 flex-1 overflow-y-auto pb-8 pr-8 pt-[34px]"
+            className="ml-[239px] min-w-0 flex-1 overflow-y-auto pb-8 pr-8 pt-[32px]"
             data-testid={`settings-section-${section}`}
           >
             {section === 'appearance' ? (
@@ -144,6 +145,8 @@ export default function SettingsDialog() {
               <LibrariesSection />
             ) : section === 'tags' ? (
               <TagsSection />
+            ) : section === 'capture' ? (
+              <CaptureSettings />
             ) : section === 'storage' ? (
               <StorageSection />
             ) : section === 'data' ? (

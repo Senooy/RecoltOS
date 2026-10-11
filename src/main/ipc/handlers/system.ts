@@ -16,6 +16,7 @@ import {
   type WebContents,
 } from 'electron'
 import log from 'electron-log/main'
+import { takePendingNav } from '../../nav'
 import fs from 'node:fs'
 import path from 'node:path'
 import { AppError } from '../../../shared/errors'
@@ -173,6 +174,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     return next.tools
   },
 
+  'system.takePendingNav': () => takePendingNav(),
   'system.appInfo': () => ({
     version: app.getVersion(),
     electron: process.versions.electron ?? '',

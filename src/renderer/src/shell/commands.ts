@@ -5,6 +5,8 @@ import type { MenuCommand } from '../../../shared/shortcuts'
 import { toast } from '../components/ui'
 import { fr } from '../i18n/fr'
 import { RpcError, rpc } from '../lib/rpc'
+import { runCapture } from '../features/capture/capture-actions'
+import { importFolder, reportImport, useImportUi } from '../features/import/import-actions'
 import { emit } from '../lib/bus'
 import { isEditableTarget } from '../lib/shortcuts'
 import { askName } from '../state/dialogs'
@@ -29,9 +31,7 @@ export function soon(): void {
 
 export async function importFiles(collectionUuid?: string): Promise<void> {
   try {
-    const r = await rpc('ingest.pickFiles', collectionUuid ? { collectionUuid } : {})
-    if (r && r.added.length > 0) toast(fr.toast.importDone(r.added.length))
-    else if (r && r.failed.length > 0) toast(r.failed[0]!.message)
+    reportImport(await rpc('ingest.pickFiles', collectionUuid ? { collectionUuid } : {}))
   } catch (err) {
     toast(err instanceof RpcError ? err.message : fr.errors.generic)
   }
@@ -122,6 +122,15 @@ export function runMenuCommand(cmd: MenuCommand): void {
       return
     case 'rediscover':
       openRediscover()
+      return
+    case 'capture':
+      void runCapture()
+      return
+    case 'importFolder':
+      void importFolder(ui.route.name === 'collection' ? ui.route.uuid : undefined)
+      return
+    case 'pasteUrl':
+      if (!ui.overlay) useImportUi.getState().setUrlOpen(true)
       return
     case 'importFiles':
       void importFiles(ui.route.name === 'collection' ? ui.route.uuid : undefined)

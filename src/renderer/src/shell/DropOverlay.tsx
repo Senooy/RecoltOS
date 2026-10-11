@@ -1,17 +1,23 @@
 /**
- * Calque de dépôt (DESIGN §2.8) : SEUL gestionnaire `drop` de la fenêtre. Fichiers venus de
- * l'extérieur → `ingest.files` (chemins via `recolt.pathForFile`) ; ignoré pendant un glisser
- * interne (`ui.internalDrag`) ou si tous les chemins sont déjà dans la bibliothèque (main les ignore).
+ * Calque de dépôt (DESIGN §2.8) : SEUL gestionnaire `drop` de la fenêtre. Fichiers et dossiers
+ * venus de l'extérieur → `ingest.files` (chemins via `recolt.pathForFile`, dossiers parcourus par
+ * main, WP-34), lien d'un navigateur → `ingest.url` ; rapport « N ajoutés · M doublons · 0 échec ».
+ * Ignoré pendant un glisser interne (`ui.internalDrag`) et dans l'éditeur d'espace.
  */
 import { Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from '../components/ui'
 import { fr } from '../i18n/fr'
-import { RpcError, rpc } from '../lib/rpc'
+import { RpcError } from '../lib/rpc'
 import { useUi } from '../state/ui'
+import { importPaths, importUrl, reportImport } from '../features/import/import-actions'
+import { isExternalDrag, readDrop } from '../features/import/walk'
 
 function hasFiles(e: DragEvent): boolean {
-  return Array.from(e.dataTransfer?.types ?? []).includes('Files')
+  return (
+    isExternalDrag(Array.from(e.dataTransfer?.types ?? [])) &&
+    useUi.getState().route.name !== 'space'
+  )
 }
 
 export function DropOverlay({ collection }: { collection: { uuid: string; name: string } | null }) {
@@ -41,18 +47,13 @@ export function DropOverlay({ collection }: { collection: { uuid: string; name: 
       setVisible(false)
       if (!external(e)) return
       e.preventDefault()
-      const files = Array.from(e.dataTransfer?.files ?? [])
-      const paths = files
-        .map((f) => window.recolt?.pathForFile(f) ?? '')
-        .filter((p) => p.startsWith('/'))
-      if (paths.length === 0) return
+      const drop = readDrop(e.dataTransfer, (f) => window.recolt?.pathForFile(f) ?? '')
       const col = collectionRef.current
-      void rpc('ingest.files', { paths, ...(col ? { collectionUuid: col.uuid } : {}) })
-        .then((r) => {
-          if (r.added.length > 0) toast(fr.toast.importDone(r.added.length))
-          else if (r.failed.length > 0) toast(r.failed[0]!.message)
-        })
-        .catch((err: unknown) => toast(err instanceof RpcError ? err.message : fr.errors.generic))
+      if (drop.paths.length > 0) void importPaths(drop.paths, col?.uuid)
+      else if (drop.url)
+        void importUrl(drop.url, col?.uuid)
+          .then(reportImport)
+          .catch((err: unknown) => toast(err instanceof RpcError ? err.message : fr.errors.generic))
     }
     window.addEventListener('dragenter', onEnter)
     window.addEventListener('dragleave', onLeave)

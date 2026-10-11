@@ -11,6 +11,7 @@ import { clipboardImageHash, readClipboardImage, writeClipboardPng } from '../im
 import { ingest } from '../ingest/ingest'
 import { ingestDeps } from '../ipc/handlers/ingest'
 import { rebuildMenu } from '../menu'
+import { requestOpenItem } from '../nav'
 import { requirePrefsStore } from '../prefs/store'
 import { ensureMainWindow } from '../windows/main-window'
 import { notifyCapture } from './notify'
@@ -77,7 +78,7 @@ export function initCapture(ctx: ServiceContext): () => void {
   service = createCaptureService({
     prefs: () => prefs.get().capture,
     access: () => getScreenAccess(),
-    provokePrompt,
+    provokePrompt: () => provokePrompt(),
     markPromptShown: () => {
       prefs.set({ capture: { promptShown: true } })
     },
@@ -102,7 +103,7 @@ export function initCapture(ctx: ServiceContext): () => void {
         {
           getMainWindow: () => ctx.getMainWindow(),
           ensureMainWindow,
-          openItem: (uuid) => ctx.emit('nav.openItem', { uuid }),
+          openItem: requestOpenItem,
         },
         'permission' in r ? { kind: 'permission' } : { kind: 'done', ...r },
       ),

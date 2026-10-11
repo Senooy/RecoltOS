@@ -15,7 +15,7 @@ import { useUi, type Route } from '../state/ui'
 import { useUndo } from '../state/undo'
 import { Dialogs } from './Dialogs'
 import { DropOverlay } from './DropOverlay'
-import { Fab } from './Fab'
+import { FabMenu } from './FabMenu'
 import { HeaderActions } from './HeaderActions'
 import { LibraryPicker } from './LibraryPicker'
 import { NavSegmented, type NavValue } from './NavSegmented'
@@ -24,6 +24,11 @@ import { SelectionBar } from './SelectionBar'
 import type { MenuCommand } from '../../../shared/shortcuts'
 import { importFiles, openRediscover, runMenuCommand, toggleTheme } from './commands'
 import { openViewerByUuid } from '../features/viewer/open'
+import { CaptureFeedback } from '../features/capture/CaptureFeedback'
+import { runCapture } from '../features/capture/capture-actions'
+import { importFolder } from '../features/import/import-actions'
+import { IngestProgress } from '../features/import/IngestProgress'
+import { usePaste } from '../features/import/usePaste'
 
 const navOf = (r: Route): NavValue =>
   r.name === 'search'
@@ -59,6 +64,7 @@ export function AppShell({ dark }: { dark: boolean }) {
   const navigate = useUi((s) => s.navigate)
   const openOverlay = useUi((s) => s.openOverlay)
   const width = useWindowWidth()
+  usePaste()
 
   useEffect(() => {
     void useCollections.getState().load()
@@ -66,7 +72,10 @@ export function AppShell({ dark }: { dark: boolean }) {
       followCollections(),
       subscribe('menu.command', ({ cmd }) => runMenuCommand(cmd)),
       // Notification de capture, « Ouvrir avec », import d'un seul fichier : vue détail.
-      subscribe('nav.openItem', ({ uuid }) => openViewerByUuid(uuid)),
+      subscribe('nav.openItem', ({ uuid }) => {
+        void rpc('system.takePendingNav').catch(() => undefined)
+        openViewerByUuid(uuid)
+      }),
       subscribe('library.switched', () => {
         useUi.getState().clearSelection()
         useUndo.getState().clear()
@@ -93,6 +102,12 @@ export function AppShell({ dark }: { dark: boolean }) {
       }
     }
     window.addEventListener('keydown', onKey)
+    // Fenêtre recréée par « Ouvrir avec » ou une notification : élément en attente.
+    void rpc('system.takePendingNav')
+      .then((p) => {
+        if (p) openViewerByUuid(p.uuid)
+      })
+      .catch(() => undefined)
     return () => {
       offs.forEach((o) => o())
       window.removeEventListener('keydown', onKey)
@@ -172,13 +187,19 @@ export function AppShell({ dark }: { dark: boolean }) {
           )}
         </div>
         {showFab ? (
-          <Fab
+          <FabMenu
+            collection={collection ? { uuid: collection.uuid, name: collection.name } : null}
             onImportFiles={() =>
               void importFiles(route.name === 'collection' ? route.uuid : undefined)
             }
-            onImportGatheros={() => openOverlay({ type: 'settings', section: 'libraries' })}
+            onImportFolder={() =>
+              void importFolder(route.name === 'collection' ? route.uuid : undefined)
+            }
+            onCapture={() => void runCapture()}
           />
         ) : null}
+        <IngestProgress />
+        <CaptureFeedback />
         <SelectionBar />
         <DropOverlay
           collection={collection ? { uuid: collection.uuid, name: collection.name } : null}

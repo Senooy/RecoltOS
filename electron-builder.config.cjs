@@ -119,6 +119,32 @@ module.exports = {
     '**/node_modules/@img/**',
   ],
   extraResources: [...nativeHost, ...extension],
+  // « Ouvrir avec RecoltOS » (SPACES §3.3, WP-34) : `Alternate` = présent dans « Ouvrir avec » sans
+  // devenir l'app par défaut ; `Viewer` explicite (le défaut est `Editor`).
+  fileAssociations: [
+    {
+      ext: [
+        'png',
+        'jpg',
+        'jpeg',
+        'webp',
+        'gif',
+        'avif',
+        'heic',
+        'heif',
+        'tif',
+        'tiff',
+        'bmp',
+        'mp4',
+        'mov',
+        'm4v',
+        'webm',
+      ],
+      name: 'Image ou vidéo',
+      role: 'Viewer',
+      rank: 'Alternate',
+    },
+  ],
   mac: {
     target: [{ target: 'dir', arch: ['arm64'] }],
     category: 'public.app-category.graphics-design',
@@ -130,7 +156,8 @@ module.exports = {
     darkModeSupport: true,
     extendInfo: {
       LSMinimumSystemVersion: '13.0',
-      NSDesktopFolderUsageDescription: 'RecoltOS surveille le dossier de dépôt des captures.',
+      NSDesktopFolderUsageDescription:
+        'RecoltOS enregistre tes captures dans ce dossier si tu l’as choisi.',
       NSDocumentsFolderUsageDescription: 'RecoltOS importe les fichiers que tu lui confies.',
       NSDownloadsFolderUsageDescription: 'RecoltOS importe les fichiers que tu lui confies.',
       // Remplace les textes anglais par défaut d'Electron : aucun texte anglais visible (PLAN §2.6).

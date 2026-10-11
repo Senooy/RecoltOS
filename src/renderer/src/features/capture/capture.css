@@ -1,0 +1,54 @@
+/* Réglages › Capture (mesures `kgogfx`, ≈ 1:1). */
+.capture-cap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+  color: var(--fg);
+  font: 700 12px/1 var(--font-sans);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+:root[data-theme='dark'] .capture-cap {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.capture-rule {
+  height: 1px;
+  background: #ececec;
+}
+:root[data-theme='dark'] .capture-rule {
+  background: var(--border-subtle);
+}
+.capture-field {
+  width: 287px;
+  height: 33px;
+  padding: 0 11px;
+  border-radius: 10px;
+  border: 1px solid #e9e9e9;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  outline: none;
+  text-overflow: ellipsis;
+}
+.capture-field::placeholder {
+  color: var(--fg-faint);
+}
+.capture-step {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}

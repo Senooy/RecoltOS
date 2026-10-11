@@ -22,7 +22,9 @@ export function getScreenAccess(env = process.env): { access: ScreenAccess; raw:
 }
 
 /** Inscrit l'app dans le volet et déclenche le prompt système (une fois). */
-export async function provokePrompt(): Promise<void> {
+export async function provokePrompt(env = process.env): Promise<void> {
+  // Accès forcé (tests) : jamais de vrai prompt TCC.
+  if (!app.isPackaged && env.RECOLTOS_SCREEN_ACCESS) return
   await desktopCapturer
     .getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })
     .catch(() => undefined)
