@@ -486,18 +486,26 @@ function EditorView({ uuid }: { uuid: string }) {
       void addFilesAt(drop.paths, at)
       return
     }
-    const files = Array.from(e.dataTransfer.files)
-    for (const f of files.slice(0, 200)) {
-      void f.arrayBuffer().then((buf) =>
-        rpc('spaces.addAssetBuffer', {
-          spaceUuid: uuid,
-          bytes: new Uint8Array(buf),
-          mime: f.type || 'application/octet-stream',
-        })
-          .then((a) => placeAssetsAt([a], at))
-          .catch(fail),
-      )
-    }
+    const files = Array.from(e.dataTransfer.files).slice(0, 200)
+    void Promise.all(
+      files.map(async (f) => {
+        try {
+          return await rpc('spaces.addAssetBuffer', {
+            spaceUuid: uuid,
+            bytes: new Uint8Array(await f.arrayBuffer()),
+            mime: f.type || 'application/octet-stream',
+          })
+        } catch (err) {
+          fail(err)
+          return null
+        }
+      }),
+    ).then((assets) =>
+      placeAssetsAt(
+        assets.filter((a) => a !== null),
+        at,
+      ),
+    )
   }
 
   return (

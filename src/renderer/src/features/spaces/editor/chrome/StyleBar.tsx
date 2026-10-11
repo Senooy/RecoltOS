@@ -20,7 +20,7 @@ import {
   LockOpen,
   Trash2,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { aabb, unionRect } from '../../../../../../shared/spaces-geometry'
 import {
   ColorToken,
@@ -351,12 +351,19 @@ export function StyleBar() {
   const marquee = useSpace((s) => s.marquee)
   const camera = useCamera((s) => s.camera)
   const view = useCamera((s) => s.view)
+  const ref = useRef<HTMLDivElement | null>(null)
+  const [barW, setBarW] = useState(320)
+  useLayoutEffect(() => {
+    const w = ref.current?.offsetWidth
+    if (w && Math.abs(w - barW) > 1) setBarW(w)
+  }, [barW, selection, nodes])
   const sel = selection.map((id) => nodes[id]).filter((n): n is SpaceNode => Boolean(n))
   if (sel.length === 0 || preview || editingId || marquee) return null
   const box = unionRect(sel.map(aabb))!
   const a = worldToScreen(camera, { x: box.x, y: box.y })
   const b = worldToScreen(camera, { x: box.x + box.width, y: box.y + box.height })
-  const cx = Math.min(Math.max((a.x + b.x) / 2, 160), view.w - 160)
+  const half = barW / 2 + 8
+  const cx = Math.min(Math.max((a.x + b.x) / 2, half), Math.max(half, view.w - half))
   const single0 = sel.length === 1 ? sel[0]! : null
   // Au-dessus de la poignée de rotation quand elle est affichée (nœud seul, déverrouillé).
   const gap = single0 && !single0.locked ? GAP + 22 : GAP
@@ -371,6 +378,7 @@ export function StyleBar() {
       aria-label={fr.spacesUi.color}
       data-testid="space-stylebar"
       className="sp-float absolute z-20 flex h-9 -translate-x-1/2 items-center gap-1 px-1.5"
+      ref={ref}
       style={{ left: cx, top }}
       onPointerDown={(e) => e.stopPropagation()}
     >
