@@ -239,6 +239,16 @@ export class WorkerHost {
 
   private onMessage(m: unknown): void {
     if (isHello(m)) {
+      if (this._state === 'stopping' || this._state === 'stopped') {
+        // Arrêt demandé pendant le démarrage : dans Electron, `kill()` avant le spawn est sans
+        // effet. `hello` prouve que le processus existe : on renvoie SIGTERM sans le déclarer prêt.
+        try {
+          this.child?.kill('SIGTERM')
+        } catch {
+          // déjà mort
+        }
+        return
+      }
       this.ready = true
       this._state = 'ready'
       this.log.info(`[${this.name}] prêt (pid ${m.pid})`)
@@ -281,16 +291,8 @@ export class WorkerHost {
     if (this.stableTimer) clearTimeout(this.stableTimer)
     this.stableTimer = null
 
-    if (this._state === 'stopping') {
-      this._state = 'stopped'
-      for (const p of this.pending.values()) {
-        p.cleanup()
-        p.reject(new AppError('cancelled', `worker ${this.name} arrêté`))
-      }
-      this.pending.clear()
-      const waiters = this.exitWaiters
-      this.exitWaiters = []
-      for (const w of waiters) w()
+    if (this._state === 'stopping' || this._state === 'stopped') {
+      this.finishStop()
       return
     }
 
@@ -334,6 +336,23 @@ export class WorkerHost {
     }, restartInMs)
   }
 
+  /** Termine un arrêt demandé (sortie du worker ou filet de sécurité). Idempotent. */
+  private finishStop(): void {
+    this.child = null
+    this.ready = false
+    if (this.stableTimer) clearTimeout(this.stableTimer)
+    this.stableTimer = null
+    this._state = 'stopped'
+    for (const p of this.pending.values()) {
+      p.cleanup()
+      p.reject(new AppError('cancelled', `worker ${this.name} arrêté`))
+    }
+    this.pending.clear()
+    const waiters = this.exitWaiters
+    this.exitWaiters = []
+    for (const w of waiters) w()
+  }
+
   /** Arrêt propre : SIGTERM, puis SIGKILL après `stopTimeoutMs` (3 s). Idempotent. */
   stop(): Promise<void> {
     if (this.stopPromise) return this.stopPromise
@@ -344,7 +363,7 @@ export class WorkerHost {
       const child = this.child
       this._state = 'stopping'
       if (!child) {
-        this.handleExit(null, null, null)
+        this.finishStop()
         resolve()
         return
       }
@@ -357,7 +376,8 @@ export class WorkerHost {
           // déjà mort
         }
         // Filet de sécurité : sans événement `exit`, l'arrêt ne doit jamais bloquer la fermeture.
-        forceTimer = setTimeout(() => this.handleExit(child, null, 'SIGKILL'), grace)
+        // Appel direct (pas `handleExit`) : `this.child` peut déjà avoir changé.
+        forceTimer = setTimeout(() => this.finishStop(), grace)
       }, grace)
       this.exitWaiters.push(() => {
         clearTimeout(killTimer)

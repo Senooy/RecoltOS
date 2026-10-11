@@ -23,6 +23,24 @@ export function makeUtilityFork(log?: HostLogger): ForkFn {
     }
     proc.stdout?.on('data', relay('info'))
     proc.stderr?.on('data', relay('warn'))
+    // `proc.kill()` avant l'événement `spawn` est sans effet : la demande est rejouée au spawn.
+    let spawned = false
+    let killOnSpawn: NodeJS.Signals | null = null
+    const doKill = (signal: NodeJS.Signals | undefined): void => {
+      if (signal === 'SIGKILL' && proc.pid !== undefined) {
+        try {
+          process.kill(proc.pid, 'SIGKILL')
+          return
+        } catch {
+          // déjà terminé
+        }
+      }
+      proc.kill()
+    }
+    proc.once('spawn', () => {
+      spawned = true
+      if (killOnSpawn) doKill(killOnSpawn)
+    })
     return {
       get pid() {
         return proc.pid
@@ -35,15 +53,11 @@ export function makeUtilityFork(log?: HostLogger): ForkFn {
         proc.on('exit', (code: number) => cb(code, null))
       },
       kill: (signal) => {
-        if (signal === 'SIGKILL' && proc.pid !== undefined) {
-          try {
-            process.kill(proc.pid, 'SIGKILL')
-            return
-          } catch {
-            // déjà terminé
-          }
+        if (!spawned) {
+          killOnSpawn = killOnSpawn === 'SIGKILL' ? 'SIGKILL' : (signal ?? 'SIGTERM')
+          return
         }
-        proc.kill()
+        doKill(signal)
       },
     }
   }

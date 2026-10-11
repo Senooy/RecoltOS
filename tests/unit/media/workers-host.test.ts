@@ -259,6 +259,88 @@ describe('WorkerHost (enfant factice)', () => {
     }
   })
 
+  it('stop pendant le démarrage : hello ignoré, SIGTERM renvoyé, aucun redémarrage', async () => {
+    vi.useFakeTimers()
+    try {
+      const ff = fakeFork()
+      const crashes: CrashInfo[] = []
+      const ready: number[] = []
+      const h = new WorkerHost({
+        name: 't',
+        modulePath: '/x.js',
+        fork: ff.fork,
+        backoffMs: [10],
+        onCrash: (i) => crashes.push(i),
+        onReady: (pid) => ready.push(pid),
+      })
+      h.start()
+      const k = ff.kids[0]!
+      let resolved = false
+      const stopped = h.stop().then(() => {
+        resolved = true
+      })
+      expect(k.signals).toEqual(['SIGTERM'])
+      // `hello` arrive après le stop (kill sans effet avant le spawn, cas Electron).
+      k.reply({ ready: true, pid: 1 })
+      expect(h.state).toBe('stopping')
+      expect(k.signals).toEqual(['SIGTERM', 'SIGTERM'])
+      expect(ready).toEqual([])
+      await expect(h.call('hashFile', {})).rejects.toMatchObject({ code: 'cancelled' })
+      k.exit(null, 'SIGTERM')
+      await vi.advanceTimersByTimeAsync(100)
+      await stopped
+      expect(resolved).toBe(true)
+      expect(h.state).toBe('stopped')
+      expect(crashes).toEqual([])
+      expect(ff.kids).toHaveLength(1)
+
+      // Même scénario, l'enfant ne signale jamais sa sortie : le filet finalise l'arrêt.
+      const h2 = new WorkerHost({
+        name: 't2',
+        modulePath: '/x.js',
+        fork: ff.fork,
+        backoffMs: [10],
+        onCrash: (i) => crashes.push(i),
+      })
+      h2.start()
+      const k2 = ff.kids.at(-1)!
+      const s2 = h2.stop()
+      k2.reply({ ready: true, pid: 2 })
+      await vi.advanceTimersByTimeAsync(6_000)
+      await s2
+      expect(h2.state).toBe('stopped')
+      expect(k2.signals).toEqual(['SIGTERM', 'SIGTERM', 'SIGKILL'])
+      expect(crashes).toEqual([])
+      expect(ff.kids).toHaveLength(2)
+      // Sortie tardive après le filet : ignorée, pas de redémarrage.
+      k2.exit(null, 'SIGKILL')
+      await vi.advanceTimersByTimeAsync(100)
+      expect(h2.state).toBe('stopped')
+      expect(ff.kids).toHaveLength(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('stop avant hello puis sortie : pas de crash signalé ni de redémarrage (enfant réel)', async () => {
+    const nf = nodeFork()
+    const crashes: CrashInfo[] = []
+    const mw = createMediaWorker({
+      modulePath: MEDIA_WORKER_TS,
+      fork: nf.fork,
+      tools: TOOLS,
+      backoffMs: [10],
+      onCrash: (i) => crashes.push(i),
+    })
+    mw.host.start()
+    await mw.stop()
+    expect(mw.host.state).toBe('stopped')
+    await new Promise((r) => setTimeout(r, 200))
+    expect(crashes).toEqual([])
+    expect(nf.children).toHaveLength(1)
+    expect(mw.host.restarts).toBe(0)
+  }, 30_000)
+
   it('annulation : rejet immédiat et __cancel envoyé ; progression relayée ; délai dépassé', async () => {
     const ff = fakeFork()
     const h = new WorkerHost({ name: 't', modulePath: '/x.js', fork: ff.fork, config: { a: 1 } })
