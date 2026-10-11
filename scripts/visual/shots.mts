@@ -14,7 +14,7 @@ import { parseArgs } from 'node:util'
 import { launchApp } from '../../tests/helpers/electron-app'
 import { ensureBuild } from '../../tests/helpers/ensure-build'
 import { makeTmpDir, removeTmpDir } from '../../tests/helpers/tmpdir'
-import { cloneDir, makeDemoLibrary } from '../make-fixtures.mjs'
+import { cloneDir, makeDemoLibrary } from '../../tests/helpers/demo-library'
 import { mergeManifest, ROOT } from './refs.mjs'
 import { ALL_SCENES, freezePage, playScene, selectScenes } from './scenes.mjs'
 

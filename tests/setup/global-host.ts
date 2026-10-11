@@ -4,8 +4,11 @@
  */
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { purgeStaleTmpDirs } from '../helpers/tmpdir'
 
 export default async function setup(): Promise<void> {
+  // Restes d'exécutions précédentes interrompues (`.tmp/tests/`, > 10 min).
+  purgeStaleTmpDirs()
   const root = resolve(import.meta.dirname, '../..')
   const entry = resolve(root, 'src/host/index.ts')
   if (!existsSync(entry)) return

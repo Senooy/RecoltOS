@@ -209,5 +209,19 @@ export function seedSyntheticLibrary(
   return { itemIds, collectionIds }
 }
 
+/** Base d'une bibliothèque d'un `userData` (par défaut la bibliothèque `default`, cf. `make-fixtures`). */
+export const libraryDbPath = (userData: string, libraryId = 'default'): string =>
+  join(userData, 'libraries', libraryId, 'recolt.db')
+
+/**
+ * Ouvre une base EXISTANTE en lecture seule (vérifier ce que l'app a écrit, QA §6.1). Aucune
+ * migration, aucune écriture : l'app peut tourner en parallèle (WAL). À fermer par l'appelant.
+ */
+export function openDbReadonly(file: string): TestDb {
+  const db = new Database(file, { readonly: true, fileMustExist: true })
+  db.pragma('busy_timeout = 5000')
+  return db
+}
+
 /** Vrai si le chemin d'une base existe (aide pour les tests de fixtures). */
 export const dbExists = (file: string): boolean => existsSync(file)

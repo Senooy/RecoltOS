@@ -36,6 +36,7 @@ export default defineConfig({
         /e2e\/.*\.spec\.ts$/,
         /setup\/launch\.smoke\.spec\.ts$/,
         /setup\/console-capture\.spec\.ts$/,
+        /setup\/demo-fixture\.spec\.ts$/,
       ],
       dependencies: ['build'],
     },

@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { makeDemoLibrary } from '../../scripts/make-fixtures.mjs'
+import { makeDemoLibrary } from './demo-library'
 import { seedBench } from '../../scripts/seed-bench.mjs'
 import { REPO_ROOT } from './paths'
 import { assertSafeOutDir, FIXTURE_MARKER, markFixtureDir } from './safe-out'
