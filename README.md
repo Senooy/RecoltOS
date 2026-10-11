@@ -24,6 +24,11 @@ Le pnpm 9.15.0 de Homebrew (`/opt/homebrew/bin/pnpm`) n'est pas utilisé.
 | `rebuild:native`                      | `electron-builder install-app-deps` (repli ; les natifs sont des prebuilds N-API) |
 | `verify:fast`                         | format + lint + typecheck + check:pkg + tests unitaires                           |
 
+> État M0 : `verify:fast` est rouge tant que WP-01 n'a pas livré `vitest.config.mts` (projets `unit`,
+> `renderer`, `real`, alias) et `scripts/check-package.mts` : `test:unit` et `check:pkg` échouent pour cette
+> seule raison. D'ici là, la commande de contrôle des tests est `pnpm exec vitest run tests/unit`
+> (plus `pnpm run format:check && pnpm run lint && pnpm run typecheck`).
+
 Variables : `RECOLTOS_USER_DATA`, `RECOLTOS_E2E=1`, `RECOLTOS_WINDOW=1280x820`, `RECOLTOS_HOME` (QA §2).
 
 ## Documents
