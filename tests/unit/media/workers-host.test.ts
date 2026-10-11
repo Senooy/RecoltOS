@@ -4,7 +4,7 @@
  * annulation, `stopAll()`.
  */
 import { createHash } from 'node:crypto'
-import { writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -144,6 +144,46 @@ describe('media-worker réel (child_process + tsx)', () => {
     // Émise pendant le backoff : attend le nouveau worker. La config (sans ffmpeg) est rejouée.
     const p = mw.call('makePoster', { src: file, dst: join(tmp.dir, 'p.jpg'), atMs: 0 })
     await expect(p).rejects.toMatchObject({ code: 'tool_missing' })
+  }, 30_000)
+
+  it('zipLibrary avec une source illisible : erreur typée, worker vivant, aucun .part', async () => {
+    const nf = nodeFork()
+    const crashes: CrashInfo[] = []
+    const mw = createMediaWorker({
+      modulePath: MEDIA_WORKER_TS,
+      fork: nf.fork,
+      tools: TOOLS,
+      onCrash: (i) => crashes.push(i),
+    })
+    const root = join(tmp.dir, 'ziproot')
+    const outDir = join(tmp.dir, 'zipout')
+    mkdirSync(root, { recursive: true })
+    writeFileSync(join(root, 'a.bin'), Buffer.alloc(64 * 1024, 1))
+    writeFileSync(join(root, 'b.bin'), Buffer.alloc(64 * 1024, 2))
+    chmodSync(join(root, 'b.bin'), 0o000)
+    try {
+      await expect(
+        mw.call(
+          'zipLibrary',
+          {
+            root,
+            out: join(outDir, 'lib.zip'),
+            entries: [
+              { abs: 'a.bin', name: 'a.bin' },
+              { abs: 'b.bin', name: 'b.bin' },
+            ],
+          },
+          { jobId: 1 },
+        ),
+      ).rejects.toMatchObject({ code: 'io' })
+    } finally {
+      chmodSync(join(root, 'b.bin'), 0o644)
+    }
+    expect(await mw.call('hashFile', { abs: file })).toMatchObject({ sha256: expectedSha })
+    expect(crashes).toEqual([])
+    expect(mw.host.restarts).toBe(0)
+    expect(nf.children).toHaveLength(1)
+    expect(readdirSync(outDir)).toEqual([])
   }, 30_000)
 
   it('stopAll : arrêt propre, appels ultérieurs refusés', async () => {

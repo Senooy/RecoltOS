@@ -2,7 +2,16 @@
  * WP-03 — opérations fichier : hash en flux, clonage FICLONE + rename, zip (yazl), toPng.
  */
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import {
+  chmodSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  truncateSync,
+  writeFileSync,
+} from 'node:fs'
 import { join } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
 import { cloneFile, hashFile, safeZipName, zipLibrary } from '../../../src/main/workers/media/files'
@@ -100,5 +109,56 @@ describe('zipLibrary', () => {
       zipLibrary({ root: tmp.dir, out, entries: [{ abs: join(tmp.dir, 'nope'), name: 'n' }] }),
     ).rejects.toMatchObject({ code: 'not_found' })
     expect(readdirSync(join(tmp.dir, 'bad'))).toEqual([])
+  })
+
+  describe('source modifiée ou supprimée pendant l’export', () => {
+    function setup(tag: string) {
+      const root = join(tmp.dir, `live-${tag}`)
+      mkdirSync(root, { recursive: true })
+      writeFileSync(join(root, 'a.bin'), Buffer.alloc(256 * 1024, 1))
+      writeFileSync(join(root, 'b.bin'), Buffer.alloc(256 * 1024, 2))
+      writeFileSync(join(root, 'c.bin'), Buffer.alloc(1024, 3))
+      const outDir = join(tmp.dir, `live-out-${tag}`)
+      return {
+        root,
+        outDir,
+        args: {
+          root,
+          out: join(outDir, 'lib.zip'),
+          entries: ['a.bin', 'b.bin', 'c.bin'].map((n) => ({ abs: n, name: n })),
+        },
+      }
+    }
+
+    it('fichier tronqué après la 1re entrée → conflict, aucun .part', async () => {
+      const { root, outDir, args } = setup('trunc')
+      await expect(
+        zipLibrary(args, (p) => {
+          if (p.done === 1) truncateSync(join(root, 'b.bin'), 1000)
+        }),
+      ).rejects.toMatchObject({ code: 'conflict' })
+      expect(readdirSync(outDir)).toEqual([])
+    })
+
+    it('fichier supprimé après la 1re entrée → not_found, aucun .part', async () => {
+      const { root, outDir, args } = setup('rm')
+      const run = zipLibrary(args, (p) => {
+        if (p.done === 1) rmSync(join(root, 'b.bin'))
+      })
+      await expect(run).rejects.toMatchObject({ code: 'not_found' })
+      await expect(run).rejects.toThrow(/b\.bin/)
+      expect(readdirSync(outDir)).toEqual([])
+    })
+
+    it('fichier illisible (EACCES à l’ouverture) → io, aucun .part', async () => {
+      const { root, outDir, args } = setup('eacces')
+      chmodSync(join(root, 'b.bin'), 0o000)
+      try {
+        await expect(zipLibrary(args)).rejects.toMatchObject({ code: 'io' })
+      } finally {
+        chmodSync(join(root, 'b.bin'), 0o644)
+      }
+      expect(readdirSync(outDir)).toEqual([])
+    })
   })
 })

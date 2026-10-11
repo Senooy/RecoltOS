@@ -3,6 +3,7 @@
  * clonage APFS (`COPYFILE_FICLONE`) et archive zip (yazl) — ARCHI §2.2, §7.
  */
 import { createHash } from 'node:crypto'
+import { once } from 'node:events'
 import { constants, createReadStream, createWriteStream } from 'node:fs'
 import { copyFile, stat } from 'node:fs/promises'
 import { extname, isAbsolute, posix, resolve } from 'node:path'
@@ -63,6 +64,16 @@ function ioError(err: unknown, p: string): AppError {
   const e = err as NodeJS.ErrnoException
   if (e.code === 'ENOENT') return new AppError('not_found', `fichier introuvable : ${p}`)
   return new AppError('io', `${e.code ?? 'erreur'} : ${e.message}`)
+}
+
+/** Erreur d'export zip → AppError typée (source modifiée, absente, ou E/S). */
+function zipError(err: unknown, out: string): AppError {
+  if (err instanceof AppError) return err
+  const e = err as NodeJS.ErrnoException
+  if (/unexpected number of bytes/.test(e.message ?? '')) {
+    return new AppError('conflict', "fichier source modifié pendant l'export")
+  }
+  return ioError(err, e.path ?? out)
 }
 
 /** Copie par clonage APFS si possible (copie classique sinon), puis `rename` atomique. */
@@ -151,40 +162,59 @@ export async function zipLibrary(
     out,
     async (tmp) => {
       const zip = new yazl.ZipFile()
+      // `outputStream` est un PassThrough (typé ReadableStream par @types/yazl).
+      const output = zip.outputStream as NodeJS.ReadableStream & { destroy(): void }
+      const ws = createWriteStream(tmp)
+      // yazl signale sur le ZipFile (pas sur outputStream) une source supprimée ou modifiée
+      // pendant l'export : sans écouteur, `error` tuerait tout le worker. Écouteur permanent,
+      // posé avant le premier flux : une 2e erreur ne doit pas être orpheline non plus.
+      const zipFailed = new Promise<never>((_, reject) => {
+        zip.on('error', (err: Error) => {
+          output.destroy()
+          ws.destroy()
+          reject(err)
+        })
+      })
+      zipFailed.catch(() => undefined)
       let done = 0
-      for (const e of entries) {
-        let st
-        try {
-          st = await stat(e.abs)
-        } catch (err) {
-          throw ioError(err, e.abs)
-        }
-        if (!st.isFile()) throw new AppError('validation', `pas un fichier : ${e.abs}`)
-        zip.addReadStreamLazy(
-          e.name,
-          {
-            size: st.size,
-            mtime: st.mtime,
-            mode: 0o100644,
-            compress: !STORED_EXT.has(extname(e.name).toLowerCase()),
-          },
-          (cb) => {
-            const rs = createReadStream(e.abs)
-            rs.once('end', () => {
-              done++
-              onProgress?.({ done, total })
-            })
-            cb(null, rs)
-          },
-        )
-      }
-      zip.end()
       try {
-        await pipeline(zip.outputStream, createWriteStream(tmp), { signal })
+        for (const e of entries) {
+          let st
+          try {
+            st = await stat(e.abs)
+          } catch (err) {
+            throw ioError(err, e.abs)
+          }
+          if (!st.isFile()) throw new AppError('validation', `pas un fichier : ${e.abs}`)
+          zip.addReadStreamLazy(
+            e.name,
+            {
+              size: st.size,
+              mtime: st.mtime,
+              mode: 0o100644,
+              compress: !STORED_EXT.has(extname(e.name).toLowerCase()),
+            },
+            (cb) => {
+              const rs = createReadStream(e.abs)
+              // yazl n'écoute pas les erreurs des flux « lazy » : on les relaie sur le ZipFile.
+              rs.on('error', (err) => zip.emit('error', err))
+              rs.once('end', () => {
+                done++
+                onProgress?.({ done, total })
+              })
+              cb(null, rs)
+            },
+          )
+        }
+        zip.end()
+        await Promise.race([pipeline(output, ws, { signal }), zipFailed])
       } catch (err) {
+        output.destroy()
+        ws.destroy()
+        // Le temporaire doit être fermé avant que writeAtomic ne le supprime.
+        if (!ws.closed) await once(ws, 'close').catch(() => undefined)
         if (signal?.aborted) throw new AppError('cancelled', 'export annulé')
-        if (err instanceof AppError) throw err
-        throw ioError(err, out)
+        throw zipError(err, out)
       }
       return { bytes: (await stat(tmp)).size }
     },
