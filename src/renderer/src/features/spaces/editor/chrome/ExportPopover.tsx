@@ -1,0 +1,147 @@
+/**
+ * Export PNG (SPACES §1.3.2, §1.9 ; WP-63) : dialogue Portée (Tout / Sélection), Échelle (1× 2×
+ * 3×), Fond (Clair / Sombre / Thème) → vidage → `spaces.exportPng` (fenêtre stage côté main,
+ * enregistrement choisi par l'utilisateur) → pilule de progression avec « Annuler » → toast
+ * « Export terminé · Afficher dans le Finder ».
+ */
+import { useEffect, useState } from 'react'
+import { Button, Dialog, SegmentedSmall, toast } from '../../../../components/ui'
+import { fr } from '../../../../i18n/fr'
+import { RpcError, rpc, subscribe } from '../../../../lib/rpc'
+import { persistence, useSpace } from '../store/spaceStore'
+
+type Scope = 'all' | 'selection'
+type Bg = 'light' | 'dark' | 'theme'
+
+function ExportProgress({ onCancel }: { onCancel: () => void }) {
+  const [p, setP] = useState<{ done: number; total: number }>({ done: 0, total: 1 })
+  useEffect(() => subscribe('spaces.exportProgress', setP), [])
+  return (
+    <div
+      data-testid="export-progress"
+      className="sp-float fixed bottom-6 left-1/2 z-[60] flex h-10 -translate-x-1/2 items-center gap-3 pl-4 pr-1.5 text-small text-fg"
+    >
+      {fr.spacesExtra.exporting(p.done, p.total)}
+      <Button variant="secondary" size="sm" onClick={onCancel}>
+        {fr.spacesExtra.cancel}
+      </Button>
+    </div>
+  )
+}
+
+export function ExportPopover({
+  open,
+  onOpenChange,
+  spaceUuid,
+  name,
+}: {
+  open: boolean
+  onOpenChange: (o: boolean) => void
+  spaceUuid: string
+  name: string
+}) {
+  const hasSelection = useSpace((s) => s.selection.length > 0)
+  const [scope, setScope] = useState<Scope>('all')
+  const [scale, setScale] = useState<'1' | '2' | '3'>('2')
+  const [bg, setBg] = useState<Bg>('theme')
+  const [running, setRunning] = useState(false)
+
+  const run = async () => {
+    onOpenChange(false)
+    if (Object.keys(useSpace.getState().nodes).length === 0) {
+      toast(fr.spacesExtra.exportEmpty)
+      return
+    }
+    setRunning(true)
+    try {
+      await persistence.flush()
+      const sel = useSpace.getState().selection
+      const r = await rpc('spaces.exportPng', {
+        uuid: spaceUuid,
+        scope: scope === 'selection' && sel.length > 0 ? 'selection' : 'all',
+        ...(scope === 'selection' && sel.length > 0 ? { nodeUuids: sel } : {}),
+        scale: Number(scale) as 1 | 2 | 3,
+        background: bg,
+        name: name || fr.spaces.untitled,
+      })
+      if ('path' in r) {
+        toast(fr.spacesExtra.exportDone, {
+          action: {
+            label: fr.spacesExtra.revealInFinder,
+            onClick: () => void rpc('spaces.revealExport').catch(() => undefined),
+          },
+        })
+      } else toast(fr.spacesExtra.exportCancelled)
+    } catch (err) {
+      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <>
+      <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        <Dialog.Content
+          title={fr.spacesExtra.exportTitle}
+          className="w-[min(380px,calc(100vw-48px))]"
+          data-testid="export-dialog"
+        >
+          <div className="flex flex-col gap-4 px-5 pb-5 pt-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-small text-fg-muted">{fr.spacesExtra.scope}</span>
+              <SegmentedSmall
+                label={fr.spacesExtra.scope}
+                value={hasSelection ? scope : 'all'}
+                onChange={setScope}
+                options={[
+                  { value: 'all', label: fr.spacesExtra.scopeAll },
+                  ...(hasSelection
+                    ? [{ value: 'selection' as const, label: fr.spacesExtra.scopeSelection }]
+                    : []),
+                ]}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-small text-fg-muted">{fr.spacesExtra.scale}</span>
+              <SegmentedSmall
+                label={fr.spacesExtra.scale}
+                value={scale}
+                onChange={setScale}
+                options={[
+                  { value: '1', label: '1×' },
+                  { value: '2', label: '2×' },
+                  { value: '3', label: '3×' },
+                ]}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-small text-fg-muted">{fr.spacesExtra.background}</span>
+              <SegmentedSmall
+                label={fr.spacesExtra.background}
+                value={bg}
+                onChange={setBg}
+                options={[
+                  { value: 'light', label: fr.spacesExtra.bgLight },
+                  { value: 'dark', label: fr.spacesExtra.bgDark },
+                  { value: 'theme', label: fr.spacesExtra.bgTheme },
+                ]}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                {fr.spacesExtra.cancel}
+              </Button>
+              <Button data-testid="export-run" onClick={() => void run()}>
+                {fr.spacesExtra.export}
+              </Button>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog.Root>
+      {running ? (
+        <ExportProgress onCancel={() => void rpc('spaces.exportCancel').catch(() => undefined)} />
+      ) : null}
+    </>
+  )
+}

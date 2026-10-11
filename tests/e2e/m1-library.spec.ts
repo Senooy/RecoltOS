@@ -119,7 +119,8 @@ test.describe('coque et grille (bibliothèque de démo)', () => {
     const menu = page.locator('[data-testid="ctx-menu"]')
     await expect(menu).toBeVisible()
     const items = menu.locator('[role="menuitem"]')
-    expect(await items.count()).toBe(7)
+    // 7 entrées de GatherOS + « Ajouter à un space › » (extension RecoltOS, WP-62).
+    expect(await items.count()).toBe(8)
     await expect(items.last()).toHaveText('Supprimer')
   })
 })

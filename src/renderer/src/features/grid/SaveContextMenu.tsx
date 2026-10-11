@@ -26,6 +26,7 @@ import { flattenTree, useCollections } from '../../state/collections'
 import { askName } from '../../state/dialogs'
 import { usePrefs } from '../../state/prefs'
 import { analyzeItems } from '../ai/ai-actions'
+import { AddToSpaceSub } from '../spaces/AddToSpaceMenu'
 import {
   addToCollection,
   copyFor,
@@ -149,6 +150,7 @@ export function SaveContextMenuContent({
         </Menu.Context.SubTrigger>
         <CollectionsSub uuids={uuids} onNew={() => void newCollection()} />
       </Menu.Context.Sub>
+      <AddToSpaceSub uuids={uuids} />
       {context === 'collection' && collection ? (
         <>
           <Menu.Context.Item

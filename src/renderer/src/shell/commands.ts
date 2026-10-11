@@ -7,6 +7,7 @@ import { fr } from '../i18n/fr'
 import { RpcError, rpc } from '../lib/rpc'
 import { runCapture } from '../features/capture/capture-actions'
 import { importFolder, reportImport, useImportUi } from '../features/import/import-actions'
+import { newSpace } from '../features/spaces/space-actions'
 import { emit } from '../lib/bus'
 import { isEditableTarget } from '../lib/shortcuts'
 import { askName } from '../state/dialogs'
@@ -90,9 +91,24 @@ function selectAllVisible(): void {
   if (uuids.length > 0) useUi.getState().setSelection(uuids)
 }
 
+const SPACE_COMMANDS: ReadonlySet<MenuCommand> = new Set<MenuCommand>([
+  'undo',
+  'redo',
+  'selectAll',
+  'zoomIn',
+  'zoomOut',
+  'zoomReset',
+  'quickLook',
+])
+
 export function runMenuCommand(cmd: MenuCommand): void {
   const ui = useUi.getState()
   const editing = isEditableTarget(document.activeElement)
+  // Éditeur de space : annuler, rétablir, tout sélectionner, zoom et aperçu vont à la toile.
+  if (ui.route.name === 'space' && !ui.overlay && !editing && SPACE_COMMANDS.has(cmd)) {
+    emit('space.command', { cmd })
+    return
+  }
   switch (cmd) {
     case 'palette':
       // Un seul déclencheur : l'accélérateur ⌘K du menu natif (pas d'écouteur renderer).
@@ -137,6 +153,9 @@ export function runMenuCommand(cmd: MenuCommand): void {
       return
     case 'newCollection':
       void newCollection()
+      return
+    case 'newSpace':
+      void newSpace()
       return
     case 'exportZip':
       void exportZip()

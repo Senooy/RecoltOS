@@ -10,6 +10,8 @@ export interface BusEvents {
   'grid.cascade': { except: string | null }
   /** Commande du menu natif destinée au calque ouvert (zoom, panneau Détails…). */
   'overlay.command': { cmd: string }
+  /** Commande du menu natif destinée à l'éditeur de space ouvert (annuler, zoom…). */
+  'space.command': { cmd: string }
 }
 
 type Handler<K extends keyof BusEvents> = (payload: BusEvents[K]) => void
