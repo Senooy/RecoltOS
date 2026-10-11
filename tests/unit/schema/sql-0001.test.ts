@@ -178,4 +178,27 @@ describe('0001_init.sql', () => {
       .all() as { detail: string }[]
     expect(plan.map((p) => p.detail).join(' ')).toMatch(/ix_items_live_created/)
   })
+
+  it('post_meta.thread non objet (chaîne, tableau de chaînes) : INSERT, UPDATE et reconstruction ne lèvent pas', () => {
+    expect(() => addItem(30, { post_meta: '{"v":1,"thread":"x"}' })).not.toThrow()
+    expect(() => addItem(31, { post_meta: '{"v":1,"thread":["a"]}' })).not.toThrow()
+    const mixed = addItem(32, {
+      kind: 'tweet',
+      post_meta: JSON.stringify({ v: 1, thread: ['pas un objet', { text: 'Fil valide' }] }),
+    })
+    expect(() =>
+      db.prepare('UPDATE items SET post_meta = ? WHERE id = ?').run('{"thread":["a"]}', mixed),
+    ).not.toThrow()
+    expect(() =>
+      db.exec(`DELETE FROM items_fts;
+        INSERT INTO items_fts(rowid,title,notes,post_text,ocr_text,ai_text,tags,url)
+        SELECT item_id,title,notes,post_text,ocr_text,ai_text,tags,url FROM items_fts_src;`),
+    ).not.toThrow()
+    expect(match('valide')).toEqual([])
+    db.prepare('UPDATE items SET post_meta = ? WHERE id = ?').run(
+      JSON.stringify({ v: 1, thread: [{ text: 'Fil valide' }] }),
+      mixed,
+    )
+    expect(match('valide')).toEqual([mixed])
+  })
 })

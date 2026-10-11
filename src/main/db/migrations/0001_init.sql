@@ -396,7 +396,7 @@ SELECT
     coalesce(i.post_meta ->> '$.quoted.text','')        || ' ' ||
     coalesce(i.post_meta ->> '$.quoted.author.name','') || ' ' ||
     coalesce(i.post_meta ->> '$.quoted.author.handle','') || ' ' ||
-    coalesce((SELECT group_concat(j.value ->> '$.text', ' ') FROM json_each(i.post_meta, '$.thread') j), '')
+    coalesce((SELECT group_concat(j.value ->> '$.text', ' ') FROM json_each(i.post_meta, '$.thread') j WHERE j.type = 'object'), '')
   END                                                                                      AS post_text,
   coalesce(i.ocr_text,'')                                                                  AS ocr_text,
   coalesce(i.ai_description,'') || ' ' ||
