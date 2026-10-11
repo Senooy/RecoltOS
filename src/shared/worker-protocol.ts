@@ -75,6 +75,20 @@ export interface MediaOps {
   /** COPYFILE_FICLONE puis rename. */
   cloneFile(a: { src: string; dst: string }): { bytes: number }
   zipLibrary(a: { root: string; entries: ZipEntry[]; out: string }): { bytes: number }
+  /** IA (AI §4) : JPEG q85 ≤ `maxEdge` (1568), sans métadonnées, fond blanc. */
+  aiImage(a: { src: string; dst: string; maxEdge: number }): {
+    width: number
+    height: number
+    bytes: number
+  }
+  /** IA (AI §4) : une image clé à `atMs` ou `fromEndMs` de la fin, JPEG ≤ `maxEdge` (1024). */
+  extractFrame(a: {
+    src: string
+    dst: string
+    atMs?: number
+    fromEndMs?: number
+    maxEdge: number
+  }): { width: number; height: number; bytes: number }
 }
 
 export type MediaOp = keyof MediaOps

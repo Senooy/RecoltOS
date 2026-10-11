@@ -4,6 +4,7 @@
  */
 import { AppError } from '../../../shared/errors'
 import type { MediaArgs, MediaOp, MediaResult } from '../../../shared/worker-protocol'
+import { aiImage, extractFrame } from './ai'
 import type { MediaTools } from './exec'
 import { cloneFile, hashFile, toPng, zipLibrary } from './files'
 import { decodeForeign } from './foreign'
@@ -35,6 +36,8 @@ export const MEDIA_OPS: { [O in MediaOp]: Impl<O> } = {
   hashFile: (a) => hashFile(a),
   cloneFile: (a) => cloneFile(a),
   zipLibrary: (a, c) => zipLibrary(a, c.progress, c.signal),
+  aiImage: (a, c) => aiImage(a, c.tools, c.signal),
+  extractFrame: (a, c) => extractFrame(a, c.tools, c.signal),
 }
 
 export function isMediaOp(op: string): op is MediaOp {
