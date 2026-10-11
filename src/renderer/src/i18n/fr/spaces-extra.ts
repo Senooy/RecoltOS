@@ -1,5 +1,45 @@
 /**
- * Textes du domaine `spaces-extra`, possédé par WP-63 (ERRATA §F). Ajouter ici les namespaces propres au
- * domaine (tutoiement, typographie FR) ; ne pas redéfinir un namespace de `base.ts`.
+ * Textes du domaine `spaces-extra`, possédé par WP-63 (ERRATA §F) : rotation, texte libre, formes
+ * supplémentaires, alignement, export PNG (tutoiement, typographie FR).
  */
-export const spacesExtra = {} as const
+export const spacesExtra = {
+  spacesExtra: {
+    exportMenu: 'Exporter en PNG…',
+    exportTitle: 'Exporter en PNG',
+    scope: 'Portée',
+    scopeAll: 'Tout',
+    scopeSelection: 'Sélection',
+    scale: 'Échelle',
+    background: 'Fond',
+    bgLight: 'Clair',
+    bgDark: 'Sombre',
+    bgTheme: 'Thème',
+    export: 'Exporter',
+    exporting: (done: number, total: number) => `Export en cours… ${done}/${total}`,
+    exportDone: 'Export terminé',
+    revealInFinder: 'Afficher dans le Finder',
+    cancel: 'Annuler',
+    exportCancelled: 'Export annulé',
+    exportEmpty: 'Rien à exporter : le space est vide.',
+    shapes: 'Formes',
+    triangle: 'Triangle',
+    diamond: 'Losange',
+    text: 'Texte',
+    align: 'Aligner',
+    alignLeft: 'Aligner à gauche',
+    alignHCenter: 'Centrer horizontalement',
+    alignRight: 'Aligner à droite',
+    alignTop: 'Aligner en haut',
+    alignVCenter: 'Centrer verticalement',
+    alignBottom: 'Aligner en bas',
+    distributeH: 'Répartir horizontalement',
+    distributeV: 'Répartir verticalement',
+    rotate: 'Pivoter',
+    textSize: 'Taille du texte',
+    bold: 'Gras',
+    font: 'Police',
+    fonts: { sans: 'Sans', serif: 'Serif', mono: 'Mono' },
+    dashed: 'Pointillés',
+    strokeWidth: 'Épaisseur',
+  },
+} as const
