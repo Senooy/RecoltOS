@@ -10,7 +10,14 @@ import { jobHandlers, type JobContext } from '../../../src/main/jobs/handlers'
 import { dispatch } from '../../../src/main/ipc/router'
 
 /** Domaines IPC déjà implémentés (les autres sont encore des stubs `not_implemented`). */
-const IMPLEMENTED_DOMAINS: readonly string[] = ['prefs', 'libraries', 'system', 'ingest', 'jobs']
+const IMPLEMENTED_DOMAINS: readonly string[] = [
+  'prefs',
+  'libraries',
+  'system',
+  'ingest',
+  'jobs',
+  'import',
+]
 /** Types de jobs encore en stub (IA : M4). */
 const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']
 

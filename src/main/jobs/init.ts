@@ -5,6 +5,11 @@
  * sont supprimés et les vieux jobs terminés nettoyés (ARCHI §5.3).
  */
 import { net } from 'electron'
+import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { AppError } from '../../shared/errors'
+import { configureImportService } from '../importers/gatheros/service'
+import { getLibraryManager } from '../library/init'
 import type { Prefs } from '../../shared/prefs'
 import type { Disposer, ServiceContext } from '../bootstrap/context'
 import { capturePage } from '../ingest/page-capture'
@@ -108,7 +113,30 @@ export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
     emitChanged: (uuids) => batcher.push(uuids, 'purged'),
   })
 
+  configureImportService({
+    home: ctx.flags.home,
+    media,
+    log: ctx.log,
+    kick: () => q.kick(),
+    emitProgress: (p) => ctx.emit('import.progress', p),
+    changed: (uuids) => batcher.push(uuids, 'created'),
+    collectionsChanged: (uuids) => ctx.emit('collections.changed', { uuids }),
+    applyPrefs: (patch) => prefsStore.set(patch),
+    createLibrary: async (name) => {
+      const m = getLibraryManager()
+      if (!m)
+        throw new AppError('library_unavailable', 'Gestionnaire de bibliothèques indisponible.')
+      await m.create({ name })
+    },
+    tmpDir: () => {
+      const dir = join(ctx.userData, 'tmp')
+      mkdirSync(dir, { recursive: true })
+      return dir
+    },
+  })
+
   return async () => {
+    configureImportService(null)
     stopAutoPurge()
     offPrefs()
     disposeLifecycle()

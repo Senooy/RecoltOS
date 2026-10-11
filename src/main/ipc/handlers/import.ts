@@ -1,7 +1,35 @@
 /**
- * Handlers `import.*`. Stub `not_implemented` créé par WP-00, possédé ensuite par WP-11.
- * Remplacer par un objet `DomainHandlers<'import'>` complet (le typage impose chaque canal du contrat).
+ * Handlers `import.gatheros.*` (WP-11, ARCHI §6) : détection (copie de la base, jamais la source),
+ * lancement en tâche de fond (`import.progress`), annulation, rapport, import interrompu à reprendre.
  */
-import { notImplemented, type DomainHandlers } from '../router'
+import { shell } from 'electron'
+import { requireLibrary } from '../../library/library-context'
+import {
+  cancelGatherosImport,
+  detectGatheros,
+  lastReport,
+  pending,
+  startGatherosImport,
+} from '../../importers/gatheros/service'
+import type { DomainHandlers } from '../router'
+import { AppError } from '../../../shared/errors'
 
-export const importHandlers: DomainHandlers<'import'> = notImplemented('import')
+export const importHandlers: DomainHandlers<'import'> = {
+  'import.gatheros.detect': () => detectGatheros(),
+  'import.gatheros.start': (input) =>
+    startGatherosImport({
+      ...(input.libraryId ? { libraryId: input.libraryId } : {}),
+      options: input.options,
+      target: input.target,
+    }),
+  'import.gatheros.cancel': () => {
+    cancelGatherosImport()
+  },
+  'import.gatheros.lastReport': () => lastReport(),
+  'import.gatheros.pending': () => pending(),
+  'import.gatheros.revealReport': () => {
+    const r = lastReport()
+    if (!r?.reportRel) throw new AppError('not_found', 'Aucun rapport d’import.')
+    shell.showItemInFolder(requireLibrary().paths.abs(r.reportRel))
+  },
+}

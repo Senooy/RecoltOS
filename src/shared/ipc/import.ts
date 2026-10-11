@@ -2,7 +2,6 @@
  * Contrat `import.gatheros.*` (ARCHI §6). GatherOS en lecture seule, copie de la base (PLAN §2.2).
  */
 import { z } from 'zod'
-import { LibraryId } from '../enums'
 import { Empty, Void, type ContractShape, type EventShape } from './define'
 
 export const ImportPhase = z.enum([
@@ -19,12 +18,38 @@ export const ImportPhase = z.enum([
   'finalize',
   'done',
 ])
+export type ImportPhase = z.output<typeof ImportPhase>
 
 export const ImportOptions = z.object({
   includeTrash: z.boolean().default(true),
   includeHidden: z.boolean().default(true),
   importSpaces: z.boolean().default(true),
+  /** Exemples livrés par GatherOS (tag `__starter__`), exclus par défaut (ARCHI §6.6). */
+  skipStarterContent: z.boolean().default(true),
+  /** Titres, descriptions, OCR et prompts (ARCHI §6.3). */
+  importAiFields: z.boolean().default(true),
+  /** Réglages GatherOS par liste blanche ; ne peut jamais activer un fournisseur IA. */
+  importPrefs: z.boolean().default(false),
+  /** Avancé : recrée ce que l'utilisateur a supprimé depuis le dernier import. */
+  ignoreTombstones: z.boolean().default(false),
 })
+export type ImportOptions = z.output<typeof ImportOptions>
+
+/** Comptes de la carte de détection (ARCHI §6.9), après exclusion des exemples de démarrage. */
+export const ImportPreview = z.object({
+  items: z.number().int(),
+  images: z.number().int(),
+  videos: z.number().int(),
+  posts: z.number().int(),
+  links: z.number().int(),
+  collections: z.number().int(),
+  tags: z.number().int(),
+  trash: z.number().int(),
+  hidden: z.number().int(),
+  starter: z.number().int(),
+  bytes: z.number().int(),
+})
+export type ImportPreview = z.output<typeof ImportPreview>
 
 export const ImportProgress = z.object({
   runId: z.number().int(),
@@ -44,6 +69,13 @@ export const ImportReport = z.object({
   counts: z.record(z.string(), z.number().int()),
   warnings: z.array(z.string()),
   error: z.string().nullable(),
+  /** Liens du résumé : éléments sans fichier, doublons d'URL (ARCHI §6.9). */
+  missingFiles: z.array(z.object({ itemUuid: z.string(), file: z.string() })).default([]),
+  urlDuplicates: z.array(z.object({ url: z.string(), itemUuids: z.array(z.string()) })).default([]),
+  /** Éléments importés sans description (bouton « Enrichir N éléments avec l'IA… »). */
+  missingDescription: z.number().int().default(0),
+  /** Rapport JSON complet (`import/report-<ts>.json`), relatif à la bibliothèque. */
+  reportRel: z.string().nullable().default(null),
 })
 export type ImportReport = z.output<typeof ImportReport>
 
@@ -54,18 +86,34 @@ export const importContract = {
       found: z.boolean(),
       path: z.string().nullable(),
       running: z.boolean(),
+      /** Nom d'hôte du verrou (`SingletonLock`) quand GatherOS tourne. */
+      runningHost: z.string().nullable().default(null),
       schemaVersion: z.number().int().nullable(),
-      counts: z
-        .object({ items: z.number().int(), collections: z.number().int(), tags: z.number().int() })
-        .nullable(),
+      libraryName: z.string().nullable().default(null),
+      counts: ImportPreview.nullable(),
     }),
   },
+  /** `libraryId` = bibliothèque GatherOS source (défaut : l'active de GatherOS). */
   'import.gatheros.start': {
-    input: z.object({ libraryId: LibraryId.optional(), options: ImportOptions.prefault({}) }),
+    input: z.object({
+      libraryId: z
+        .string()
+        .regex(/^[A-Za-z0-9_-]{1,80}$/)
+        .optional(),
+      options: ImportOptions.prefault({}),
+      /** `new` : crée d'abord la bibliothèque « Importée de GatherOS » et bascule dessus. */
+      target: z.enum(['active', 'new']).default('active'),
+    }),
     output: z.object({ runId: z.number().int() }),
   },
   'import.gatheros.cancel': { input: Empty, output: Void },
   'import.gatheros.lastReport': { input: Empty, output: ImportReport.nullable() },
+  /** Import interrompu (`import_runs.state='running'`) à reprendre au lancement. */
+  'import.gatheros.pending': {
+    input: Empty,
+    output: z.object({ runId: z.number().int(), phase: z.string().nullable() }).nullable(),
+  },
+  'import.gatheros.revealReport': { input: Empty, output: Void },
 } as const satisfies ContractShape
 
 export const importEvents = {
