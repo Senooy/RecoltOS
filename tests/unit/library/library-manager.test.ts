@@ -651,3 +651,71 @@ describe('isSyncedFolder : casse ignorée, anciens dossiers cloud', () => {
     expect(isSyncedFolder(path.join(home, 'Pictures', 'Lib'), home)).toBe(false)
   })
 })
+
+describe('revue WP-02 : bibliothèque disparue, dossiers gérés', () => {
+  it('bibliothèque hors default dont le dossier a disparu : refusée, jamais recréée vide', async () => {
+    const m = make()
+    await m.open()
+    const lib = await m.create({ name: 'A' })
+    requireLibrary().repos.items.insert({ kind: 'image' })
+    await m.switch('default')
+    fs.rmSync(path.join(userData, 'libraries', lib.id), { recursive: true, force: true })
+    await expect(m.switch(lib.id)).rejects.toMatchObject({ code: 'library_unavailable' })
+    expect(getActiveLibrary()?.id).toBe('default')
+    expect(fs.existsSync(path.join(userData, 'libraries', lib.id, 'recolt.db'))).toBe(false)
+    expect(m.list().libraries.find((l) => l.id === lib.id)).toBeDefined()
+  })
+
+  it('recolt.db seul disparu (dossier présent) : refusé, pas de base vide recréée', async () => {
+    const m = make()
+    await m.open()
+    const lib = await m.create({ name: 'B' })
+    await m.switch('default')
+    fs.rmSync(path.join(userData, 'libraries', lib.id, 'recolt.db'))
+    await expect(m.switch(lib.id)).rejects.toMatchObject({ code: 'library_unavailable' })
+    expect(fs.existsSync(path.join(userData, 'libraries', lib.id, 'recolt.db'))).toBe(false)
+  })
+
+  it('au démarrage, une bibliothèque active disparue retombe sur default', async () => {
+    const m = make()
+    await m.open()
+    const lib = await m.create({ name: 'C' })
+    await m.close()
+    fs.rmSync(path.join(userData, 'libraries', lib.id), { recursive: true, force: true })
+    const m2 = make()
+    const ctx = await m2.open()
+    expect(ctx.id).toBe('default')
+    expect(log.error).toHaveBeenCalled()
+  })
+
+  it('create sans chemin et première ouverture de default restent automatiques', async () => {
+    const m = make()
+    await m.open()
+    expect(fs.existsSync(path.join(userData, 'libraries', 'default', 'items'))).toBe(true)
+    await expect(m.create({ name: 'D' })).resolves.toMatchObject({ path: null })
+    expect(requireLibrary().name).toBe('D')
+  })
+
+  it('create refuse un dossier situé dans libraries/ ou dans la racine d’une bibliothèque', async () => {
+    const m = make()
+    await m.open()
+    const libRoot = path.join(userData, 'libraries', 'default')
+    const refused = [
+      path.join(libRoot, 'tmp', 'sub'),
+      path.join(libRoot, 'items', 'zz'),
+      path.join(libRoot),
+      path.join(userData, 'libraries', 'autre'),
+      path.join(userData, 'LIBRARIES', 'DEFAULT', 'TMP', 'sub'),
+    ]
+    for (const p of refused) {
+      await expect(m.create({ name: 'Sub', path: p }), p).rejects.toMatchObject({
+        code: 'conflict',
+      })
+    }
+    expect(readRegistry().libraries).toHaveLength(1)
+    const outside = path.join(base, 'dehors')
+    await expect(m.create({ name: 'Dehors', path: outside })).resolves.toMatchObject({
+      path: outside,
+    })
+  })
+})

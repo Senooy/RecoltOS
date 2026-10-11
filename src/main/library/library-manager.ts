@@ -313,6 +313,26 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
 
   const rootOf = (e: RegistryEntry) => e.path ?? defaultLibraryRoot(deps.userData, e.id)
 
+  /**
+   * Refuse un dossier choisi situé dans `userData/libraries` ou dans la racine d'une bibliothèque
+   * déjà enregistrée : `tmp/` et `items/` y sont gérés (staging, restaurations), un nettoyage par
+   * un autre lot détruirait la bibliothèque imbriquée. Comparaison insensible à la casse.
+   */
+  const assertNotManaged = (target: string): void => {
+    const candidates = [...new Set([path.resolve(target), realpathOfNearest(target)])]
+    const managed = [files.librariesDir, ...load().libraries.map(rootOf)]
+    for (const dir of managed) {
+      for (const d of new Set([path.resolve(dir), realpathOfNearest(dir)])) {
+        if (candidates.some((p) => isUnder(p, d))) {
+          throw new AppError(
+            'conflict',
+            'Ce dossier est déjà utilisé par une bibliothèque RecoltOS : choisis un autre emplacement.',
+          )
+        }
+      }
+    }
+  }
+
   /** Options d'ouverture communes à `openEntry` et à la réouverture de `closeActive`. */
   const dbOptions = () => ({
     ...(deps.onSlowQuery ? { onSlowQuery: deps.onSlowQuery } : {}),
@@ -367,10 +387,18 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     itemCount: countItems(e),
   })
 
-  /** Ouvre une bibliothèque (dossiers, migrations, repos) et la rend active. */
-  const openEntry = async (e: RegistryEntry): Promise<LibraryContext> => {
+  /**
+   * Ouvre une bibliothèque (dossiers, migrations, repos) et la rend active.
+   * Sauf `create` et `default` (créée au premier lancement), une bibliothèque dont le dossier ou
+   * `recolt.db` a disparu est refusée : sinon SQLite recréerait une base vide sans prévenir.
+   */
+  const openEntry = async (
+    e: RegistryEntry,
+    opts: { create?: boolean } = {},
+  ): Promise<LibraryContext> => {
     const root = rootOf(e)
-    if (e.path !== null && !fs.existsSync(root)) {
+    const mayCreate = opts.create === true || e.id === DEFAULT_LIBRARY_ID
+    if (!mayCreate && (!fs.existsSync(root) || !fs.existsSync(path.join(root, DB_FILE)))) {
       throw new AppError('library_unavailable', `Dossier de bibliothèque introuvable : ${root}`)
     }
     const paths = libraryPaths(root)
@@ -471,13 +499,13 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     }
   }
 
-  const switchTo = async (id: string): Promise<void> => {
+  const switchTo = async (id: string, opts: { create?: boolean } = {}): Promise<void> => {
     const target = entry(id)
     if (ctx?.id === id) return
     const previous = ctx ? entry(ctx.id) : null
     await closeActive(false)
     try {
-      await openEntry(target)
+      await openEntry(target, opts)
     } catch (err) {
       deps.log?.error(`[library] ouverture de ${id} impossible`, err)
       if (previous) {
@@ -565,6 +593,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         if (input.path) {
           custom = path.resolve(input.path)
           assertNotSynced(custom, home)
+          assertNotManaged(custom)
           const st = fs.statSync(custom, { throwIfNoEntry: false })
           if (st && !st.isDirectory()) {
             throw new AppError('validation', 'Ce chemin n’est pas un dossier.')
@@ -587,7 +616,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         fs.mkdirSync(root, { recursive: true })
         save({ ...load(), libraries: [...load().libraries, e] })
         try {
-          await switchTo(id)
+          await switchTo(id, { create: true })
         } catch (err) {
           const r = load()
           save({ ...r, libraries: r.libraries.filter((l) => l.id !== id) })

@@ -132,7 +132,11 @@ describe('handlers libraries.*', () => {
     electron.shell.openPath.mockResolvedValueOnce('refusé')
     expect(await call('libraries.reveal', { id: 'default' })).toMatchObject({
       ok: false,
-      error: { code: 'io' },
+      error: {
+        code: 'io',
+        message: 'Impossible d’ouvrir le dossier dans le Finder.',
+        details: { message: 'refusé' },
+      },
     })
   })
 

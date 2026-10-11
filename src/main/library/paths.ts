@@ -5,6 +5,7 @@
  */
 import { createHash } from 'node:crypto'
 import path from 'node:path'
+import { AppError } from '../../shared/errors'
 import { shard } from '../../shared/ids'
 import { DB_FILE } from '../db/open'
 
@@ -54,21 +55,23 @@ export function libraryPaths(root: string): LibraryPaths {
  */
 export function resolveInside(root: string, rel: string): string {
   if (!rel || rel.includes('\0') || path.isAbsolute(rel) || rel.includes('\\')) {
-    throw new Error(`chemin relatif invalide : ${JSON.stringify(rel)}`)
+    throw new AppError('validation', `chemin relatif invalide : ${JSON.stringify(rel)}`)
   }
   if (rel.split('/').some((seg) => seg === '..' || seg === '.' || seg === '')) {
-    throw new Error(`chemin relatif invalide : ${JSON.stringify(rel)}`)
+    throw new AppError('validation', `chemin relatif invalide : ${JSON.stringify(rel)}`)
   }
   const base = path.resolve(root)
   const abs = path.resolve(base, rel)
-  if (!abs.startsWith(base + path.sep)) throw new Error('chemin hors de la bibliothèque')
+  if (!abs.startsWith(base + path.sep)) {
+    throw new AppError('validation', 'chemin hors de la bibliothèque')
+  }
   return abs
 }
 
 const sha1 = (s: string) => createHash('sha1').update(s).digest('hex')
 const cleanExt = (ext: string) => {
   const e = ext.replace(/^\./, '').toLowerCase()
-  if (!/^[a-z0-9]{1,8}$/.test(e)) throw new Error(`extension invalide : ${ext}`)
+  if (!/^[a-z0-9]{1,8}$/.test(e)) throw new AppError('validation', `extension invalide : ${ext}`)
   return e
 }
 

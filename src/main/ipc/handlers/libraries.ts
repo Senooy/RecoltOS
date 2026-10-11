@@ -48,6 +48,8 @@ export const librariesHandlers: DomainHandlers<'libraries'> = {
 
   'libraries.reveal': async ({ id }) => {
     const err = await shell.openPath(manager().rootOf(id))
-    if (err) throw new AppError('io', `Impossible d'ouvrir le dossier : ${err}`)
+    // Le texte de macOS est en anglais : il part dans `details`, jamais dans le toast.
+    if (err)
+      throw new AppError('io', 'Impossible d’ouvrir le dossier dans le Finder.', { message: err })
   },
 }
