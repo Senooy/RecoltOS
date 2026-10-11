@@ -39,6 +39,23 @@ describe('layoutMasonry', () => {
     )
   })
 
+  it('posts : colonne choisie sur la hauteur estimée, position sur la hauteur mesurée (uqre2k)', () => {
+    const l = layoutMasonry(
+      [
+        { id: 't1', measured: 217, placementRatio: 0.5 },
+        { id: 't2', measured: 195, placementRatio: 0.5 },
+        { id: 'v1', ratio: 2 / 3 },
+        { id: 'v2', ratio: 2 / 3 },
+        { id: 'man', ratio: 16 / 9 },
+        { id: 'clown', ratio: 9 / 16 },
+      ],
+      opts(1280, 4),
+    )
+    expect(l.placed.map((p) => p.col)).toEqual([0, 1, 2, 3, 0, 1])
+    expect(l.placed[4]!.y).toBe(217 + 8)
+    expect(l.placed[5]!.y).toBe(195 + 8)
+  })
+
   it('fenêtrage et voisin géométrique', () => {
     const items = Array.from({ length: 40 }, (_, i) => ({
       id: String(i),

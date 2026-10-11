@@ -125,7 +125,7 @@ export function CollectionCard({ node, dragging }: { node: CollectionNode; dragg
           data-testid="collection-card"
           data-uuid={node.uuid}
           className={cn(
-            'relative h-[181px] w-[188px] shrink-0 overflow-hidden rounded-lg border text-left transition-[background-color,box-shadow] duration-150',
+            'relative block h-[181px] w-[188px] shrink-0 overflow-hidden rounded-lg border text-left transition-[background-color,box-shadow] duration-150',
             target ? 'border-accent bg-surface' : 'border-border bg-bg hover:bg-surface',
           )}
           style={{ boxShadow: hover || target ? 'var(--shadow-card-hover)' : undefined }}

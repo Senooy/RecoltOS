@@ -139,7 +139,8 @@ export function MasonryGrid({
   const layout = useMemo(() => {
     const list: MasonryItem[] = items.map((c) => {
       const k = cardKind(c)
-      if (k === 'tweet') return { id: c.uuid, measured: tweets.height(c.uuid) ?? 160 }
+      if (k === 'tweet')
+        return { id: c.uuid, measured: tweets.height(c.uuid) ?? 160, placementRatio: 0.5 }
       if (k === 'page') return { id: c.uuid, ratio: PAGE_RATIO, fixedExtra: PAGE_FOOTER_H }
       const ratio = c.width && c.height ? c.height / c.width : 1
       return { id: c.uuid, ratio }

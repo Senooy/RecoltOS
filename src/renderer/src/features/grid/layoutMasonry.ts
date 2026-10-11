@@ -11,6 +11,12 @@ export interface MasonryItem {
   fixedExtra?: number
   /** Hauteur mesurée (posts texte) : prioritaire. */
   measured?: number
+  /**
+   * Hauteur ESTIMÉE servant seulement au choix de la colonne (posts texte : `colW × 0,5`), la
+   * position verticale suivant la hauteur réelle. Reproduit le placement observé sur `uqre2k`,
+   * où les posts sont rangés avant leur mesure (écart à DESIGN §4.4 consigné au CHANGELOG).
+   */
+  placementRatio?: number
 }
 
 export interface Placed {
@@ -60,10 +66,12 @@ export function columnGeometry(o: MasonryOptions): { colW: number; columns: numb
 export function layoutMasonry(items: readonly MasonryItem[], o: MasonryOptions): MasonryLayout {
   const { colW, columns } = columnGeometry(o)
   const heights = new Array<number>(columns).fill(0)
+  /** Hauteurs utilisées pour choisir la colonne (estimées pour les posts). */
+  const choice = new Array<number>(columns).fill(0)
   const placed: Placed[] = []
   for (const it of items) {
     let col = 0
-    for (let c = 1; c < columns; c++) if (heights[c]! < heights[col]!) col = c
+    for (let c = 1; c < columns; c++) if (choice[c]! < choice[col]!) col = c
     const h =
       it.measured !== undefined && it.measured > 0
         ? Math.round(it.measured)
@@ -71,6 +79,8 @@ export function layoutMasonry(items: readonly MasonryItem[], o: MasonryOptions):
     const y = heights[col]!
     placed.push({ id: it.id, x: o.padX + col * (colW + o.gap), y, w: colW, h, col })
     heights[col] = y + h + o.gap
+    const est = it.placementRatio !== undefined ? Math.round(colW * it.placementRatio) : h
+    choice[col] = choice[col]! + est + o.gap
   }
   const height = Math.max(0, ...heights.map((v) => v - o.gap))
   return { placed, height: placed.length > 0 ? height : 0, colW, columns }

@@ -15,6 +15,15 @@ import { QuotedTweet } from './QuotedTweet'
 
 export type TweetVariant = 'light' | 'overlay' | 'cover'
 
+/**
+ * Texte d'un post dans la grille : le lien `t.co` final (média ou post cité joints, déjà visibles
+ * ailleurs) est remplacé par « … », comme sur X. Le texte complet reste dans le détail.
+ */
+export function gridText(text: string): string {
+  const stripped = text.replace(/\s*https:\/\/t\.co\/\w+\s*$/, '')
+  return stripped !== text && stripped.trim() !== '' ? `${stripped}\n…` : text
+}
+
 function SourceGlyph({ source }: { source: ItemCard['source'] }) {
   const common = { size: 18, className: 'text-fg-social' }
   if (source === 'instagram') return <InstagramGlyph {...common} />
@@ -36,7 +45,7 @@ export function TweetCard({
   const post = card.post
   const name = post?.author.name ?? post?.author.handle ?? card.title ?? ''
   const handle = post?.author.handle ?? null
-  const text = post?.text ?? card.title ?? ''
+  const text = gridText(post?.text ?? card.title ?? '')
   return (
     <article
       data-tweet=""

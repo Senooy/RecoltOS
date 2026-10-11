@@ -28,7 +28,7 @@ export function LibraryTabs({
       <div
         role="tablist"
         aria-label={fr.libraryUi.tabsLabel}
-        className="flex h-full items-center gap-11 pl-[6px]"
+        className="flex h-full items-center gap-11 pl-[6px] pt-[6px]"
       >
         {TABS.map(({ key, label, Icon }) => {
           const active = value === key
