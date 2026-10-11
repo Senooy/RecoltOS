@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+/**
+ * Faux `claude` pour les tests (WP-42 fournit la version complète sous tests/fixtures/fake-bin/).
+ * Comportement piloté par FAKE_CLI_MODE : ok (défaut) | rate_limited | error | slow.
+ * Journalise ses arguments dans $FAKE_CLI_LOG s'il est défini. Aucun réseau.
+ */
+'use strict'
+const fs = require('node:fs')
+const args = process.argv.slice(2)
+if (process.env.FAKE_CLI_LOG)
+  fs.appendFileSync(process.env.FAKE_CLI_LOG, JSON.stringify(args) + '\n')
+if (args.includes('--version')) {
+  console.log('2.1.284 (Claude Code)')
+  process.exit(0)
+}
+const mode = process.env.FAKE_CLI_MODE || 'ok'
+if (args.includes('--bare')) {
+  console.error('--bare est interdit')
+  process.exit(64)
+}
+if (mode === 'error') {
+  console.error('erreur simulée')
+  process.exit(1)
+}
+if (mode === 'rate_limited') {
+  console.error('rate limit reached')
+  process.exit(2)
+}
+const out = {
+  type: 'result',
+  subtype: 'success',
+  is_error: false,
+  result: '{"title":"Titre synthétique","description":"Description synthétique.","tags":["test"]}',
+}
+const emit = () => {
+  console.log(JSON.stringify(out))
+  process.exit(0)
+}
+if (mode === 'slow') setTimeout(emit, 2000)
+else emit()

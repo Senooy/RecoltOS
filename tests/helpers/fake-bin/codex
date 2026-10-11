@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+/** Faux `codex` pour les tests (voir `claude` : mêmes variables FAKE_CLI_MODE / FAKE_CLI_LOG). */
+'use strict'
+const fs = require('node:fs')
+const args = process.argv.slice(2)
+if (process.env.FAKE_CLI_LOG)
+  fs.appendFileSync(process.env.FAKE_CLI_LOG, JSON.stringify(args) + '\n')
+if (args.includes('--version')) {
+  console.log('codex-cli 0.159.0')
+  process.exit(0)
+}
+const mode = process.env.FAKE_CLI_MODE || 'ok'
+if (mode === 'error') {
+  console.error('erreur simulée')
+  process.exit(1)
+}
+console.log(
+  JSON.stringify({
+    title: 'Titre synthétique',
+    description: 'Description synthétique.',
+    tags: ['test'],
+  }),
+)
