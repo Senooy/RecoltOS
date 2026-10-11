@@ -16,8 +16,13 @@ export const FETCH_MAX_BYTES = 2 * 1024 ** 3
 
 export interface FetchPolicy {
   headers?: Record<string, string>
-  /** Appelé sur 401/403 (session expirée, URL signée périmée…). */
+  /** Appelé sur 401/403/410 (session expirée, URL signée périmée…). */
   onAuthError?: (status: number, url: string) => void
+  /**
+   * Téléchargement spécifique (ex. liste de lecture HLS → mp4 par ffmpeg `-c copy`, WP-56) : remplace
+   * le flux HTTP direct. Doit écrire `dst` et rendre le même résultat que `fetchToFile`.
+   */
+  download?: (url: string, dst: string, opts: FetchToFileOptions) => Promise<FetchedFile>
 }
 
 type PolicyEntry = { match: (url: URL) => boolean; resolve: (url: URL) => FetchPolicy }
@@ -94,6 +99,8 @@ export async function fetchToFile(
 ): Promise<FetchedFile> {
   assertWebUrl(url)
   const policy = policyFor(url)
+  if (policy.download)
+    return policy.download(url, dst, { ...opts, headers: { ...policy.headers, ...opts.headers } })
   const timeout = AbortSignal.timeout(opts.timeoutMs ?? FETCH_TIMEOUT_MS)
   const signal = opts.signal ? AbortSignal.any([opts.signal, timeout]) : timeout
   let res: Response
@@ -107,7 +114,9 @@ export async function fetchToFile(
     })
   }
   if (res.status >= 400) {
-    if (res.status === 401 || res.status === 403) policy.onAuthError?.(res.status, url)
+    if (res.status === 401 || res.status === 403 || res.status === 410) {
+      policy.onAuthError?.(res.status, url)
+    }
     await res.body?.cancel().catch(() => undefined)
     if (res.status < 500 && res.status !== 408 && res.status !== 429) {
       throw new AppError('http_4xx', `réponse ${res.status}`, { status: res.status })

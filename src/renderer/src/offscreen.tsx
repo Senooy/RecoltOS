@@ -6,6 +6,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/tokens.css'
 import './styles/globals.css'
+import { TweetCardRender } from './features/sync/TweetCardRender'
 
 const params = new URLSearchParams(window.location.search)
 const route = params.get('render') ?? ''
@@ -19,7 +20,7 @@ const el = document.getElementById('root')
 if (el) {
   createRoot(el).render(
     <StrictMode>
-      <OffscreenStub />
+      {route === 'tweet-card' ? <TweetCardRender data={params.get('data')} /> : <OffscreenStub />}
     </StrictMode>,
   )
 }

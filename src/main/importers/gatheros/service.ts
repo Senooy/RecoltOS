@@ -10,7 +10,11 @@ import { AppError } from '../../../shared/errors'
 import type { ImportOptions, ImportProgress, ImportReport } from '../../../shared/ipc/import'
 import type { PrefsPatch } from '../../../shared/prefs'
 import type { JobLogger, MediaCaller } from '../../jobs/handlers/types'
-import { getActiveLibrary, requireLibrary } from '../../library/library-context'
+import {
+  getActiveLibrary,
+  requireLibrary,
+  type LibraryContext,
+} from '../../library/library-context'
 import {
   detectRunning,
   gatherosRoot,
@@ -110,6 +114,15 @@ export function prefsPatchFromGatheros(g: Record<string, unknown>): PrefsPatch {
   return patch
 }
 
+type ImportDoneHook = (lib: LibraryContext, gatherosPrefs: Record<string, unknown>) => void
+const importDoneHooks = new Set<ImportDoneHook>()
+
+/** Fin d'import réussie (WP-56 : backfill programmé, réglages de sync notés). */
+export function onGatherosImportDone(fn: ImportDoneHook): () => void {
+  importDoneHooks.add(fn)
+  return () => importDoneHooks.delete(fn)
+}
+
 export async function startGatherosImport(input: {
   libraryId?: string
   options: ImportOptions
@@ -147,6 +160,15 @@ export async function startGatherosImport(input: {
       applyPrefs: () => d.applyPrefs(prefsPatchFromGatheros(readGatherosPrefs(r))),
     },
   )
+    .then(() => {
+      for (const h of importDoneHooks) {
+        try {
+          h(lib, readGatherosPrefs(r))
+        } catch (err) {
+          d.log.warn('[import] crochet de fin', err)
+        }
+      }
+    })
     .catch((err: unknown) => {
       const e = err as { code?: string; message?: string }
       d.log.warn(`[import] arrêt : ${e.code ?? 'erreur'}`, err)
