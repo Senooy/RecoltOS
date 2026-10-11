@@ -1,7 +1,132 @@
 /*
- * Étagère 3D des collections (DESIGN §3.4). Styles réservés à WP-21 (contenu à venir) ;
- * fichier créé par WP-00 pour figer l'emplacement.
+ * Étagère 3D des collections (DESIGN §3.4, WP-21) : tranches verticales en perspective, côté droit
+ * le plus proche ; la face s'assombrit vers ce côté, juste avant un liseré clair de 6 px.
+ *
+ * Géométrie recalée sur `zzrib6` (×0,858) plutôt que sur les valeurs de départ de DESIGN §3.4
+ * (perspective 1400 / -62°, qui donnaient des tranches deux fois trop étroites) : arête proche de
+ * la couverture i à x = 274 + 122·i pt, haut à 172 pt ; arête éloignée de « Gaming » à ≈ 99 pt et
+ * 227 pt de haut ; d'où perspective 800 px centrée, face 410×700, rotateY(-35deg).
  */
 .shelf-root {
   background: var(--shelf-bg);
+}
+.shelf {
+  perspective: 800px;
+  perspective-origin: 50% 50%;
+  overflow: hidden;
+}
+.shelf-track {
+  display: flex;
+  transform-style: preserve-3d;
+  padding-left: 152px;
+  padding-top: 172px;
+  will-change: transform;
+}
+.shelf-cover {
+  flex: 0 0 122px;
+  height: 700px;
+  position: relative;
+  transform-style: preserve-3d;
+  outline: none;
+}
+.cover-face {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 410px;
+  height: 700px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #111;
+  transform-origin: 100% 50%;
+  transform: rotateY(-35deg);
+  /* Le clic se fait sur le créneau plat de 122 px (= segment visible) : pas de test 3D. */
+  pointer-events: none;
+  transition: transform 350ms var(--ease-sheet);
+}
+.cover-face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.3) 45%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+  transition: opacity 350ms var(--ease-sheet);
+}
+.cover-face::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  z-index: 2;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.38));
+}
+.shelf-cover:hover .cover-face,
+.shelf-cover:focus-visible .cover-face,
+.shelf-cover[data-active='1'] .cover-face {
+  transform: rotateY(-20deg) translateZ(30px);
+}
+.shelf-cover:hover .cover-face::before,
+.shelf-cover:focus-visible .cover-face::before,
+.shelf-cover[data-active='1'] .cover-face::before {
+  opacity: 0.55;
+}
+.cover-face > img,
+.cover-face > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cover-face-new {
+  background: transparent;
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+}
+.cover-face-new::before,
+.cover-face-new::after {
+  display: none;
+}
+.shelf-label {
+  position: absolute;
+  top: 0;
+  width: 116px;
+  pointer-events: none;
+}
+.shelf-label-name {
+  color: var(--shelf-label);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 160ms var(--ease-out);
+}
+.shelf-label[data-active='1'] .shelf-label-name {
+  color: #fff;
+}
+.shelf-label-count {
+  margin-top: 4px;
+  color: var(--shelf-count);
+  font-size: 11px;
+  line-height: 14px;
+}
+/* Mouvement réduit : étagère statique (aucune rotation animée). */
+@media (prefers-reduced-motion: reduce) {
+  .cover-face,
+  .cover-face::before {
+    transition: none;
+  }
+}
+[data-reduce-motion='1'] .cover-face,
+[data-reduce-motion='1'] .cover-face::before {
+  transition: none;
 }

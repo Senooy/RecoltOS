@@ -8,6 +8,8 @@ import type { ElectronApplication, Page } from '@playwright/test'
 
 export type Step =
   | { click: string; optional?: boolean }
+  /** Clique la première cible présente parmi `clickFirst` (ex. « Dev », sinon la 1re collection). */
+  | { clickFirst: string[] }
   | { clickNth: string; nth: number }
   | { rightClick: string }
   | { hover: string }
@@ -61,7 +63,7 @@ export const START_SCENES: Scene[] = [
     id: 'collections-shelf',
     ref: 'collections-shelf',
     title: 'Étagère Collections',
-    steps: [{ click: t('seg-collections') }, { wait: t('collection-card') }, { sleep: 400 }],
+    steps: [{ click: t('seg-collections') }, { wait: t('shelf-cover') }, { sleep: 600 }],
   },
   {
     id: 'rediscover',
@@ -81,15 +83,17 @@ export const START_SCENES: Scene[] = [
     title: 'Vue d’une collection',
     steps: [
       { click: t('seg-collections') },
-      { clickNth: t('collection-card'), nth: 0 },
+      { wait: t('shelf-cover') },
+      { clickFirst: [`${t('shelf-cover')}[data-name="Dev"]`, t('shelf-cover')] },
       { wait: t('grid') },
+      { sleep: 400 },
     ],
   },
   {
     id: 'search',
     ref: 'search',
     title: 'Recherche',
-    steps: [{ click: t('seg-search') }, { wait: t('seg-search') }],
+    steps: [{ click: t('seg-search') }, { wait: t('search-input') }, { sleep: 300 }],
   },
   {
     id: 'spaces-empty',
@@ -137,7 +141,12 @@ export const EXTRA_SCENES: Scene[] = [
     id: 'search-results',
     ref: 'search-results',
     title: 'Recherche avec résultats',
-    steps: [{ click: t('seg-search') }, { type: t('seg-search'), text: 'lumière' }, { sleep: 400 }],
+    steps: [
+      { click: t('seg-search') },
+      { type: t('search-input'), text: 'instagram' },
+      { wait: t('grid') },
+      { sleep: 400 },
+    ],
   },
   {
     id: 'collection-menu',
@@ -145,8 +154,10 @@ export const EXTRA_SCENES: Scene[] = [
     title: 'Menu « … » d’une collection',
     steps: [
       { click: t('seg-collections') },
-      { rightClick: t('collection-card') },
-      { wait: t('ctx-menu') },
+      { wait: t('shelf-cover') },
+      { click: t('shelf-cover') },
+      { click: t('collection-more') },
+      { wait: t('collection-menu') },
     ],
   },
   {
@@ -194,6 +205,16 @@ export async function playScene(
         return { ok: false, reason: `cible absente : ${step.click}` }
       }
       await page.locator(step.click).first().click()
+    } else if ('clickFirst' in step) {
+      let done = false
+      for (const sel of step.clickFirst) {
+        if ((await page.locator(sel).count()) > 0) {
+          await page.locator(sel).first().click()
+          done = true
+          break
+        }
+      }
+      if (!done) return { ok: false, reason: `cible absente : ${step.clickFirst.join(' | ')}` }
     } else if ('clickNth' in step) {
       if (!(await waitFor(page, step.clickNth)))
         return { ok: false, reason: `cible absente : ${step.clickNth}` }
