@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   electronAvailable: true,
   handled: new Map<string, (req: Request) => Promise<Response>>(),
   setups: [] as ((ses: unknown) => void)[],
+  pages: [] as { session: unknown; url: string }[],
   ipcOn: [] as string[],
   ipcOff: [] as string[],
 }))
@@ -32,6 +33,14 @@ vi.mock('electron', () => ({
     removeListener: (c: string) => state.ipcOff.push(c),
   },
   nativeImage: {},
+  webContents: {
+    getAllWebContents: () =>
+      state.pages.map((p) => ({
+        session: p.session,
+        isDestroyed: () => false,
+        getURL: () => p.url,
+      })),
+  },
   BrowserWindow: { getAllWindows: () => [] },
 }))
 vi.mock('../../../src/main/windows/offscreen', () => ({
@@ -62,6 +71,7 @@ afterEach(() => {
   state.electronAvailable = true
   state.handled.clear()
   state.setups.length = 0
+  state.pages.length = 0
   state.ipcOn.length = 0
   state.ipcOff.length = 0
   resetLibraryContextForTests()
@@ -97,6 +107,11 @@ describe('initProtocol', () => {
     state.setups[0]!(ses)
     state.setups[0]!(ses)
     const off = offHandled.get('recolt')!
+    // Page interne : servie.
+    state.pages.push({
+      session: ses,
+      url: 'file:///app/out/renderer/offscreen.html?render=tweet-card',
+    })
     expect((await off(new Request('recolt://default/thumbs/ab/x.webp'))).status).toBe(200)
     expect(
       (await off(new Request('recolt://default/thumbs/ab/x.webp', { method: 'POST' }))).status,
@@ -109,6 +124,57 @@ describe('initProtocol', () => {
     await (dispose as () => Promise<void>)()
     expect(state.handled.has('recolt')).toBe(false)
     expect(state.ipcOff).toEqual(['drag'])
+  })
+
+  it('session hors écran : une page http(s) capturée ou aucune page → 403, page interne → 200', async () => {
+    const root = makeTmpDir('recolt-init-guard-')
+    mkdirSync(join(root, 'avatars', 'x'), { recursive: true })
+    writeFileSync(join(root, 'avatars', 'x', 'a.jpg'), 'jpg')
+    setActiveLibrary({ id: 'default', root } as LibraryContext)
+    const dispose = initProtocol({
+      ...ctx(),
+      flags: { ...ctx().flags, rendererUrl: 'http://localhost:5173/' },
+    })
+
+    const offHandled = new Map<string, Handler>()
+    const ses = {
+      protocol: {
+        handle: (s: string, fn: Handler) => offHandled.set(s, fn),
+        isProtocolHandled: (s: string) => offHandled.has(s),
+      },
+    }
+    state.setups[0]!(ses)
+    const off = offHandled.get('recolt')!
+    const probe = () => off(new Request('recolt://default/avatars/x/a.jpg'))
+
+    // Aucune fenêtre identifiable : fail closed.
+    expect((await probe()).status).toBe(403)
+
+    // Page distante (fetch / <img> : le handler ne voit que la requête, pas ses en-têtes).
+    state.pages.push({ session: ses, url: 'https://evil.example/page.html' })
+    expect((await probe()).status).toBe(403)
+    expect(
+      (await off(new Request('recolt://default/avatars/x/a.jpg', { method: 'OPTIONS' }))).status,
+    ).toBe(403)
+
+    // Une fenêtre d'une autre session ne compte pas ; la page distante bloque toujours.
+    state.pages.push({ session: {}, url: 'file:///app/out/renderer/offscreen.html' })
+    expect((await probe()).status).toBe(403)
+
+    // Page interne seule (serveur Vite de dev) : servie.
+    state.pages.length = 0
+    state.pages.push({
+      session: ses,
+      url: 'http://localhost:5173/offscreen.html?render=space-stage',
+    })
+    expect((await probe()).status).toBe(200)
+
+    // Même origine de dev mais autre page : refus.
+    state.pages.length = 0
+    state.pages.push({ session: ses, url: 'http://localhost:5173/index.html' })
+    expect((await probe()).status).toBe(403)
+
+    await (dispose as () => Promise<void>)()
   })
 
   it('hors Electron : avertit et ne branche rien', () => {
