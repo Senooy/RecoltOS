@@ -402,6 +402,7 @@ export const base = {
       videos: 'Vidéos',
       derived: 'Aperçus',
       snapshots: 'Instantanés',
+      keepOriginals: 'Conserver les originaux',
       downloadRemote: 'Télécharger les médias distants',
       autoEmpty: 'Vider la corbeille automatiquement',
       never: 'Jamais',
