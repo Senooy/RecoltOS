@@ -22,7 +22,7 @@ import { NavSegmented, type NavValue } from './NavSegmented'
 import { isRouteImplemented, overlays, routes } from './routes'
 import { SelectionBar } from './SelectionBar'
 import type { MenuCommand } from '../../../shared/shortcuts'
-import { importFiles, runMenuCommand, soon, toggleTheme } from './commands'
+import { importFiles, openRediscover, runMenuCommand, toggleTheme } from './commands'
 import { openViewerByUuid } from '../features/viewer/open'
 
 const navOf = (r: Route): NavValue =>
@@ -154,7 +154,7 @@ export function AppShell({ dark }: { dark: boolean }) {
               compact={width < 1100}
               dark={dark}
               onSearch={() => useUi.getState().openOverlay({ type: 'palette' })}
-              onRediscover={soon}
+              onRediscover={openRediscover}
               onToggleTheme={toggleTheme}
               onSettings={() => openOverlay({ type: 'settings' })}
             />

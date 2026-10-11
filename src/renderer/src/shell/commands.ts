@@ -12,6 +12,17 @@ import { effectiveTheme, usePrefs } from '../state/prefs'
 import { useUi } from '../state/ui'
 import { useUndo } from '../state/undo'
 
+/** Redécouvrir (⇧⌘R, bouton de l'en-tête) : portée = collection ouverte, sinon bibliothèque. */
+export function openRediscover(): void {
+  const ui = useUi.getState()
+  if (ui.overlay?.type === 'rediscover') return
+  ui.openOverlay(
+    ui.route.name === 'collection'
+      ? { type: 'rediscover', collectionUuid: ui.route.uuid }
+      : { type: 'rediscover' },
+  )
+}
+
 export function soon(): void {
   toast(fr.shell.unavailable)
 }
@@ -108,6 +119,9 @@ export function runMenuCommand(cmd: MenuCommand): void {
       return
     case 'toggleTheme':
       toggleTheme()
+      return
+    case 'rediscover':
+      openRediscover()
       return
     case 'importFiles':
       void importFiles(ui.route.name === 'collection' ? ui.route.uuid : undefined)

@@ -44,13 +44,13 @@ function DialogContent({
     <DialogPrimitive.Portal container={usePortalContainer()}>
       <DialogPrimitive.Overlay
         className={cn(
-          'ui-scrim overlay fixed inset-0 z-50',
+          'ui-scrim overlay fixed inset-0 z-[75]',
           scrim === 'modal' ? 'ui-scrim-modal' : 'ui-scrim-palette',
         )}
       />
       <DialogPrimitive.Content
         className={cn(
-          'ui-dialog app-no-drag fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100vh-80px)] w-[min(420px,calc(100vw-48px))] flex-col',
+          'ui-dialog app-no-drag fixed left-1/2 top-1/2 z-[75] flex max-h-[calc(100vh-80px)] w-[min(420px,calc(100vw-48px))] flex-col',
           'rounded-2xl bg-bg text-fg shadow-[var(--shadow-modal)]',
           className,
         )}

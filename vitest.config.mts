@@ -3,7 +3,7 @@
  *  - `unit`     : Node, processus enfants (`forks`), `tests/unit/**`, `src/**` et les auto-tests de l'outillage.
  *  - `renderer` : happy-dom, `tests/renderer/**`.
  *  - `real`     : `tests/real/**`, séquentiel, ignoré sauf si `RECOLTOS_REAL_LIBRARY` est défini
- *                 (ou `RECOLT_TEST_IMPORTED_USERDATA` : seulement `m2-imported.test.ts`).
+ *                 (ou `RECOLT_TEST_IMPORTED_USERDATA` : seulement `m2-imported` et `m3-imported`).
  * Les alias répliquent ceux d'`electron.vite.config.ts` / `tsconfig.base.json`.
  */
 import { fileURLToPath } from 'node:url'
@@ -63,7 +63,7 @@ export default defineConfig({
           include: realLibrary
             ? ['tests/real/**/*.test.ts']
             : importedUserData
-              ? ['tests/real/m2-imported.test.ts']
+              ? ['tests/real/m2-imported.test.ts', 'tests/real/m3-imported.test.ts']
               : [],
           fileParallelism: false,
           testTimeout: 600_000,
