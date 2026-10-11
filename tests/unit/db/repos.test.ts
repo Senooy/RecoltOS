@@ -3,6 +3,7 @@ import { nameKey, UNTITLED_NAME_KEY } from '../../../src/main/db/repos/items'
 import { normalizeHandle } from '../../../src/main/db/repos/authors'
 import { syncSourceKey } from '../../../src/main/db/repos/sync'
 import { membershipKey } from '../../../src/main/db/repos/tombstones'
+import { JOB_PRIORITY } from '../../../src/shared/jobs'
 import { isReservedTagName, normalizeTagName } from '../../../src/main/db/repos/tags'
 import { chunks, fromJson, toBool, toJson } from '../../../src/main/db/repos/util'
 import { z } from 'zod'
@@ -350,6 +351,18 @@ describe('collections', () => {
     expect(collections.itemIds(c)).toEqual([])
     expect(collections.itemIds(c2)).toEqual([local])
     expect(() => collections.addItems(999, [local])).toThrow()
+    // Déplacement vers la même collection, membre gatheros vivant : aucune pierre tombale posée.
+    const c3 = collections.create({ name: 'C3', origin: 'gatheros', originId: 'col3' }).id
+    const g3 = items.insert({ kind: 'image', origin: 'gatheros', originId: 'save3' }).id
+    collections.addItems(c3, [g3])
+    const tombsBefore = tombs()
+    expect(collections.moveItems(c3, c3, [g3])).toBe(0)
+    expect(collections.itemIds(c3)).toEqual([g3])
+    expect(tombs()).toEqual(tombsBefore)
+    expect(tombs()).not.toContainEqual({
+      entity: 'membership',
+      origin_id: membershipKey('col3', 'save3'),
+    })
   })
 
   it('upsertByOrigin et markViewed', () => {
@@ -677,5 +690,38 @@ describe('intégrité après un scénario complet', () => {
     expect(lib.db.pragma('foreign_keys', { simple: true })).toBe(1)
     expect(lib.db.pragma('integrity_check', { simple: true })).toBe('ok')
     expect(lib.db.pragma('foreign_key_check')).toEqual([])
+  })
+})
+
+describe('renumérotation et erreurs de validation', () => {
+  it('renumérotation : tous les frères repositionnés reçoivent updated_at', () => {
+    const { collections } = lib.repos
+    const [a, b, c] = ['A', 'B', 'C'].map((name) => collections.create({ name }).id) as [
+      number,
+      number,
+      number,
+    ]
+    // Écart trop faible entre A et B : `reorder` doit renuméroter les frères.
+    lib.db.prepare('UPDATE collections SET order_index = ? WHERE id = ?').run(1, a)
+    lib.db.prepare('UPDATE collections SET order_index = ? WHERE id = ?').run(1 + 1e-7, b)
+    lib.db.prepare('UPDATE collections SET order_index = ? WHERE id = ?').run(3, c)
+    lib.clock.now = T0 + 777
+    collections.reorder(c, b)
+    expect(collections.children(null).map((x) => x.name)).toEqual(['A', 'C', 'B'])
+    for (const id of [a, b, c]) expect(collections.getById(id)?.updated_at).toBe(T0 + 777)
+  })
+
+  it('authors.upsert et settings.set lèvent une AppError validation', () => {
+    expect(() => lib.repos.authors.upsert({ platform: 'x', handle: ' @ ' })).toThrow(
+      expect.objectContaining({ code: 'validation' }),
+    )
+    expect(() => lib.repos.settings.set('k', undefined)).toThrow(
+      expect.objectContaining({ code: 'validation' }),
+    )
+  })
+
+  it('jobs.enqueue sans priorité : JOB_PRIORITY.BACKGROUND', () => {
+    const id = lib.repos.jobs.enqueue({ type: 'media.derive' })
+    expect(lib.repos.jobs.get(id)?.priority).toBe(JOB_PRIORITY.BACKGROUND)
   })
 })

@@ -95,6 +95,26 @@ describe('closeLibrary (ARCHI §4.6)', () => {
     })
   })
 
+  it('forReplace : réouverture impossible → workers et file non relancés, wal_not_empty levée', async () => {
+    const { lib, file, order, hooks, warn } = setup()
+    lib.reopen = () => {
+      throw new Error('base illisible')
+    }
+    const reader = new Database(file)
+    cleanups.push(() => reader.close())
+    reader.exec('BEGIN')
+    reader.prepare('SELECT count(*) FROM items').get()
+    await expect(
+      closeLibrary(lib, { forReplace: true, checkpointBusyTimeoutMs: 10 }),
+    ).rejects.toMatchObject({ code: 'wal_not_empty' })
+    expect(order).toEqual(['pause:10000', 'stop'])
+    expect(hooks.startWorkers).not.toHaveBeenCalled()
+    expect(hooks.resumeJobs).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalled()
+    expect(lib.db.open).toBe(false)
+    reader.exec('COMMIT')
+  })
+
   it('sans forReplace : un checkpoint bloqué est seulement journalisé', async () => {
     const { lib, file } = setup()
     const reader = new Database(file)

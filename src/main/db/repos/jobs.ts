@@ -5,6 +5,7 @@
  */
 import type Database from 'better-sqlite3'
 import {
+  JOB_PRIORITY,
   JobPayloadBase,
   type JobError,
   type JobRecord,
@@ -103,7 +104,7 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
         item_id: j.itemId ?? null,
         dedupe_key: j.dedupeKey ?? null,
         payload: JSON.stringify({ failedOn: [], ...(j.payload ?? {}) }),
-        priority: j.priority ?? 0,
+        priority: j.priority ?? JOB_PRIORITY.BACKGROUND,
         run_after: j.runAfter ?? 0,
         max_attempts: j.maxAttempts ?? 3,
         batch_id: j.batchId ?? null,

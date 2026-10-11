@@ -68,12 +68,16 @@ const LenientRegistry = z.object({
 // Dossiers synchronisés
 // ---------------------------------------------------------------------------------------------
 
+/**
+ * Chemin réel de l'ancêtre existant le plus proche, avec la casse du disque
+ * (`realpathSync.native` la rétablit sur macOS, contrairement à la version JS).
+ */
 function realpathOfNearest(p: string): string {
   let cur = path.resolve(p)
   const rest: string[] = []
   for (;;) {
     try {
-      return path.join(fs.realpathSync(cur), ...rest.reverse())
+      return path.join(fs.realpathSync.native(cur), ...rest.reverse())
     } catch {
       const parent = path.dirname(cur)
       if (parent === cur) return path.resolve(p)
@@ -83,21 +87,34 @@ function realpathOfNearest(p: string): string {
   }
 }
 
-const isUnder = (p: string, dir: string) => p === dir || p.startsWith(dir + path.sep)
+/** APFS ignore la casse : toutes les comparaisons de chemins se font en minuscules. */
+const fold = (s: string): string => s.toLowerCase()
+
+const isUnder = (p: string, dir: string): boolean => {
+  const a = fold(p)
+  const b = fold(dir)
+  return a === b || a.startsWith(b + path.sep)
+}
+
+/** Segments de dossiers synchronisés (comparés sans tenir compte de la casse). */
+const SYNCED_SEGMENTS: readonly RegExp[] = [
+  /^dropbox( \(.+\))?$/i,
+  /^com~apple~clouddocs$/i,
+  /^onedrive( - .+)?$/i,
+  /^google drive$/i,
+]
 
 /**
  * Vrai si `target` est dans un dossier synchronisé : iCloud Drive (`~/Library/Mobile Documents`,
- * Bureau / Documents synchronisés par iCloud), `~/Library/CloudStorage` (Dropbox, OneDrive,
- * Google Drive en File Provider), un dossier `Dropbox` ou un ancêtre marqué `.dropbox`.
+ * Bureau / Documents synchronisés par iCloud), `~/Library/CloudStorage` (File Provider), anciens
+ * dossiers `~/Dropbox`, `~/OneDrive`, `~/Google Drive`, ou un ancêtre marqué `.dropbox`.
  */
 export function isSyncedFolder(target: string, home: string = os.homedir()): boolean {
   const candidates = new Set([path.resolve(target), realpathOfNearest(target)])
   const homes = new Set([path.resolve(home), realpathOfNearest(home)])
   for (const p of candidates) {
     const segments = p.split(path.sep)
-    if (segments.some((s) => /^dropbox( \(.+\))?$/i.test(s) || s === 'com~apple~CloudDocs')) {
-      return true
-    }
+    if (segments.some((s) => SYNCED_SEGMENTS.some((re) => re.test(s)))) return true
     for (const h of homes) {
       const lib = path.join(h, 'Library')
       if (isUnder(p, path.join(lib, 'Mobile Documents'))) return true
@@ -238,6 +255,31 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
 
   const rootOf = (e: RegistryEntry) => e.path ?? defaultLibraryRoot(deps.userData, e.id)
 
+  /** Options d'ouverture communes à `openEntry` et à la réouverture de `closeActive`. */
+  const dbOptions = () => ({
+    ...(deps.onSlowQuery ? { onSlowQuery: deps.onSlowQuery } : {}),
+    ...(deps.busyTimeout !== undefined ? { busyTimeout: deps.busyTimeout } : {}),
+    now,
+  })
+
+  /**
+   * Retour arrière d'une création : retire le dossier créé, ou, s'il existait (vide), seulement
+   * ce que la création y a écrit. Les fichiers cachés préexistants sont conservés.
+   */
+  const discardCreatedRoot = (root: string, existed: boolean): void => {
+    try {
+      if (!existed) {
+        fs.rmSync(root, { recursive: true, force: true })
+        return
+      }
+      for (const f of fs.readdirSync(root)) {
+        if (!f.startsWith('.')) fs.rmSync(path.join(root, f), { recursive: true, force: true })
+      }
+    } catch (err) {
+      deps.log?.warn('[library] nettoyage de la création annulée impossible', err)
+    }
+  }
+
   const countItems = (e: RegistryEntry): number => {
     if (ctx && ctx.id === e.id) return ctx.repos.items.countLive()
     const file = path.join(rootOf(e), DB_FILE)
@@ -276,11 +318,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     const paths = libraryPaths(root)
     for (const d of LIBRARY_DIRS) fs.mkdirSync(paths.dir(d), { recursive: true })
     fs.mkdirSync(path.join(paths.dir('spaces'), 'assets'), { recursive: true })
-    const { db, migration } = openLibraryDb(root, {
-      ...(deps.onSlowQuery ? { onSlowQuery: deps.onSlowQuery } : {}),
-      ...(deps.busyTimeout !== undefined ? { busyTimeout: deps.busyTimeout } : {}),
-      now,
-    })
+    const { db, migration } = openLibraryDb(root, dbOptions())
     if (migration.applied.length > 0) {
       deps.log?.info(`[library] ${e.id} migrée v${migration.from} → v${migration.to}`)
     }
@@ -294,7 +332,19 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     }
     ctx = next
     setActiveLibrary(next)
-    await runAfterOpen(next)
+    try {
+      await runAfterOpen(next)
+    } catch (err) {
+      // Ouverture incomplète : la base est fermée et aucune bibliothèque n'est active.
+      ctx = null
+      setActiveLibrary(null)
+      try {
+        next.db.close()
+      } catch {
+        // déjà fermée
+      }
+      throw err
+    }
     return next
   }
 
@@ -305,7 +355,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       db: current.db,
       dbFile: current.paths.db,
       hooks: aggregatedCloseHooks(),
-      reopen: () => openLibraryDb(current.root, { now }).db,
+      reopen: () => openLibraryDb(current.root, dbOptions()).db,
       ...(deps.log ? { log: deps.log } : {}),
     }
     try {
@@ -316,10 +366,14 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
           : {}),
       })
     } catch (err) {
-      // Annulé (wal_not_empty) : la base a été rouverte, la bibliothèque reste active.
       if (closable.db !== current.db) {
+        // Annulé (wal_not_empty) et base rouverte : la bibliothèque reste active.
         current.db = closable.db
         current.repos = createRepos(closable.db, { now })
+      } else if (!current.db.open) {
+        // Annulé et réouverture impossible : la bibliothèque n'est plus utilisable.
+        ctx = null
+        setActiveLibrary(null)
       }
       throw err
     }
@@ -432,6 +486,10 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         if (input.path) {
           custom = path.resolve(input.path)
           assertNotSynced(custom, home)
+          const st = fs.statSync(custom, { throwIfNoEntry: false })
+          if (st && !st.isDirectory()) {
+            throw new AppError('validation', 'Ce chemin n’est pas un dossier.')
+          }
           if (fs.existsSync(path.join(custom, DB_FILE))) {
             throw new AppError(
               'conflict',
@@ -445,13 +503,16 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         // Emplacement par défaut (`userData/libraries/<id>`) : pas de contrôle, comme `open()`
         // (l'app y vit déjà ; en dev, `RECOLTOS_USER_DATA` peut être sous un dossier synchronisé).
         const e: RegistryEntry = { id, name, path: custom, createdAt: now() }
-        fs.mkdirSync(rootOf(e), { recursive: true })
+        const root = rootOf(e)
+        const existed = fs.existsSync(root)
+        fs.mkdirSync(root, { recursive: true })
         save({ ...load(), libraries: [...load().libraries, e] })
         try {
           await switchTo(id)
         } catch (err) {
           const r = load()
           save({ ...r, libraries: r.libraries.filter((l) => l.id !== id) })
+          discardCreatedRoot(root, existed)
           throw err
         }
         return info(e)

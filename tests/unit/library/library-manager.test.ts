@@ -421,3 +421,100 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
     expect(onSlowQuery).not.toHaveBeenCalled()
   })
 })
+
+describe('création annulée, réouverture impossible, chemin non dossier', () => {
+  it('create sur un fichier existant : validation, pas d’erreur système brute', async () => {
+    const m = make()
+    await m.open()
+    const file = path.join(base, 'fichier.txt')
+    fs.writeFileSync(file, 'x')
+    await expect(m.create({ name: 'X', path: file })).rejects.toMatchObject({ code: 'validation' })
+    expect(m.list().libraries).toHaveLength(1)
+  })
+
+  it('afterOpen en échec : création annulée, dossier créé retiré, nouvel essai possible', async () => {
+    const m = make()
+    await m.open()
+    const custom = path.join(base, 'neuve')
+    let failOnce = true
+    const off = registerLibraryLifecycle('flaky', {
+      afterOpen: () => {
+        if (failOnce) {
+          failOnce = false
+          throw new Error('boom')
+        }
+      },
+    })
+    await expect(m.create({ name: 'Neuve', path: custom })).rejects.toThrow('boom')
+    expect(fs.existsSync(custom)).toBe(false)
+    expect(requireLibrary().id).toBe('default')
+    expect(m.list().libraries.map((l) => l.name)).toEqual(['Bibliothèque'])
+    const again = await m.create({ name: 'Neuve', path: custom })
+    expect(fs.existsSync(path.join(custom, 'recolt.db'))).toBe(true)
+    expect(requireLibrary().id).toBe(again.id)
+    off()
+  })
+
+  it('dossier vide préexistant : seul le contenu créé est retiré, le dossier reste', async () => {
+    const m = make()
+    await m.open()
+    const custom = path.join(base, 'vide')
+    fs.mkdirSync(custom)
+    fs.writeFileSync(path.join(custom, '.DS_Store'), '')
+    let failOnce = true
+    const off = registerLibraryLifecycle('flaky', {
+      afterOpen: () => {
+        if (failOnce) {
+          failOnce = false
+          throw new Error('boom')
+        }
+      },
+    })
+    await expect(m.create({ name: 'Vide', path: custom })).rejects.toThrow('boom')
+    off()
+    expect(fs.existsSync(custom)).toBe(true)
+    expect(fs.readdirSync(custom)).toEqual(['.DS_Store'])
+  })
+
+  it('réouverture impossible après wal_not_empty : aucune bibliothèque active, erreur d’origine', async () => {
+    const m = make()
+    const ctx = await m.open()
+    for (let i = 0; i < 5; i++) ctx.repos.items.insert({ kind: 'image' })
+    const reader = new Database(ctx.paths.db)
+    reader.exec('BEGIN')
+    reader.prepare('SELECT count(*) FROM items').get()
+    const off = registerLibraryLifecycle('sabotage', {
+      stopWorkers: () => {
+        // Fichier remplacé par un dossier pendant la fermeture : la réouverture échoue.
+        fs.rmSync(ctx.paths.db)
+        fs.mkdirSync(ctx.paths.db)
+      },
+    })
+    await expect(m.closeForReplace()).rejects.toMatchObject({ code: 'wal_not_empty' })
+    off()
+    expect(getActiveLibrary()).toBeNull()
+    expect(m.active()).toBeNull()
+    reader.exec('COMMIT')
+    reader.close()
+  })
+})
+
+describe('isSyncedFolder : casse ignorée, anciens dossiers cloud', () => {
+  it('Documents, iCloud Drive, OneDrive et Google Drive refusés quelle que soit la casse', () => {
+    fs.mkdirSync(
+      path.join(home, 'Library', 'Mobile Documents', 'com~apple~CloudDocs', 'Documents'),
+      { recursive: true },
+    )
+    expect(isSyncedFolder(path.join(home, 'DOCUMENTS', 'Lib'), home)).toBe(true)
+    expect(
+      isSyncedFolder(
+        path.join(home, 'library', 'mobile documents', 'com~apple~clouddocs', 'Lib'),
+        home,
+      ),
+    ).toBe(true)
+    expect(isSyncedFolder(path.join(home, 'onedrive', 'Lib'), home)).toBe(true)
+    expect(isSyncedFolder(path.join(home, 'OneDrive - Acme', 'Lib'), home)).toBe(true)
+    expect(isSyncedFolder(path.join(home, 'google drive', 'Lib'), home)).toBe(true)
+    expect(isSyncedFolder(path.join(home, 'Pictures', 'Lib'), home)).toBe(false)
+  })
+})

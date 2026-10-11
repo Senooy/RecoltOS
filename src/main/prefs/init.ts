@@ -11,9 +11,13 @@ import { createPrefsStore, setPrefsStore } from './store'
 export function initPrefs(ctx: ServiceContext): Disposer {
   const store = createPrefsStore({ file: userDataPaths(ctx.userData).prefs, log: ctx.log })
   setPrefsStore(store)
-  nativeTheme.themeSource = store.get().theme
+  // Hors Electron (tests sous Node), `nativeTheme` est absent : le thème natif n'est alors pas touché.
+  const syncNativeTheme = (theme: ReturnType<typeof store.get>['theme']) => {
+    if (nativeTheme) nativeTheme.themeSource = theme
+  }
+  syncNativeTheme(store.get().theme)
   const off = store.onChange((next, previous) => {
-    if (next.theme !== previous.theme) nativeTheme.themeSource = next.theme
+    if (next.theme !== previous.theme) syncNativeTheme(next.theme)
     ctx.emit('prefs.changed', next)
   })
   return () => {

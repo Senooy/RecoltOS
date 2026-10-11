@@ -6,6 +6,7 @@
 import Database from 'better-sqlite3'
 import fs from 'node:fs'
 import path from 'node:path'
+import { AppError } from '../../shared/errors'
 import { migrate, type MigrateOptions, type MigrateResult } from './migrate'
 
 export const DB_FILE = 'recolt.db'
@@ -126,6 +127,9 @@ export function openLibraryDb(root: string, opts: OpenLibraryDbOptions = {}): Op
       ...(opts.migrations ? { migrations: opts.migrations } : {}),
       ...(opts.now ? { now: opts.now } : {}),
     })
+    if (db.pragma('foreign_keys', { simple: true }) !== 1) {
+      throw new AppError('library_unavailable', 'Clés étrangères inactives sur la connexion.')
+    }
     return { db, file, migration }
   } catch (err) {
     db.close()

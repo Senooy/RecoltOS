@@ -4,6 +4,7 @@
  */
 import type Database from 'better-sqlite3'
 import type { z } from 'zod'
+import { AppError } from '../../../shared/errors'
 import { repoBase, type RepoOptions } from './util'
 
 export function createSettingsRepo(db: Database.Database, opts: RepoOptions = {}) {
@@ -28,7 +29,7 @@ export function createSettingsRepo(db: Database.Database, opts: RepoOptions = {}
     },
 
     set(key: string, value: unknown, at: number = now()): void {
-      if (value === undefined) throw new Error('valeur de réglage indéfinie')
+      if (value === undefined) throw new AppError('validation', 'Valeur de réglage indéfinie.')
       q(
         `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)
          ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,

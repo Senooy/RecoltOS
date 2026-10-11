@@ -7,7 +7,8 @@
  * 3. `PRAGMA optimize` puis `PRAGMA wal_checkpoint(TRUNCATE)` (on vérifie `busy = 0`) ;
  * 4. `db.close()` ;
  * 5. `forReplace` : le `-wal` doit être absent ou vide, sinon `AppError('wal_not_empty')`, la base
- *    est rouverte (`reopen`) et la file relancée : l'opération appelante est annulée.
+ *    est rouverte (`reopen`) et la file relancée : l'opération appelante est annulée. Si la
+ *    réouverture échoue, la file n'est pas relancée et l'erreur `wal_not_empty` est tout de même levée.
  * Pas d'import `electron`.
  */
 import type Database from 'better-sqlite3'
@@ -96,9 +97,20 @@ export async function closeLibrary(lib: ClosableLibrary, opts: CloseOptions): Pr
   }
 
   if (opts.forReplace && walSize(lib.dbFile) > 0) {
-    if (lib.reopen) lib.db = lib.reopen()
-    await hooks.startWorkers?.()
-    await hooks.resumeJobs?.()
+    let reopened = true
+    if (lib.reopen) {
+      try {
+        lib.db = lib.reopen()
+      } catch (err) {
+        // Pas de base à servir : workers et file restent arrêtés, l'erreur d'origine est relancée.
+        reopened = false
+        lib.log?.warn('[db] réouverture impossible après wal_not_empty', err)
+      }
+    }
+    if (reopened) {
+      await hooks.startWorkers?.()
+      await hooks.resumeJobs?.()
+    }
     throw new AppError(
       'wal_not_empty',
       'La base est encore utilisée par un autre lecteur : opération annulée.',

@@ -120,11 +120,51 @@ export function migrate(db: Database.Database, opts: MigrateOptions = {}): Migra
 
   const applied: number[] = []
   for (const mig of pending) {
-    db.transaction(() => {
-      db.exec(mig.sql)
-      db.pragma(`user_version = ${mig.version}`)
-    })()
+    if (needsForeignKeysOff(mig.sql)) {
+      applyWithForeignKeysOff(db, mig)
+    } else {
+      db.transaction(() => {
+        db.exec(mig.sql)
+        db.pragma(`user_version = ${mig.version}`)
+      })()
+    }
     applied.push(mig.version)
   }
   return { from, to: latest, applied, snapshot }
+}
+
+/**
+ * En-tête optionnel d'une migration : `-- recolt:foreign_keys=off` (ligne seule). Il permet la
+ * procédure ARCHI §4.2 (créer, copier, supprimer, renommer) sans cascade sur les tables filles.
+ */
+const FK_OFF_HEADER = /^--\s*recolt:foreign_keys\s*=\s*off\s*$/im
+
+export function needsForeignKeysOff(sql: string): boolean {
+  return FK_OFF_HEADER.test(sql)
+}
+
+/**
+ * `PRAGMA foreign_keys` est sans effet dans une transaction : la migration est donc appliquée
+ * hors transaction avec les clés désactivées, puis `foreign_key_check` valide l'ensemble dans une
+ * transaction (échec = retour arrière, `user_version` inchangé). Les clés sont rétablies dans
+ * tous les cas, à leur valeur d'origine.
+ */
+function applyWithForeignKeysOff(db: Database.Database, mig: Migration): void {
+  const previous = db.pragma('foreign_keys', { simple: true }) as number
+  db.pragma('foreign_keys = OFF')
+  try {
+    db.transaction(() => {
+      db.exec(mig.sql)
+      const broken = db.pragma('foreign_key_check') as unknown[]
+      if (broken.length > 0) {
+        throw new AppError(
+          'library_unavailable',
+          `Migration v${mig.version} annulée : ${broken.length} ligne(s) avec clé étrangère invalide.`,
+        )
+      }
+      db.pragma(`user_version = ${mig.version}`)
+    })()
+  } finally {
+    db.pragma(`foreign_keys = ${previous ? 'ON' : 'OFF'}`)
+  }
 }

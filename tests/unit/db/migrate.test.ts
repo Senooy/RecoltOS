@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   bundledMigrations,
   migrate,
+  needsForeignKeysOff,
   parseMigrations,
   snapshotPath,
   snapshotStamp,
@@ -181,5 +182,79 @@ describe('openDatabase / préparées', () => {
     // Le fichier n'est plus verrouillé : on peut le rouvrir et l'écrire.
     const db = track(openDatabase(path.join(root, 'recolt.db')))
     expect(db.pragma('user_version', { simple: true })).toBe(0)
+  })
+})
+
+describe('en-tête -- recolt:foreign_keys=off', () => {
+  const base: Migration[] = [
+    {
+      version: 1,
+      name: 'init',
+      sql: [
+        'CREATE TABLE parent (id INTEGER PRIMARY KEY, name TEXT NOT NULL);',
+        'CREATE TABLE child (id INTEGER PRIMARY KEY,',
+        '  parent_id INTEGER NOT NULL REFERENCES parent(id) ON DELETE CASCADE);',
+        "INSERT INTO parent (id, name) VALUES (1, 'a');",
+        'INSERT INTO child (id, parent_id) VALUES (1, 1);',
+      ].join('\n'),
+    },
+  ]
+  const childCount = (db: Database.Database) =>
+    (db.prepare('SELECT count(*) AS n FROM child').get() as { n: number }).n
+
+  it('détection de l’en-tête (ligne seule uniquement)', () => {
+    expect(needsForeignKeysOff('-- recolt:foreign_keys=off\nSELECT 1;')).toBe(true)
+    expect(needsForeignKeysOff('--   recolt:foreign_keys = off  \nSELECT 1;')).toBe(true)
+    expect(needsForeignKeysOff('SELECT 1; -- recolt:foreign_keys=off')).toBe(false)
+    expect(needsForeignKeysOff('SELECT 1;')).toBe(false)
+  })
+
+  it('procédure ARCHI §4.2 (créer, copier, supprimer, renommer) : les tables filles survivent', () => {
+    const db = track(openDatabase(path.join(dir(), 'recolt.db')))
+    migrate(db, { migrations: base })
+    const rebuild: Migration = {
+      version: 2,
+      name: 'rebuild',
+      sql: [
+        '-- recolt:foreign_keys=off',
+        'CREATE TABLE parent_new (id INTEGER PRIMARY KEY, name TEXT NOT NULL, extra TEXT);',
+        'INSERT INTO parent_new (id, name) SELECT id, name FROM parent;',
+        'DROP TABLE parent;',
+        'ALTER TABLE parent_new RENAME TO parent;',
+      ].join('\n'),
+    }
+    const res = migrate(db, { migrations: [...base, rebuild] })
+    expect(res.applied).toEqual([2])
+    expect(db.pragma('user_version', { simple: true })).toBe(2)
+    expect(childCount(db)).toBe(1)
+    expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
+    expect(db.pragma('foreign_key_check')).toEqual([])
+  })
+
+  it('contrôle final : une migration qui orpheline des lignes est annulée, clés rétablies', () => {
+    const db = track(openDatabase(path.join(dir(), 'recolt.db')))
+    migrate(db, { migrations: base })
+    const orphan: Migration = {
+      version: 2,
+      name: 'orphan',
+      sql: '-- recolt:foreign_keys=off\nDELETE FROM parent;',
+    }
+    expect(() => migrate(db, { migrations: [...base, orphan] })).toThrow(/clé étrangère invalide/)
+    expect(db.pragma('user_version', { simple: true })).toBe(1)
+    expect(childCount(db)).toBe(1)
+    expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
+  })
+
+  it('sans en-tête, un PRAGMA foreign_keys=OFF dans le SQL est sans effet (cascade)', () => {
+    const db = track(openDatabase(path.join(dir(), 'recolt.db')))
+    migrate(db, { migrations: base })
+    const naive: Migration = {
+      version: 2,
+      name: 'naive',
+      sql: 'PRAGMA foreign_keys=OFF; DELETE FROM parent;',
+    }
+    migrate(db, { migrations: [...base, naive] })
+    expect(childCount(db)).toBe(0)
+    expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
   })
 })

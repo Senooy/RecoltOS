@@ -262,6 +262,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
     reorder(id: number, beforeId: number | null): void {
       db.transaction(() => {
         const row = requireById(id)
+        const at = now()
         const siblings = siblingsOf(row.parent_id).filter((s) => s.id !== id)
         let index: number
         if (beforeId === null) {
@@ -274,16 +275,12 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
           index = (prev + next) / 2
           if (next - prev < MIN_ORDER_GAP) {
             const ordered = [...siblings.slice(0, pos), row, ...siblings.slice(pos)]
-            const stmt = q('UPDATE collections SET order_index = ? WHERE id = ?')
-            ordered.forEach((s, i) => stmt.run(i + 1, s.id))
+            const stmt = q('UPDATE collections SET order_index = ?, updated_at = ? WHERE id = ?')
+            ordered.forEach((s, i) => stmt.run(i + 1, at, s.id))
             return
           }
         }
-        q('UPDATE collections SET order_index = ?, updated_at = ? WHERE id = ?').run(
-          index,
-          now(),
-          id,
-        )
+        q('UPDATE collections SET order_index = ?, updated_at = ? WHERE id = ?').run(index, at, id)
       })()
     },
 
@@ -298,6 +295,9 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
       itemIds: readonly number[],
       at: number = now(),
     ): number {
+      // Même collection : rien à faire (retirer puis rajouter poserait une pierre tombale sur un
+      // membre vivant).
+      if (fromId === toId) return 0
       return db.transaction(() => {
         removeItems(fromId, itemIds)
         return addItems(toId, itemIds, at)
