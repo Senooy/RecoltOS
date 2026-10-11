@@ -11,7 +11,7 @@ import { requireJobServices } from '../../jobs/runtime'
 import { requireLibrary } from '../../library/library-context'
 import { importAssetBuffer, importAssetFiles, type AssetDeps } from '../../spaces/assets'
 import { readSpacesClipboard, writeSpacesClipboard } from '../../spaces/clipboard'
-import { cancelExport, exportSpacePng } from '../../spaces/export'
+import { cancelExport, exportSpacePng, revealLastExport } from '../../spaces/export'
 import {
   addItems,
   applyBatch,
@@ -136,5 +136,9 @@ export const spacesHandlers: DomainHandlers<'spaces'> = {
 
   'spaces.exportCancel': () => {
     cancelExport()
+  },
+
+  'spaces.revealExport': () => {
+    revealLastExport()
   },
 }

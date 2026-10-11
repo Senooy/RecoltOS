@@ -87,6 +87,8 @@ export const spacesContract = {
     output: z.union([z.object({ path: z.string() }), z.object({ cancelled: z.literal(true) })]),
   },
   'spaces.exportCancel': { input: Empty, output: Void },
+  /** Affiche le dernier PNG exporté dans le Finder (aucun chemin venu du renderer). */
+  'spaces.revealExport': { input: Empty, output: Void },
 } as const satisfies ContractShape
 
 export const spacesEvents = {
