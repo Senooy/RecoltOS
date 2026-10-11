@@ -31,7 +31,7 @@ C'est un réglage de sécurité de ton Mac : aucun script ne le fait à ta place
    security find-identity -v -p codesigning
    ```
 
-   Tu dois voir une ligne `"RecoltOS Local"`. Sans l'étape 4, il n'apparaît pas et electron-builder échoue avec « Identity name is specified, but no valid identity… ».
+   Tu dois voir une ligne `"RecoltOS Local"`. Sans l'étape 4, il n'apparaît pas. Dans ce cas la config (`electron-builder.config.cjs`) **échoue volontairement** avec « aucune identité de signature valide de ce nom dans le trousseau » : electron-builder seul, lui, logue « skipped macOS application code signing … Identity name is specified, but no valid identity », sort avec le code 0 et produit un build en signature ad hoc (cdhash instable), sans rien signaler d'autre.
 
 À la première signature, macOS peut demander l'accès de `codesign` à la clé privée : choisis **Toujours autoriser**.
 
@@ -44,7 +44,8 @@ pnpm run app:install          # copie dans /Applications et ouvre l'app
 
 - Variable absente ou vide : signature ad hoc `-` (`mac.identity` dans `electron-builder.config.cjs`).
 - `identity: null` est volontairement évité : sur arm64 il ne laisse que la signature du linker, refusée au lancement.
-- `pnpm run app:install` (script `scripts/install-local.sh`) arrête l'app installée, remplace `/Applications/RecoltOS.app` via `ditto`, retire l'attribut de quarantaine, vérifie la signature (`codesign --verify --deep --strict`) puis ouvre l'app. Il ne touche **jamais** à `~/Library/Application Support/RecoltOS`.
+- Si `RECOLTOS_SIGN_IDENTITY` est définie mais que l'identité est absente du trousseau, le build s'arrête avec une erreur claire (pas de repli silencieux sur l'ad hoc).
+- `pnpm run app:install` (script `scripts/install-local.sh`) arrête l'app installée, remplace `/Applications/RecoltOS.app` via `ditto`, retire l'attribut de quarantaine, vérifie la signature (`codesign --verify --deep --strict`), vérifie que l'exigence désignée contient `certificate leaf` quand `RECOLTOS_SIGN_IDENTITY` est définie (sinon le build est en réalité ad hoc et le script échoue), puis ouvre l'app. Il ne touche **jamais** à `~/Library/Application Support/RecoltOS`.
 - Variables du script : `RECOLTOS_INSTALL_DIR` (dossier cible, défaut `/Applications`) et `RECOLTOS_NO_OPEN=1` (n'ouvre pas l'app).
 
 ## Vérifier que la signature est stable

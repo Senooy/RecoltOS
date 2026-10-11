@@ -26,6 +26,15 @@ ditto "$SRC" "$DST"
 # Une copie faite par ditto n'est pas en quarantaine ; cette commande couvre une copie qui a voyagé.
 xattr -dr com.apple.quarantine "$DST" 2>/dev/null || true
 codesign --verify --deep --strict --verbose=2 "$DST"
+# Identité explicite demandée : l'exigence désignée doit s'appuyer sur le certificat, pas sur un cdhash
+# (electron-builder peut produire un build ad hoc en silence si l'identité est introuvable).
+if [ -n "${RECOLTOS_SIGN_IDENTITY:-}" ] && [ "${RECOLTOS_SIGN_IDENTITY}" != "-" ]; then
+  if ! codesign -dr - "$DST" 2>&1 | grep -q "certificate leaf"; then
+    echo "install-local : RECOLTOS_SIGN_IDENTITY est défini mais le build est en signature ad hoc (cdhash)." >&2
+    echo "  Vérifie le certificat : security find-identity -v -p codesigning (voir docs/signature.md)." >&2
+    exit 1
+  fi
+fi
 echo "RecoltOS installé : $DST"
 
 if [ "${RECOLTOS_NO_OPEN:-0}" != "1" ]; then

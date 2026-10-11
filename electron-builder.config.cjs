@@ -11,6 +11,7 @@
  */
 const fs = require('node:fs')
 const path = require('node:path')
+const { execFileSync } = require('node:child_process')
 
 const root = __dirname
 
@@ -27,6 +28,39 @@ const nativeHost = fs.existsSync(path.join(root, 'out', 'native-host'))
 const extension = fs.existsSync(path.join(root, 'dist-extension'))
   ? [{ from: 'dist-extension', to: 'extension' }]
   : []
+
+/**
+ * Identité de signature demandée. electron-builder 26 ne bloque pas si l'identité nommée est absente ou
+ * non approuvée du trousseau : il logue « skipped macOS application code signing », sort avec 0 et produit
+ * un .app en signature ad hoc (cdhash instable, permissions TCC perdues). On échoue donc ici, tôt et
+ * clairement. `RECOLTOS_SECURITY_BIN` remplace `security` (tests uniquement).
+ */
+function resolveSignIdentity() {
+  const identity = (process.env.RECOLTOS_SIGN_IDENTITY || '').trim()
+  if (identity === '') return '-'
+  if (identity === '-') return '-'
+  if (process.platform !== 'darwin' && !process.env.RECOLTOS_SECURITY_BIN) return identity
+  let listing = ''
+  try {
+    listing = execFileSync(
+      process.env.RECOLTOS_SECURITY_BIN || 'security',
+      ['find-identity', '-v', '-p', 'codesigning'],
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+    )
+  } catch {
+    listing = ''
+  }
+  const names = [...listing.matchAll(/^\s*\d+\)\s+([0-9A-F]{40})\s+"([^"]*)"/gim)]
+  const found = names.some(([, hash, name]) => name === identity || hash === identity.toUpperCase())
+  if (!found) {
+    throw new Error(
+      `RECOLTOS_SIGN_IDENTITY="${identity}" : aucune identité de signature valide de ce nom dans le trousseau ` +
+        '(vérifie `security find-identity -v -p codesigning` ; le certificat doit être approuvé pour la signature ' +
+        'de code, voir docs/signature.md). Retire la variable pour une signature ad hoc.',
+    )
+  }
+  return identity
+}
 
 /**
  * Profils de fuses : `RECOLTOS_DIST_PROFILE=test` (réservé aux tests Playwright de l'app empaquetée)
@@ -78,7 +112,7 @@ module.exports = {
     target: [{ target: 'dir', arch: ['arm64'] }],
     category: 'public.app-category.graphics-design',
     icon: 'build/icon.icns',
-    identity: process.env.RECOLTOS_SIGN_IDENTITY || '-',
+    identity: resolveSignIdentity(),
     hardenedRuntime: false,
     gatekeeperAssess: false,
     notarize: false,

@@ -1,7 +1,8 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { createRequire } from 'node:module'
-import { resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 const root = resolve(import.meta.dirname, '..', '..', '..')
@@ -66,10 +67,47 @@ describe('electron-builder.config.cjs', () => {
     expect(loadConfig({ RECOLTOS_SIGN_IDENTITY: '' }).mac.identity).toBe('-')
   })
 
-  it("utilise l'identité fournie par RECOLTOS_SIGN_IDENTITY", () => {
-    expect(loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local' }).mac.identity).toBe(
-      'RecoltOS Local',
-    )
+  describe('identité de signature explicite', () => {
+    let dir = ''
+    const fakeSecurity = (output: string, exit = 0): string => {
+      dir = mkdtempSync(join(tmpdir(), 'recoltos-sec-'))
+      const bin = join(dir, 'security')
+      writeFileSync(bin, `#!/bin/sh\ncat <<'EOF'\n${output}\nEOF\nexit ${exit}\n`, { mode: 0o755 })
+      return bin
+    }
+    const listing = (name: string): string =>
+      `  1) ${'A'.repeat(40)} "${name}"\n     1 valid identities found`
+
+    afterEach(() => {
+      if (dir) rmSync(dir, { recursive: true, force: true })
+      dir = ''
+    })
+
+    it("utilise l'identité fournie quand le trousseau la contient", () => {
+      const bin = fakeSecurity(listing('RecoltOS Local'))
+      expect(
+        loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: bin }).mac
+          .identity,
+      ).toBe('RecoltOS Local')
+    })
+
+    it("échoue (au lieu d'un build ad hoc silencieux) si l'identité est absente du trousseau", () => {
+      const bin = fakeSecurity('     0 valid identities found')
+      expect(() =>
+        loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: bin }),
+      ).toThrow(/RECOLTOS_SIGN_IDENTITY="RecoltOS Local".*docs\/signature\.md/s)
+    })
+
+    it('échoue si seule une autre identité existe, ou si `security` échoue', () => {
+      const other = fakeSecurity(listing('Autre identité'))
+      expect(() =>
+        loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: other }),
+      ).toThrow(/aucune identité de signature valide/)
+      const broken = fakeSecurity('', 1)
+      expect(() =>
+        loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: broken }),
+      ).toThrow(/aucune identité de signature valide/)
+    })
   })
 
   it('ne rebuild pas les natifs et sort les natifs de app.asar', () => {
