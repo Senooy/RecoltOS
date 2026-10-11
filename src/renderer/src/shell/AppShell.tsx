@@ -150,7 +150,7 @@ export function AppShell({ dark }: { dark: boolean }) {
             <HeaderActions
               compact={width < 1100}
               dark={dark}
-              onSearch={() => useUi.getState().openSearch()}
+              onSearch={() => useUi.getState().openOverlay({ type: 'palette' })}
               onRediscover={soon}
               onToggleTheme={toggleTheme}
               onSettings={() => openOverlay({ type: 'settings' })}

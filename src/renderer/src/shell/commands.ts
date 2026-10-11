@@ -82,6 +82,11 @@ export function runMenuCommand(cmd: MenuCommand): void {
   const ui = useUi.getState()
   const editing = isEditableTarget(document.activeElement)
   switch (cmd) {
+    case 'palette':
+      // Un seul déclencheur : l'accélérateur ⌘K du menu natif (pas d'écouteur renderer).
+      if (ui.overlay?.type === 'palette') ui.closeOverlay()
+      else ui.openOverlay({ type: 'palette' })
+      return
     case 'goLibrary':
       ui.navigate({ name: 'library' })
       return

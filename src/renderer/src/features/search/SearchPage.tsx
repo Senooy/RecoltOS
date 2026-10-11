@@ -387,6 +387,7 @@ export default function SearchPage() {
             aria-label={fr.searchUi.inputLabel}
             className="h-full min-w-0 flex-1 bg-transparent pl-12 pr-2 text-[16px] text-fg outline-none placeholder:text-fg-faint focus-visible:outline-none"
             placeholder={fr.search.placeholder}
+            style={{ outline: 'none' }}
             value={text}
             onChange={(e) => {
               const v = e.target.value

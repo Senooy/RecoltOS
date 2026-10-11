@@ -63,3 +63,8 @@ export const overlays = Object.fromEntries(
 export function isRouteImplemented(name: RouteName): boolean {
   return ROUTE_FILES[name] in modules
 }
+
+/** Vrai si le lot propriétaire a livré le calque. */
+export function isOverlayImplemented(name: OverlayType): boolean {
+  return OVERLAY_FILES[name] in modules
+}

@@ -1,0 +1,75 @@
+/* Palette ⌘K (DESIGN §3.6) : gabarit cmdk. */
+.palette [cmdk-group-heading] {
+  /* Recalé sur 25w3t4 : titre centré 22 pt sous le filet, items 4 pt sous le titre. */
+  padding: 12px 18px 4px;
+  font-size: 11.5px;
+  line-height: 15px;
+  font-weight: 500;
+  color: var(--fg-faint);
+}
+.palette [cmdk-item] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 33px;
+  margin: 0 6px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--fg);
+  cursor: default;
+  user-select: none;
+}
+.palette [cmdk-item] > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  stroke-width: 1.75;
+  color: #4e4c4d;
+}
+[data-theme='dark'] .palette [cmdk-item] > svg {
+  color: var(--fg-subtle);
+}
+.palette [cmdk-item][aria-selected='true'] {
+  background: var(--palette-selected);
+}
+.palette .palette-recent[cmdk-item] {
+  height: 63px;
+  width: 63px;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--skeleton);
+}
+.palette .palette-recent[cmdk-item][aria-selected='true'] {
+  background: var(--skeleton);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.palette .palette-recent-row [cmdk-group-items] {
+  display: flex;
+  gap: 8px;
+  padding: 7px 16px 12px;
+}
+.palette [cmdk-input]:focus-visible {
+  outline: none;
+}
+.palette-kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 11px;
+  color: #9a9a9a;
+  letter-spacing: 0.04em;
+}
+[data-theme='dark'] .palette-kbd {
+  background: rgba(255, 255, 255, 0.08);
+}
+[data-theme='dark'] .palette-surface {
+  background: linear-gradient(180deg, rgba(34, 34, 36, 0.95), rgba(24, 24, 26, 0.9));
+}
