@@ -17,7 +17,11 @@ async function clickMenu(app: ElectronApplication, id: string): Promise<boolean>
   }, id)
 }
 
-const topUuid = (page: Page) => page.locator(t('rd-card')).getAttribute('data-uuid')
+/** Carte du haut, une fois la précédente partie (pendant son animation de sortie, deux `rd-card`). */
+const topUuid = async (page: Page) => {
+  await expect(page.locator(t('rd-card'))).toHaveCount(1)
+  return page.locator(t('rd-card')).getAttribute('data-uuid')
+}
 
 test.describe('Redécouvrir', () => {
   test.use({ demoLibrary: { count: 30, collections: 3 } })

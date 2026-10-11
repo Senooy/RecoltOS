@@ -306,6 +306,10 @@ export default function Rediscover() {
   }, [])
 
   const current = cards[index]
+  // Pile et position lues au moment de l'action (une touche peut arriver avant que l'effet clavier
+  // ne soit réabonné avec la nouvelle pile : la carte agie doit être celle qui est affichée).
+  const live = useRef({ cards, index })
+  live.current = { cards, index }
 
   const reset = useCallback(() => {
     x.set(0)
@@ -326,7 +330,8 @@ export default function Rediscover() {
       collection?: { uuid: string; name: string },
       velocity = { x: 0, y: 0 },
     ) => {
-      const card = cards[index]
+      const { cards: deck, index: at } = live.current
+      const card = deck[at]
       if (!card || busy.current) return
       busy.current = true
       setAim(action === 'skip' ? null : action)
@@ -343,7 +348,7 @@ export default function Rediscover() {
         springBack()
         return
       }
-      const restore = index
+      const restore = at
       useUndo.getState().push({
         label: 'rediscover',
         undo: async () => {
@@ -374,7 +379,7 @@ export default function Rediscover() {
       setIndex((i) => i + 1)
       busy.current = false
     },
-    [cards, index, session, x, y, reset, springBack],
+    [session, x, y, reset, springBack],
   )
 
   const onDrag = useCallback((info: PanInfo) => setAim(aimOf(info.offset.x, info.offset.y)), [])
