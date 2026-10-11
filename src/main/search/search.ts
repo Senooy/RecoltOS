@@ -2,11 +2,13 @@
  * Exécution de `search.query` (ARCHI §4.5, DESIGN §3.5) : FTS5 pondérée bm25 (title 8, notes 3,
  * post_text 4, ocr 2, ai 2, tags 6, url 0,5) + filtres (types, sources, tags, période, collection),
  * masqués et corbeille exclus. Un mot nu égal à une source met les éléments de cette source en
- * tête. Couleur : filtre provisoire ΔE76 sur les 3 premières couleurs de la palette, en attendant
- * le `PaletteIndex` de WP-31 (les éléments sans palette sont exclus et comptés).
+ * tête. Couleur (WP-31) : `PaletteIndex` + ΔE2000 (`color/color-search.ts`), une ou plusieurs
+ * couleurs (ET), tolérance réglable ; les éléments sans palette sont exclus et comptés. Sans texte,
+ * les résultats d'un filtre couleur sont classés par proximité.
  */
 import type Database from 'better-sqlite3'
-import { hexToRgb, rgbToLab, type Lab } from '../../shared/color'
+import { getPaletteIndex } from '../color/palette-index'
+import { queryFromHex, searchColors } from '../color/color-search'
 import { AppError } from '../../shared/errors'
 import type { ItemFilters } from '../../shared/ipc/items'
 import { cardRowsByIds, filterWhere, type CardRow } from '../db/queries/list'
@@ -14,8 +16,6 @@ import { toFtsQuery, type ParsedQuery } from '../../shared/search-query'
 
 /** Plafond interne des identifiants examinés (au-delà, la liste est tronquée). */
 export const SEARCH_CAP = 5000
-/** Distance ΔE76 maximale pour le filtre de couleur provisoire. */
-export const COLOR_MAX_DE = 22
 
 const LIVE = 'i.deleted_at IS NULL AND i.hidden_at IS NULL'
 const BM25 = 'bm25(items_fts, 8.0, 3.0, 4.0, 2.0, 2.0, 6.0, 0.5)'
@@ -32,10 +32,6 @@ const union = <T>(a: readonly T[] | undefined, b: readonly T[]): T[] => [
   ...new Set([...(a ?? []), ...b]),
 ]
 
-function deltaE(a: Lab, b: Lab): number {
-  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
-}
-
 function isFtsError(err: unknown): boolean {
   return err instanceof Error && /fts5|syntax error|unterminated|no such column/i.test(err.message)
 }
@@ -50,8 +46,17 @@ export function runSearch(
     sources: union(input.filters?.sources, parsed.sources),
     kinds: union(input.filters?.kinds, parsed.kinds),
   }
-  const color = input.filters?.color ?? parsed.color
+  const colors = [
+    ...new Set(
+      [...(input.filters?.colors ?? []), input.filters?.color ?? parsed.color].filter(
+        (c): c is string => typeof c === 'string',
+      ),
+    ),
+  ]
+  const tolerance = input.filters?.colorTolerance
   delete f.color
+  delete f.colors
+  delete f.colorTolerance
   const params: Record<string, unknown> = {}
   const where = [LIVE, ...filterWhere(f, params)].join(' AND ')
 
@@ -100,36 +105,19 @@ export function runSearch(
   }
 
   let noPalette = 0
-  if (color) {
-    const target = rgbToLab(hexToRgb(color))
-    const palettes = new Map(
-      (
-        db
-          .prepare('SELECT id, palette FROM items WHERE id IN (SELECT value FROM json_each(?))')
-          .all(JSON.stringify(ids)) as { id: number; palette: string | null }[]
-      ).map((r) => [r.id, r.palette]),
+  if (colors.length > 0) {
+    const r = searchColors(
+      getPaletteIndex(db),
+      colors.map((c) => queryFromHex(c, tolerance)),
+      ids,
     )
-    ids = ids.filter((id) => {
-      const raw = palettes.get(id)
-      let hexes: unknown = null
-      try {
-        hexes = raw ? JSON.parse(raw) : null
-      } catch {
-        hexes = null
-      }
-      if (!Array.isArray(hexes) || hexes.length === 0) {
-        noPalette++
-        return false
-      }
-      return hexes
-        .slice(0, 3)
-        .some(
-          (h) =>
-            typeof h === 'string' &&
-            /^#[0-9a-f]{6}$/i.test(h) &&
-            deltaE(rgbToLab(hexToRgb(h)), target) <= COLOR_MAX_DE,
-        )
-    })
+    noPalette = r.noPalette
+    if (parsed.match) {
+      const keep = new Set(r.matches.map((m) => m.id))
+      ids = ids.filter((id) => keep.has(id))
+    } else {
+      ids = r.matches.map((m) => m.id)
+    }
   }
 
   return {

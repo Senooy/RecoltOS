@@ -7,7 +7,7 @@ import { Check } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import type { TagInfo } from '../../../../shared/dto/collections'
 import type { ItemKind, Source } from '../../../../shared/enums'
-import { Button, Popover, SegmentedSmall } from '../../components/ui'
+import { Button, Popover, SegmentedSmall, Slider, Tooltip } from '../../components/ui'
 import { fr } from '../../i18n/fr'
 import { cn } from '../../lib/cn'
 import { flattenTree, useCollections } from '../../state/collections'
@@ -69,6 +69,8 @@ export function FiltersPopover({
         .slice(0, 6)
     : []
   const set = (patch: Partial<SearchFilters>) => onChange({ ...value, ...patch })
+  /** Dernière couleur libre (hors pastilles nommées). */
+  const custom = [...value.colors].reverse().find((h) => !SWATCHES.some((c) => c.hex === h))
   return (
     <Popover.Root>
       <Popover.Trigger asChild>{children}</Popover.Trigger>
@@ -103,38 +105,66 @@ export function FiltersPopover({
           </div>
         </Group>
         <Group label={fr.search.color}>
-          <div className="flex flex-wrap items-center gap-[7px]">
-            {SWATCHES.map((hex) => (
-              <button
-                key={hex}
-                type="button"
-                aria-label={fr.searchUi.colorChip(hex)}
-                aria-pressed={value.color === hex}
-                className="flex h-[22px] w-[22px] items-center justify-center rounded-full border border-[rgba(0,0,0,.12)]"
-                style={{ background: hex }}
-                onClick={() => set({ color: value.color === hex ? null : hex })}
-              >
-                {value.color === hex ? (
-                  <Check
-                    size={12}
-                    strokeWidth={2.5}
-                    className={hex === '#ffffff' || hex === '#ffcc00' ? 'text-black' : 'text-white'}
-                  />
-                ) : null}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-[7px]" data-testid="color-filter">
+            {SWATCHES.map((c) => {
+              const on = value.colors.includes(c.hex)
+              return (
+                <Tooltip key={c.id} content={c.label} side="top">
+                  <button
+                    type="button"
+                    data-color={c.id}
+                    aria-label={fr.searchUi.colorChip(c.label)}
+                    aria-pressed={on}
+                    className="flex h-[22px] w-[22px] items-center justify-center rounded-full border border-[rgba(128,128,128,.35)]"
+                    style={{ background: c.hex }}
+                    onClick={() => set({ colors: toggle(value.colors, c.hex) })}
+                  >
+                    {on ? (
+                      <Check
+                        size={12}
+                        strokeWidth={2.5}
+                        className={c.lab[0] > 70 ? 'text-black' : 'text-white'}
+                      />
+                    ) : null}
+                  </button>
+                </Tooltip>
+              )
+            })}
             <label className="ml-1 flex h-[22px] cursor-default items-center gap-1.5 text-[12px] text-fg-muted">
               <input
                 type="color"
                 className="h-[22px] w-[22px] cursor-default rounded-full border-0 bg-transparent p-0"
-                value={value.color ?? '#888888'}
-                onChange={(e) => set({ color: e.target.value })}
+                value={custom ?? '#888888'}
+                onChange={(e) => {
+                  const hex = e.target.value.toLowerCase()
+                  const rest = value.colors.filter((h) => h !== custom)
+                  set({ colors: [...rest, hex].slice(-5) })
+                }}
               />
               {fr.search.custom}
             </label>
           </div>
-          {value.color && noPalette > 0 ? (
-            <p className="mt-1.5 text-[11px] text-fg-faint">{fr.search.noPalette(noPalette)}</p>
+          {value.colors.length > 0 ? (
+            <div className="mt-2 flex items-center gap-3">
+              <span className="text-[12px] text-fg-muted">{fr.colorUi.tolerance}</span>
+              <Slider
+                variant="settings"
+                label={fr.colorUi.tolerance}
+                min={6}
+                max={40}
+                step={1}
+                value={value.tolerance}
+                valueText={String(value.tolerance)}
+                onValueChange={(tolerance) => set({ tolerance })}
+                className="w-[150px]"
+              />
+              <span className="text-[11.5px] tabular-nums text-fg-faint">{value.tolerance}</span>
+            </div>
+          ) : null}
+          {value.colors.length > 0 && noPalette > 0 ? (
+            <p className="mt-1.5 text-[11px] text-fg-faint" data-testid="no-palette">
+              {fr.search.noPalette(noPalette)}
+            </p>
           ) : null}
         </Group>
         <Group label={fr.search.period}>

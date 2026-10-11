@@ -11,6 +11,16 @@
  */
 import type { ItemKind, Source } from './enums'
 
+import { NAMED_COLORS } from './color'
+
+const foldName = (v: string): string => v.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+
+/** Hex d'une couleur nommée (« rouge », « Bleu »…), sinon `null`. */
+export function namedColorHex(value: string): string | null {
+  const v = foldName(value)
+  return NAMED_COLORS.find((c) => c.id === v || foldName(c.label) === v)?.hex ?? null
+}
+
 export interface ParsedQuery {
   /** Expression FTS5, `null` si aucun terme plein texte. */
   match: string | null
@@ -128,6 +138,12 @@ export function toFtsQuery(raw: string): ParsedQuery {
       }
       if ((key === 'couleur' || key === 'color') && /^#?[0-9a-f]{6}$/.test(value)) {
         color = value.startsWith('#') ? value : `#${value}`
+        continue
+      }
+      // `couleur:rouge` : une des 12 couleurs nommées (WP-31).
+      const named = (key === 'couleur' || key === 'color') && namedColorHex(value)
+      if (named) {
+        color = named
         continue
       }
     }

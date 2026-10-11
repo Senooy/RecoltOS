@@ -23,7 +23,14 @@ import { MasonryGrid } from '../grid/MasonryGrid'
 import { openViewer } from '../viewer/open'
 import { TweetCard } from '../grid/cards/TweetCard'
 import { FiltersPopover } from './FiltersPopover'
-import { EMPTY_FILTERS, activeCount, toItemFilters, toggle, type SearchFilters } from './filters'
+import {
+  EMPTY_FILTERS,
+  colorLabel,
+  activeCount,
+  toItemFilters,
+  toggle,
+  type SearchFilters,
+} from './filters'
 
 export const SEARCH_DEBOUNCE_MS = 120
 const HISTORY_IDLE_MS = 1500
@@ -206,7 +213,7 @@ export default function SearchPage() {
   // Graine `ui.openSearch({ query, tag, color })` (ERRATA §B).
   useEffect(() => {
     const next = { ...EMPTY_FILTERS }
-    if (seed.color) next.color = seed.color
+    if (seed.color) next.colors = [seed.color.toLowerCase()]
     setFilters(next)
     setText(seed.query ?? (seed.tag ? `#${seed.tag} ` : ''))
     inputRef.current?.focus()
@@ -267,7 +274,7 @@ export default function SearchPage() {
           ...next,
           kinds: [...new Set([...next.kinds, ...p.kinds])],
           sources: [...new Set([...next.sources, ...p.sources])],
-          color: p.color ?? next.color,
+          colors: p.color ? [...new Set([...next.colors, p.color.toLowerCase()])] : next.colors,
         }
         changed = true
         return false
@@ -302,14 +309,12 @@ export default function SearchPage() {
         label: fr.searchUi.sources[s]!,
         remove: () => setFilters((f) => ({ ...f, sources: toggle(f.sources, s) })),
       })
-    if (filters.color) {
-      const hex = filters.color
+    for (const hex of filters.colors)
       out.push({
-        key: 'color',
-        label: fr.searchUi.colorChip(hex),
-        remove: () => setFilters((f) => ({ ...f, color: null })),
+        key: `c:${hex}`,
+        label: fr.searchUi.colorChip(colorLabel(hex)),
+        remove: () => setFilters((f) => ({ ...f, colors: f.colors.filter((c) => c !== hex) })),
       })
-    }
     if (filters.period !== 'all')
       out.push({
         key: 'period',

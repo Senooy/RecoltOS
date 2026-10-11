@@ -100,4 +100,18 @@ test.describe('vue détail', () => {
       .poll(() => db.prepare('SELECT view_count FROM items WHERE uuid = ?').get(uuid))
       .not.toEqual({ view_count: 0 })
   })
+
+  test('pastille du panneau → Recherche filtrée par cette couleur (WP-31)', async ({ page }) => {
+    const card = page.locator(`${t('grid')} ${t('card')}[data-kind="image"]`).first()
+    await expect(card).toBeVisible()
+    await card.click()
+    const swatch = page.locator(`${t('palette-swatches')} button`).first()
+    await expect(swatch).toBeVisible()
+    const hex = await swatch.getAttribute('data-hex')
+    await swatch.click()
+    await expect(page.locator(t('detail'))).toHaveCount(0)
+    await expect(page.locator(t('search-page'))).toBeVisible()
+    await expect(page.locator(t('search-filter-chip')).first()).toContainText(hex!)
+    await expect(page.locator(t('search-count'))).toBeVisible()
+  })
 })

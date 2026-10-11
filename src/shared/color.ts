@@ -89,11 +89,52 @@ export function deltaE76(p: Lab, q: Lab): number {
   return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
 }
 
-/** Bucket de tri couleur : 0..11 teinte par tranches de 30°, 12 neutre, 13 inconnu. */
+/** Décalage des secteurs de teinte (AI §9.3) : les rouges (≈ 350–20°) ne sont plus coupés en deux. */
+export const HUE_OFFSET = 15
+
+/**
+ * Bucket de tri couleur : 0..11 teinte par secteurs de 30° décalés de 15° (0 = rouges de 345° à
+ * 15°, 1 = rouge-orangé…), 12 neutre (C < 12), 13 inconnu. Migration `0002` recalcule l'existant.
+ */
 export function hueBucket(lch: Lch | null | undefined): number {
   if (!lch) return UNKNOWN_BUCKET
   const [, c, h] = lch
   if (!Number.isFinite(c) || !Number.isFinite(h)) return UNKNOWN_BUCKET
   if (c < NEUTRAL_CHROMA) return NEUTRAL_BUCKET
-  return Math.floor((((h % 360) + 360) % 360) / 30) % 12
+  return Math.floor(((((h + HUE_OFFSET) % 360) + 360) % 360) / 30) % 12
 }
+
+export interface NamedColor {
+  id: string
+  /** Libellé FR (pastilles du filtre). */
+  label: string
+  hex: string
+  /** Centre Lab D65 constant (dérivé de `hex`). */
+  lab: Lab
+}
+
+const named = (id: string, label: string, hex: string): NamedColor => ({
+  id,
+  label,
+  hex,
+  lab: hexToLab(hex),
+})
+
+/** 12 couleurs nommées du filtre (AI §9.2), du rouge au rose puis neutres. */
+export const NAMED_COLORS: readonly NamedColor[] = [
+  named('rouge', 'Rouge', '#e0312b'),
+  named('orange', 'Orange', '#f2862a'),
+  named('jaune', 'Jaune', '#f4d02c'),
+  named('vert', 'Vert', '#3fa34d'),
+  named('turquoise', 'Turquoise', '#2bbfb3'),
+  named('bleu', 'Bleu', '#2f6be0'),
+  named('violet', 'Violet', '#7a4fd4'),
+  named('rose', 'Rose', '#ec5fa6'),
+  named('marron', 'Marron', '#7b4a2b'),
+  named('noir', 'Noir', '#151515'),
+  named('gris', 'Gris', '#8c8c8c'),
+  named('blanc', 'Blanc', '#f4f4f4'),
+]
+
+/** Tolérance par défaut du filtre couleur (ΔE2000, AI §9.2). */
+export const DEFAULT_COLOR_TOLERANCE = 18

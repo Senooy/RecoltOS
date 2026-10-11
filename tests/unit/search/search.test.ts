@@ -92,7 +92,7 @@ describe('runSearch', () => {
     expect(titles('', { period: { from: lib.clock.now, to: null } })).toEqual([])
   })
 
-  it('filtre couleur provisoire : éléments sans palette exclus et comptés', () => {
+  it('filtre couleur (ΔE2000, PaletteIndex) : éléments sans palette exclus et comptés', () => {
     const { items } = lib.repos
     items.insert({ kind: 'image', title: 'rouge', palette: ['#fe3a2f', '#ffffff'] } as never)
     items.insert({ kind: 'image', title: 'bleu', palette: ['#1040ff'] } as never)

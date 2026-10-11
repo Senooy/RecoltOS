@@ -4,6 +4,7 @@
  * (`ServiceContext.emit`) est branché par `jobs/init.ts` ; hors Electron, rien n'est émis.
  */
 import type { EventName, EventPayload } from '../shared/ipc'
+import { invalidatePaletteIndex } from './color/palette-index'
 import { invalidateCounts } from './db/queries/counts'
 import { getActiveLibrary } from './library/library-context'
 
@@ -19,7 +20,10 @@ export type ItemsChangedReason = EventPayload<'items.changed'>['reason']
 
 export function emitItemsChanged(uuids: readonly string[], reason: ItemsChangedReason): void {
   const lib = getActiveLibrary()
-  if (lib) invalidateCounts(lib.db)
+  if (lib) {
+    invalidateCounts(lib.db)
+    invalidatePaletteIndex(lib.db)
+  }
   if (uuids.length === 0) return
   emitFn?.('items.changed', { uuids: [...uuids], reason })
 }

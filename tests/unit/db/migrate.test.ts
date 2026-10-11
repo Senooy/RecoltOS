@@ -46,7 +46,12 @@ describe('migrations embarquées', () => {
     const { db, migration } = openLibraryDb(root)
     track(db)
     const latest = bundledMigrations().length
-    expect(migration).toEqual({ from: 0, to: latest, applied: [1], snapshot: null })
+    expect(migration).toEqual({
+      from: 0,
+      to: latest,
+      applied: Array.from({ length: latest }, (_, i) => i + 1),
+      snapshot: null,
+    })
     expect(db.pragma('user_version', { simple: true })).toBe(latest)
     expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
     expect(db.pragma('journal_mode', { simple: true })).toBe('wal')
@@ -79,7 +84,7 @@ describe('migrate()', () => {
   it('snapshot VACUUM INTO -pre-vN avant de migrer une base non vide', () => {
     const root = dir()
     const db = track(openDatabase(path.join(root, 'recolt.db')))
-    const base = bundledMigrations()
+    const base = bundledMigrations().slice(0, 1)
     migrate(db, { migrations: base })
     db.prepare(
       "INSERT INTO items (uuid, kind, created_at, updated_at) VALUES ('u1', 'image', 1, 1)",
@@ -100,7 +105,7 @@ describe('migrate()', () => {
   it('échec en cours de migration : rollback, version inchangée', () => {
     const root = dir()
     const db = track(openDatabase(path.join(root, 'recolt.db')))
-    const base = bundledMigrations()
+    const base = bundledMigrations().slice(0, 1)
     migrate(db, { migrations: base })
     const broken = extra('CREATE TABLE t2 (id INTEGER PRIMARY KEY); INSERT INTO nope VALUES (1);')
     expect(() => migrate(db, { migrations: [...base, broken] })).toThrow(/nope/)

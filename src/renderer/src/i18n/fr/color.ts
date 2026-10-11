@@ -1,5 +1,8 @@
 /**
- * Textes du domaine `color`, possédé par WP-31 (ERRATA §F). Ajouter ici les namespaces propres au
- * domaine (tutoiement, typographie FR) ; ne pas redéfinir un namespace de `base.ts`.
+ * Textes du domaine `color` (WP-31) : filtre et tri par couleur.
  */
-export const color = {} as const
+export const color = {
+  colorUi: {
+    tolerance: 'Tolérance',
+  },
+} as const
