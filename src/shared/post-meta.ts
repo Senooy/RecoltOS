@@ -3,6 +3,7 @@
  * Forme stockée en base. Le renderer ne la voit jamais : il reçoit `PostView` (dto/items.ts).
  */
 import { z } from 'zod'
+import { WebUrl } from './enums'
 
 export const PostPlatform = z.enum(['x', 'instagram', 'cosmos', 'web'])
 export type PostPlatform = z.output<typeof PostPlatform>
@@ -12,14 +13,14 @@ export const PostAuthor = z.object({
   /** Handle SANS '@'. */
   handle: z.string().nullable(),
   /** Provenance seulement ; l'affichage passe par `authors` (cache local). */
-  avatarUrl: z.url().nullable(),
+  avatarUrl: WebUrl.nullable(),
 })
 export type PostAuthor = z.output<typeof PostAuthor>
 
 export const PostMedia = z.object({
   type: z.enum(['image', 'video']),
-  remoteUrl: z.url().nullable(),
-  posterUrl: z.url().nullable(),
+  remoteUrl: WebUrl.nullable(),
+  posterUrl: WebUrl.nullable(),
   /** Lien vers `item_media.uuid` si le média est local. */
   mediaUuid: z.uuid().nullable(),
 })
@@ -28,7 +29,7 @@ export type PostMedia = z.output<typeof PostMedia>
 export const QuotedPost = z.object({
   author: PostAuthor.nullable(),
   text: z.string().nullable(),
-  url: z.string().nullable(),
+  url: WebUrl.nullable(),
   media: z.array(PostMedia).default([]),
 })
 export type QuotedPost = z.output<typeof QuotedPost>
@@ -43,7 +44,7 @@ export const PostMetaSchema = z.object({
   platform: PostPlatform,
   author: PostAuthor.nullable(),
   text: z.string().nullable(),
-  url: z.string().nullable(),
+  url: WebUrl.nullable(),
   postedAt: z.number().int().nullable(),
   media: z.array(PostMedia).default([]),
   quoted: QuotedPost.nullable().default(null),

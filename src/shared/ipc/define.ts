@@ -1,5 +1,6 @@
 /** Briques communes aux contrats IPC par domaine (PLAN §1.8). */
 import { z } from 'zod'
+import '../zod-locale'
 
 export interface ChannelDef {
   input: z.ZodType
@@ -15,4 +16,11 @@ export const Void = z.void()
 export const Count = z.object({ count: z.number().int().min(0) })
 
 /** Chemin absolu de fichier reçu du renderer (revalidé côté main : realpath + racine). */
-export const AbsPath = z.string().min(1).max(4096).startsWith('/')
+export const AbsPath = z
+  .string()
+  .min(1)
+  .max(4096)
+  .startsWith('/')
+  .refine((p) => !p.split('/').some((seg) => seg === '.' || seg === '..'), {
+    message: 'chemin absolu sans segment . ni ..',
+  })

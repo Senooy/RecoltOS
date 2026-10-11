@@ -3,6 +3,7 @@
  * Aucun import `electron` ni `node:*` dans `src/shared/**` (QA §2.4).
  */
 import { z } from 'zod'
+import './zod-locale'
 
 /** UUID RFC strict : ids GatherOS et `crypto.randomUUID()` sont conformes. */
 export const Uuid = z.uuid()
@@ -81,7 +82,21 @@ export const MEDIA_ROOTS = [
   'spaces',
 ] as const
 export type MediaRoot = (typeof MEDIA_ROOTS)[number]
-export const MediaUrl = z.string().regex(/^recolt:\/\/[a-z0-9-]+\//, 'URL recolt:// attendue')
+/**
+ * Forme : `recolt://<libraryId>/<root>/<rel>[?…]`, `root` ∈ MEDIA_ROOTS, sans fragment ni
+ * antislash ; la requête ne contient que des caractères sûrs (`?v=<n>` en production, ou les
+ * indications `w=&h=&c=` de la maquette). Aucun segment `.` ou `..` (contournement de racine).
+ * La revalidation réelle (realpath, racine) reste côté main (WP-05, handlers).
+ */
+const MEDIA_URL_RE = new RegExp(
+  `^recolt://[a-z0-9-]{1,40}/(?:${MEDIA_ROOTS.join('|')})/[^?#\\\\\\s]+(?:\\?[A-Za-z0-9=&._-]*)?$`,
+)
+export const MediaUrl = z
+  .string()
+  .regex(MEDIA_URL_RE, 'URL recolt:// attendue')
+  .refine((u) => !(u.split('?')[0] ?? '').split('/').some((seg) => seg === '.' || seg === '..'), {
+    message: 'segment de chemin interdit (. ou ..)',
+  })
 export type MediaUrl = z.output<typeof MediaUrl>
 
 /** URL web saisie par l'utilisateur ou ouverte dans le navigateur (jamais chargée par le renderer). */
