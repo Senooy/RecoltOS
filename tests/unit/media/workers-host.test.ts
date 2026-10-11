@@ -528,3 +528,42 @@ describe('WorkerHost (enfant factice)', () => {
     k.exit(0)
   })
 })
+
+describe('délai de démarrage', () => {
+  it('worker vivant sans hello → tué au délai, compté comme démarrage raté ; broken, requêtes rejetées', async () => {
+    let kills = 0
+    const fork: ForkFn = () => {
+      let exitCb: ((code: number | null, signal: string | null) => void) | undefined
+      const child: WorkerChild = {
+        pid: 1,
+        postMessage: () => {},
+        onMessage: () => {},
+        onExit: (cb) => {
+          exitCb = cb
+        },
+        kill: (sig) => {
+          kills++
+          queueMicrotask(() => exitCb?.(null, sig ?? 'SIGTERM'))
+        },
+      }
+      return child
+    }
+    const crashes: CrashInfo[] = []
+    const host = new WorkerHost({
+      name: 'fake-bloque',
+      modulePath: 'inutile.js',
+      fork,
+      backoffMs: [5],
+      startTimeoutMs: 30,
+      onCrash: (c) => crashes.push(c),
+    })
+    const err = await host.call('hashFile', { abs: '/x' }, { jobId: 3 }).catch((e: unknown) => e)
+    expect(err).toMatchObject({ code: 'worker_unavailable', details: { jobId: 3 } })
+    expect(host.state).toBe('broken')
+    expect(kills).toBe(3)
+    expect(crashes.at(-1)).toMatchObject({ broken: true, interrupted: [{ op: 'hashFile' }] })
+    await expect(host.call('hashFile', { abs: '/x' })).rejects.toMatchObject({
+      code: 'worker_unavailable',
+    })
+  })
+})

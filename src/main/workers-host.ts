@@ -84,6 +84,8 @@ export interface WorkerHostOptions {
   backoffMs?: readonly number[]
   /** Sorties consécutives sans `hello` avant l'état `broken` (défaut 3). */
   maxStartFailures?: number
+  /** Délai max pour recevoir `hello` après le lancement (défaut 15 s). */
+  startTimeoutMs?: number
   /** Un worker resté prêt aussi longtemps remet le backoff à zéro. */
   stableAfterMs?: number
   /** SIGTERM, puis SIGKILL après ce délai. */
@@ -112,6 +114,8 @@ interface Pending {
 
 export const DEFAULT_BACKOFF_MS = [1_000, 5_000, 30_000] as const
 export const DEFAULT_MAX_START_FAILURES = 3
+/** Délai max avant `hello` : au-delà, le processus est tué et compté comme démarrage raté. */
+export const DEFAULT_START_TIMEOUT_MS = 15_000
 
 const silent: HostLogger = { info: () => {}, warn: () => {}, error: () => {} }
 
@@ -134,6 +138,7 @@ export class WorkerHost {
   private restartTimer: ReturnType<typeof setTimeout> | null = null
   private stableTimer: ReturnType<typeof setTimeout> | null = null
   private stopPromise: Promise<void> | null = null
+  private startTimer: ReturnType<typeof setTimeout> | null = null
   private exitWaiters: (() => void)[] = []
   private config: unknown
   /** Nombre de redémarrages effectués (diagnostic). */
@@ -274,6 +279,18 @@ export class WorkerHost {
       return
     }
     this.child = child
+    this.clearStartTimer()
+    const limit = this.opts.startTimeoutMs ?? DEFAULT_START_TIMEOUT_MS
+    this.startTimer = setTimeout(() => {
+      this.startTimer = null
+      if (this.child !== child || this.helloSeen) return
+      this.log.error(`[${this.name}] pas de hello après ${limit} ms ; processus arrêté`)
+      try {
+        child.kill('SIGKILL')
+      } catch {
+        // déjà mort
+      }
+    }, limit)
     child.onMessage((m) => {
       if (this.child === child) this.onMessage(m)
     })
@@ -292,6 +309,7 @@ export class WorkerHost {
         }
         return
       }
+      this.clearStartTimer()
       this.ready = true
       this.helloSeen = true
       this.startFailures = 0
@@ -329,8 +347,14 @@ export class WorkerHost {
     }
   }
 
+  private clearStartTimer(): void {
+    if (this.startTimer) clearTimeout(this.startTimer)
+    this.startTimer = null
+  }
+
   private handleExit(child: WorkerChild | null, code: number | null, signal: string | null): void {
     if (child && this.child !== child) return
+    this.clearStartTimer()
     this.child = null
     this.ready = false
     if (this.stableTimer) clearTimeout(this.stableTimer)
@@ -429,6 +453,7 @@ export class WorkerHost {
   stop(): Promise<void> {
     if (this.stopPromise) return this.stopPromise
     this.stopPromise = new Promise<void>((resolve) => {
+      this.clearStartTimer()
       if (this.restartTimer) clearTimeout(this.restartTimer)
       this.restartTimer = null
       if (this.stableTimer) clearTimeout(this.stableTimer)
