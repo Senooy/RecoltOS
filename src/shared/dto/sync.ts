@@ -16,12 +16,28 @@ export const SyncSourceStatusState = z.enum([
   'error',
 ])
 
+/**
+ * Précision de l'état (ERRATA §G.2) : `blocked` (cookies présents mais requête refusée),
+ * `permissions` (autorisations d'hôte manquantes, Firefox), `not_logged_in` (aucun cookie de session),
+ * `browser_closed` (aucune extension connectée), `network`, `budget` (quota du jour atteint).
+ */
+export const SyncDetail = z.enum([
+  'blocked',
+  'permissions',
+  'not_logged_in',
+  'browser_closed',
+  'network',
+  'budget',
+])
+export type SyncDetail = z.output<typeof SyncDetail>
+
 export const SyncSourceStatus = z.object({
   source: SyncSource,
   enabled: z.boolean(),
   allowBackgroundTab: z.boolean(),
   accountHandle: z.string().nullable(),
   status: SyncSourceStatusState,
+  detail: SyncDetail.nullable(),
   lastRunAt: z.number().int().nullable(),
   lastSuccessAt: z.number().int().nullable(),
   lastNewCount: z.number().int(),
@@ -29,6 +45,19 @@ export const SyncSourceStatus = z.object({
   totalSynced: z.number().int(),
   backfillDone: z.boolean(),
   cooldownUntil: z.number().int().nullable(),
+  /** Run en cours : pages reçues et éléments ajoutés. */
+  running: z
+    .object({ mode: z.string(), pages: z.number().int(), newItems: z.number().int() })
+    .nullable(),
+  /** Navigateur qui synchronise cette source (libellé), `null` si aucun. */
+  browser: z.string().nullable(),
+  /** Session vue par l'extension (`null` : aucune extension connectée). */
+  loggedIn: z.boolean().nullable(),
+  /** Publications rattrapées par le backfill, pas encore revues. */
+  recovered: z.number().int(),
+  /** Réglage repris de GatherOS à l'import (proposé, jamais appliqué seul). */
+  importedFlag: z.boolean().nullable(),
+  nextRunAt: z.number().int().nullable(),
 })
 export type SyncSourceStatus = z.output<typeof SyncSourceStatus>
 
@@ -60,8 +89,12 @@ export type BridgeClient = z.output<typeof BridgeClient>
 export const SyncStatus = z.object({
   sources: z.array(SyncSourceStatus),
   clients: z.array(BridgeClient),
-  /** GatherOS (sync ou extension) actif : la sync RecoltOS est bloquée (PLAN §9.1). */
+  /** GatherOS (sync ou extension) actif : avertissement, bloquant pour Instagram (SYNC §1.9). */
   gatherosConflict: z.boolean(),
+  /** Une extension est connectée : la sync ne tourne que navigateur ouvert. */
+  browserConnected: z.boolean(),
+  /** Pont arrêté (tests e2e sans `RECOLTOS_BRIDGE`). */
+  bridgeRunning: z.boolean(),
 })
 export type SyncStatus = z.output<typeof SyncStatus>
 
@@ -70,6 +103,8 @@ export const SyncRunInfo = z.object({
   source: SyncSource,
   mode: z.string(),
   reason: z.string(),
+  browser: z.string().nullable(),
+  target: z.string().nullable(),
   startedAt: z.number().int(),
   finishedAt: z.number().int().nullable(),
   pages: z.number().int(),

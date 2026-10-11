@@ -27,6 +27,7 @@ const IMPLEMENTED_DOMAINS: readonly string[] = [
   'ai',
   'bridge',
   'spaces',
+  'sync',
 ]
 /** Jobs IA : `not_implemented` tant qu'aucun service IA n'est enregistré (hors Electron). */
 const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']

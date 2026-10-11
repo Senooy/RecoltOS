@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import { installInternalDragCleanup } from './lib/dnd'
 import { initLayoutMap } from './lib/shortcuts'
+import { installSyncNotifier } from './features/sync/notifier'
 import { AppShell } from './shell/AppShell'
 import { installFlushBridge } from './state/flush'
 import { followPrefsChanges, usePrefs } from './state/prefs'
@@ -28,7 +29,12 @@ export function App() {
   const dark = useDarkTheme()
 
   useEffect(() => {
-    const disposers = [installFlushBridge(), installInternalDragCleanup(), followPrefsChanges()]
+    const disposers = [
+      installFlushBridge(),
+      installInternalDragCleanup(),
+      followPrefsChanges(),
+      installSyncNotifier(),
+    ]
     void usePrefs.getState().load()
     void initLayoutMap()
     const onFocus = () => void initLayoutMap()

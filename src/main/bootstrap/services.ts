@@ -26,8 +26,8 @@ export const SERVICE_DOMAINS = [
   'data',
   'spaces',
   'ai',
-  'sync',
   'bridge',
+  'sync',
   'capture',
   'import-ux',
 ] as const
@@ -42,8 +42,9 @@ export const SERVICES: readonly { domain: ServiceDomain; init: InitFn }[] = [
   { domain: 'data', init: initData },
   { domain: 'spaces', init: initSpaces },
   { domain: 'ai', init: initAi },
-  { domain: 'sync', init: initSync },
+  // Le pont avant la sync : le coordinateur s'abonne aux messages du `BridgeServer` (WP-57).
   { domain: 'bridge', init: initBridge },
+  { domain: 'sync', init: initSync },
   { domain: 'capture', init: initCapture },
   { domain: 'import-ux', init: initImportUx },
 ]

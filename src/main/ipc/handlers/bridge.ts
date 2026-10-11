@@ -9,7 +9,7 @@ import path from 'node:path'
 import { EXTENSION_ID, EXTENSION_VERSION, GECKO_ID } from '../../../shared/bridge/constants'
 import type { BridgeClient } from '../../../shared/dto/sync'
 import { AppError } from '../../../shared/errors'
-import { BROWSERS, isAppInstalled } from '../../bridge/browsers'
+import { BROWSERS, browserLabel, isAppInstalled } from '../../bridge/browsers'
 import { blocksInstagram, detectGatherOS } from '../../bridge/gatheros-coexistence'
 import { reinstallHosts } from '../../bridge/init'
 import { hostInstalledIn, uninstallNativeHosts } from '../../bridge/native-host-installer'
@@ -17,8 +17,6 @@ import { bundledExtensionDir, installedExtensionDir } from '../../bridge/paths'
 import { getBridgeRuntime, type BridgeRuntime } from '../../bridge/runtime'
 import type { BridgeClient as ServerClient } from '../../bridge/server'
 import type { DomainHandlers } from '../router'
-
-const LABELS = new Map(BROWSERS.map((b) => [b.id, b.label]))
 
 export function clientDto(c: ServerClient, stale: boolean): BridgeClient {
   const state = (p: 'x' | 'instagram' | 'cosmos') => {
@@ -31,7 +29,7 @@ export function clientDto(c: ServerClient, stale: boolean): BridgeClient {
   }
   return {
     browser: c.browser,
-    label: LABELS.get(c.browser) ?? c.browserName ?? c.browser,
+    label: browserLabel(c.browser, c.browserName),
     target: c.target,
     extVersion: c.extVersion,
     connectedAt: c.connectedAt,

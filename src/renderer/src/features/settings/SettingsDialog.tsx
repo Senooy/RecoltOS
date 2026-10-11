@@ -30,6 +30,7 @@ import { StorageSection } from './sections/Storage'
 import { TagsSection } from './sections/Tags'
 import { CaptureSettings } from '../capture/CaptureSettings'
 import { AiSettings } from '../ai/AiSettings'
+import { SyncSettings } from '../sync/SyncSettings'
 
 const NAV: { key: SettingsSection; label: string; Icon: typeof Palette }[] = [
   { key: 'appearance', label: fr.settings.nav.appearance, Icon: Palette },
@@ -150,6 +151,8 @@ export default function SettingsDialog() {
               <TagsSection />
             ) : section === 'capture' ? (
               <CaptureSettings />
+            ) : section === 'sync' ? (
+              <SyncSettings />
             ) : section === 'storage' ? (
               <StorageSection />
             ) : section === 'data' ? (

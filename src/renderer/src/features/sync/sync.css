@@ -1,0 +1,178 @@
+/* Réglages › Synchronisation (WP-57), recalés sur `fte10a` (k = 1, modale 749 × 571). */
+.sync-group {
+  margin-top: 9px;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #969696;
+}
+.sync-row {
+  position: relative;
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #ececec;
+  padding: 7px 0;
+}
+.sync-row:last-child {
+  border-bottom: 0;
+}
+:root[data-theme='dark'] .sync-row {
+  border-color: var(--border-subtle);
+}
+.sync-row-label {
+  font-size: 14.5px;
+  line-height: 19px;
+  color: var(--fg);
+}
+.sync-row-line {
+  margin-top: 1px;
+  font-size: 12px;
+  line-height: 15px;
+  color: #959595;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sync-tone-warn {
+  color: #b26b00;
+}
+.sync-tone-err {
+  color: #d1342b;
+}
+:root[data-theme='dark'] .sync-tone-warn {
+  color: #ffb340;
+}
+:root[data-theme='dark'] .sync-tone-err {
+  color: #ff6961;
+}
+/* Ajout RecoltOS : invisible tant que la ligne n'est pas survolée (garde la mise en page `fte10a`). */
+.sync-more {
+  display: inline-flex;
+  height: 26px;
+  width: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--fg-muted);
+  opacity: 0;
+  transition: opacity 120ms;
+}
+.sync-row:hover .sync-more,
+.sync-more:focus-visible,
+.sync-more[data-state='open'] {
+  opacity: 1;
+}
+.sync-more:hover {
+  background: var(--hover);
+}
+.sync-foot {
+  margin-top: 9px;
+  max-width: 480px;
+  font-size: 13px;
+  line-height: 16px;
+  color: #959595;
+}
+.sync-foot-tight {
+  margin-top: 6px;
+}
+.sync-link {
+  color: var(--accent-blue, #0a84ff);
+  cursor: pointer;
+}
+.sync-link:hover {
+  text-decoration: underline;
+}
+.sync-ext {
+  margin-top: 18px;
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  background: #f4f4f4;
+  padding: 10px 12px 10px 13px;
+}
+:root[data-theme='dark'] .sync-ext {
+  border-color: var(--border);
+  background: var(--surface);
+}
+.sync-ext-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.sync-ext-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #959595;
+}
+.sync-ext-state i {
+  display: inline-block;
+  height: 7px;
+  width: 7px;
+  border-radius: 50%;
+  background: #b5b5b5;
+}
+.sync-ext-on i {
+  background: #30c552;
+}
+.sync-ext-help {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #959595;
+}
+.sync-ext-warn {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #b26b00;
+}
+:root[data-theme='dark'] .sync-ext-warn {
+  color: #ffb340;
+}
+.sync-pill {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #000;
+  padding: 0 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+.sync-pill:hover {
+  background: #262626;
+}
+:root[data-theme='dark'] .sync-pill {
+  background: #fff;
+  color: #000;
+}
+.sync-bullets {
+  list-style: disc;
+  padding-left: 18px;
+}
+.sync-bullets li + li {
+  margin-top: 4px;
+}
+.sync-step {
+  display: inline-flex;
+  height: 18px;
+  width: 18px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--pressed);
+  font-size: 11px;
+  font-weight: 600;
+}
+.sync-code {
+  font-family: 'Geist Mono Variable', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+}

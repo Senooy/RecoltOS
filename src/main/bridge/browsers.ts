@@ -105,3 +105,22 @@ export async function isAppInstalled(
     exists(path.join(home, 'Applications', `${b.app}.app`))
   )
 }
+
+/**
+ * Libellé d'un client : nom du processus parent de l'hôte (« Google Chrome », « firefox »,
+ * « Brave Browser »…) ou identifiant, sinon le nom annoncé par l'extension.
+ */
+export function browserLabel(hostBrowser: string, helloName?: string | null): string {
+  const n = hostBrowser.toLowerCase()
+  const b = BROWSERS.find(
+    (x) => x.id === n || x.app.toLowerCase() === n || x.label.toLowerCase() === n,
+  )
+  if (b) return b.label
+  if (helloName) {
+    const h = helloName.toLowerCase()
+    const byHello = BROWSERS.find((x) => h.includes(x.label.toLowerCase()))
+    if (byHello) return byHello.label
+    return helloName
+  }
+  return hostBrowser
+}
