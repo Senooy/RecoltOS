@@ -1,0 +1,17 @@
+out
+dist
+dist-extension
+coverage
+test-results
+playwright-report
+pnpm-lock.yaml
+design/reference
+tests/visual/__snapshots__
+.visual
+.bin-cache
+.tmp
+.worktrees
+node_modules
+docs/specs
+docs/plan
+.claude

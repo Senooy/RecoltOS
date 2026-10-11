@@ -1,0 +1,23 @@
+# Réglages pnpm 12 (PLAN §1.15). Une seule package racine : pas de champ `packages`.
+nodeLinker: hoisted
+saveExact: true
+autoInstallPeers: true
+strictPeerDependencies: false
+engineStrict: true
+
+# Seuls electron (téléchargement du binaire) et esbuild (binaire natif) exécutent
+# leurs scripts d'installation. better-sqlite3 livre `prebuilds/darwin-arm64.node`
+# (N-API) : son `binding.gyp` ne doit PAS déclencher de node-gyp. electron-winstaller
+# (Windows, tiré par electron-builder) et simple-git-hooks (géré par `prepare`) sont refusés.
+allowBuilds:
+  better-sqlite3: false
+  electron: true
+  electron-winstaller: false
+  esbuild: true
+  simple-git-hooks: false
+
+supportedArchitectures:
+  os:
+    - darwin
+  cpu:
+    - arm64

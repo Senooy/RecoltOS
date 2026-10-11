@@ -1,0 +1,33 @@
+# Dépendances et sorties
+node_modules/
+out/
+dist/
+dist-extension/
+coverage/
+test-results/
+playwright-report/
+.visual/
+.bin-cache/
+.tmp/
+*.tsbuildinfo
+
+# Worktrees des lots (PLAN §7.2)
+.worktrees/
+
+# Données : jamais de base ni de données réelles dans le dépôt
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+
+# Références visuelles la référence (gitignorées sauf README et ref-map)
+design/reference/*
+!design/reference/README.md
+!design/reference/ref-map.json
+
+# Local
+.DS_Store
+.claude/settings.local.json
+.env
+.env.*
+*.log

@@ -1,0 +1,25 @@
+/**
+ * Entrée des fenêtres hors écran (`offscreen.html?render=<route>`, ERRATA §B) : sans preload,
+ * jamais `window.recolt`. Routes : `tweet-card` (WP-56), `space-stage` (WP-63). Stub WP-00.
+ */
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './styles/tokens.css'
+import './styles/globals.css'
+
+const params = new URLSearchParams(window.location.search)
+const route = params.get('render') ?? ''
+document.documentElement.dataset.theme = params.get('theme') === 'dark' ? 'dark' : 'light'
+
+function OffscreenStub() {
+  return <div data-render={route} data-ready="1" />
+}
+
+const el = document.getElementById('root')
+if (el) {
+  createRoot(el).render(
+    <StrictMode>
+      <OffscreenStub />
+    </StrictMode>,
+  )
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "WebWorker"],
+    "types": ["chrome"],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.extension.tsbuildinfo"
+  },
+  "include": ["extension/**/*.ts", "src/shared/bridge/**/*.ts"],
+  "exclude": ["node_modules", "dist-extension", ".worktrees", ".tmp"]
+}

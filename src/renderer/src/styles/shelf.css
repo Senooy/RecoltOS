@@ -1,0 +1,7 @@
+/*
+ * Étagère 3D des collections (DESIGN §3.4). Styles réservés à WP-21 (contenu à venir) ;
+ * fichier créé par WP-00 pour figer l'emplacement.
+ */
+.shelf-root {
+  background: var(--shelf-bg);
+}

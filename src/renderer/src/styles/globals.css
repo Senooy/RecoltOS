@@ -1,0 +1,116 @@
+/*
+ * Styles globaux : tokens complémentaires (ombres DESIGN §1.6, mouvement §1.9, mise en page §1.7),
+ * surfaces de verre, focus clavier, squelettes, mouvement réduit et mode e2e (QA §2.2).
+ */
+:root {
+  --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 18px rgba(0, 0, 0, 0.06);
+  --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12);
+  --shadow-popover:
+    0 0 0 1px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-palette: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 24px 64px rgba(0, 0, 0, 0.2);
+  --shadow-modal: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 30px 80px rgba(0, 0, 0, 0.18);
+  --shadow-fab: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 6px 20px rgba(0, 0, 0, 0.14);
+  --shadow-toast: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 8px 28px rgba(0, 0, 0, 0.14);
+  --shadow-swipe: 0 30px 80px rgba(0, 0, 0, 0.6);
+
+  --dur-instant: 80ms;
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 240ms;
+  --dur-sheet: 340ms;
+
+  --header-h: 96px;
+  --header-pad-l: 18px;
+  --header-pad-r: 28px;
+  --subheader-h: 60px;
+  --subheader-pad-x: 32px;
+  --page-pad-x: 18px;
+  --grid-gap: 8px;
+  --content-pad-top: 18px;
+  --fab-size: 52px;
+}
+/* Sombre : anneau blanc et opacités doublées (DESIGN §1.6). */
+[data-theme='dark'] {
+  --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(0, 0, 0, 0.12);
+  --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.24);
+  --shadow-popover:
+    0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  --shadow-palette: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 64px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.36);
+  --shadow-fab: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 6px 20px rgba(0, 0, 0, 0.28);
+  --shadow-toast: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.fab-surface {
+  background: var(--fab-bg);
+  backdrop-filter: blur(20px) saturate(1.6);
+}
+.palette-surface {
+  background: linear-gradient(180deg, rgba(252, 252, 252, 0.95), rgba(242, 242, 242, 0.86));
+  backdrop-filter: blur(28px) saturate(1.5);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes recolt-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+.skeleton {
+  background: var(--skeleton);
+  animation: recolt-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 80ms !important;
+    transition-duration: 80ms !important;
+  }
+}
+[data-reduce-motion='1'] *,
+[data-reduce-motion='1'] *::before,
+[data-reduce-motion='1'] *::after {
+  animation-duration: 80ms !important;
+  transition-duration: 80ms !important;
+}
+
+/* RECOLTOS_E2E=1 : animations coupées (QA §2.2). */
+[data-e2e] *,
+[data-e2e] *::before,
+[data-e2e] *::after {
+  animation: none !important;
+  transition: none !important;
+}
