@@ -12,7 +12,13 @@ export interface TrashReport {
   trashed: string[]
   /** Déjà absents : rien à faire (purge idempotente). */
   missing: string[]
-  failed: { path: string; message: string }[]
+  /** `message` est en français ; `details` (message Node brut) sert au journal seulement. */
+  failed: { path: string; message: string; details?: string }[]
+}
+
+function rawMessage(err: unknown): string {
+  const e = err as NodeJS.ErrnoException | undefined
+  return e?.code ? `${e.code} : ${e.message}` : String(err)
 }
 
 const electronTrashItem: TrashItemFn = async (abs) => {
@@ -38,7 +44,12 @@ export async function moveToTrash(
         report.missing.push(p)
       } else {
         // EACCES, EPERM, EIO… : le fichier existe peut-être, il n'est pas « déjà absent ».
-        report.failed.push({ path: p, message: err instanceof Error ? err.message : String(err) })
+        const denied = code === 'EACCES' || code === 'EPERM'
+        report.failed.push({
+          path: p,
+          message: denied ? `accès refusé : ${p}` : `impossible de vérifier : ${p}`,
+          details: rawMessage(err),
+        })
       }
       continue
     }
@@ -46,7 +57,11 @@ export async function moveToTrash(
       await trashItem(p)
       report.trashed.push(p)
     } catch (err) {
-      report.failed.push({ path: p, message: err instanceof Error ? err.message : String(err) })
+      report.failed.push({
+        path: p,
+        message: 'impossible de déplacer dans la corbeille',
+        details: rawMessage(err),
+      })
     }
   }
   return report

@@ -3,7 +3,7 @@
  *   1) `prefs.tools.<bin>` s'il est exécutable ;
  *   2) `/opt/homebrew/bin/<bin>`, puis `/usr/local/bin/<bin>` ;
  *   3) le shell de login (`login-shell-env.ts`, ARCHI §2.6).
- * `sips` : toujours `/usr/bin/sips` (sauf chemin explicite valide dans les prefs).
+ * `sips` : toujours `/usr/bin/sips` (ARCHI §1.4) ; `prefs.tools.sips` est ignoré.
  * Absence de ffmpeg/ffprobe = mode dégradé (jobs vidéo en `tool_missing`), jamais un crash.
  */
 import { constants } from 'node:fs'
@@ -51,9 +51,6 @@ export async function resolveBinaries(
   const isExec = deps.isExecutable ?? isExecutable
   const tools = (prefs.tools ?? {}) as Partial<Record<BinName, string | undefined>>
   const out: BinPaths = { sips: SIPS_PATH }
-
-  const prefSips = tools.sips
-  if (prefSips && (await isExec(prefSips))) out.sips = prefSips
 
   const missing: LoginShellTool[] = []
   for (const bin of LOOKUP) {

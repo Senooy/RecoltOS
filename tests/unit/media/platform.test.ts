@@ -242,7 +242,7 @@ describe('trash', () => {
     expect(r.trashed).toEqual([a])
     expect(r.missing).toEqual([join(dir, 'absent.jpg')])
     expect(r.failed).toEqual([
-      { path: b, message: 'refusé' },
+      { path: b, message: 'impossible de déplacer dans la corbeille', details: 'Error: refusé' },
       { path: 'relatif.jpg', message: 'chemin absolu attendu' },
     ])
   })
@@ -267,7 +267,9 @@ describe('trash : erreurs de lstat', () => {
       expect(trashed).toEqual([])
       expect(r.failed).toHaveLength(1)
       expect(r.failed[0]!.path).toBe(target)
-      expect(r.failed[0]!.message).toMatch(/EACCES/)
+      expect(r.failed[0]!.message).toBe(`accès refusé : ${target}`)
+      expect(r.failed[0]!.message).not.toMatch(/EACCES|permission denied/)
+      expect(r.failed[0]!.details).toMatch(/EACCES/)
     } finally {
       chmodSync(dir, 0o755)
     }
