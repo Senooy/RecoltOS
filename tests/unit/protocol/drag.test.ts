@@ -8,7 +8,9 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import { describe, expect, it, vi } from 'vitest'
 import {
+  DRAG_ICON_MAX_CHARS,
   DRAG_MAX_ITEMS,
+  PNG_DATA_URL_PREFIX,
   SYSTEM_DRAG_ICON,
   makeDragIcon,
   parseDragPayload,
@@ -52,10 +54,30 @@ describe('parseDragPayload', () => {
     ['vide', { uuids: [] }],
     ['uuid invalide', { uuids: ['../../etc'] }],
     ['pas un objet', 'x'],
-    ['icône non PNG', { uuids: [A], iconDataUrl: 'data:image/webp;base64,AAAA' }],
-    ['icône URL', { uuids: [A], iconDataUrl: 'file:///etc/passwd' }],
+    ['uuids tous invalides', { uuids: ['x', 42, null] }],
+    ['uuids absent', { iconDataUrl: PNG }],
   ])('refuse %s', (_l, raw) => {
     expect(parseDragPayload(raw)).toBeNull()
+  })
+
+  it.each([
+    ['JPEG', 'data:image/jpeg;base64,AAAA'],
+    ['webp', 'data:image/webp;base64,AAAA'],
+    ['URL', 'file:///etc/passwd'],
+    ['trop grande', PNG_DATA_URL_PREFIX + 'A'.repeat(DRAG_ICON_MAX_CHARS)],
+    ['pas une chaîne', 42],
+  ])('icône invalide (%s) : charge conservée, icône ramenée à null', (_l, icon) => {
+    expect(parseDragPayload({ uuids: [A], iconDataUrl: icon })).toEqual({
+      uuids: [A],
+      iconDataUrl: null,
+    })
+  })
+
+  it('écarte les uuids invalides sans abandonner la charge', () => {
+    expect(parseDragPayload({ uuids: [A, 'pas-un-uuid', B, 7] })).toEqual({
+      uuids: [A, B],
+      iconDataUrl: null,
+    })
   })
 
   it('tronque une sélection géante', () => {
@@ -154,6 +176,39 @@ describe('registerDrag', () => {
     const none = setup({ files: [] })
     none.send({ uuids: [A] })
     expect(none.startDrag).not.toHaveBeenCalled()
+  })
+
+  it('icône invalide ou uuid mêlé : startDrag appelé avec l’icône de repli', () => {
+    const fallback = { tag: 'fallback' }
+    let listener: ((e: unknown, p: unknown) => void) | null = null
+    const files = vi.fn(() => ['/lib/items/11/a.webp'])
+    const images = fakeImages({ createFromPath: img('fallback') })
+    registerDrag({
+      ipcMain: {
+        on: vi.fn((_c: string, l: (e: unknown, p: unknown) => void) => {
+          listener = l
+        }),
+        removeListener: vi.fn(),
+      },
+      isAllowedSender: () => true,
+      files,
+      icon: (url) => makeDragIcon(images as never, '/f.png', url),
+    })
+    const startDrag = vi.fn()
+    const send = (p: unknown) => listener!({ senderFrame: { url: 'x' }, sender: { startDrag } }, p)
+    for (const icon of [
+      'data:image/jpeg;base64,AAAA',
+      PNG_DATA_URL_PREFIX + 'A'.repeat(DRAG_ICON_MAX_CHARS),
+    ]) {
+      startDrag.mockClear()
+      send({ uuids: [A], iconDataUrl: icon })
+      expect(startDrag).toHaveBeenCalledTimes(1)
+      expect(startDrag.mock.calls[0]![0]).toMatchObject({ icon: fallback })
+    }
+    startDrag.mockClear()
+    send({ uuids: [A, 'pas-un-uuid'], iconDataUrl: PNG })
+    expect(files).toHaveBeenLastCalledWith([A])
+    expect(startDrag).toHaveBeenCalledTimes(1)
   })
 
   it('une exception de startDrag est journalisée, jamais propagée', () => {

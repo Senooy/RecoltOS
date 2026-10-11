@@ -22,14 +22,14 @@ export const PNG_DATA_URL_PREFIX = 'data:image/png;base64,'
 /** Icône système de repli (NSImageNameMultipleDocuments). */
 export const SYSTEM_DRAG_ICON = 'NSMultipleDocuments'
 
+/**
+ * Charge tolérante : seule la forme (objet, tableau `uuids`) fait échouer la validation. Une icône
+ * invalide (type, taille) est ramenée à `null` et un uuid invalide est écarté, pour que la chaîne
+ * de repli de l'icône (dataURL, `drag-fallback.png`, icône système) reste atteignable.
+ */
 const DragPayload = z.object({
-  uuids: z.array(Uuid).min(1),
-  iconDataUrl: z
-    .string()
-    .max(DRAG_ICON_MAX_CHARS)
-    .refine((s) => s.startsWith(PNG_DATA_URL_PREFIX), 'PNG en dataURL attendu')
-    .optional()
-    .nullable(),
+  uuids: z.array(z.unknown()),
+  iconDataUrl: z.unknown().optional(),
 })
 
 export interface DragRequest {
@@ -37,14 +37,21 @@ export interface DragRequest {
   iconDataUrl: string | null
 }
 
+/** dataURL PNG de taille raisonnable, sinon `null` (makeDragIcon choisit alors le repli). */
+function sanitizeIcon(v: unknown): string | null {
+  if (typeof v !== 'string') return null
+  if (v.length > DRAG_ICON_MAX_CHARS || !v.startsWith(PNG_DATA_URL_PREFIX)) return null
+  return v
+}
+
 /** Valide la charge du canal brut (pas de contrat zod partagé pour les canaux bruts). */
 export function parseDragPayload(raw: unknown): DragRequest | null {
   const r = DragPayload.safeParse(raw)
   if (!r.success) return null
-  return {
-    uuids: [...new Set(r.data.uuids)].slice(0, DRAG_MAX_ITEMS),
-    iconDataUrl: r.data.iconDataUrl ?? null,
-  }
+  const valid = r.data.uuids.filter((u): u is string => Uuid.safeParse(u).success)
+  const uuids = [...new Set(valid)].slice(0, DRAG_MAX_ITEMS)
+  if (uuids.length === 0) return null
+  return { uuids, iconDataUrl: sanitizeIcon(r.data.iconDataUrl) }
 }
 
 /** Sous-ensemble de `nativeImage` utilisé (injecté). */
