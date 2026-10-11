@@ -131,6 +131,9 @@ export async function detectRunning(root: string, deps: LockDeps = {}): Promise<
       if (/gatheros/i.test(comm)) return { running: true, host: lock.host, pid: lock.pid }
     }
   }
+  // Sans `SingletonLock`, ce profil GatherOS n'est pas ouvert (Chromium le crée toujours) : le
+  // contrôle `pgrep` global ne sert qu'à départager un verrou dont le pid a été réutilisé.
+  if (!lock) return { running: false, host: null, pid: null }
   const viaPgrep = await (deps.pgrep ?? (() => isGatherOSRunning()))().catch(() => false)
   return viaPgrep
     ? { running: true, host: lock?.host ?? null, pid: null }
