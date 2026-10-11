@@ -20,6 +20,7 @@ const IMPLEMENTED_DOMAINS: readonly string[] = [
   'items',
   'collections',
   'tags',
+  'search',
 ]
 /** Types de jobs encore en stub (IA : M4). */
 const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']
@@ -61,10 +62,10 @@ describe('registre des handlers IPC', () => {
   })
 
   it('via dispatch, un canal stub renvoie { ok:false, code:not_implemented }', async () => {
-    const r = await dispatch('search.query', { q: 'a' }, {}, { handlers, validateOutput: true })
+    const r = await dispatch('spaces.list', {}, {}, { handlers, validateOutput: true })
     expect(r).toEqual({
       ok: false,
-      error: { code: 'not_implemented', message: "search.query n'est pas encore implémenté" },
+      error: { code: 'not_implemented', message: "spaces.list n'est pas encore implémenté" },
     })
   })
 })

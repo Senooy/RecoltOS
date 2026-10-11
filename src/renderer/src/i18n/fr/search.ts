@@ -1,5 +1,37 @@
 /**
- * Textes du domaine `search`, possédé par WP-22 (ERRATA §F). Ajouter ici les namespaces propres au
- * domaine (tutoiement, typographie FR) ; ne pas redéfinir un namespace de `base.ts`.
+ * Textes du domaine `search` (WP-22) : page Recherche, filtres, chips. Le namespace de base
+ * `search` (DESIGN §5.2) reste dans `base.ts`.
  */
-export const search = {} as const
+export const search = {
+  searchUi: {
+    inputLabel: 'Rechercher dans ta bibliothèque',
+    prev: 'Collections précédentes',
+    next: 'Collections suivantes',
+    removeFilter: (label: string) => `Retirer le filtre ${label}`,
+    filtersActive: (n: number) => `${n} filtre${n > 1 ? 's' : ''} actif${n > 1 ? 's' : ''}`,
+    sources: {
+      x: 'X',
+      instagram: 'Instagram',
+      cosmos: 'Cosmos',
+      web: 'Web',
+      capture: 'Capture',
+      local: 'Fichiers',
+    } as Record<string, string>,
+    kinds: {
+      image: 'Images',
+      video: 'Vidéos',
+      tweet: 'Posts',
+      url: 'Pages',
+    } as Record<string, string>,
+    periodChip: {
+      '7d': '7 derniers jours',
+      '30d': '30 derniers jours',
+      '1y': 'Dernière année',
+    } as Record<string, string>,
+    anyCollection: 'Toutes',
+    tagsPlaceholder: 'Ajouter un tag…',
+    colorChip: (hex: string) => `Couleur ${hex}`,
+    moreTags: (n: number) => `+${n}`,
+    recentLabel: 'Relancer la recherche',
+  },
+} as const

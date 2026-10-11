@@ -12,7 +12,12 @@ export const searchContract = {
       filters: ItemFilters.optional(),
       limit: z.number().int().min(1).max(1000).default(300),
     }),
-    output: z.object({ items: z.array(ItemCard), total: z.number().int().min(0) }),
+    output: z.object({
+      items: z.array(ItemCard),
+      total: z.number().int().min(0),
+      /** Éléments écartés par le filtre de couleur faute de palette (DESIGN §3.5). */
+      noPalette: z.number().int().min(0).default(0),
+    }),
   },
   'search.suggest': {
     input: z.object({ q: z.string().max(200) }),

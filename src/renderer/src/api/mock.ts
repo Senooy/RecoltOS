@@ -159,7 +159,7 @@ function search(q: string): Out<'search.query'> {
         (i.post?.text ?? '').toLocaleLowerCase('fr').includes(needle) ||
         i.source === needle),
   )
-  return { items, total: items.length }
+  return { items, total: items.length, noPalette: 0 }
 }
 
 function handle(channel: string, input: unknown): RpcResult<unknown> {

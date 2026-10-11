@@ -136,7 +136,7 @@ export function tabWhere(tab: LibraryTab): string {
   }
 }
 
-function filterWhere(f: ItemFilters | undefined, params: Record<string, unknown>): string[] {
+export function filterWhere(f: ItemFilters | undefined, params: Record<string, unknown>): string[] {
   if (!f) return []
   const out: string[] = []
   if (f.kinds && f.kinds.length > 0) {
@@ -265,6 +265,18 @@ export function cardRowsByUuid(db: Database.Database, uuids: readonly string[]):
     .all(JSON.stringify(uuids)) as CardRow[]
   const by = new Map(rows.map((r) => [r.uuid, r]))
   return uuids.map((u) => by.get(u)).filter((r): r is CardRow => r !== undefined)
+}
+
+/** Carte(s) par id interne (ordre de la liste fournie). */
+export function cardRowsByIds(db: Database.Database, ids: readonly number[]): CardRow[] {
+  if (ids.length === 0) return []
+  const rows = db
+    .prepare(
+      `SELECT ${CARD_SELECT} FROM ${CARD_FROM} WHERE i.id IN (SELECT value FROM json_each(?))`,
+    )
+    .all(JSON.stringify(ids)) as CardRow[]
+  const by = new Map(rows.map((r) => [r.id, r]))
+  return ids.map((id) => by.get(id)).filter((r): r is CardRow => r !== undefined)
 }
 
 /** « Récemment vus » (palette ⌘K) : `ix_items_viewed`, masqués exclus. */
