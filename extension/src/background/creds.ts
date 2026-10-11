@@ -35,8 +35,14 @@ export function accountFromTwid(twid: string | null): string | null {
 }
 
 export async function getLocal<T>(key: string): Promise<T | undefined> {
-  const got = await api().storage.local.get(key)
-  return got[key] as T | undefined
+  const got: unknown = await api().storage.local.get(key)
+  return (got as Record<string, unknown> | undefined)?.[key] as T | undefined
+}
+
+/** Lecture typée de `storage.session` (une ou plusieurs clés). */
+export async function sessionGet<T extends object>(keys: string | string[]): Promise<Partial<T>> {
+  const got: unknown = await api().storage.session.get(keys)
+  return got ?? {}
 }
 
 export async function setLocal(key: string, value: unknown): Promise<void> {

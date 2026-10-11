@@ -10,8 +10,8 @@ export async function maybeReload(
   onStale: (p: { extVersion: string; bundledExtVersion: string }) => void,
 ): Promise<'reloaded' | 'stale'> {
   const a = api()
-  const got = await a.storage.local.get('reloadAttemptedFor')
-  if (got.reloadAttemptedFor !== bundled) {
+  const got: unknown = await a.storage.local.get('reloadAttemptedFor')
+  if ((got as { reloadAttemptedFor?: string } | undefined)?.reloadAttemptedFor !== bundled) {
     await a.storage.local.set({ reloadAttemptedFor: bundled })
     a.runtime.reload()
     return 'reloaded'

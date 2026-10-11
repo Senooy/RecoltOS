@@ -111,3 +111,33 @@ test('menus contextuels : collections reçues de l’app', async () => {
   expect(Array.isArray(st.collections)).toBe(true)
   expect(st.bridge).toBe('app_connected')
 })
+
+test('sync en arrière-plan sans onglet : cookies de session, CSRF et Origin réécrit (faux serveur)', async () => {
+  const url = srv.base
+  await ctx.addCookies([
+    { name: 'ct0', value: 'csrf-test', url, sameSite: 'Lax' },
+    // SameSite=None exige https : en http local, Lax (le comportement Lax est le plus strict).
+    { name: 'auth_token', value: 'session-test', url, sameSite: 'Lax' },
+    { name: 'csrftoken', value: 'csrf-ig', url, sameSite: 'Lax' },
+    { name: 'sessionid', value: 'session-ig', url, sameSite: 'Lax' },
+  ])
+  const pagesBefore = ctx.pages().length
+  const x = await ev<{ kind: string; json: { data?: unknown } }>(`.fetchPage('x', null)`)
+  expect(x.kind).toBe('page')
+  const bm = srv.log.find((l) => l.path.includes('/Bookmarks?'))!
+  expect(bm.csrf).toBe('csrf-test')
+  expect(bm.cookie).toContain('ct0=csrf-test')
+  expect(bm.cookie).toContain('auth_token=session-test')
+  expect(bm.origin).toBe(srv.base)
+  // queryId découvert dans le bundle factice (accueil puis main.js), depuis l'arrière-plan.
+  expect(bm.path).toContain('/BoOkMaRkSqUeRy0001/Bookmarks')
+  const ig = await ev<{ kind: string }>(`.fetchPage('instagram', 'QVFD')`)
+  expect(ig.kind).toBe('page')
+  const igLog = srv.log.find((l) =>
+    l.path.startsWith('/instagram/api/v1/feed/saved/posts/?max_id='),
+  )!
+  expect(igLog.igCsrf).toBe('csrf-ig')
+  expect(igLog.cookie).toContain('sessionid=session-ig')
+  // Aucun onglet ouvert par la sync.
+  expect(ctx.pages().length).toBe(pagesBefore)
+})

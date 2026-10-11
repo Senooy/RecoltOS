@@ -9,13 +9,16 @@ import type { SyncStateMessage } from '../../../src/shared/bridge/sync'
 import { api, TARGET } from '../lib/api'
 import { platformOfUrl, TEST_BASE } from '../lib/endpoints'
 import type { PopupRequest, PopupState } from '../lib/popup-protocol'
-import { getLocal, setLocal } from './creds'
+import { getLocal, sessionGet, setLocal } from './creds'
 import { parseMenuId, setupMenus } from './menus'
 import { NativeBridge } from './native'
 import { readPageMeta, showToast } from './page-functions'
 import { maybeReload } from './reload-guard'
 import { saveFromClick, type MenuInfo, type SaveDeps, type TabLike } from './save'
 import { helloPayload, platformsState, SESSION_COOKIES } from './state'
+import { ensureHeaderRules } from './sync/dnr'
+import { backgroundFetch } from './sync/fetcher'
+import { clientFor } from './sync/platforms'
 import { SyncRunner } from './sync/runner'
 
 const a = api()
@@ -120,7 +123,7 @@ async function popupState(): Promise<PopupState> {
   if (tab?.id !== undefined && /^https?:/.test(tab.url ?? '')) {
     ogImage = (await exec(tab.id, readPageMeta, []).catch(() => null))?.ogImage ?? null
   }
-  const pending = await a.storage.session.get('pendingSave')
+  const pending = await sessionGet<{ pendingSave: unknown }>('pendingSave')
   return {
     bridge: bridge.state,
     stale,
@@ -146,8 +149,9 @@ async function onPopup(msg: PopupRequest): Promise<unknown> {
       return popupState()
     case 'popup:save': {
       await rememberCollection(msg.collectionId)
-      const pending: { pendingSave?: { info: MenuInfo; tab: TabLike } } =
-        await a.storage.session.get('pendingSave')
+      const pending = await sessionGet<{ pendingSave: { info: MenuInfo; tab: TabLike } }>(
+        'pendingSave',
+      )
       if (pending.pendingSave) {
         await a.storage.session.remove('pendingSave')
         return saveFromClick(saveDeps, pending.pendingSave.info, pending.pendingSave.tab, {
@@ -279,7 +283,7 @@ bridge.on('collections.changed', onCollections)
 bridge.on('sync.state', (m) => {
   syncState = (m.payload as PayloadOf<'sync.state'>).sources
 })
-bridge.on('sync.run', (m) => runner.run(m.payload as PayloadOf<'sync.run'>))
+bridge.on('sync.run', (m) => void runner.run(m.payload as PayloadOf<'sync.run'>))
 bridge.on('sync.cancel', (m) => runner.cancel((m.payload as PayloadOf<'sync.cancel'>).runId))
 bridge.on('item.refresh', (m) => void runner.refreshItem(m.payload as PayloadOf<'item.refresh'>))
 bridge.on('media.fetch', (m) => void runner.proxyMedia(m.payload as PayloadOf<'media.fetch'>))
@@ -304,5 +308,9 @@ if (TEST_BASE) {
       ),
     menuClick: onMenuClick,
     state: () => popupState(),
+    fetchPage: async (p: 'x' | 'instagram' | 'cosmos', cursor: string | null) => {
+      await ensureHeaderRules()
+      return clientFor(p).fetchPage(cursor, backgroundFetch)
+    },
   }
 }
