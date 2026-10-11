@@ -18,6 +18,7 @@
     "build:app": "electron-vite build",
     "build:host": "tsx --tsconfig tsconfig.node.json scripts/build-host.mts",
     "build:ext": "tsx --tsconfig tsconfig.node.json scripts/build-ext.mts",
+    "gen:bridge-schema": "tsx --tsconfig tsconfig.node.json scripts/gen-bridge-schema.mts",
     "preview": "electron-vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings=0",

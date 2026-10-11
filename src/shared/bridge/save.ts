@@ -1,5 +1,5 @@
 /**
- * `SaveRequest` (SYNC §6.2) en zod. Stub typé créé par WP-00, possédé ensuite par WP-51.
+ * `SaveRequest` (SYNC §6.2), accusé, envoi découpé et collections. Possédé par WP-51.
  */
 import { z } from 'zod'
 import { MAX_INLINE_BASE64_CHARS, MAX_UPLOAD_BYTES } from './constants'
@@ -57,7 +57,46 @@ export type SaveRequest = z.output<typeof SaveRequest>
 
 export const SaveAck = z.object({
   status: z.enum(['saved', 'duplicate', 'queued', 'error']),
+  /** `uuid` de l'élément créé ou retrouvé. */
   saveId: z.string().optional(),
   collectionName: z.string().optional(),
   error: z.string().optional(),
+})
+export type SaveAck = z.output<typeof SaveAck>
+
+/** Morceau binaire (base64) : envoi d'un fichier > 8 Mio (`upload.id`) ou proxy `media.fetch` (`jobId`). */
+export const MediaChunkMessage = z.object({
+  jobId: z.string().min(1).max(64),
+  seq: z.number().int().min(0),
+  last: z.boolean(),
+  mime: z.string().max(100).optional(),
+  data: z.string().max(MAX_INLINE_BASE64_CHARS),
+  /** Échec côté extension (proxy) : plus aucun morceau ne suivra. */
+  error: z.string().max(500).optional(),
+})
+export type MediaChunkMessage = z.output<typeof MediaChunkMessage>
+
+export const MediaFetchMessage = z.object({
+  jobId: z.string().min(1).max(64),
+  url: z.url().max(8192),
+  referer: z.string().max(8192).optional(),
+})
+
+export const BridgeCollection = z.object({
+  id: z.string(),
+  name: z.string(),
+  color: z.string().nullable(),
+  parentId: z.string().nullable(),
+  count: z.number().int(),
+})
+export type BridgeCollection = z.output<typeof BridgeCollection>
+
+export const CollectionsListResult = z.object({
+  collections: z.array(BridgeCollection).max(2000),
+  /** `collection.create` : identifiant de la collection créée. */
+  createdId: z.string().optional(),
+})
+export const CollectionCreateMessage = z.object({
+  name: z.string().trim().min(1).max(200),
+  color: z.string().max(20).optional(),
 })

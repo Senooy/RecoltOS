@@ -1,0 +1,1489 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "recoltos:bridge/v1",
+  "$defs": {
+    "Envelope": {
+      "type": "object",
+      "properties": {
+        "v": {
+          "type": "number",
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "re": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "type": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "ts": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "payload": {}
+      },
+      "required": ["v", "id", "type", "payload"]
+    },
+    "Platform": {
+      "type": "string",
+      "enum": ["x", "instagram", "cosmos"]
+    },
+    "Trigger": {
+      "type": "string",
+      "enum": ["schedule", "hint", "manual", "toggle", "import"]
+    },
+    "SaveRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["image", "video", "link", "page", "post"]
+        },
+        "pageUrl": {
+          "type": "string",
+          "maxLength": 8192,
+          "format": "uri"
+        },
+        "pageTitle": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "srcUrl": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "linkUrl": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "inlineMedia": {
+          "type": "object",
+          "properties": {
+            "mime": {
+              "type": "string"
+            },
+            "dataBase64": {
+              "type": "string",
+              "maxLength": 11184812
+            }
+          },
+          "required": ["mime", "dataBase64"]
+        },
+        "upload": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "mime": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 209715200
+            }
+          },
+          "required": ["id", "mime", "size"]
+        },
+        "screenshot": {
+          "type": "object",
+          "properties": {
+            "mime": {
+              "type": "string",
+              "enum": ["image/jpeg", "image/png"]
+            },
+            "dataBase64": {
+              "type": "string",
+              "maxLength": 11184812
+            },
+            "width": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "height": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "devicePixelRatio": {
+              "type": "number"
+            }
+          },
+          "required": ["mime", "dataBase64", "width", "height"]
+        },
+        "pageMeta": {
+          "type": "object",
+          "properties": {
+            "ogImage": {
+              "type": "string"
+            },
+            "ogTitle": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "siteName": {
+              "type": "string"
+            },
+            "favicon": {
+              "type": "string"
+            }
+          }
+        },
+        "post": {
+          "type": "object",
+          "properties": {
+            "platform": {
+              "type": "string",
+              "enum": ["x", "instagram", "cosmos"]
+            },
+            "externalId": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "raw": {},
+            "dom": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            },
+            "partial": {
+              "type": "boolean"
+            }
+          },
+          "required": ["platform", "externalId"]
+        },
+        "collectionId": {
+          "type": ["string", "null"]
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 5000
+        }
+      },
+      "required": ["kind", "pageUrl"],
+      "additionalProperties": false,
+      "not": {
+        "required": ["inlineMedia", "upload"]
+      }
+    },
+    "SyncRun": {
+      "type": "object",
+      "properties": {
+        "runId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["x", "instagram", "cosmos"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["incremental", "backfill", "deep"]
+        },
+        "trigger": {
+          "type": "string",
+          "enum": ["schedule", "hint", "manual", "toggle", "import"]
+        },
+        "startCursor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maxPages": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "hintTabId": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "allowBackgroundTab": {
+          "type": "boolean"
+        }
+      },
+      "required": ["runId", "platform", "mode", "trigger", "maxPages"]
+    },
+    "SyncPage": {
+      "type": "object",
+      "properties": {
+        "runId": {
+          "type": ["string", "null"]
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["x", "instagram", "cosmos"]
+        },
+        "pageIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "origin": {
+          "type": "string",
+          "enum": ["intercept", "replay", "assist"]
+        },
+        "status": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "headers": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "json": {},
+        "target": {
+          "type": "string",
+          "enum": ["background", "tab", "created_tab"]
+        }
+      },
+      "required": ["runId", "platform", "pageIndex", "origin", "status", "json"]
+    },
+    "SyncAck": {
+      "type": "object",
+      "properties": {
+        "runId": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string",
+          "enum": ["continue", "stop"]
+        },
+        "nextCursor": {
+          "type": ["string", "null"]
+        },
+        "delayMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "parsed": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "new": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "known": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "dismissed": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "auth_required",
+            "rate_limited",
+            "api_changed",
+            "network",
+            "waiting_for_tab",
+            "aborted",
+            "blocked",
+            "permissions"
+          ]
+        }
+      },
+      "required": ["runId", "decision"]
+    },
+    "payloads": {
+      "host.hello": {
+        "type": "object",
+        "properties": {
+          "protocol": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "browser": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "origin": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "hostVersion": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "pid": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["protocol", "browser", "origin", "hostVersion", "pid"]
+      },
+      "app.status": {
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          }
+        },
+        "required": ["connected"]
+      },
+      "hello": {
+        "type": "object",
+        "properties": {
+          "extVersion": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "protocol": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "target": {
+            "type": "string",
+            "enum": ["chromium", "firefox"]
+          },
+          "browser": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "version": {
+                "type": "string",
+                "maxLength": 40
+              }
+            },
+            "required": ["name", "version"]
+          },
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "platforms": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "object",
+                "properties": {
+                  "loggedIn": {
+                    "type": "boolean"
+                  },
+                  "accountId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "handle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "permission": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["loggedIn"]
+              },
+              "instagram": {
+                "type": "object",
+                "properties": {
+                  "loggedIn": {
+                    "type": "boolean"
+                  },
+                  "accountId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "handle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "permission": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["loggedIn"]
+              },
+              "cosmos": {
+                "type": "object",
+                "properties": {
+                  "loggedIn": {
+                    "type": "boolean"
+                  },
+                  "accountId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "handle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "permission": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["loggedIn"]
+              }
+            },
+            "required": ["x", "instagram", "cosmos"]
+          },
+          "openTabs": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "instagram": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "cosmos": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": ["x", "instagram", "cosmos"]
+          }
+        },
+        "required": [
+          "extVersion",
+          "protocol",
+          "target",
+          "browser",
+          "profileId",
+          "platforms",
+          "openTabs"
+        ]
+      },
+      "hello.ack": {
+        "type": "object",
+        "properties": {
+          "appVersion": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "protocol": {
+            "type": "number",
+            "const": 1
+          },
+          "needsReload": {
+            "type": "boolean"
+          },
+          "bundledExtVersion": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "sync": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "boolean"
+                  },
+                  "instagram": {
+                    "type": "boolean"
+                  },
+                  "cosmos": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["x", "instagram", "cosmos"]
+              },
+              "allowBackgroundTab": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "boolean"
+                  },
+                  "instagram": {
+                    "type": "boolean"
+                  },
+                  "cosmos": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["x", "instagram", "cosmos"]
+              },
+              "intervalsMin": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "instagram": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "cosmos": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": ["x", "instagram", "cosmos"]
+              },
+              "maxPages": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50
+                  },
+                  "instagram": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50
+                  },
+                  "cosmos": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50
+                  }
+                },
+                "required": ["x", "instagram", "cosmos"]
+              },
+              "wantedAuthors": {
+                "maxItems": 500,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "platform": {
+                      "type": "string",
+                      "enum": ["x", "instagram", "cosmos"]
+                    },
+                    "handle": {
+                      "type": "string",
+                      "maxLength": 100
+                    }
+                  },
+                  "required": ["platform", "handle"]
+                }
+              }
+            },
+            "required": ["sync", "allowBackgroundTab", "intervalsMin", "maxPages", "wantedAuthors"]
+          }
+        },
+        "required": ["appVersion", "protocol", "needsReload", "bundledExtVersion", "settings"]
+      },
+      "ext.status": {
+        "type": "object",
+        "properties": {
+          "platforms": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "object",
+                "properties": {
+                  "loggedIn": {
+                    "type": "boolean"
+                  },
+                  "accountId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "handle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "permission": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["loggedIn"]
+              },
+              "instagram": {
+                "type": "object",
+                "properties": {
+                  "loggedIn": {
+                    "type": "boolean"
+                  },
+                  "accountId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "handle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "permission": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["loggedIn"]
+              },
+              "cosmos": {
+                "type": "object",
+                "properties": {
+                  "loggedIn": {
+                    "type": "boolean"
+                  },
+                  "accountId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 64
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "handle": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "permission": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["loggedIn"]
+              }
+            },
+            "required": ["x", "instagram", "cosmos"]
+          }
+        },
+        "required": ["platforms"]
+      },
+      "save.create": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["image", "video", "link", "page", "post"]
+          },
+          "pageUrl": {
+            "type": "string",
+            "maxLength": 8192,
+            "format": "uri"
+          },
+          "pageTitle": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "srcUrl": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "linkUrl": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "inlineMedia": {
+            "type": "object",
+            "properties": {
+              "mime": {
+                "type": "string"
+              },
+              "dataBase64": {
+                "type": "string",
+                "maxLength": 11184812
+              }
+            },
+            "required": ["mime", "dataBase64"]
+          },
+          "upload": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "mime": {
+                "type": "string"
+              },
+              "size": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 209715200
+              }
+            },
+            "required": ["id", "mime", "size"]
+          },
+          "screenshot": {
+            "type": "object",
+            "properties": {
+              "mime": {
+                "type": "string",
+                "enum": ["image/jpeg", "image/png"]
+              },
+              "dataBase64": {
+                "type": "string",
+                "maxLength": 11184812
+              },
+              "width": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "height": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "devicePixelRatio": {
+                "type": "number"
+              }
+            },
+            "required": ["mime", "dataBase64", "width", "height"]
+          },
+          "pageMeta": {
+            "type": "object",
+            "properties": {
+              "ogImage": {
+                "type": "string"
+              },
+              "ogTitle": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 4000
+              },
+              "siteName": {
+                "type": "string"
+              },
+              "favicon": {
+                "type": "string"
+              }
+            }
+          },
+          "post": {
+            "type": "object",
+            "properties": {
+              "platform": {
+                "type": "string",
+                "enum": ["x", "instagram", "cosmos"]
+              },
+              "externalId": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "raw": {},
+              "dom": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "partial": {
+                "type": "boolean"
+              }
+            },
+            "required": ["platform", "externalId"]
+          },
+          "collectionId": {
+            "type": ["string", "null"]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 5000
+          }
+        },
+        "required": ["kind", "pageUrl"],
+        "additionalProperties": false
+      },
+      "save.ack": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["saved", "duplicate", "queued", "error"]
+          },
+          "saveId": {
+            "type": "string"
+          },
+          "collectionName": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": ["status"]
+      },
+      "sync.page": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": ["string", "null"]
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "pageIndex": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "origin": {
+            "type": "string",
+            "enum": ["intercept", "replay", "assist"]
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "headers": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "json": {},
+          "target": {
+            "type": "string",
+            "enum": ["background", "tab", "created_tab"]
+          }
+        },
+        "required": ["runId", "platform", "pageIndex", "origin", "status", "json"]
+      },
+      "sync.run": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["incremental", "backfill", "deep"]
+          },
+          "trigger": {
+            "type": "string",
+            "enum": ["schedule", "hint", "manual", "toggle", "import"]
+          },
+          "startCursor": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxPages": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "hintTabId": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allowBackgroundTab": {
+            "type": "boolean"
+          }
+        },
+        "required": ["runId", "platform", "mode", "trigger", "maxPages"]
+      },
+      "sync.ack": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["continue", "stop"]
+          },
+          "nextCursor": {
+            "type": ["string", "null"]
+          },
+          "delayMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "parsed": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "new": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "known": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "dismissed": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "auth_required",
+              "rate_limited",
+              "api_changed",
+              "network",
+              "waiting_for_tab",
+              "aborted",
+              "blocked",
+              "permissions"
+            ]
+          }
+        },
+        "required": ["runId", "decision"]
+      },
+      "sync.hint": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "reason": {
+            "type": "string",
+            "const": "native_save"
+          },
+          "tabId": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["platform", "reason"]
+      },
+      "sync.request": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "trigger": {
+            "default": "manual",
+            "type": "string",
+            "enum": ["manual", "schedule"]
+          }
+        }
+      },
+      "sync.finished": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "auth_required",
+              "rate_limited",
+              "api_changed",
+              "network",
+              "waiting_for_tab",
+              "aborted",
+              "blocked",
+              "permissions"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "resetAt": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "pages": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "target": {
+            "type": "string",
+            "enum": ["background", "tab", "created_tab"]
+          }
+        },
+        "required": ["runId", "status"]
+      },
+      "sync.cancel": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          }
+        },
+        "required": ["runId"]
+      },
+      "capture.passive": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "op": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "json": {},
+          "tabUrl": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        },
+        "required": ["platform", "op", "status", "json"]
+      },
+      "item.refresh": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "externalId": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "required": ["platform", "externalId"]
+      },
+      "item.data": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "externalId": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "status": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "json": {}
+        },
+        "required": ["platform", "externalId", "json"]
+      },
+      "media.fetch": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 8192,
+            "format": "uri"
+          },
+          "referer": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        },
+        "required": ["jobId", "url"]
+      },
+      "media.chunk": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "mime": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "data": {
+            "type": "string",
+            "maxLength": 11184812
+          },
+          "error": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": ["jobId", "seq", "last", "data"]
+      },
+      "author.seen": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["x", "instagram", "cosmos"]
+          },
+          "handle": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "avatarUrl": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": ["platform", "handle"]
+      },
+      "authors.wanted": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "platform": {
+                  "type": "string",
+                  "enum": ["x", "instagram", "cosmos"]
+                },
+                "handle": {
+                  "type": "string",
+                  "maxLength": 100
+                }
+              },
+              "required": ["platform", "handle"]
+            }
+          }
+        },
+        "required": ["authors"]
+      },
+      "ext.stale": {
+        "type": "object",
+        "properties": {
+          "extVersion": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "bundledExtVersion": {
+            "type": "string",
+            "maxLength": 20
+          }
+        },
+        "required": ["extVersion", "bundledExtVersion"]
+      },
+      "collections.list": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {}
+      },
+      "collections.list.result": {
+        "type": "object",
+        "properties": {
+          "collections": {
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": ["string", "null"]
+                },
+                "parentId": {
+                  "type": ["string", "null"]
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": ["id", "name", "color", "parentId", "count"]
+            }
+          },
+          "createdId": {
+            "type": "string"
+          }
+        },
+        "required": ["collections"]
+      },
+      "collections.changed": {
+        "type": "object",
+        "properties": {
+          "collections": {
+            "maxItems": 2000,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": ["string", "null"]
+                },
+                "parentId": {
+                  "type": ["string", "null"]
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": ["id", "name", "color", "parentId", "count"]
+            }
+          },
+          "createdId": {
+            "type": "string"
+          }
+        },
+        "required": ["collections"]
+      },
+      "collection.create": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 20
+          }
+        },
+        "required": ["name"]
+      },
+      "ping": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {}
+      },
+      "pong": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": {}
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "APP_NOT_RUNNING",
+              "PROTOCOL_MISMATCH",
+              "MESSAGE_TOO_LARGE",
+              "VALIDATION",
+              "UNSUPPORTED",
+              "INTERNAL"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "appProtocol": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "type": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "required": ["code"]
+      }
+    }
+  }
+}
