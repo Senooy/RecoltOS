@@ -10,12 +10,23 @@ une case n'est cochée que si le comportement a été vu, jamais déduit.
 
 ## 1. Capture d'écran (M3, SPACES §8.2)
 
+Préparation (une fois) : `RECOLTOS_SIGN_IDENTITY="RecoltOS Local" pnpm run pack` puis
+`pnpm run app:install`, lancer `/Applications/RecoltOS.app`, faire ⌘⇧S : macOS affiche l'invite
+« Enregistrement de l'écran » (ou le guide RecoltOS s'ouvre) → Réglages Système › Confidentialité et
+sécurité › Enregistrement de l'écran et de l'audio système → activer **RecoltOS** → « Relancer
+RecoltOS ». Pour recommencer à zéro : `tccutil reset ScreenCapture com.recoltos.app`.
+
 - [ ] ⌘⇧S global déclenche la capture, app au premier plan et en arrière-plan.
 - [ ] Mode région : sélection à la souris, Échap annule, l'élément apparaît dans la bibliothèque.
 - [ ] Dossier de dépôt : choisir le Bureau déclenche l'invite d'accès ; le fichier PNG y est écrit.
 - [ ] L'invite « Enregistrement d'écran » n'apparaît **qu'une fois** ; elle ne revient pas après un second build signé avec la même identité.
 - [ ] Raccourci modifié à chaud ; avec GatherOS ouvert, le message d'erreur de conflit est en français.
 - [ ] Raccourci sur une lettre en AZERTY : le libellé affiché correspond à la touche réellement pressée.
+- [ ] Toutes fenêtres fermées (⌘W) : ⌘⇧S capture toujours ; la notification « Capture ajoutée » est cliquable et rouvre l'élément dans une fenêtre recréée.
+- [ ] ⌃ pendant la sélection : l'image est prise depuis le presse-papiers.
+- [ ] Capture d'une image déjà présente : « Déjà dans la bibliothèque ».
+- [ ] Réglages › Capture : « Enregistrement de l'écran : Autorisé » ; le guide ne signale pas de signature ad hoc.
+- [ ] « Ouvrir avec » depuis le Finder (1 puis N fichiers), dépôt sur l'icône du Dock app fermée.
 
 ## 2. Extension et synchronisation (M5, SYNC §8)
 

@@ -43,8 +43,8 @@ export const GRID_GAP = 8
 export const GRID_PAD_X = 18
 export const OVERSCAN = 800
 /** Cascade de réapparition : décalage par carte (ordre de lecture) et durée du fondu. */
-export const CASCADE_STEP_MS = 28
-export const CASCADE_MS = 220
+export const CASCADE_STEP_MS = 40
+export const CASCADE_MS = 240
 
 function useWidth(ref: RefObject<HTMLElement | null>): number {
   const [w, setW] = useState(0)

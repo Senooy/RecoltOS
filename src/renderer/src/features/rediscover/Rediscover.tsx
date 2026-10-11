@@ -79,6 +79,13 @@ function motionOff(): boolean {
   return isReducedMotion() || document.documentElement.dataset.e2e === '1'
 }
 
+/** Image fixe de la carte (une vidéo n'a jamais son original dans un `<img>`). */
+function stillSrc(c: ItemCard): string | undefined {
+  return c.kind === 'video'
+    ? mediaSrc(c.largeUrl ?? c.posterUrl ?? c.thumbUrl)
+    : (cardLargeSrc(c) ?? mediaSrc(c.posterUrl))
+}
+
 function cardSize(c: ItemCard): { w: number; h: number } {
   if (c.kind === 'tweet') return { w: 400, h: 0 }
   const r = c.width && c.height ? c.width / c.height : 1
@@ -96,8 +103,12 @@ function CardFace({ card, top }: { card: ItemCard; top: boolean }) {
   if (card.kind === 'tweet') {
     return <TweetCard card={card} variant="overlay" className="rd-tweet-only w-[400px]" />
   }
-  const video = card.kind === 'video' && top ? mediaSrc(card.previewUrl) : undefined
-  const img = cardLargeSrc(card) ?? mediaSrc(card.posterUrl)
+  // Aperçu vidéo en boucle (hors e2e : rendu déterministe des références visuelles).
+  const video =
+    card.kind === 'video' && top && document.documentElement.dataset.e2e !== '1'
+      ? mediaSrc(card.previewUrl)
+      : undefined
+  const img = stillSrc(card)
   return (
     <div
       className="rd-card-media"
@@ -257,7 +268,7 @@ export default function Rediscover() {
       })
     }
     for (const c of cards.slice(index + 1, index + 4)) {
-      const src = cardLargeSrc(c)
+      const src = stillSrc(c)
       if (src) new Image().src = src
     }
   }, [index, cards, total, load])

@@ -67,6 +67,7 @@ test.describe('Redécouvrir', () => {
           ).n,
       )
       .toBeGreaterThan(0)
+    await expect(page.locator(t('rd-counter'))).toHaveText(/^3 \//)
 
     // Glisser à la souris vers la droite = garder
     const c = await topUuid(page)
@@ -79,6 +80,7 @@ test.describe('Redécouvrir', () => {
     await expect(page.locator(`${t('rd-target-keep')} .rd-target`)).toHaveClass(/is-active/)
     await page.mouse.up()
     await expect.poll(() => row(c).view_count).toBe(1)
+    await expect(page.locator(t('rd-counter'))).toHaveText(/^4 \//)
 
     // Relâchée près du centre : rien ne change
     const d = await topUuid(page)
