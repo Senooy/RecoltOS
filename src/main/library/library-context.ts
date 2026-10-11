@@ -26,6 +26,13 @@ export interface LibraryContext {
  *   chaque bascule, repli ou `reopen()` réussi (le gestionnaire les appelle APRÈS `afterOpen`, dans
  *   l'ordre inverse d'enregistrement). Au démarrage (`open()`), seul `afterOpen` est appelé : il
  *   démarre les workers et la file. Les trois doivent donc être idempotents.
+ *
+ * ATTENTION : ne mémorisez JAMAIS `ctx.db` ni `ctx.repos` (ni un statement préparé) au-delà de
+ * l'appel ; relisez `requireLibrary()` à chaque usage. Après un `closeForReplace` annulé
+ * (`wal_not_empty`), le gestionnaire remplace `ctx.db` et `ctx.repos` par une nouvelle connexion
+ * (l'objet `ctx` reste le même) puis rappelle `afterOpen(ctx)` AVANT `startWorkers`/`resumeJobs` :
+ * un `afterOpen` doit donc pouvoir être rappelé pour la même bibliothèque et remplacer ce qu'il avait
+ * gardé. Une connexion mémorisée avant ce rappel est fermée.
  */
 export interface LibraryLifecycle extends CloseHooks {
   afterOpen?(ctx: LibraryContext): void | Promise<void>

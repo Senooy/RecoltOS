@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { AppError } from '../../../src/shared/errors'
 import { events } from '../../../src/shared/ipc'
 import {
   getActiveLibrary,
@@ -13,6 +14,7 @@ import {
 import {
   createLibraryManager,
   isSyncedFolder,
+  toAppError,
   type LibraryManager,
   type LibraryManagerDeps,
 } from '../../../src/main/library/library-manager'
@@ -494,6 +496,137 @@ describe('création annulée, réouverture impossible, chemin non dossier', () =
     off()
     expect(getActiveLibrary()).toBeNull()
     expect(m.active()).toBeNull()
+    reader.exec('COMMIT')
+    reader.close()
+  })
+})
+
+describe('erreurs système et SQLite converties en AppError français', () => {
+  const asRoot = process.getuid?.() === 0
+  const failure = async (p: Promise<unknown>): Promise<AppError> => {
+    try {
+      await p
+    } catch (e) {
+      return e as AppError
+    }
+    throw new Error('aucune erreur levée')
+  }
+  const frenchIo = { code: 'io', message: 'Pas le droit d’écrire dans ce dossier.' }
+
+  it.skipIf(asRoot)('create dans un dossier en lecture seule : io, pas EACCES', async () => {
+    const m = make()
+    await m.open()
+    const ro = path.join(base, 'ro')
+    fs.mkdirSync(ro)
+    fs.chmodSync(ro, 0o500)
+    try {
+      const err = await failure(m.create({ name: 'X', path: path.join(ro, 'lib') }))
+      expect(err).toBeInstanceOf(AppError)
+      expect(err).toMatchObject(frenchIo)
+      expect((err.details as { code: string }).code).toMatch(/^E(ACCES|PERM)$/)
+      expect(m.list().libraries).toHaveLength(1)
+      expect(requireLibrary().id).toBe('default')
+    } finally {
+      fs.chmodSync(ro, 0o700)
+    }
+  })
+
+  it.skipIf(asRoot)('create sur un dossier illisible : io', async () => {
+    const m = make()
+    await m.open()
+    const locked = path.join(base, 'locked')
+    fs.mkdirSync(locked)
+    fs.chmodSync(locked, 0o000)
+    try {
+      await expect(m.create({ name: 'X', path: locked })).rejects.toMatchObject(frenchIo)
+    } finally {
+      fs.chmodSync(locked, 0o700)
+    }
+  })
+
+  it('addExisting sur un faux recolt.db : library_unavailable, entrée retirée du registre', async () => {
+    const m = make()
+    await m.open()
+    const before = m.registry().libraries
+    const fake = path.join(base, 'faux')
+    fs.mkdirSync(fake)
+    fs.writeFileSync(path.join(fake, 'recolt.db'), 'ceci n’est pas une base SQLite'.repeat(200))
+    for (let i = 0; i < 2; i++) {
+      const err = await failure(m.addExisting(fake))
+      expect(err).toBeInstanceOf(AppError)
+      expect(err).toMatchObject({
+        code: 'library_unavailable',
+        message: 'Ce fichier recolt.db est illisible ou abîmé.',
+      })
+      expect((err.details as { code: string }).code).toMatch(/^SQLITE_/)
+      expect(m.registry().libraries).toEqual(before)
+      expect(readRegistry().libraries).toHaveLength(1)
+    }
+    expect(requireLibrary().id).toBe('default')
+  })
+
+  it('addExisting d’une base de version future : entrée retirée, bibliothèque active inchangée', async () => {
+    const m = make()
+    await m.open()
+    const before = m.registry().libraries
+    const future = path.join(base, 'futur')
+    fs.mkdirSync(future)
+    const db = new Database(path.join(future, 'recolt.db'))
+    db.pragma('user_version = 99')
+    db.close()
+    await expect(m.addExisting(future)).rejects.toMatchObject({ code: 'library_unavailable' })
+    expect(m.registry().libraries).toEqual(before)
+    expect(m.list().libraries).toHaveLength(1)
+  })
+
+  it('addExisting d’une entrée déjà au registre : échec sans la retirer', async () => {
+    const m = make()
+    await m.open()
+    const dir = path.join(base, 'ext')
+    const lib = await m.create({ name: 'Ext', path: dir })
+    await m.switch('default')
+    fs.writeFileSync(path.join(dir, 'recolt.db'), 'x'.repeat(4096))
+    await expect(m.addExisting(dir)).rejects.toMatchObject({ code: 'library_unavailable' })
+    expect(m.registry().libraries.map((l) => l.id)).toContain(lib.id)
+  })
+
+  it('toAppError : codes système, SQLite et inconnus', () => {
+    const sys = (code: string) => Object.assign(new Error(`${code}: boom`), { code })
+    expect(toAppError(sys('EROFS'))).toMatchObject({ code: 'io' })
+    expect(toAppError(sys('ENOSPC'))).toMatchObject({ code: 'io' })
+    expect((toAppError(sys('ENOSPC')) as AppError).message).toMatch(/place/)
+    expect(toAppError(sys('SQLITE_CORRUPT'))).toMatchObject({ code: 'library_unavailable' })
+    expect(toAppError(sys('SQLITE_BUSY'))).toMatchObject({ code: 'busy' })
+    expect(toAppError(sys('EMFILE'))).toMatchObject({ code: 'io' })
+    const plain = new Error('boom')
+    expect(toAppError(plain)).toBe(plain)
+    const app = new AppError('conflict', 'x')
+    expect(toAppError(app)).toBe(app)
+  })
+})
+
+describe('wal_not_empty : le contexte et les domaines reçoivent la nouvelle connexion', () => {
+  it('un afterOpen qui garde repos retrouve une connexion ouverte avant startWorkers', async () => {
+    let kept: { repos: { items: { countLive(): number } }; db: { open: boolean } } | undefined
+    const seenAtStart: boolean[] = []
+    registerLibraryLifecycle('jobs', {
+      afterOpen: (ctx) => {
+        kept = { repos: ctx.repos, db: ctx.db }
+      },
+      startWorkers: () => void seenAtStart.push(requireLibrary().db.open && kept!.db.open),
+      resumeJobs: () => void seenAtStart.push(kept!.repos.items.countLive() === 5),
+    })
+    const m = make()
+    const ctx = await m.open()
+    for (let i = 0; i < 5; i++) ctx.repos.items.insert({ kind: 'image' })
+    const reader = new Database(ctx.paths.db)
+    reader.exec('BEGIN')
+    reader.prepare('SELECT count(*) FROM items').get()
+    await expect(m.closeForReplace()).rejects.toMatchObject({ code: 'wal_not_empty' })
+    expect(requireLibrary().db.open).toBe(true)
+    expect(kept!.db.open).toBe(true)
+    expect(kept!.repos.items.countLive()).toBe(5)
+    expect(seenAtStart).toEqual([true, true])
     reader.exec('COMMIT')
     reader.close()
   })

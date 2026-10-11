@@ -144,6 +144,57 @@ function assertNotSynced(target: string, home: string): void {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Conversion des erreurs système / SQLite
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Convertit une erreur système (`EACCES`…) ou SQLite (`SQLITE_NOTADB`…) en `AppError` au message
+ * français (règle §2.6) : le routeur IPC transmet tel quel tout objet portant `code` et `message`
+ * chaînes. Les `AppError` et les erreurs sans `code` textuel (qui deviennent `internal` côté
+ * routeur) sont renvoyées inchangées. L'erreur d'origine est gardée, décrite en objet simple
+ * (clonable par l'IPC), dans `details`.
+ */
+export function toAppError(err: unknown): unknown {
+  if (err instanceof AppError) return err
+  if (typeof err !== 'object' || err === null) return err
+  const e = err as { code?: unknown; message?: unknown; syscall?: unknown; path?: unknown }
+  if (typeof e.code !== 'string') return err
+  const details = {
+    code: e.code,
+    ...(typeof e.syscall === 'string' ? { syscall: e.syscall } : {}),
+    ...(typeof e.path === 'string' ? { path: e.path } : {}),
+    ...(typeof e.message === 'string' ? { message: e.message } : {}),
+  }
+  switch (e.code) {
+    case 'EACCES':
+    case 'EPERM':
+    case 'EROFS':
+      return new AppError('io', 'Pas le droit d’écrire dans ce dossier.', details)
+    case 'ENOSPC':
+      return new AppError('io', 'Il n’y a plus assez de place sur le disque.', details)
+    case 'ENOENT':
+    case 'ENOTDIR':
+      return new AppError(
+        'library_unavailable',
+        'Le dossier de la bibliothèque est introuvable.',
+        details,
+      )
+    case 'SQLITE_BUSY':
+    case 'SQLITE_LOCKED':
+      return new AppError('busy', 'La bibliothèque est utilisée par un autre processus.', details)
+    default:
+      if (e.code.startsWith('SQLITE_')) {
+        return new AppError(
+          'library_unavailable',
+          'Ce fichier recolt.db est illisible ou abîmé.',
+          details,
+        )
+      }
+      return new AppError('io', 'Opération impossible sur ce dossier.', details)
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
 // Gestionnaire
 // ---------------------------------------------------------------------------------------------
 
@@ -171,7 +222,14 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
   let queue: Promise<unknown> = Promise.resolve()
 
   const serial = <T>(fn: () => Promise<T>): Promise<T> => {
-    const run = queue.then(fn, fn)
+    const guarded = async (): Promise<T> => {
+      try {
+        return await fn()
+      } catch (err) {
+        throw toAppError(err)
+      }
+    }
+    const run = queue.then(guarded, guarded)
     queue = run.catch(() => undefined)
     return run
   }
@@ -351,10 +409,32 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
   const closeActive = async (forReplace = false): Promise<void> => {
     const current = ctx
     if (!current) return
+    const hooks = aggregatedCloseHooks()
+    /**
+     * Après un `wal_not_empty`, `closeLibrary` a rouvert la base (`closable.db`) : la connexion de
+     * `current` est fermée. Le contexte reçoit la nouvelle connexion, et les domaines sont
+     * prévenus par `afterOpen` (ils ne doivent pas garder l'ancienne), avant la relance.
+     */
+    const adoptReopened = async (): Promise<void> => {
+      if (closable.db === current.db) return
+      current.db = closable.db
+      current.repos = createRepos(closable.db, { now })
+      try {
+        await runAfterOpen(current)
+      } catch (err) {
+        deps.log?.error('[library] afterOpen en échec après réouverture annulée', err)
+      }
+    }
     const closable = {
       db: current.db,
       dbFile: current.paths.db,
-      hooks: aggregatedCloseHooks(),
+      hooks: {
+        ...hooks,
+        async startWorkers() {
+          await adoptReopened()
+          await hooks.startWorkers()
+        },
+      },
       reopen: () => openLibraryDb(current.root, dbOptions()).db,
       ...(deps.log ? { log: deps.log } : {}),
     }
@@ -368,8 +448,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     } catch (err) {
       if (closable.db !== current.db) {
         // Annulé (wal_not_empty) et base rouverte : la bibliothèque reste active.
-        current.db = closable.db
-        current.repos = createRepos(closable.db, { now })
+        await adoptReopened()
       } else if (!current.db.open) {
         // Annulé et réouverture impossible : la bibliothèque n'est plus utilisable.
         ctx = null
@@ -533,6 +612,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         }
         const r = load()
         let e = r.libraries.find((l) => path.resolve(rootOf(l)) === root)
+        const added = !e
         if (!e) {
           e = {
             id: freshId(),
@@ -542,7 +622,17 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
           }
           save({ ...r, libraries: [...r.libraries, e] })
         }
-        await switchTo(e.id)
+        try {
+          await switchTo(e.id)
+        } catch (err) {
+          // Retour arrière : une entrée ajoutée par cet appel et inouvrable ne reste pas au registre.
+          if (added) {
+            const cur = load()
+            const id = e.id
+            save({ ...cur, libraries: cur.libraries.filter((l) => l.id !== id) })
+          }
+          throw err
+        }
         return info(e)
       })
     },
@@ -552,7 +642,11 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       const r = load()
       const e = entry(id)
       const next = { ...e, name: clean }
-      save({ ...r, libraries: r.libraries.map((l) => (l.id === id ? next : l)) })
+      try {
+        save({ ...r, libraries: r.libraries.map((l) => (l.id === id ? next : l)) })
+      } catch (err) {
+        throw toAppError(err)
+      }
       if (ctx?.id === id) ctx.name = next.name
       return info(next)
     },
@@ -564,7 +658,11 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       if ((ctx?.id ?? r.active) === id) {
         throw new AppError('conflict', 'Ouvre une autre bibliothèque avant de retirer celle-ci.')
       }
-      save({ ...r, libraries: r.libraries.filter((l) => l.id !== id) })
+      try {
+        save({ ...r, libraries: r.libraries.filter((l) => l.id !== id) })
+      } catch (err) {
+        throw toAppError(err)
+      }
     },
   }
 }
