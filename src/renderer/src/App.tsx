@@ -21,6 +21,9 @@ function useDarkTheme(): boolean {
   return dark
 }
 
+/** StrictMode exécute les effets deux fois en dev : la métrique n'est écrite qu'une fois. */
+let appMountedMarked = false
+
 export function App() {
   const dark = useDarkTheme()
 
@@ -30,7 +33,10 @@ export function App() {
     void initLayoutMap()
     const onFocus = () => void initLayoutMap()
     window.addEventListener('focus', onFocus)
-    window.recolt?.perfMark('app-mounted')
+    if (!appMountedMarked) {
+      appMountedMarked = true
+      window.recolt?.perfMark('app-mounted')
+    }
     return () => {
       window.removeEventListener('focus', onFocus)
       for (const d of disposers) d()

@@ -5,8 +5,6 @@
  */
 import type { ItemCard } from '../../../shared/dto/items'
 
-const MOCK_PREFIX = 'recolt://mock/'
-
 export function isRecoltUrl(url: string | null | undefined): url is string {
   return typeof url === 'string' && url.startsWith('recolt://')
 }
@@ -18,8 +16,8 @@ export function mediaSrc(url: string | null | undefined): string | undefined {
     if (import.meta.env.DEV) console.error(`[media-url] URL http(s) refusée dans un DTO : ${url}`)
     return undefined
   }
-  if (import.meta.env.DEV && url.startsWith(MOCK_PREFIX)) {
-    return `/__mock/media/${url.slice(MOCK_PREFIX.length)}`
+  if (import.meta.env.DEV && url.startsWith('recolt://mock/')) {
+    return `/__mock/media/${url.slice('recolt://mock/'.length)}`
   }
   return url
 }

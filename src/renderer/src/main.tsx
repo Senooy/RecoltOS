@@ -5,6 +5,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { initApi } from './api/client'
 import './styles/tokens.css'
 import './styles/globals.css'
 
@@ -16,8 +17,11 @@ if (flags?.e2e) root.dataset.e2e = '1'
 
 const el = document.getElementById('root')
 if (!el) throw new Error('#root introuvable')
-createRoot(el).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+// La maquette (dev) est chargée avant le premier rendu : `getApi()` reste synchrone.
+void initApi().then(() => {
+  createRoot(el).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  )
+})
