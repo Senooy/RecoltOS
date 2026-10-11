@@ -18,7 +18,7 @@ import './ui.css'
 export type MenuItemTone = 'default' | 'danger'
 
 const CONTENT =
-  'ui-pop app-no-drag z-[60] min-w-[200px] overflow-hidden rounded-lg bg-surface p-[5px] shadow-[var(--shadow-popover)]'
+  'ui-pop app-no-drag z-[80] min-w-[200px] overflow-hidden rounded-lg bg-surface p-[5px] shadow-[var(--shadow-popover)]'
 const ITEM =
   'ui-menu-item flex h-7 cursor-default select-none items-center gap-2.5 rounded-sm px-2 text-[13.5px] leading-5 outline-none'
 const ICON = '[&_svg]:h-[15px] [&_svg]:w-[15px] [&_svg]:shrink-0 [&_svg]:[stroke-width:1.75]'

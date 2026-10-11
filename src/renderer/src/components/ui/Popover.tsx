@@ -22,7 +22,7 @@ function PopoverContent({
         collisionPadding={collisionPadding}
         align={align}
         className={cn(
-          'ui-pop app-no-drag z-[60] rounded-xl bg-surface p-3 text-fg shadow-[var(--shadow-popover)]',
+          'ui-pop app-no-drag z-[80] rounded-xl bg-surface p-3 text-fg shadow-[var(--shadow-popover)]',
           className,
         )}
         {...rest}
