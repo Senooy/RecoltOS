@@ -27,6 +27,8 @@ export interface BuildExtOptions {
   targets?: readonly ExtTarget[]
   /** Build de test : toutes les plateformes remplacées par ce faux serveur local. */
   testBase?: string
+  /** Build de test : auto-test au démarrage (cookies factices, requête X, rapport au faux serveur). */
+  selfTest?: boolean
   logLevel?: 'info' | 'silent'
 }
 
@@ -63,6 +65,7 @@ async function buildTarget(
     define: {
       __RECOLTOS_TARGET__: JSON.stringify(target),
       __RECOLTOS_TEST_BASE__: JSON.stringify(opts.testBase ?? ''),
+      __RECOLTOS_SELFTEST__: JSON.stringify(Boolean(opts.testBase && opts.selfTest)),
     },
   }
   const background = join(src, 'src/background/index.ts')
@@ -126,12 +129,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       'test-base': { type: 'string' },
       out: { type: 'string' },
       target: { type: 'string', multiple: true },
+      selftest: { type: 'boolean', default: false },
     },
   })
   buildExt({
     ...(values['test-base'] ? { testBase: values['test-base'] } : {}),
     ...(values.out ? { outDir: resolve(values.out) } : {}),
     ...(values.target ? { targets: values.target as ExtTarget[] } : {}),
+    selfTest: values.selftest,
   })
     .then((out) => {
       console.log(

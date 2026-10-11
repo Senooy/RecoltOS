@@ -42,6 +42,7 @@
     "test:perf": "playwright test --project=perf",
     "test:packaged": "playwright test --project=packaged",
     "test:ext": "playwright test --project=ext-smoke",
+    "test:ext:firefox": "tsx --tsconfig tsconfig.node.json scripts/ext-firefox-smoke.mts",
     "bench:color": "tsx --tsconfig tsconfig.node.json scripts/bench-color.mts",
     "shots": "tsx --tsconfig tsconfig.node.json scripts/visual/shots.mts",
     "shots:compare": "tsx --tsconfig tsconfig.node.json scripts/visual/compare.mts",

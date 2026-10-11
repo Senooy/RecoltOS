@@ -183,6 +183,12 @@ test.describe('synchronisation (faux hôte)', () => {
     await page.locator(t('sync-more-x')).click()
     await page.getByRole('menuitem', { name: 'Voir le journal' }).click()
     await expect(page.locator(t('sync-journal'))).toContainText('arrière-plan')
+    await page.screenshot({ path: path.join(REPO_ROOT, '.tmp/m5-shots/journal.png') })
+    await page.keyboard.press('Escape')
+    await expect(page.locator(t('sync-journal'))).toBeHidden()
+    await page.screenshot({
+      path: path.join(REPO_ROOT, '.tmp/m5-shots/reglages-synchronisation.png'),
+    })
     host.sock.end()
   })
 })

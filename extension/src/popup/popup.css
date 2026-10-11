@@ -92,7 +92,7 @@ main {
   font-size: 12px;
 }
 .preview {
-  height: 132px;
+  height: 104px;
   border-radius: 10px;
   overflow: hidden;
   background: var(--field);
@@ -230,4 +230,12 @@ main {
   margin: 0;
   font-size: 11px;
   color: var(--muted);
+}
+#save {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#newCollection {
+  align-self: flex-start;
 }

@@ -295,8 +295,41 @@ bridge.onState((s) => {
 })
 bridge.connect()
 
+declare const __RECOLTOS_SELFTEST__: boolean
+
+/**
+ * Build de test `--selftest` seulement (navigateur jetable, faux serveur) : pose des cookies factices
+ * pour le faux serveur, fait une requête X depuis l'arrière-plan et rapporte le résultat.
+ */
+async function selfTest(base: string): Promise<void> {
+  const report: Record<string, unknown> = { target: TARGET }
+  try {
+    report.permission = await a.permissions.contains({ origins: [`${base}/*`] })
+    // Cookies posés par le faux serveur (comme une connexion au site), puis relus par l'API `cookies`.
+    report.plain = await fetch(`${base}/img.png`).then(
+      (r) => r.status,
+      (e: unknown) => String(e),
+    )
+    await fetch(`${base}/setcookies`, { credentials: 'include' })
+    report.cookies = (await a.cookies.getAll({ url: `${base}/` })).map((c) => c.name)
+    await ensureHeaderRules()
+    const page = await clientFor('x').fetchPage(null, backgroundFetch)
+    report.page = page.kind === 'page' ? { kind: 'page', status: page.status } : page
+  } catch (e) {
+    report.error = e instanceof Error ? e.message : String(e)
+  }
+  console.warn(`[recoltos selftest] ${JSON.stringify(report)}`)
+  await fetch(`${base}/selftest`, { method: 'POST', body: JSON.stringify(report) }).catch(
+    (e: unknown) => console.warn(`[recoltos selftest] rapport impossible : ${String(e)}`),
+  )
+}
+
 // Build de test seulement : poignées pour Playwright (jamais dans le build livré).
 if (TEST_BASE) {
+  if (typeof __RECOLTOS_SELFTEST__ === 'boolean' && __RECOLTOS_SELFTEST__) {
+    const base = TEST_BASE
+    setTimeout(() => void selfTest(base), 1_500)
+  }
   ;(globalThis as Record<string, unknown>).__recoltos = {
     bridge,
     runner,

@@ -141,3 +141,34 @@ test('sync en arrière-plan sans onglet : cookies de session, CSRF et Origin ré
   // Aucun onglet ouvert par la sync.
   expect(ctx.pages().length).toBe(pagesBefore)
 })
+
+test('aucun cookie ni jeton dans les journaux ni la base de l’app (SYNC §8 critère 11)', async () => {
+  const { lstatSync, readdirSync, readFileSync } = await import('node:fs')
+  const walk = (d: string): string[] =>
+    readdirSync(d).flatMap((n) => {
+      const p = join(d, n)
+      const st = lstatSync(p)
+      if (st.isSymbolicLink()) return []
+      return st.isDirectory() ? walk(p) : st.size < 50 * 1024 * 1024 ? [p] : []
+    })
+  const files = walk(handle.userData).filter((f) => /\.(log|db|db-wal|json|txt)$/.test(f))
+  expect(files.length).toBeGreaterThan(0)
+  for (const f of files) {
+    const s = readFileSync(f).toString('latin1')
+    expect(s, f).not.toMatch(/csrf-test|session-test|csrf-ig|session-ig|Bearer [A-Za-z0-9]/)
+  }
+})
+
+test('popup 360×520 : état connecté, textes en français (tutoiement)', async () => {
+  const extId = EXTENSION_ORIGIN.slice('chrome-extension://'.length, -1)
+  const page = await ctx.newPage()
+  await page.setViewportSize({ width: 360, height: 560 })
+  await page.goto(`chrome-extension://${extId}/popup.html`)
+  await expect(page.locator('#status')).toContainText('Connecté à RecoltOS')
+  await expect(page.locator('#savePage')).toHaveText('Enregistrer la page')
+  await expect(page.locator('body')).toContainText('tant que ce navigateur est ouvert')
+  await expect(page.locator('body')).not.toContainText(/\bvous\b|\bvotre\b/)
+  mkdirSync(join(REPO_ROOT, '.tmp/m5-shots'), { recursive: true })
+  await page.screenshot({ path: join(REPO_ROOT, '.tmp/m5-shots/popup.png') })
+  await page.close()
+})

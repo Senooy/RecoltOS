@@ -24,6 +24,8 @@ export interface FakePlatforms {
   base: string
   port: number
   log: Logged[]
+  /** Rapports `POST /selftest` des builds `--selftest`. */
+  selfTests: unknown[]
   /** Réponse forcée pour un chemin (statut + corps). */
   override(prefix: string, status: number, body: unknown): void
   close(): Promise<void>
@@ -37,10 +39,24 @@ export function testPng(): Buffer {
   return readFileSync(join(REPO_ROOT, 'build/icon.png'))
 }
 
-export async function startFakePlatforms(port = 0): Promise<FakePlatforms> {
+export async function startFakePlatforms(port = 0, hostName = '127.0.0.1'): Promise<FakePlatforms> {
   const log: Logged[] = []
   const overrides = new Map<string, { status: number; body: unknown }>()
+  const selfTests: unknown[] = []
   const server = http.createServer((req, res) => {
+    if (req.url === '/selftest' && req.method === 'POST') {
+      let body = ''
+      req.on('data', (c: Buffer) => (body += c.toString()))
+      req.on('end', () => {
+        try {
+          selfTests.push(JSON.parse(body))
+        } catch {
+          selfTests.push({ invalid: body })
+        }
+        res.end('ok')
+      })
+      return
+    }
     const url = new URL(req.url ?? '/', 'http://127.0.0.1')
     const h = (k: string) => String(req.headers[k] ?? '')
     log.push({
@@ -61,6 +77,15 @@ export async function startFakePlatforms(port = 0): Promise<FakePlatforms> {
       if (url.pathname.startsWith(prefix)) return json(o.status, o.body)
     }
     const p = url.pathname
+    if (p === '/setcookies') {
+      res.writeHead(200, {
+        'set-cookie': [
+          'ct0=csrf-selftest; Path=/; SameSite=Lax',
+          'auth_token=session-selftest; Path=/; HttpOnly; SameSite=Lax',
+        ],
+      })
+      return res.end('ok')
+    }
     if (p === '/img.png') {
       res.writeHead(200, { 'content-type': 'image/png' })
       return res.end(testPng())
@@ -108,11 +133,12 @@ export async function startFakePlatforms(port = 0): Promise<FakePlatforms> {
   })
   await new Promise<void>((r) => server.listen(port, '127.0.0.1', r))
   const actual = (server.address() as AddressInfo).port
-  const base = `http://127.0.0.1:${actual}`
+  const base = `http://${hostName}:${actual}`
   return {
     base,
     port: actual,
     log,
+    selfTests,
     override: (prefix, status, body) => void overrides.set(prefix, { status, body }),
     close: () => new Promise((r) => server.close(() => r())),
   }
