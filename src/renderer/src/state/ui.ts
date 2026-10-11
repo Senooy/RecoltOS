@@ -44,18 +44,18 @@ export interface UiState {
   /** Colonnes par vue (`library`, `collection:<uuid>`…), 2 à 8. */
   columns: Record<string, number>
 
-  navigate(route: Route): void
-  back(): void
-  setLibraryTab(tab: LibraryTab): void
-  openOverlay(overlay: Overlay): void
-  closeOverlay(): void
-  setSelection(uuids: string[]): void
-  toggleSelected(uuid: string): void
-  clearSelection(): void
-  setInternalDrag(uuids: string[]): void
-  clearInternalDrag(): void
-  openSearch(seed?: SearchSeed): void
-  setColumns(viewKey: string, n: number): void
+  navigate: (route: Route) => void
+  back: () => void
+  setLibraryTab: (tab: LibraryTab) => void
+  openOverlay: (overlay: Overlay) => void
+  closeOverlay: () => void
+  setSelection: (uuids: string[]) => void
+  toggleSelected: (uuid: string) => void
+  clearSelection: () => void
+  setInternalDrag: (uuids: string[]) => void
+  clearInternalDrag: () => void
+  openSearch: (seed?: SearchSeed) => void
+  setColumns: (viewKey: string, n: number) => void
 }
 
 export const clampColumns = (n: number): number => Math.min(8, Math.max(2, Math.round(n)))

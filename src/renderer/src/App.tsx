@@ -1,11 +1,11 @@
 /**
- * Racine React. WP-00 : coque statique + ponts transverses (prefs, vidage avant fermeture,
- * nettoyage du glisser interne). WP-13 remplace `AppShellSkeleton` par `AppShell` + `routes.tsx`.
+ * Racine React : coque `AppShell` (WP-13) + ponts transverses (prefs, vidage avant fermeture,
+ * nettoyage du glisser interne).
  */
 import { useEffect, useState } from 'react'
 import { installInternalDragCleanup } from './lib/dnd'
 import { initLayoutMap } from './lib/shortcuts'
-import { AppShellSkeleton } from './shell/AppShellSkeleton'
+import { AppShell } from './shell/AppShell'
 import { installFlushBridge } from './state/flush'
 import { followPrefsChanges, usePrefs } from './state/prefs'
 
@@ -43,5 +43,5 @@ export function App() {
     }
   }, [])
 
-  return <AppShellSkeleton dark={dark} />
+  return <AppShell dark={dark} />
 }

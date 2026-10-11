@@ -1,5 +1,24 @@
 /**
- * Textes du domaine `shell`, possédé par WP-13 (ERRATA §F). Ajouter ici les namespaces propres au
- * domaine (tutoiement, typographie FR) ; ne pas redéfinir un namespace de `base.ts`.
+ * Textes du domaine `shell` (WP-13) : coque, sélecteur de bibliothèque, dialogues génériques.
  */
-export const shell = {} as const
+export const shell = {
+  shell: {
+    create: 'Créer',
+    rename: 'Renommer',
+    cancel: 'Annuler',
+    confirm: 'Confirmer',
+    name: 'Nom',
+    librariesHeading: 'Bibliothèques',
+    newLibraryTitle: 'Nouvelle bibliothèque',
+    newLibraryDefault: 'Ma bibliothèque',
+    selectionClear: 'Tout désélectionner',
+    addTo: 'Ajouter à…',
+    hide: 'Masquer',
+    download: 'Télécharger',
+    delete: 'Supprimer',
+    restore: 'Restaurer',
+    deleteForever: 'Supprimer définitivement',
+    dropCollection: 'Déposer dans la collection',
+    unavailable: 'Pas encore disponible dans cette version.',
+  },
+} as const
