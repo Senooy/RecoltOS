@@ -43,26 +43,46 @@ function intersection(a: Rect, b: Rect): number {
 }
 
 /**
- * Bornes à appliquer : celles sauvegardées si au moins 25 % de la fenêtre (et 100×60 px)
- * reste visible sur un écran actuel, sinon taille par défaut centrée (position laissée à macOS).
+ * Bornes à appliquer au lancement.
+ * - Position sauvegardée conservée si au moins 25 % de la fenêtre (et 100×60 px) reste visible
+ *   sur un écran actuel ; taille bornée à la workArea de cet écran (et au minimum 1040×620).
+ * - Sinon (écran débranché, fichier absent ou invalide) : `DEFAULT_WINDOW` (1280×820), position
+ *   laissée à macOS (centrage). La taille sauvegardée n'est jamais reprise sur un écran inconnu.
  */
 export function pickRestoreBounds(
   state: WindowState | null,
   displays: readonly DisplayLike[],
-): { bounds: Partial<Rect> & { width: number; height: number }; maximize: boolean } {
-  const fallback = { bounds: { ...DEFAULT_WINDOW }, maximize: false }
+): {
+  bounds: Partial<Rect> & { width: number; height: number }
+  maximize: boolean
+  fullScreen: boolean
+} {
+  const fallback = { bounds: { ...DEFAULT_WINDOW }, maximize: false, fullScreen: false }
   if (!state) return fallback
   const b = {
     ...state.bounds,
     width: Math.max(MIN_WINDOW.width, state.bounds.width),
     height: Math.max(MIN_WINDOW.height, state.bounds.height),
   }
-  const visible = displays.some((d) => {
+  let target: DisplayLike | null = null
+  let best = 0
+  for (const d of displays) {
     const area = intersection(b, d.workArea)
-    return area >= 0.25 * b.width * b.height && area >= 100 * 60
-  })
-  if (!visible) return { bounds: { width: b.width, height: b.height }, maximize: state.isMaximized }
-  return { bounds: b, maximize: state.isMaximized }
+    if (area > best) {
+      best = area
+      target = d
+    }
+  }
+  const visible = target !== null && best >= 0.25 * b.width * b.height && best >= 100 * 60
+  if (!visible || !target) return fallback
+  const workArea = target.workArea
+  const width = Math.min(b.width, Math.max(MIN_WINDOW.width, workArea.width))
+  const height = Math.min(b.height, Math.max(MIN_WINDOW.height, workArea.height))
+  return {
+    bounds: { x: b.x, y: b.y, width, height },
+    maximize: state.isMaximized,
+    fullScreen: state.isFullScreen,
+  }
 }
 
 export function readWindowState(userData: string): WindowState | null {

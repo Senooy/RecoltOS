@@ -72,6 +72,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
 
   let bounds: { x?: number; y?: number; width: number; height: number }
   let maximize = false
+  let fullScreen = false
   if (flags.windowSize) {
     bounds = { ...flags.windowSize }
   } else {
@@ -81,6 +82,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
     )
     bounds = picked.bounds
     maximize = picked.maximize
+    fullScreen = picked.fullScreen
   }
 
   const w = new BrowserWindow({
@@ -108,6 +110,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
   win = w
 
   if (maximize) w.maximize()
+  if (fullScreen) w.setFullScreen(true)
 
   w.once('ready-to-show', () => {
     if (flags.e2e) w.showInactive()
