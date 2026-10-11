@@ -167,7 +167,7 @@ describe('system.copyImage', () => {
     provideMediaWorker(null)
     expect(await call('system.copyImage', { itemUuid: uuids.image })).toMatchObject({
       ok: false,
-      error: { code: 'worker_unavailable' },
+      error: { code: 'system.worker_unavailable' },
     })
   })
 })

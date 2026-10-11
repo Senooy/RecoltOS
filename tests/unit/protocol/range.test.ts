@@ -23,6 +23,11 @@ describe('parseRange', () => {
     ['bytes=-5000', 0, 999],
     ['bytes=900-5000', 900, 999],
     [' bytes=10-20 ', 10, 20],
+    ['Bytes=0-1', 0, 1],
+    ['BYTES=-500', 500, 999],
+    ['bytes=0-99999999999999999999999', 0, 999],
+    ['bytes=900-99999999999999999999999', 900, 999],
+    ['bytes=-99999999999999999999999', 0, 999],
   ])('%s → [%i, %i]', (header, start, end) => {
     expect(parseRange(header, size)).toEqual({ kind: 'partial', start, end })
   })

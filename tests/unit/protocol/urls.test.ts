@@ -56,6 +56,18 @@ describe('assetUrl', () => {
     expect(assetUrlOrNull('default', rel)).toBeNull()
   })
 
+  it('?v non fini (NaN, Infinity) omis : jamais ?v=NaN dans une URL servie', () => {
+    expect(assetUrl('default', `thumbs/0d/${U}.webp`, Number.NaN)).toBe(
+      `recolt://default/thumbs/0d/${U}.webp`,
+    )
+    expect(assetUrl('default', `thumbs/0d/${U}.webp`, Number.POSITIVE_INFINITY)).toBe(
+      `recolt://default/thumbs/0d/${U}.webp`,
+    )
+    expect(MediaUrl.safeParse(assetUrl('default', `thumbs/0d/${U}.webp`, Number.NaN)).success).toBe(
+      true,
+    )
+  })
+
   it('refuse un identifiant de bibliothèque non compatible avec un hôte', () => {
     expect(() => assetUrl('Default', 'thumbs/x.webp')).toThrow()
     expect(() => assetUrl('a.b', 'thumbs/x.webp')).toThrow()

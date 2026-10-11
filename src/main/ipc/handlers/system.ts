@@ -74,7 +74,8 @@ export const systemHandlers: DomainHandlers<'system'> = {
   'system.copyImage': async ({ itemUuid }) => {
     const src = copyImageSource(requireLibrary(), itemUuid)
     const mw = getMediaWorker()
-    if (!mw) throw new AppError('worker_unavailable', 'Le traitement des images est indisponible.')
+    if (!mw)
+      throw new AppError('system.worker_unavailable', 'Le traitement des images est indisponible.')
     const { png } = await mw.call(
       'toPng',
       { abs: src, maxEdge: COPY_IMAGE_MAX_EDGE },
@@ -84,7 +85,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     // Electron 44 : `clipboard.writeImage` n'existe plus ; `write([ClipboardItem])` (W3C).
     // `nativeImage` sert seulement à vérifier que le PNG du worker est décodable et non vide.
     if (nativeImage.createFromBuffer(bytes).isEmpty()) {
-      throw new AppError('decode_failed', 'Impossible de copier cette image.')
+      throw new AppError('system.decode_failed', 'Impossible de copier cette image.')
     }
     await clipboard.write([
       new ClipboardItem({ 'image/png': new Blob([bytes], { type: 'image/png' }) }),

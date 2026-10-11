@@ -31,7 +31,10 @@ export function assetUrl(libId: string, rel: string, v?: number | null): string 
     throw new Error(`chemin média non servi : ${JSON.stringify(rel)}`)
   }
   const encoded = segments.map((s) => encodeURIComponent(s)).join('/')
-  const query = v === undefined || v === null ? '' : `?v=${Math.max(0, Math.trunc(v))}`
+  // `?v` seulement pour un entier fini : NaN / Infinity produiraient `?v=NaN` (URL acceptée par
+  // MediaUrl, mais sans sens). Une version invalide n'empêche pas l'affichage, elle est omise.
+  const query =
+    typeof v === 'number' && Number.isFinite(v) ? `?v=${Math.max(0, Math.trunc(v))}` : ''
   const url = `${RECOLT_PROTOCOL}://${libId}/${encoded}${query}`
   // Dernier contrôle : la forme exacte acceptée par le contrat (`MediaUrl`).
   if (!MediaUrl.safeParse(url).success) {

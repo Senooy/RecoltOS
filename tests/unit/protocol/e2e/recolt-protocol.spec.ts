@@ -189,6 +189,9 @@ test('recolt:// dans le renderer : Range, seek vidéo, canvas CORS, copie d’im
       const g = globalThis as unknown as { __savedClipboard?: Electron.ClipboardItem[] | null }
       if (g.__savedClipboard && g.__savedClipboard.length > 0) {
         await clipboard.write(g.__savedClipboard).catch(() => undefined)
+      } else {
+        // Presse-papiers vide à l'origine : on n'y laisse pas le PNG du test.
+        clipboard.clear()
       }
     })
   }

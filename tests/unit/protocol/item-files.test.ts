@@ -2,7 +2,7 @@
  * WP-05 — fichiers d'un élément (handlers `system.*`, glisser) sur une vraie base migrée :
  * original de la couverture, poster d'une vidéo pour la copie, médias distants ignorés.
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createRepos } from '../../../src/main/db/repos'
@@ -118,6 +118,37 @@ describe('item-files', () => {
     expect(copyImageSource(lib, ids.image!)).toMatch(/items\/11\/.*\.webp$/)
     expect(copyImageSource(lib, ids.video!)).toMatch(/posters\/22\/.*\.jpg$/)
     expect(() => copyImageSource(lib, ids.textOnly!)).toThrow(
+      expect.objectContaining({ code: 'not_found' }),
+    )
+  })
+
+  it('copie d’image : vidéo sans poster ni vignette → vignette héritée', () => {
+    const uuid = '55555555-5555-4555-8555-555555555555'
+    const id = lib.repos.items.insertWithMedia({ kind: 'video' }, [
+      {
+        mediaType: 'video',
+        uuid,
+        fileRel: `items/55/${uuid}.mp4`,
+        legacyThumbRel: `legacy/55/${uuid}.jpg`,
+      },
+    ]).uuid
+    touch(`items/55/${uuid}.mp4`)
+    touch(`legacy/55/${uuid}.jpg`)
+    expect(copyImageSource(lib, id)).toBe(join(lib.paths.root, `legacy/55/${uuid}.jpg`))
+  })
+
+  it('glisser et itemOriginals : un lien symbolique qui sort de la bibliothèque est ignoré', () => {
+    const outside = makeTmpDir('recolt-outside-')
+    const uuid = '66666666-6666-4666-8666-666666666666'
+    const rel = `items/66/${uuid}.jpg`
+    mkdirSync(dirname(join(lib.paths.root, rel)), { recursive: true })
+    writeFileSync(join(outside, 'secret.jpg'), 'x')
+    symlinkSync(join(outside, 'secret.jpg'), join(lib.paths.root, rel))
+    const id = lib.repos.items.insertWithMedia({ kind: 'image' }, [
+      { mediaType: 'image', uuid, fileRel: rel },
+    ]).uuid
+    expect(itemOriginals(lib, id)).toEqual([])
+    expect(() => requireCoverOriginal(lib, id)).toThrow(
       expect.objectContaining({ code: 'not_found' }),
     )
   })

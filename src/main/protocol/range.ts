@@ -11,7 +11,8 @@ export type RangeResult =
   /** Plage hors du fichier, ou forme non comprise : réponse 416 `Content-Range: bytes *\/size`. */
   | { kind: 'unsatisfiable' }
 
-const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/
+// Unité insensible à la casse (RFC 9110 §14.1).
+const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/i
 
 /**
  * `bytes=a-b`, `bytes=a-` et `bytes=-n` (suffixe). Fin au-delà du fichier : ramenée à `size - 1`.
@@ -29,15 +30,16 @@ export function parseRange(header: string | null | undefined, size: number): Ran
   let start: number
   let end = size - 1
   if (rawStart === '') {
+    // Suffixe plus grand que le fichier : toute la représentation (RFC 9110 §14.1.2).
     const suffix = Number(rawEnd)
-    if (!Number.isSafeInteger(suffix) || suffix <= 0) return { kind: 'unsatisfiable' }
+    if (!(suffix > 0)) return { kind: 'unsatisfiable' }
     start = Math.max(0, size - suffix)
   } else {
     start = Number(rawStart)
-    if (!Number.isSafeInteger(start)) return { kind: 'unsatisfiable' }
+    if (!Number.isFinite(start)) return { kind: 'unsatisfiable' }
     if (rawEnd !== '') {
+      // Fin au-delà du fichier (même démesurée) : ramenée à size - 1, comme la RFC le demande.
       const e = Number(rawEnd)
-      if (!Number.isSafeInteger(e)) return { kind: 'unsatisfiable' }
       end = Math.min(e, size - 1)
     }
   }

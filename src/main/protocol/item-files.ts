@@ -6,6 +6,7 @@
  * Ne mémorise ni `db` ni `repos` : la bibliothèque est relue à chaque appel (contrat WP-02).
  */
 import fs from 'node:fs'
+import path from 'node:path'
 import { AppError } from '../../shared/errors'
 import type { MediaRow } from '../db/repos/media'
 import type { ItemRow } from '../db/repos/items'
@@ -28,7 +29,11 @@ export function loadItem(lib: Lib, uuid: string): ItemWithMedia {
   return { item, media }
 }
 
-/** Chemin absolu d'un fichier relatif s'il existe (fichier ordinaire), sinon `null`. */
+/**
+ * Chemin absolu d'un fichier relatif s'il existe (fichier ordinaire), sinon `null`. Le fichier doit
+ * rester sous la racine de la bibliothèque une fois les liens symboliques résolus : le glisser et
+ * « Afficher dans le Finder » ne donnent jamais un fichier qui sort de la bibliothèque.
+ */
 export function existingAbs(lib: Lib, rel: string | null | undefined): string | null {
   if (!rel) return null
   let abs: string
@@ -38,7 +43,12 @@ export function existingAbs(lib: Lib, rel: string | null | undefined): string | 
     return null
   }
   try {
-    return fs.statSync(abs).isFile() ? abs : null
+    if (!fs.statSync(abs).isFile()) return null
+    const real = fs.realpathSync(abs)
+    const root = fs.realpathSync(lib.paths.root)
+    const inside =
+      real === root || real.startsWith(root.endsWith(path.sep) ? root : root + path.sep)
+    return inside ? abs : null
   } catch {
     return null
   }
@@ -56,12 +66,12 @@ export function originalAbs(lib: Lib, m: MediaRow): string | null {
  */
 export function itemOriginals(lib: Lib, uuid: string): string[] {
   const { media } = loadItem(lib, uuid)
-  const out: string[] = []
+  const seen = new Set<string>()
   for (const m of media) {
     const abs = originalAbs(lib, m)
-    if (abs && !out.includes(abs)) out.push(abs)
+    if (abs) seen.add(abs)
   }
-  return out
+  return [...seen]
 }
 
 /** Original de la couverture ou `AppError('not_found')` (post texte, média distant ou perdu). */
@@ -81,7 +91,7 @@ export function copyImageSource(lib: Lib, uuid: string): string {
   if (!cover) throw new AppError('not_found', 'Cet élément n’a pas d’image.')
   const candidates =
     cover.media_type === 'video'
-      ? [cover.poster_rel, cover.thumb_rel, cover.large_rel]
+      ? [cover.poster_rel, cover.thumb_rel, cover.legacy_thumb_rel, cover.large_rel]
       : [
           cover.display_rel,
           cover.status === 'remote' || cover.status === 'missing' ? null : cover.file_rel,
@@ -96,9 +106,12 @@ export function copyImageSource(lib: Lib, uuid: string): string {
   throw new AppError('not_found', 'Aucune image locale pour cet élément.')
 }
 
-/** Fichiers glissés vers l'extérieur pour une sélection (ordre de la sélection, sans doublon). */
+/**
+ * Fichiers glissés vers l'extérieur pour une sélection (ordre de la sélection, sans doublon).
+ * Appelé pendant le `dragstart` : dédoublonnage par `Set` (O(n)), pas de `includes` (O(n²)).
+ */
 export function dragFiles(lib: Lib, uuids: readonly string[]): string[] {
-  const out: string[] = []
+  const out = new Set<string>()
   for (const uuid of uuids) {
     let files: string[]
     try {
@@ -106,7 +119,7 @@ export function dragFiles(lib: Lib, uuids: readonly string[]): string[] {
     } catch {
       continue
     }
-    for (const f of files) if (!out.includes(f)) out.push(f)
+    for (const f of files) out.add(f)
   }
-  return out
+  return [...out]
 }
