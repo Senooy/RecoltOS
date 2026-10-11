@@ -204,7 +204,7 @@ describe('détection et verrou', () => {
     })
     const running = await detectRunning(legacy.root, {
       kill: () => undefined,
-      psComm: () => Promise.resolve('/Applications/GatherOS.app/Contents/MacOS/GatherOS\n'),
+      psComm: () => Promise.resolve('GatherOS\n'),
       pgrep: () => Promise.resolve(false),
     })
     expect(running).toEqual({ running: true, host: 'mon-mac-de-test.local', pid: 4242 })

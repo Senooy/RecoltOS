@@ -9,6 +9,7 @@ import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { parsePostMeta } from '../../src/shared/post-meta'
 import { snapshotGatherosDb } from '../../src/main/importers/gatheros/detect'
+import { collectionTree } from '../../src/main/dto/collection-node'
 import type { LibraryContext } from '../../src/main/library/library-context'
 import { importReal, openTmpLibrary, realSource } from './real-helpers'
 
@@ -164,6 +165,14 @@ describe('import réel GatherOS', () => {
         .get(name) as { title: string | null; post_meta: string | null }
     expect(JSON.stringify(front('Gaming'))).toMatch(/MINECRAFT MOD/)
     expect(front('Photo/Vidéo').title).toBe('Creative Workspace Setup')
+    // Même résultat par le DTO (WP-12) : carte de devant = covers[0].
+    const tree = collectionTree({ id: 'lreal', root: lib.root }, lib.db)
+    const gaming = tree.find((n) => n.name === 'Gaming')!
+    expect(gaming.covers[0]!.post?.text ?? '').toMatch(/MINECRAFT MOD/)
+    expect(tree.find((n) => n.name === 'Photo/Vidéo')!.covers[0]!.title).toBe(
+      'Creative Workspace Setup',
+    )
+    expect(gaming.count).toBe(36)
   })
 
   it('ré-import immédiat : 0 création, tout déjà présent, 0 fichier copié', async () => {

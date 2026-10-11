@@ -124,6 +124,11 @@ describe('resolveMediaUrls', () => {
     expect(u.previewUrl).toBeNull()
     expect(u.originalUrl).toBe(`recolt://default/items/0d/${U}.mp4?v=2`)
     expect(resolveMediaUrls(lib, { ...v, poster_rel: null }).thumbUrl).toBeNull()
+    // Arbitrage M1 : la miniature la référence sert de repli tant que le poster manque.
+    const legacy = `thumbs/0d/${U}.legacy.jpg`
+    expect(
+      resolveMediaUrls(lib, { ...v, poster_rel: null, legacy_thumb_rel: legacy }).thumbUrl,
+    ).toContain(legacy)
     expect(resolveMediaUrls(lib, { ...v, preview_rel: `previews/0d/${U}.mp4` }).previewUrl).toBe(
       `recolt://default/previews/0d/${U}.mp4?v=2`,
     )

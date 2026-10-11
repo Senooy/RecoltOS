@@ -8,6 +8,7 @@ import { net } from 'electron'
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { AppError } from '../../shared/errors'
+import { emitCollectionsChanged, emitItemsChanged, setAppEmitter } from '../events'
 import { configureImportService } from '../importers/gatheros/service'
 import { getLibraryManager } from '../library/init'
 import type { Prefs } from '../../shared/prefs'
@@ -55,7 +56,8 @@ export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
 
   const media: MediaCaller = (op, args, opts) => mw.call(op, args, opts)
   const fetchFn: FetchFn = (url, init) => net.fetch(url, init)
-  const batcher = createChangeBatcher((p) => ctx.emit('items.changed', p))
+  setAppEmitter((event, payload) => ctx.emit(event, payload))
+  const batcher = createChangeBatcher((p) => emitItemsChanged(p.uuids, p.reason))
 
   let queue: JobQueue | null = null
   const servicesFor = (): JobServices | null => {
@@ -120,7 +122,7 @@ export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
     kick: () => q.kick(),
     emitProgress: (p) => ctx.emit('import.progress', p),
     changed: (uuids) => batcher.push(uuids, 'created'),
-    collectionsChanged: (uuids) => ctx.emit('collections.changed', { uuids }),
+    collectionsChanged: (uuids) => emitCollectionsChanged(uuids),
     applyPrefs: (patch) => prefsStore.set(patch),
     createLibrary: async (name) => {
       const m = getLibraryManager()
@@ -137,6 +139,7 @@ export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
 
   return async () => {
     configureImportService(null)
+    setAppEmitter(null)
     stopAutoPurge()
     offPrefs()
     disposeLifecycle()

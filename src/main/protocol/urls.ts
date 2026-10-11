@@ -2,7 +2,7 @@
  * URL média des DTO (PLAN §1.7, ARCHI §2.5) : main construit `recolt://<libraryId>/<rel>?v=<n>`,
  * le renderer ne manipule jamais de chemin. Chaîne de repli résolue ICI, pas dans le renderer :
  *   image : thumbUrl = thumb ?? legacyThumb ?? display ?? original
- *   vidéo : thumbUrl = thumb ?? poster ?? null
+ *   vidéo : thumbUrl = thumb ?? poster ?? legacyThumb ?? null (arbitrage M1, CHANGELOG WP-12)
  * Pas d'import `electron` : utilisé par les DTO (WP-12…) et testé sous Node.
  */
 import type { MediaRow } from '../db/repos/media'
@@ -106,7 +106,7 @@ export function resolveMediaUrls(libId: string, m: MediaUrlSource | null | undef
   if (m.media_type === 'video') {
     const poster = url(m.poster_rel)
     return {
-      thumbUrl: thumb ?? poster ?? null,
+      thumbUrl: thumb ?? poster ?? url(m.legacy_thumb_rel) ?? null,
       largeUrl: large,
       posterUrl: poster,
       previewUrl: url(m.preview_rel),

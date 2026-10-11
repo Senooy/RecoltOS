@@ -74,6 +74,8 @@ export const ItemCard = z.object({
   previewUrl: MediaUrl.nullable(),
   originalUrl: MediaUrl.nullable(),
   post: PostView.nullable(),
+  /** Hôte de `source_url` (« reddit.com ») pour `PageCard` : un nom d'hôte, jamais une URL. */
+  sourceHost: z.string().max(253).nullable().default(null),
 })
 export type ItemCard = z.output<typeof ItemCard>
 
