@@ -103,6 +103,7 @@ module.exports = {
   },
   files: [
     'out/**',
+    'resources/**',
     '!out/host/**',
     '!out/native-host/**',
     'package.json',

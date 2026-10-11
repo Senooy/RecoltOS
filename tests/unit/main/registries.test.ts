@@ -10,7 +10,7 @@ import { jobHandlers } from '../../../src/main/jobs/handlers'
 import { dispatch } from '../../../src/main/ipc/router'
 
 /** Domaines IPC déjà implémentés (les autres sont encore des stubs `not_implemented`). */
-const IMPLEMENTED_DOMAINS: readonly string[] = ['prefs', 'libraries']
+const IMPLEMENTED_DOMAINS: readonly string[] = ['prefs', 'libraries', 'system']
 
 function fakeCtx(userData: string = makeTmpDir('recolt-registries-')): ServiceContext {
   return {
