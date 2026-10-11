@@ -5,8 +5,8 @@
 import { createHash } from 'node:crypto'
 import { once } from 'node:events'
 import { constants, createReadStream, createWriteStream } from 'node:fs'
-import { copyFile, stat } from 'node:fs/promises'
-import { extname, isAbsolute, posix, resolve } from 'node:path'
+import { copyFile, lstat, stat } from 'node:fs/promises'
+import { extname, isAbsolute, posix, relative, resolve } from 'node:path'
 import { pipeline } from 'node:stream/promises'
 import sharp from 'sharp'
 import yazl from 'yazl'
@@ -130,6 +130,20 @@ export interface ZipProgress {
 }
 
 /**
+ * Chemin source d'une entrée zip. Un chemin absolu (envoyé par main, de confiance) est pris tel
+ * quel ; un chemin relatif est résolu depuis `root` et doit rester dans `root`.
+ */
+export function resolveEntryAbs(root: string, abs: string): string {
+  if (isAbsolute(abs)) return abs
+  const resolved = resolve(root, abs)
+  const rel = relative(root, resolved)
+  if (rel === '' || rel === '..' || rel.startsWith('../') || isAbsolute(rel)) {
+    throw new AppError('validation', `chemin source hors de la bibliothèque : ${abs}`)
+  }
+  return resolved
+}
+
+/**
  * Archive `entries` dans `out` (écriture atomique). `abs` relatif est résolu depuis `root`.
  * Progression émise à chaque entrée lue.
  */
@@ -149,7 +163,7 @@ export async function zipLibrary(
     if (typeof e.abs !== 'string' || e.abs.length === 0) {
       throw new AppError('validation', 'chemin source manquant')
     }
-    return { name, abs: isAbsolute(e.abs) ? e.abs : resolve(root, e.abs) }
+    return { name, abs: resolveEntryAbs(root, e.abs) }
   })
   const total = entries.length
   return writeAtomic(
@@ -173,11 +187,15 @@ export async function zipLibrary(
       let done = 0
       try {
         for (const e of entries) {
+          // lstat : un lien symbolique n'est pas suivi (il pourrait pointer hors de la bibliothèque).
           let st
           try {
-            st = await stat(e.abs)
+            st = await lstat(e.abs)
           } catch (err) {
             throw ioError(err, e.abs)
+          }
+          if (st.isSymbolicLink()) {
+            throw new AppError('validation', `lien symbolique refusé : ${e.abs}`)
           }
           if (!st.isFile()) throw new AppError('validation', `pas un fichier : ${e.abs}`)
           zip.addReadStreamLazy(

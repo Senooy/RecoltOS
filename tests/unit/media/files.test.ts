@@ -9,6 +9,7 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  symlinkSync,
   truncateSync,
   writeFileSync,
 } from 'node:fs'
@@ -109,6 +110,38 @@ describe('zipLibrary', () => {
       zipLibrary({ root: tmp.dir, out, entries: [{ abs: join(tmp.dir, 'nope'), name: 'n' }] }),
     ).rejects.toMatchObject({ code: 'not_found' })
     expect(readdirSync(join(tmp.dir, 'bad'))).toEqual([])
+  })
+
+  it('chemin relatif qui sort de la bibliothèque refusé ; lien symbolique refusé', async () => {
+    const root = join(tmp.dir, 'confine')
+    mkdirSync(join(root, 'items'), { recursive: true })
+    writeFileSync(join(root, 'items', 'ok.bin'), 'ok')
+    writeFileSync(join(tmp.dir, 'outside.bin'), 'secret')
+    const out = join(tmp.dir, 'confine-out', 'c.zip')
+    for (const abs of ['../outside.bin', 'items/../../outside.bin', '.', '']) {
+      await expect(zipLibrary({ root, out, entries: [{ abs, name: 'x' }] })).rejects.toMatchObject({
+        code: 'validation',
+      })
+    }
+    symlinkSync(join(tmp.dir, 'outside.bin'), join(root, 'items', 'link.bin'))
+    await expect(
+      zipLibrary({ root, out, entries: [{ abs: 'items/link.bin', name: 'link.bin' }] }),
+    ).rejects.toMatchObject({ code: 'validation' })
+    await expect(
+      zipLibrary({
+        root,
+        out,
+        entries: [{ abs: join(root, 'items', 'link.bin'), name: 'link.bin' }],
+      }),
+    ).rejects.toMatchObject({ code: 'validation' })
+    expect(readdirSync(join(tmp.dir, 'confine-out'))).toEqual([])
+    // Un chemin relatif sous la racine reste accepté.
+    const ok = await zipLibrary({
+      root,
+      out,
+      entries: [{ abs: 'items/ok.bin', name: 'items/ok.bin' }],
+    })
+    expect(ok.bytes).toBeGreaterThan(0)
   })
 
   describe('source modifiée ou supprimée pendant l’export', () => {
