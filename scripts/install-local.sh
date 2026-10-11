@@ -8,6 +8,17 @@
 # Les données (~/Library/Application Support/RecoltOS) ne sont JAMAIS touchées.
 set -eu
 
+# Garde-fou tests : sous Vitest ou NODE_ENV=test, l'installation doit viser un dossier explicite (jamais
+# /Applications par défaut) et ne doit pas ouvrir l'app. Évite de relancer l'app empaquetée sans
+# RECOLTOS_USER_DATA, comme lors de l'incident de test décrit dans docs/spikes/s2-signature.md.
+if [ -n "${VITEST:-}" ] || [ "${NODE_ENV:-}" = "test" ]; then
+  if [ -z "${RECOLTOS_INSTALL_DIR:-}" ]; then
+    echo "install-local : refus sous test sans RECOLTOS_INSTALL_DIR (pas de /Applications depuis un test)." >&2
+    exit 2
+  fi
+  RECOLTOS_NO_OPEN="${RECOLTOS_NO_OPEN:-1}"
+fi
+
 # Teste si l'app installée à $DST tourne (correspondance littérale du chemin, pas une regex).
 running_from_dst() {
   ps -axww -o command= | grep -F -- "$DST/Contents/MacOS/RecoltOS" | grep -v -F -- grep >/dev/null 2>&1
