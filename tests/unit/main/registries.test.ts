@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { makeTmpDir } from '../../helpers/tmpdir'
 import { AppError } from '../../../src/shared/errors'
 import { CHANNELS, DOMAINS, domainOf } from '../../../src/shared/ipc'
 import { JOB_TYPES, type JobRecord } from '../../../src/shared/jobs'
@@ -8,9 +9,12 @@ import { handlers, handlersByDomain } from '../../../src/main/ipc/handlers'
 import { jobHandlers } from '../../../src/main/jobs/handlers'
 import { dispatch } from '../../../src/main/ipc/router'
 
-function fakeCtx(): ServiceContext {
+/** Domaines IPC déjà implémentés (les autres sont encore des stubs `not_implemented`). */
+const IMPLEMENTED_DOMAINS: readonly string[] = ['prefs', 'libraries']
+
+function fakeCtx(userData: string = makeTmpDir('recolt-registries-')): ServiceContext {
   return {
-    userData: '/tmp/recolt-test',
+    userData,
     flags: { e2e: true, windowSize: null, home: null, rendererUrl: null, installDevHost: false },
     isPackaged: false,
     getMainWindow: () => null,
@@ -24,7 +28,7 @@ describe('registre des handlers IPC', () => {
     expect(Object.keys(handlersByDomain).sort()).toEqual([...DOMAINS].sort())
   })
 
-  it('chaque canal du contrat a un handler stub qui lève not_implemented', async () => {
+  it('chaque canal du contrat a un handler ; les domaines encore en stub lèvent not_implemented', async () => {
     expect(Object.keys(handlers).sort()).toEqual([...CHANNELS].sort())
     for (const ch of CHANNELS) {
       const domainHandlers = handlersByDomain[
@@ -32,6 +36,7 @@ describe('registre des handlers IPC', () => {
       ] as Record<string, (i: unknown, c: object) => unknown>
       const h = domainHandlers[ch]
       expect(h, ch).toBeTypeOf('function')
+      if (IMPLEMENTED_DOMAINS.includes(domainOf(ch))) continue
       let err: unknown
       try {
         await h?.({}, {})
@@ -99,7 +104,11 @@ describe('registre des services', () => {
 
   it('le registre réel démarre sans erreur (stubs)', async () => {
     const h = await initServices(fakeCtx())
-    expect(h.failed).toEqual([])
-    expect(h.started).toEqual([...SERVICE_DOMAINS])
+    try {
+      expect(h.failed).toEqual([])
+      expect(h.started).toEqual([...SERVICE_DOMAINS])
+    } finally {
+      await h.dispose()
+    }
   })
 })

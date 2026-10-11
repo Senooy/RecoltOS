@@ -91,7 +91,13 @@ export default defineConfig({
     resolve: { alias },
     build: {
       outDir: 'out/main',
-      rollupOptions: { input: { index: resolve(root, 'src/main/index.ts') } },
+      // Deux entrées : le main et le worker média (utilityProcess, WP-03 → out/main/media.worker.js).
+      rollupOptions: {
+        input: {
+          index: resolve(root, 'src/main/index.ts'),
+          'media.worker': resolve(root, 'src/main/workers/media.worker.ts'),
+        },
+      },
     },
   },
   preload: {
