@@ -128,7 +128,15 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
     }
   }
 
+  /** Un nom de collection ne peut pas être vide (après rognage des espaces). */
+  const assertName = (name: string): void => {
+    if (name.trim() === '') {
+      throw new AppError('validation', 'Le nom de la collection ne peut pas être vide.')
+    }
+  }
+
   const create = (c: NewCollection): { id: number; uuid: string } => {
+    assertName(c.name)
     const at = now()
     const uuid = c.uuid ?? newUuid()
     const parentId = c.parentId ?? null
@@ -158,6 +166,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
   const update = (id: number, patch: CollectionPatch): boolean => {
     return db.transaction(() => {
       requireById(id)
+      if (patch.name !== undefined) assertName(patch.name)
       if (patch.parentId !== undefined) {
         if (patch.parentId !== null) requireById(patch.parentId)
         assertNoCycle(id, patch.parentId)

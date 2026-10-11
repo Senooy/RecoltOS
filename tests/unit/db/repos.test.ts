@@ -725,3 +725,26 @@ describe('renumérotation et erreurs de validation', () => {
     expect(lib.repos.jobs.get(id)?.priority).toBe(JOB_PRIORITY.BACKGROUND)
   })
 })
+
+describe('collections : nom vide refusé (écriture gelée)', () => {
+  it('create et update refusent un nom vide ou blanc, sans rien écrire', () => {
+    const { collections } = lib.repos
+    const a = collections.create({ name: 'A' })
+    expect(() => collections.create({ name: '' })).toThrow(
+      expect.objectContaining({ code: 'validation' }),
+    )
+    expect(() => collections.create({ name: '   ' })).toThrow(
+      expect.objectContaining({ code: 'validation' }),
+    )
+    expect(() => collections.update(a.id, { name: ' \t' })).toThrow(
+      expect.objectContaining({ code: 'validation' }),
+    )
+    const count = lib.db.prepare('SELECT count(*) AS n FROM collections').get() as { n: number }
+    expect(count.n).toBe(1)
+    expect(collections.update(a.id, { name: 'Renommée' })).toBe(true)
+    expect(
+      (lib.db.prepare('SELECT name FROM collections WHERE id = ?').get(a.id) as { name: string })
+        .name,
+    ).toBe('Renommée')
+  })
+})

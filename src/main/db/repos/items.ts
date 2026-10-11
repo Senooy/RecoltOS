@@ -438,6 +438,10 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
     /**
      * Suppression définitive (ARCHI §7) en UNE transaction : liste des fichiers, `DELETE` (cascades,
      * FTS, pierres tombales `item` par trigger) et job `purge.files` (`item_id NULL`).
+     * Coût : un seul `DELETE … IN json_each` (≈ 213 ms pour 3 000 items, mesuré) et un payload
+     * `purge.files` d'un seul tenant. Les appelants (« Vider la corbeille », purge automatique WP-12)
+     * DOIVENT donc découper en lots de 500 ids (`chunks(ids, 500)`) : un appel = une transaction
+     * = un job `purge.files`.
      */
     purge(ids: readonly number[], mode: PurgeMode = 'rm'): PurgeResult {
       return db.transaction((): PurgeResult => {
