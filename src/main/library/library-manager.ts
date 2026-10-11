@@ -46,6 +46,24 @@ export const LibrariesRegistry = z.object({
 })
 export type LibrariesRegistry = z.output<typeof LibrariesRegistry>
 
+/** Même règle que le nom du contrat IPC (`shared/ipc/libraries.ts`) : rogné, 1 à 100 caractères. */
+const LibraryName = z.string().trim().min(1).max(100)
+
+function parseName(name: unknown): string {
+  const r = LibraryName.safeParse(name)
+  if (!r.success) {
+    throw new AppError('validation', 'Le nom de la bibliothèque doit faire de 1 à 100 caractères.')
+  }
+  return r.data
+}
+
+/** Lecture tolérante : seules les entrées valides sont gardées (une entrée abîmée ne vide pas le registre). */
+const LenientRegistry = z.object({
+  version: z.literal(1),
+  active: z.unknown().optional(),
+  libraries: z.array(z.unknown()),
+})
+
 // ---------------------------------------------------------------------------------------------
 // Dossiers synchronisés
 // ---------------------------------------------------------------------------------------------
@@ -167,15 +185,47 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       save(defaultRegistry())
       return registry!
     }
-    const parsed = LibrariesRegistry.safeParse(raw)
-    if (!parsed.success) {
-      deps.log?.warn('[library] libraries.json invalide, mis de côté', parsed.error.issues)
+    const lenient = LenientRegistry.safeParse(raw)
+    const entries: RegistryEntry[] = []
+    let dropped = 0
+    if (lenient.success) {
+      const seen = new Set<string>()
+      for (const candidate of lenient.data.libraries) {
+        const e = RegistryEntry.safeParse(candidate)
+        if (e.success && !seen.has(e.data.id)) {
+          seen.add(e.data.id)
+          entries.push(e.data)
+        } else {
+          dropped++
+          deps.log?.warn(
+            '[library] entrée de libraries.json invalide, écartée',
+            e.success ? 'identifiant en double' : e.error.issues,
+          )
+        }
+      }
+    }
+    if (!lenient.success || entries.length === 0) {
+      deps.log?.warn(
+        '[library] libraries.json invalide, mis de côté',
+        lenient.success ? 'aucune entrée valide' : lenient.error.issues,
+      )
       quarantine(files.libraries, now())
       save(defaultRegistry())
       return registry!
     }
-    const r = parsed.data
-    if (!r.libraries.some((l) => l.id === r.active)) r.active = r.libraries[0]!.id
+    const active = LibraryId.safeParse(lenient.data.active)
+    const r: LibrariesRegistry = {
+      version: 1,
+      active:
+        active.success && entries.some((l) => l.id === active.data) ? active.data : entries[0]!.id,
+      libraries: entries,
+    }
+    if (dropped > 0) {
+      // Garde l'original de côté puis réécrit le registre nettoyé.
+      quarantine(files.libraries, now())
+      save(r)
+      return r
+    }
     registry = r
     return r
   }
@@ -277,6 +327,17 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     setActiveLibrary(null)
   }
 
+  /** Relance workers puis file de jobs après une fermeture suivie d'une ouverture réussie. */
+  const restartBackground = async (): Promise<void> => {
+    const hooks = aggregatedCloseHooks()
+    try {
+      await hooks.startWorkers()
+      await hooks.resumeJobs()
+    } catch (err) {
+      deps.log?.error('[library] relance des workers / de la file impossible', err)
+    }
+  }
+
   const switchTo = async (id: string): Promise<void> => {
     const target = entry(id)
     if (ctx?.id === id) return
@@ -286,9 +347,13 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       await openEntry(target)
     } catch (err) {
       deps.log?.error(`[library] ouverture de ${id} impossible`, err)
-      if (previous) await openEntry(previous)
+      if (previous) {
+        await openEntry(previous)
+        await restartBackground()
+      }
       throw err
     }
+    await restartBackground()
     save({ ...load(), active: id })
     deps.emit?.('library.switched', { libraryId: id })
   }
@@ -344,6 +409,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         const r = load()
         await closeActive(false)
         const next = await openEntry(entry(r.active))
+        await restartBackground()
         deps.emit?.('library.switched', { libraryId: next.id })
         return next
       })
@@ -360,6 +426,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
      */
     create(input: { name: string; path?: string }): Promise<LibraryInfo> {
       return serial(async () => {
+        const name = parseName(input.name)
         const id = freshId()
         let custom: string | null = null
         if (input.path) {
@@ -377,7 +444,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         }
         // Emplacement par défaut (`userData/libraries/<id>`) : pas de contrôle, comme `open()`
         // (l'app y vit déjà ; en dev, `RECOLTOS_USER_DATA` peut être sous un dossier synchronisé).
-        const e: RegistryEntry = { id, name: input.name.trim(), path: custom, createdAt: now() }
+        const e: RegistryEntry = { id, name, path: custom, createdAt: now() }
         fs.mkdirSync(rootOf(e), { recursive: true })
         save({ ...load(), libraries: [...load().libraries, e] })
         try {
@@ -408,7 +475,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         if (!e) {
           e = {
             id: freshId(),
-            name: path.basename(root) || DEFAULT_LIBRARY_NAME,
+            name: path.basename(root).trim().slice(0, 100) || DEFAULT_LIBRARY_NAME,
             path: root,
             createdAt: now(),
           }
@@ -420,9 +487,10 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     },
 
     rename(id: string, name: string): LibraryInfo {
+      const clean = parseName(name)
       const r = load()
       const e = entry(id)
-      const next = { ...e, name: name.trim() }
+      const next = { ...e, name: clean }
       save({ ...r, libraries: r.libraries.map((l) => (l.id === id ? next : l)) })
       if (ctx?.id === id) ctx.name = next.name
       return info(next)

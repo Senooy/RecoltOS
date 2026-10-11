@@ -22,7 +22,10 @@ export interface LibraryContext {
  * Accroches de cycle de vie, enregistrées par les domaines dans leur `init.ts` :
  * - `afterOpen` : la bibliothèque vient d'être ouverte (démarrage, bascule, restauration) ;
  * - `pauseJobs` / `stopWorkers` : appelés par `closeLibrary` AVANT le checkpoint ;
- * - `resumeJobs` / `startWorkers` : relance après un `closeLibrary({forReplace})` annulé.
+ * - `startWorkers` / `resumeJobs` : relance après un `closeLibrary({forReplace})` annulé, ET après
+ *   chaque bascule, repli ou `reopen()` réussi (le gestionnaire les appelle APRÈS `afterOpen`, dans
+ *   l'ordre inverse d'enregistrement). Au démarrage (`open()`), seul `afterOpen` est appelé : il
+ *   démarre les workers et la file. Les trois doivent donc être idempotents.
  */
 export interface LibraryLifecycle extends CloseHooks {
   afterOpen?(ctx: LibraryContext): void | Promise<void>

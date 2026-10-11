@@ -490,6 +490,36 @@ describe('jobs', () => {
     expect(() => jobs.enqueue({ type: 'embed.item' as never })).toThrow(/CHECK/)
   })
 
+  it('requeueFailed : ne viole pas ux_jobs_active quand la clé est déjà active ou en double', () => {
+    const { jobs } = lib.repos
+    const fail = (id: number) => {
+      jobs.claimNext('media.derive')
+      jobs.fail(id, { code: 'io', message: 'x' })
+    }
+    const a = jobs.enqueue({ type: 'media.derive', dedupeKey: 'item:1' })
+    fail(a)
+    const b = jobs.enqueue({ type: 'media.derive', dedupeKey: 'item:1' })
+    expect(b).not.toBe(a)
+    expect(jobs.requeueFailed('media.derive')).toBe(0)
+    expect(jobs.get(a)?.state).toBe('cancelled')
+    expect(jobs.get(b)?.state).toBe('queued')
+
+    // Deux `failed` de même clé : seul le plus récent est relancé.
+    jobs.claimNext('media.derive')
+    jobs.fail(b, { code: 'io', message: 'x' })
+    const c = jobs.enqueue({ type: 'media.derive', dedupeKey: 'item:1' })
+    fail(c)
+    const lone = jobs.enqueue({ type: 'media.derive', dedupeKey: 'item:2' })
+    fail(lone)
+    const nokey = jobs.enqueue({ type: 'media.derive' })
+    fail(nokey)
+    expect(jobs.requeueFailed()).toBe(3)
+    expect(jobs.get(b)?.state).toBe('cancelled')
+    expect(jobs.get(c)?.state).toBe('queued')
+    expect(jobs.get(lone)?.state).toBe('queued')
+    expect(jobs.get(nokey)?.state).toBe('queued')
+  })
+
   it('charge utile illisible → failedOn vide', () => {
     const { jobs } = lib.repos
     const id = jobs.enqueue({ type: 'remote.fetch', payload: { url: 'u', failedOn: ['cdn1'] } })

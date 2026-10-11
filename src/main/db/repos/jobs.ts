@@ -68,6 +68,22 @@ export function toJobRecord(row: JobRow): JobRecord {
 
 export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
   const { q, now } = repoBase(db, opts)
+  const requeueTx = db.transaction((type: JobType | null, at: number): number => {
+    // `ux_jobs_active` interdit deux jobs actifs de même (type, dedupe_key) : les `failed`
+    // supplantés (clé déjà active, ou `failed` plus récent de même clé) passent en `cancelled`.
+    q(
+      `UPDATE jobs SET state = 'cancelled', updated_at = @at
+       WHERE state = 'failed' AND (@type IS NULL OR type = @type) AND dedupe_key IS NOT NULL AND (
+         EXISTS (SELECT 1 FROM jobs a WHERE a.type = jobs.type AND a.dedupe_key = jobs.dedupe_key
+                   AND a.state IN ('queued','running'))
+         OR EXISTS (SELECT 1 FROM jobs f WHERE f.type = jobs.type AND f.dedupe_key = jobs.dedupe_key
+                      AND f.state = 'failed' AND f.id > jobs.id))`,
+    ).run({ type, at })
+    return q(
+      `UPDATE jobs SET state = 'queued', attempts = 0, run_after = 0, updated_at = @at
+       WHERE state = 'failed' AND (@type IS NULL OR type = @type)`,
+    ).run({ type, at }).changes
+  })
   return {
     /**
      * Ajoute un job. Avec `dedupeKey`, un job actif (`queued`/`running`) du même type est réutilisé
@@ -157,12 +173,12 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
       ).run({ item: itemId, type: type ?? null, at }).changes
     },
 
-    /** Remet en `queued` des jobs `failed` (bouton « Réessayer »). */
+    /**
+     * Remet en `queued` des jobs `failed` (bouton « Réessayer »). Les doublons de clé de dédup
+     * déjà actifs ou supplantés sont annulés au lieu d'être relancés.
+     */
     requeueFailed(type?: JobType, at: number = now()): number {
-      return q(
-        `UPDATE jobs SET state = 'queued', attempts = 0, run_after = 0, updated_at = @at
-         WHERE state = 'failed' AND (@type IS NULL OR type = @type)`,
-      ).run({ type: type ?? null, at }).changes
+      return requeueTx(type ?? null, at)
     },
 
     /** Au démarrage : les jobs restés `running` repassent en `queued`. */

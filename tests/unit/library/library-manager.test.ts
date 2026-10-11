@@ -125,6 +125,30 @@ describe('ouverture et registre', () => {
     expect(log.warn).toHaveBeenCalledTimes(2)
   })
 
+  it('entrée invalide : seule cette entrée est écartée, les autres bibliothèques sont conservées', async () => {
+    const ext = path.join(base, 'ext')
+    fs.mkdirSync(ext, { recursive: true })
+    fs.mkdirSync(userData, { recursive: true })
+    fs.writeFileSync(
+      registryFile(),
+      JSON.stringify({
+        version: 1,
+        active: 'default',
+        libraries: [
+          { id: 'default', name: 'Bibliothèque', path: null, createdAt: 1 },
+          { id: 'lbad', name: '', path: null, createdAt: 2 },
+          { id: 'lext', name: 'Externe', path: ext, createdAt: 3 },
+        ],
+      }),
+    )
+    const m = make()
+    await m.open()
+    expect(m.registry().libraries.map((l) => l.id)).toEqual(['default', 'lext'])
+    expect(readRegistry().libraries.map((l) => l.id)).toEqual(['default', 'lext'])
+    expect(fs.readdirSync(userData).some((f) => f.startsWith('libraries.json.bad-'))).toBe(true)
+    expect(log.warn).toHaveBeenCalled()
+  })
+
   it('active inconnue → première de la liste ; active indisponible → repli sur default', async () => {
     const ext = path.join(base, 'ext')
     fs.mkdirSync(userData, { recursive: true })
@@ -274,6 +298,16 @@ describe('dossier existant, renommage, retrait', () => {
     ).rejects.toMatchObject({ code: 'synced_folder_refused' })
   })
 
+  it('noms vides ou trop longs refusés (validation) ; le registre reste relisible', async () => {
+    const m = make()
+    await m.open()
+    await expect(m.create({ name: '   ' })).rejects.toMatchObject({ code: 'validation' })
+    await expect(m.create({ name: 'x'.repeat(101) })).rejects.toMatchObject({ code: 'validation' })
+    expect(() => m.rename('default', '  ')).toThrow(expect.objectContaining({ code: 'validation' }))
+    expect(m.registry().libraries.map((l) => l.name)).toEqual(['Bibliothèque'])
+    expect(readRegistry().libraries).toHaveLength(1)
+  })
+
   it('renommage, retrait (fichiers conservés), bibliothèque ouverte non retirable', async () => {
     const m = make()
     await m.open()
@@ -308,6 +342,42 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
     off()
     await m.switch('default')
     expect(calls).toHaveLength(4)
+  })
+
+  it('bascule, repli et reopen relancent les workers puis la file (pause → stop → afterOpen → start → resume)', async () => {
+    const calls: string[] = []
+    registerLibraryLifecycle('all', {
+      pauseJobs: () => void calls.push('pause'),
+      stopWorkers: () => void calls.push('stop'),
+      startWorkers: () => void calls.push('start'),
+      resumeJobs: () => void calls.push('resume'),
+      afterOpen: (ctx) => void calls.push(`open:${ctx.id}`),
+    })
+    const m = make()
+    await m.open()
+    expect(calls).toEqual(['open:default'])
+    calls.length = 0
+    const lib = await m.create({ name: 'B' })
+    expect(calls).toEqual(['pause', 'stop', `open:${lib.id}`, 'start', 'resume'])
+
+    calls.length = 0
+    await m.reopen()
+    expect(calls).toEqual(['pause', 'stop', `open:${lib.id}`, 'start', 'resume'])
+
+    // Repli sur la bibliothèque précédente : relancée aussi.
+    const dir = path.join(base, 'amovible')
+    const ext = await m.create({ name: 'Disque', path: dir })
+    await m.switch('default')
+    fs.rmSync(dir, { recursive: true })
+    calls.length = 0
+    await expect(m.switch(ext.id)).rejects.toMatchObject({ code: 'library_unavailable' })
+    expect(calls).toEqual(['pause', 'stop', 'open:default', 'start', 'resume'])
+
+    // Restauration : closeForReplace puis reopen relance une seule fois.
+    calls.length = 0
+    await m.closeForReplace()
+    await m.reopen()
+    expect(calls).toEqual(['pause', 'stop', 'open:default', 'start', 'resume'])
   })
 
   it('échec d’ouverture de la cible : retour à la bibliothèque précédente', async () => {
