@@ -107,10 +107,12 @@ export function matchesKey(e: KeyboardLike, m: KeyMatch & Modifiers): boolean {
       return modsMatch(e, m) && e.key === m.key
     case 'zoom': {
       // '+' exige ⇧ sur certaines dispositions : on ignore ⇧ pour le zoom.
+      // Pas de repli positionnel (`e.code` Equal/Minus) : en AZERTY la touche « - » a
+      // `code:'Equal'` et « ) » a `code:'Minus'`, ce qui déclencherait la mauvaise commande.
       if (!modsMatch(e, m, true)) return false
       return m.dir === 'in'
-        ? e.key === '+' || e.key === '=' || e.code === 'Equal' || e.code === 'NumpadAdd'
-        : e.key === '-' || e.code === 'Minus' || e.code === 'NumpadSubtract'
+        ? e.key === '+' || e.key === '=' || e.code === 'NumpadAdd'
+        : e.key === '-' || e.key === '_' || e.code === 'NumpadSubtract'
     }
   }
 }
