@@ -27,22 +27,32 @@ export type PrefsStore = ReturnType<typeof createPrefsStore>
 export function createPrefsStore(deps: PrefsStoreDeps) {
   const listeners = new Set<PrefsListener>()
 
-  const read = (): Prefs => {
+  /**
+   * Lit le fichier. `repaired` : le fichier était absent, mis de côté ou différent de ce qui a été
+   * lu (champ réparé) ; il doit alors être réécrit (`persist`), sinon il reste abîmé sur disque.
+   */
+  const read = (): { prefs: Prefs; repaired: boolean } => {
     let raw: unknown
     try {
       raw = JSON.parse(fs.readFileSync(deps.file, 'utf8'))
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return DEFAULT_PREFS
-      deps.log?.warn('[prefs] prefs.json illisible, mis de côté', err)
-      quarantine(deps.file, (deps.now ?? Date.now)())
-      return DEFAULT_PREFS
+      if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        deps.log?.warn('[prefs] prefs.json illisible, mis de côté', err)
+        quarantine(deps.file, (deps.now ?? Date.now)())
+      }
+      return { prefs: DEFAULT_PREFS, repaired: true }
     }
-    return parsePrefsLenient(raw)
+    const prefs = parsePrefsLenient(raw)
+    return { prefs, repaired: JSON.stringify(prefs) !== JSON.stringify(raw) }
   }
 
-  let current: Prefs = read()
+  const initial = read()
+  let current: Prefs = initial.prefs
 
   return {
+    /** Vrai si `prefs.json` a été créé, mis de côté ou réparé à l'ouverture : à réécrire. */
+    repairedAtOpen: initial.repaired,
+
     get(): Prefs {
       return current
     },

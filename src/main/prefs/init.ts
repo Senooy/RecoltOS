@@ -11,6 +11,8 @@ import { createPrefsStore, setPrefsStore } from './store'
 export function initPrefs(ctx: ServiceContext): Disposer {
   const store = createPrefsStore({ file: userDataPaths(ctx.userData).prefs, log: ctx.log })
   setPrefsStore(store)
+  // Premier lancement, fichier mis de côté ou réparé : on écrit l'état effectif sur disque.
+  if (store.repairedAtOpen) store.persist()
   // Hors Electron (tests sous Node), `nativeTheme` est absent : le thème natif n'est alors pas touché.
   const syncNativeTheme = (theme: ReturnType<typeof store.get>['theme']) => {
     if (nativeTheme) nativeTheme.themeSource = theme

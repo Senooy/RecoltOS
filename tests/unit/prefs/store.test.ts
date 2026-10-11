@@ -144,3 +144,47 @@ describe('initPrefs + handlers prefs.*', () => {
     expect(getPrefsStore()).toBeNull()
   })
 })
+
+describe('prefs.json écrit au premier lancement et après réparation', () => {
+  const serviceCtx = (): ServiceContext => ({
+    userData: dir,
+    flags: { e2e: true, windowSize: null, home: null, rendererUrl: null, installDevHost: false },
+    isPackaged: false,
+    getMainWindow: () => null,
+    emit: vi.fn(),
+    log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+  })
+
+  it('repairedAtOpen : absent, mis de côté ou réparé → vrai ; fichier valide → faux', () => {
+    expect(createPrefsStore({ file }).repairedAtOpen).toBe(true)
+    fs.writeFileSync(file, '{oups')
+    expect(createPrefsStore({ file, now: () => 3 }).repairedAtOpen).toBe(true)
+    fs.writeFileSync(file, JSON.stringify({ theme: 'dark', defaultColumns: 99 }))
+    expect(createPrefsStore({ file }).repairedAtOpen).toBe(true)
+    // Un fichier produit par le magasin lui-même est relu tel quel.
+    const store = createPrefsStore({ file })
+    store.set({ theme: 'light' })
+    expect(createPrefsStore({ file }).repairedAtOpen).toBe(false)
+  })
+
+  it('initPrefs crée prefs.json au premier lancement', async () => {
+    const dispose = initPrefs(serviceCtx())
+    expect(onDisk()).toEqual(DEFAULT_PREFS)
+    await dispose()
+  })
+
+  it('initPrefs réécrit un fichier mis de côté : le fichier est reconstitué sur disque', async () => {
+    fs.writeFileSync(file, '{oups')
+    const dispose = initPrefs(serviceCtx())
+    expect(fs.readdirSync(dir).some((f) => f.startsWith('prefs.json.bad-'))).toBe(true)
+    expect(onDisk()).toEqual(DEFAULT_PREFS)
+    await dispose()
+  })
+
+  it('initPrefs réécrit un champ réparé sans perdre le reste', async () => {
+    fs.writeFileSync(file, JSON.stringify({ theme: 'dark', defaultColumns: 99 }))
+    const dispose = initPrefs(serviceCtx())
+    expect(onDisk()).toMatchObject({ theme: 'dark', defaultColumns: DEFAULT_PREFS.defaultColumns })
+    await dispose()
+  })
+})
