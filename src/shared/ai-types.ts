@@ -159,5 +159,9 @@ export const PauseReason = z.enum([
   'HARD_CAP',
   'USER',
   'NOT_AUTHENTICATED',
+  'NOT_INSTALLED',
 ])
 export type PauseReason = z.output<typeof PauseReason>
+
+/** Version du texte de consentement (AI §11) : la changer redemande l'accord. */
+export const AI_CONSENT_VERSION = 1

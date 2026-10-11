@@ -78,6 +78,7 @@ export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
     services: servicesFor,
     handlers: jobHandlers,
     failureHooks: jobFailureHooks,
+    concurrencyOf: (type) => (type === 'ai.enrich' ? prefsStore.get().ai.concurrency : undefined),
     onStatus: (s) => ctx.emit('jobs.progress', s),
   })
   const q = queue

@@ -60,6 +60,8 @@ export interface JobQueueDeps {
   failureHooks?: Partial<Record<JobType, JobFailureHook>>
   now?: () => number
   concurrency?: Partial<Record<JobType, number>>
+  /** Plafond dynamique (ex. `prefs.ai.concurrency`) ; prime sur `concurrency`. */
+  concurrencyOf?: (type: JobType) => number | undefined
   /** Période du réveil (jobs différés, pauses expirées). */
   tickMs?: number
   /** Appelé (au plus toutes les `statusThrottleMs`) quand l'état de la file change. */
@@ -109,7 +111,7 @@ export class JobQueue {
   }
 
   private cap(type: JobType): number {
-    return this.deps.concurrency?.[type] ?? JOB_CONCURRENCY[type]
+    return this.deps.concurrencyOf?.(type) ?? this.deps.concurrency?.[type] ?? JOB_CONCURRENCY[type]
   }
 
   /** Démarre la boucle (idempotent). Au premier démarrage : relit les pauses persistées. */
@@ -281,6 +283,11 @@ export class JobQueue {
     const jobs = services.lib.repos.jobs
     if (outcome.status === 'done') {
       jobs.complete(job.id, this.now())
+    } else if (outcome.status === 'defer') {
+      jobs.retry(job.id, outcome.retryAt, outcome.error ?? null, {
+        refundAttempt: true,
+        at: this.now(),
+      })
     } else if (outcome.status === 'retry' && job.attempts < job.maxAttempts) {
       jobs.retry(job.id, outcome.retryAt, outcome.error, { at: this.now() })
     } else {

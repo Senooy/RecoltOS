@@ -63,7 +63,11 @@ export default defineConfig({
           include: realLibrary
             ? ['tests/real/**/*.test.ts']
             : importedUserData
-              ? ['tests/real/m2-imported.test.ts', 'tests/real/m3-imported.test.ts']
+              ? [
+                  'tests/real/m2-imported.test.ts',
+                  'tests/real/m3-imported.test.ts',
+                  'tests/real/m4-imported.test.ts',
+                ]
               : [],
           fileParallelism: false,
           testTimeout: 600_000,

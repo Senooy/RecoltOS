@@ -2,7 +2,7 @@
  * Table FIGÉE type de job → handler (PLAN §1.26, §4.2). Chaque lot remplit son fichier.
  */
 import type { JobType } from '../../../shared/jobs'
-import { aiEnrich } from './ai-enrich'
+import { aiEnrich, aiEnrichFailed } from './ai-enrich'
 import { aiPrompt } from './ai-prompt'
 import { avatarFetch, avatarFetchFailed } from './avatar-fetch'
 import { mediaDerive, mediaDeriveFailed } from './media-derive'
@@ -31,4 +31,5 @@ export const jobFailureHooks: Partial<Record<JobType, JobFailureHook>> = {
   'media.preview': () => undefined,
   'media.download': mediaDownloadFailed,
   'avatar.fetch': avatarFetchFailed,
+  'ai.enrich': aiEnrichFailed,
 }

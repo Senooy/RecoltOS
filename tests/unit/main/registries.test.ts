@@ -24,8 +24,9 @@ const IMPLEMENTED_DOMAINS: readonly string[] = [
   'data',
   'rediscover',
   'capture',
+  'ai',
 ]
-/** Types de jobs encore en stub (IA : M4). */
+/** Jobs IA : `not_implemented` tant qu'aucun service IA n'est enregistré (hors Electron). */
 const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']
 
 function fakeCtx(userData: string = makeTmpDir('recolt-registries-')): ServiceContext {

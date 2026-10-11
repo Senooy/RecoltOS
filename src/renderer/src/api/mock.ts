@@ -128,6 +128,8 @@ function detail(uuid: string): ItemDetail | null {
     hiddenAt: hidden.has(uuid) ? card.createdAt : null,
     deletedAt: trashed.has(uuid) ? card.createdAt : null,
     aiExcluded: false,
+    aiJob: null,
+    aiError: null,
   }
 }
 
@@ -142,6 +144,8 @@ function tree(): CollectionNode[] {
     covers: c.members.slice(0, 3).flatMap((u) => MOCK_ITEMS.filter((it) => it.uuid === u)),
     coverItemUuid: null,
     aiExcluded: false,
+    aiJob: null,
+    aiError: null,
     createdAt: MOCK_ITEMS[0]?.createdAt ?? 0,
     updatedAt: MOCK_ITEMS[0]?.createdAt ?? 0,
     viewedAt: null,

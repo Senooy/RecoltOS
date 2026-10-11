@@ -39,9 +39,18 @@ export const aiContract = {
     input: z.object({ itemUuid: Uuid, task: Task }),
     output: z.object({
       provider: Cli,
+      /** Prompt système (AI §5.1), envoyé avant `prompt`. */
+      system: z.string(),
       prompt: z.string(),
       files: z.array(
-        z.object({ name: z.string(), bytes: z.number(), width: z.number(), height: z.number() }),
+        z.object({
+          name: z.string(),
+          bytes: z.number(),
+          width: z.number(),
+          height: z.number(),
+          /** JPEG exact envoyé (`data:image/jpeg;base64,…`). */
+          dataUrl: z.string().startsWith('data:image/jpeg;base64,'),
+        }),
       ),
       textChars: z.number().int(),
     }),

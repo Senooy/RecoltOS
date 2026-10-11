@@ -2,6 +2,7 @@
  * Porte IA à l'ingestion (ARCHI §5.2 étape 8, PLAN §2.5) : `ai_state = 'queued'` seulement si les
  * cinq conditions sont réunies ; sinon `none` (l'enrichissement se propose ensuite en lot).
  */
+import { AI_CONSENT_VERSION } from '../../shared/ai-types'
 import type { Prefs } from '../../shared/prefs'
 import type { SettingsRepo } from '../db/repos/settings'
 import { PAUSED_SETTING, type PauseEntry } from '../jobs/queue'
@@ -32,16 +33,26 @@ function providerPaused(settings: SettingsRepo, provider: string, now: number): 
   return false
 }
 
+/** Pause par fournisseur posée par la porte IA (`ai/gate.ts`, `settings['ai.providerPauses']`). */
+function gatePaused(settings: SettingsRepo, provider: string, now: number): boolean {
+  const raw = settings.get('ai.providerPauses') as Record<string, { until?: number }> | undefined
+  const p = raw && typeof raw === 'object' ? raw[provider] : undefined
+  return Boolean(p && (p.until === undefined || p.until > now))
+}
+
 /** Décide et, si `queued`, consomme une unité du compteur du jour. */
 export function aiGate(i: AiGateInput): 'queued' | 'none' {
   const ai = i.prefs.ai
   if (ai.provider === 'off') return 'none'
-  if (!ai.autoNameOnSave && !ai.autoTag) return 'none'
+  // Jamais d'appel sans consentement, même si `autoNameOnSave` a été importé à vrai (AI §11).
+  if (!ai.consentVersion || ai.consentVersion < AI_CONSENT_VERSION) return 'none'
+  if (!ai.autoNameOnSave && !ai.autoAnalyzeOnSave && !ai.autoTag) return 'none'
   if (!i.userAction && (i.batchSize ?? 1) > ai.bulkThreshold) return 'none'
   const key = dayKey(i.now)
   const used = Number(i.settings.get(key) ?? 0)
   if (!(used < ai.maxAutoPerDay)) return 'none'
   if (providerPaused(i.settings, ai.provider, i.now)) return 'none'
+  if (gatePaused(i.settings, ai.provider, i.now)) return 'none'
   i.settings.set(key, used + 1, i.now)
   return 'queued'
 }

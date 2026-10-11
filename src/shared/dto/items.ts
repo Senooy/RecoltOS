@@ -115,6 +115,13 @@ export const ItemDetail = ItemCard.extend({
   hiddenAt: z.number().int().nullable(),
   deletedAt: z.number().int().nullable(),
   aiExcluded: z.boolean(),
+  /** Job IA actif le plus récent (scintillement du panneau Détails). */
+  aiJob: z
+    .object({ type: z.enum(['ai.enrich', 'ai.prompt']), state: z.enum(['queued', 'running']) })
+    .nullable()
+    .default(null),
+  /** Dernière erreur IA (élément en `failed`, ou job en attente d'un fournisseur). */
+  aiError: z.object({ code: z.string(), message: z.string() }).nullable().default(null),
 })
 export type ItemDetail = z.output<typeof ItemDetail>
 

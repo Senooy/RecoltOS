@@ -94,5 +94,46 @@ export function toItemDetail(lib: DtoLib, db: Database.Database, uuid: string): 
     hiddenAt: item.hidden_at,
     deletedAt: item.deleted_at,
     aiExcluded: item.ai_excluded === 1,
+    ...aiJobState(db, item.id, item.ai_state),
+  }
+}
+
+/** Job IA actif et dernière erreur (panneau Détails, AI §12.4). */
+function aiJobState(
+  db: Database.Database,
+  itemId: number,
+  aiState: string,
+): Pick<ItemDetail, 'aiJob' | 'aiError'> {
+  const active = db
+    .prepare(
+      `SELECT type, state, last_error FROM jobs WHERE item_id = ? AND type IN ('ai.enrich','ai.prompt')
+       AND state IN ('queued','running') ORDER BY (state = 'running') DESC, id DESC LIMIT 1`,
+    )
+    .get(itemId) as
+    | { type: 'ai.enrich' | 'ai.prompt'; state: 'queued' | 'running'; last_error: string | null }
+    | undefined
+  const parse = (s: string | null) => {
+    if (!s) return null
+    try {
+      const e = JSON.parse(s) as { code?: unknown; message?: unknown }
+      return typeof e.code === 'string' && typeof e.message === 'string'
+        ? { code: e.code, message: e.message }
+        : null
+    } catch {
+      return null
+    }
+  }
+  if (active)
+    return { aiJob: { type: active.type, state: active.state }, aiError: parse(active.last_error) }
+  if (aiState !== 'failed') return { aiJob: null, aiError: null }
+  const failed = db
+    .prepare(
+      `SELECT last_error FROM jobs WHERE item_id = ? AND type = 'ai.enrich' AND state = 'failed'
+       ORDER BY id DESC LIMIT 1`,
+    )
+    .get(itemId) as { last_error: string | null } | undefined
+  return {
+    aiJob: null,
+    aiError: parse(failed?.last_error ?? null) ?? { code: 'failed', message: 'analyse impossible' },
   }
 }

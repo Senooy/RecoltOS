@@ -18,6 +18,8 @@ import type { NewMedia } from '../db/repos/media'
 import { fetchToFile, assertWebUrl } from '../jobs/fetch'
 import type { JobServices } from '../jobs/handlers/types'
 import { rel } from '../library/paths'
+import { AI_MAX_ATTEMPTS } from '../ai/errors'
+import { autoJobPayload } from '../ai/service'
 import { aiGate } from './ai-gate'
 import { detectType, readHead, requireType, type DetectedType } from './media-type'
 
@@ -230,6 +232,8 @@ async function ingestLocal(
             itemId: created.id,
             dedupeKey: `ai:${created.id}`,
             priority: JOB_PRIORITY.INTERACTIVE,
+            payload: { ...autoJobPayload(prefs.ai) },
+            maxAttempts: AI_MAX_ATTEMPTS,
           },
           at,
         )

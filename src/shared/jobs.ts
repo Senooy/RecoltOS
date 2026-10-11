@@ -62,6 +62,8 @@ export type JobOutcome =
   | { status: 'done' }
   | { status: 'retry'; retryAt: number; error: JobError }
   | { status: 'failed'; error: JobError }
+  /** Remis en file à `retryAt` SANS consommer de tentative (budget, fournisseur indisponible). */
+  | { status: 'defer'; retryAt: number; error?: JobError }
 
 export const JobsByTypeStatus = z.object({
   queued: z.number().int(),
