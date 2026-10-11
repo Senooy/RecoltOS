@@ -6,9 +6,55 @@
  * (perspective 1400 / -62°, qui donnaient des tranches deux fois trop étroites) : arête proche de
  * la couverture i à x = 274 + 122·i pt, haut à 172 pt ; arête éloignée de « Gaming » à ≈ 99 pt et
  * 227 pt de haut ; d'où perspective 800 px centrée, face 410×700, rotateY(-35deg).
+ *
+ * Entrée (mesurée sur l'original) : le fond passe de `--bg` au noir pendant que les tranches TOMBENT
+ * du haut de la fenêtre, une à une de gauche à droite (`--i` × 45 ms, plafonné), avec un léger
+ * rebond (≈ 10 px) à l'arrivée ; libellés et contour « Nouvelle collection » suivent leur tranche.
+ * L'animation porte sur les feuilles (face, libellé) : une opacité < 1 sur un parent `preserve-3d`
+ * l'aplatirait, et la propriété `translate` (appliquée avant `transform`, en repère écran) laisse
+ * intacte la chaîne rotateY / survol.
+ *
+ * Survol / focus : la tranche sort vers le spectateur DANS SON PROPRE AXE, comme un livre qu'on tire :
+ * translation appliquée après la rotateY (repère local de la face), sans changer d'angle. Calée sur
+ * les mesures de l'original à 1280×820 : haut ≈ +26 px vers le haut, arête proche ≈ +73 px vers la
+ * droite (elle déborde sur la voisine) ; le voile sombre s'efface, le libellé passe en blanc gras.
+ * Les voisines ne bougent pas.
  */
+@keyframes shelf-drop {
+  0% {
+    translate: 0 -820px;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  62% {
+    translate: 0 10px;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+@keyframes shelf-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes shelf-backdrop {
+  from {
+    background-color: var(--bg);
+  }
+  to {
+    background-color: var(--shelf-bg);
+  }
+}
 .shelf-root {
   background: var(--shelf-bg);
+  animation: shelf-backdrop 320ms var(--ease-out) both;
+}
+.shelf-root > canvas {
+  animation: shelf-fade 320ms var(--ease-out) both;
 }
 .shelf {
   perspective: 800px;
@@ -42,7 +88,15 @@
   transform: rotateY(-35deg);
   /* Le clic se fait sur le créneau plat de 122 px (= segment visible) : pas de test 3D. */
   pointer-events: none;
-  transition: transform 350ms var(--ease-sheet);
+  transition: transform 220ms var(--ease-out);
+}
+.shelf-cover > .cover-face,
+.shelf-cover > .shelf-new-label,
+.shelf-label {
+  animation:
+    shelf-drop 560ms linear both,
+    shelf-fade 220ms var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 18) * 45ms);
 }
 .cover-face::before {
   content: '';
@@ -56,7 +110,7 @@
     rgba(0, 0, 0, 0.3) 45%,
     rgba(0, 0, 0, 0.82) 100%
   );
-  transition: opacity 350ms var(--ease-sheet);
+  transition: opacity 220ms var(--ease-out);
 }
 .cover-face::after {
   content: '';
@@ -71,12 +125,13 @@
 .shelf-cover:hover .cover-face,
 .shelf-cover:focus-visible .cover-face,
 .shelf-cover[data-active='1'] .cover-face {
-  transform: rotateY(-20deg) translateZ(30px);
+  /* Même angle qu'au repos : seule une translation locale (le long de la face) la fait ressortir. */
+  transform: rotateY(-35deg) translate3d(88px, 0, 34px);
 }
 .shelf-cover:hover .cover-face::before,
 .shelf-cover:focus-visible .cover-face::before,
 .shelf-cover[data-active='1'] .cover-face::before {
-  opacity: 0.55;
+  opacity: 0.1;
 }
 .cover-face > img,
 .cover-face > video {
@@ -108,10 +163,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 160ms var(--ease-out);
+  transition: color 220ms var(--ease-out);
 }
 .shelf-label[data-active='1'] .shelf-label-name {
   color: #fff;
+  font-weight: 600;
 }
 .shelf-label-count {
   margin-top: 4px;
@@ -119,14 +175,24 @@
   font-size: 11px;
   line-height: 14px;
 }
-/* Mouvement réduit : étagère statique (aucune rotation animée). */
+/* Mouvement réduit : survol instantané, entrée en simple fondu commun (sans descente ni décalage). */
 @media (prefers-reduced-motion: reduce) {
   .cover-face,
   .cover-face::before {
     transition: none;
   }
+  .shelf-cover > .cover-face,
+  .shelf-cover > .shelf-new-label,
+  .shelf-label {
+    animation: shelf-fade 160ms linear both;
+  }
 }
 [data-reduce-motion='1'] .cover-face,
 [data-reduce-motion='1'] .cover-face::before {
   transition: none;
+}
+[data-reduce-motion='1'] .shelf-cover > .cover-face,
+[data-reduce-motion='1'] .shelf-cover > .shelf-new-label,
+[data-reduce-motion='1'] .shelf-label {
+  animation: shelf-fade 160ms linear both;
 }

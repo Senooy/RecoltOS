@@ -1,14 +1,24 @@
 /**
  * Étagère 3D des collections (DESIGN §3.4, WP-21) : fond noir plein cadre + `Starfield`, libellés
- * à y≈104 au pas de 122 px depuis x≈150, couvertures `.cover-face` 300×600 en `rotateY(-62deg)`
+ * à y≈104 au pas de 122 px depuis x≈150, couvertures `.cover-face` 410×700 en `rotateY(-35deg)`
  * (média `large`, post texte en `TweetCard cover` blanche, vidéos `preview` muettes en boucle : au
- * plus 4, les plus proches du centre ; jamais l'original). Molette (verticale ou horizontale) →
+ * plus 4, les plus proches du centre, plus la couverture survolée ; jamais l'original). Entrée en
+ * cascade (les tranches tombent une à une, `--i` = rang) et survol qui fait sortir la tranche dans
+ * son axe : voir `shelf.css`. Molette (verticale ou horizontale) →
  * défilement inertiel de la piste ; ←/→ passent d'une couverture à l'autre, ↵ ouvre, Échap revient
  * à la Bibliothèque (⌘1 passe par le menu). Fin de piste : couverture-contour « + Nouvelle
  * collection ». Mouvement réduit : étagère statique (pas d'inertie, ni scintillement, ni vidéo).
  */
 import { Plus } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState, type WheelEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type WheelEvent,
+} from 'react'
 import type { CollectionNode } from '../../../../../shared/dto/collections'
 import type { ItemCard } from '../../../../../shared/dto/items'
 import { toast, useReducedMotion } from '../../../components/ui'
@@ -204,17 +214,14 @@ export default function CollectionShelf() {
   }, [active, focusCover, open, navigate])
 
   const covers = useMemo(() => tree.map((n) => n.covers[0]), [tree])
-  const playing = useMemo(
-    () =>
-      reduced
-        ? new Set<number>()
-        : playingIndices(
-            covers.map((c) => c?.kind === 'video' && c.previewUrl !== null),
-            scroll,
-            viewport,
-          ),
-    [covers, scroll, viewport, reduced],
-  )
+  const playing = useMemo(() => {
+    if (reduced) return new Set<number>()
+    const isVideo = covers.map((c) => c?.kind === 'video' && c.previewUrl !== null)
+    const set = playingIndices(isVideo, scroll, viewport)
+    // La couverture survolée (ou focalisée) joue toujours sa vidéo.
+    if (active !== null && isVideo[active]) set.add(active)
+    return set
+  }, [covers, scroll, viewport, reduced, active])
 
   return (
     <div
@@ -235,7 +242,13 @@ export default function CollectionShelf() {
             className="shelf-label"
             data-testid="shelf-label"
             data-active={active === i ? '1' : undefined}
-            style={{ left: SHELF_LABEL_X + SHELF_STEP * i, top: SHELF_LABEL_Y }}
+            style={
+              {
+                left: SHELF_LABEL_X + SHELF_STEP * i,
+                top: SHELF_LABEL_Y,
+                '--i': i,
+              } as CSSProperties
+            }
           >
             <div className="shelf-label-name">{node.name}</div>
             <div className="shelf-label-count">{fr.count.items(node.count)}</div>
@@ -262,6 +275,7 @@ export default function CollectionShelf() {
             data-active={active === i ? '1' : undefined}
             aria-label={`${node.name}, ${fr.count.items(node.count)}`}
             className="shelf-cover"
+            style={{ '--i': i } as CSSProperties}
             onMouseEnter={() => setActive(i)}
             onMouseLeave={() => setActive((a) => (a === i ? null : a))}
             onFocus={() => setActive(i)}
@@ -282,13 +296,14 @@ export default function CollectionShelf() {
           aria-label={fr.collection.new}
           data-active={active === tree.length ? '1' : undefined}
           className="shelf-cover"
+          style={{ '--i': tree.length } as CSSProperties}
           onMouseEnter={() => setActive(tree.length)}
           onFocus={() => setActive(tree.length)}
           onClick={() => void createCollection()}
         >
           <span className="cover-face cover-face-new" />
           {/* Libellé à plat sur le créneau visible (le texte d'une face 3D vide n'est pas peint). */}
-          <span className="pointer-events-none absolute inset-y-0 left-0 right-0 flex flex-col items-center justify-center gap-2 px-2 text-center text-[13px] font-medium leading-4 text-[rgba(255,255,255,.55)]">
+          <span className="shelf-new-label pointer-events-none absolute inset-y-0 left-0 right-0 flex flex-col items-center justify-center gap-2 px-2 text-center text-[13px] font-medium leading-4 text-[rgba(255,255,255,.55)]">
             <Plus size={24} strokeWidth={1.5} />
             {fr.collection.new}
           </span>
