@@ -173,8 +173,8 @@ const HEIC_ORIENT_SWIFT = join(import.meta.dirname, 'heic-orient.swift')
 
 /**
  * HEIC 300×200 avec orientation 6, coin 60×60 rouge en haut à gauche des pixels stockés.
- * `/usr/bin/swift` existe même sans les outils Xcode (il échoue alors) : on l'exécute
- * réellement et on renvoie `undefined` en cas d'échec.
+ * `/usr/bin/swift` existe même sans les outils Xcode (il échoue alors) : on vérifie
+ * `xcode-select -p`, on l'exécute réellement et on renvoie `undefined` en cas d'échec.
  */
 async function orientedHeic(dir: string): Promise<string | undefined> {
   const w = 300
@@ -193,6 +193,8 @@ async function orientedHeic(dir: string): Promise<string | undefined> {
     .toFile(src)
   const dst = join(dir, 'portrait.heic')
   try {
+    // Sans outils de développement, le shim `swift` ouvrirait la fenêtre d'installation.
+    execFileSync('/usr/bin/xcode-select', ['-p'], { stdio: 'ignore' })
     execFileSync('/usr/bin/swift', [HEIC_ORIENT_SWIFT, src, dst, '6'], {
       stdio: 'ignore',
       timeout: 120_000,
