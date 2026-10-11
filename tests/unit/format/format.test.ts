@@ -92,6 +92,32 @@ describe('relative', () => {
   })
 })
 
+describe('-0 jamais affiché', () => {
+  it('pct et count ramènent -0 à « 0 »', () => {
+    expect(pct(-0.001)).toBe(`0${NNBSP}%`)
+    expect(count(-0)).toBe('0')
+    expect(pct(-0.001)).not.toContain('-')
+  })
+})
+
+describe('relative : hier / avant-hier au jour calendaire', () => {
+  const at = (y: number, mo: number, d: number, h: number, mi = 0) => new Date(y, mo, d, h, mi)
+
+  it('22 h 30 la veille, vu à 21 h le lendemain : « hier » (et non « il y a 22 h »)', () => {
+    expect(relative(at(2026, 9, 10, 22, 30), at(2026, 9, 11, 21, 0))).toBe('hier')
+  })
+  it('25 h d’écart à cheval sur deux jours : « hier »', () => {
+    expect(relative(at(2026, 9, 10, 12, 0), at(2026, 9, 11, 13, 0))).toBe('hier')
+  })
+  it('deux jours calendaires : « avant-hier »', () => {
+    expect(relative(at(2026, 9, 9, 23, 0), at(2026, 9, 11, 8, 0))).toBe('avant-hier')
+  })
+  it('même jour : heures, et sous 1 h minutes même à cheval sur minuit', () => {
+    expect(relative(at(2026, 9, 11, 9, 0), at(2026, 9, 11, 20, 0))).toBe(`il y a 11${NBSP}h`)
+    expect(relative(at(2026, 9, 10, 23, 50), at(2026, 9, 11, 0, 10))).toBe(`il y a 20${NBSP}min`)
+  })
+})
+
 describe('bytes', () => {
   it('4,2 Mo avec U+202F', () => {
     expect(bytes(4_200_000)).toBe('4,2 Mo')

@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import './_setup'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
@@ -338,5 +339,32 @@ describe('MediaBadge et FormatBadge', () => {
   it('FormatBadge en capitales', () => {
     render(<FormatBadge format="mp4" />)
     expect(screen.getByText('MP4')).toBeTruthy()
+  })
+})
+
+describe('Tooltip disabled : arbre stable', () => {
+  it('basculer disabled ne démonte pas le déclencheur (focus et nœud conservés)', () => {
+    const { rerender } = render(
+      <Tooltip content="Réglages">
+        <button type="button">Ouvrir</button>
+      </Tooltip>,
+    )
+    const before = screen.getByRole('button', { name: 'Ouvrir' })
+    before.focus()
+    rerender(
+      <Tooltip content="Réglages" disabled>
+        <button type="button">Ouvrir</button>
+      </Tooltip>,
+    )
+    expect(screen.getByRole('button', { name: 'Ouvrir' })).toBe(before)
+    expect(document.activeElement).toBe(before)
+  })
+})
+
+describe('IconButton : label obligatoire et non vide', () => {
+  it('rejette un label vide ou blanc', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    expect(() => render(<IconButton icon={<XGlyph />} label="  " />)).toThrow(/label/)
+    spy.mockRestore()
   })
 })

@@ -6,6 +6,7 @@
 import { cva } from 'class-variance-authority'
 import type { ComponentProps } from 'react'
 import { cn } from '../../lib/cn'
+import './ui.css'
 
 /** Classes de la pilule, partagées avec `Toaster` (sonner en mode `unstyled`). */
 export const PILL_CLASS =
@@ -33,6 +34,8 @@ export const pillActionVariants = cva(
 export interface PillBarProps extends ComponentProps<'div'> {
   /** Centrée en bas de la fenêtre (`fixed`, bottom 24) ; sinon en flux normal. */
   floating?: boolean
+  /** Nom accessible du groupe (recommandé : la barre porte un message annoncé aux lecteurs d'écran). */
+  'aria-label'?: string
 }
 
 function PillBarRoot({ floating = false, className, ...rest }: PillBarProps) {

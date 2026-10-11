@@ -6,10 +6,15 @@ import type { ComponentProps } from 'react'
 import { cn } from '../../lib/cn'
 import './ui.css'
 
-export interface SwitchProps extends Omit<ComponentProps<typeof SwitchPrimitive.Root>, 'children'> {
-  /** Nom accessible quand aucun `<label>` n'est associé. */
-  'aria-label'?: string
-}
+/**
+ * Nom accessible OBLIGATOIRE (typage) : `aria-label`, ou `aria-labelledby` quand un `<label>`
+ * visible est associé. Le contrôle ne compile pas sans l'un des deux.
+ */
+export type SwitchProps = Omit<ComponentProps<typeof SwitchPrimitive.Root>, 'children'> &
+  (
+    | { 'aria-label': string; 'aria-labelledby'?: undefined }
+    | { 'aria-labelledby': string; 'aria-label'?: undefined }
+  )
 
 export function Switch({ className, ...rest }: SwitchProps) {
   return (

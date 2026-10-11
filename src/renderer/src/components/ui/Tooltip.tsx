@@ -43,10 +43,12 @@ export function Tooltip({
   ...root
 }: TooltipProps) {
   const container = usePortalContainer()
-  if (disabled) return <>{children}</>
+  // `disabled` ne ferme que l'ouverture : l'arbre Provider > Root > Trigger reste le même, donc
+  // l'enfant n'est jamais démonté (focus et état conservés, menu ancré intact) même si la prop bascule.
+  const rootProps = disabled ? { open: false } : root
   return (
     <TooltipPrimitive.Provider delayDuration={delayDuration} skipDelayDuration={300}>
-      <TooltipPrimitive.Root {...root}>
+      <TooltipPrimitive.Root {...rootProps}>
         <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal container={container}>
           <TooltipPrimitive.Content

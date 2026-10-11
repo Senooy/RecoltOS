@@ -22,7 +22,7 @@ export function hashHue(handle: string): number {
   return fnv1a(handle.trim().replace(/^@/, '').toLowerCase()) % 360
 }
 
-/** « GamesLover with a Preferen… » → « GW » ; un seul mot → 1 lettre ; vide → « ? ». */
+/** « GamesLover with a Preference » → « GP » (premier et dernier mot) ; un seul mot → 1 lettre ; vide → « ? ». */
 export function initials(name: string, handle?: string): string {
   const words = name
     .replace(/^@/, '')

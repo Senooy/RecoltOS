@@ -17,9 +17,13 @@ export { plural }
 
 const fmtNumber = new Intl.NumberFormat('fr-FR')
 
-/** Entier (ou décimal) localisé : `1234` → « 1 234 » (U+202F). Non fini → « 0 ». */
+/**
+ * Entier (ou décimal) localisé : `1234` → « 1 234 » (U+202F). Non fini → « 0 ».
+ * `-0` (ex. `Math.round(-0.4)`) est ramené à « 0 » : `Intl` écrirait « -0 ».
+ */
 export function count(n: number): string {
-  return fmtNumber.format(Number.isFinite(n) ? n : 0)
+  const v = Number.isFinite(n) ? n : 0
+  return fmtNumber.format(v === 0 ? 0 : v)
 }
 
 /** Pourcentage d'une fraction : `pct(1)` → « 100 % » (U+202F avant le signe). */
@@ -60,13 +64,29 @@ const rtfLong = new Intl.RelativeTimeFormat('fr', { style: 'long', numeric: 'aut
 const MIN = 60
 const HOUR = 3600
 const DAY = 86_400
+const DAY_MS = DAY * 1000
 const WEEK = 7 * DAY
 const MONTH = 30 * DAY
 const YEAR = 365 * DAY
 
+/** Nombre de jours calendaires entre deux instants, jours locaux (`now` − `t`, arrondi). */
+function calendarDays(t: number, n: number): number {
+  const a = new Date(n)
+  const b = new Date(t)
+  const dayA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())
+  const dayB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())
+  return Math.round((dayA - dayB) / DAY_MS)
+}
+
 /**
- * « il y a 4 min », « hier », « avant-hier », « dans 3 min »… (style court). `now` est injectable
- * pour les tests. Moins de 5 s d'écart : « maintenant ».
+ * « il y a 4 min », « hier », « avant-hier », « dans 3 min »… (style court pour le temps court).
+ * `now` est injectable pour les tests. Moins de 5 s d'écart : « maintenant ».
+ *
+ * Écarts volontaires avec DESIGN §0 :
+ * - mois et années passent en style long (`style: 'long'`) : le style court d'`Intl` écrit « m. »
+ *   et « a », illisible ; d'où « le mois dernier » ou « il y a 2 mois » ;
+ * - « hier » et « avant-hier » suivent le jour calendaire local (et non un écart en heures) :
+ *   22 h 30 la veille, vu à 21 h le lendemain, donne « hier ». Sous 1 h, on reste en minutes.
  */
 export function relative(input: DateInput, now: number | Date = Date.now()): string {
   const t = input instanceof Date ? input.getTime() : new Date(input).getTime()
@@ -78,6 +98,10 @@ export function relative(input: DateInput, now: number | Date = Date.now()): str
   if (abs < 5) return rtfShort.format(0, 'second')
   if (abs < MIN) return rtfShort.format(sign * Math.floor(abs), 'second')
   if (abs < HOUR) return rtfShort.format(sign * Math.floor(abs / MIN), 'minute')
+  if (diff < 0) {
+    const days = calendarDays(t, n)
+    if (days === 1 || days === 2) return rtfShort.format(-days, 'day')
+  }
   if (abs < DAY) return rtfShort.format(sign * Math.floor(abs / HOUR), 'hour')
   if (abs < WEEK) return rtfShort.format(sign * Math.floor(abs / DAY), 'day')
   if (abs < MONTH) return rtfShort.format(sign * Math.floor(abs / WEEK), 'week')

@@ -89,7 +89,7 @@ function Showcase() {
 
   return (
     <div className="flex flex-col gap-8">
-      <Section title="Button">
+      <Section title="Boutons">
         <Row>
           <Button variant="primary">Importer…</Button>
           <Button variant="secondary">Nouvelle bibliothèque</Button>
@@ -110,7 +110,7 @@ function Showcase() {
             lg 36
           </Button>
           <Button shape="rounded" variant="secondary">
-            Rounded
+            Arrondi
           </Button>
           <Button
             variant="primary"
@@ -125,7 +125,7 @@ function Showcase() {
         </Row>
       </Section>
 
-      <Section title="IconButton">
+      <Section title="Boutons d'icône">
         <Row>
           <IconButton icon={<Compass />} label="Redécouvrir" shortcut={['⌘', '⇧', 'R']} />
           <IconButton icon={<Settings />} label="Réglages" shortcut={['⌘', ',']} />
@@ -140,7 +140,7 @@ function Showcase() {
         </Immersive>
       </Section>
 
-      <Section title="Kbd">
+      <Section title="Raccourcis">
         <Row>
           <Kbd keys={['⌘', 'K']} />
           <Kbd keys={['esc']} size="sm" />
@@ -152,7 +152,7 @@ function Showcase() {
         </Immersive>
       </Section>
 
-      <Section title="Switch · Slider · SegmentedSmall">
+      <Section title="Interrupteur · Curseur · Sélecteur compact">
         <Row>
           <Switch checked={sw} onCheckedChange={setSw} aria-label="Lire les vidéos au survol" />
           <Switch checked={!sw} onCheckedChange={(v) => setSw(!v)} aria-label="Exemple désactivé" />
@@ -205,7 +205,7 @@ function Showcase() {
         </Row>
       </Section>
 
-      <Section title="Tooltip (600 ms) · Menu · Popover · Dialog">
+      <Section title="Infobulle (600 ms) · Menu · Popover · Dialogue">
         <Row>
           <Tooltip content="Réglages" shortcut={['⌘', ',']} defaultOpen side="right">
             <Button variant="secondary" size="sm">
@@ -293,7 +293,7 @@ function Showcase() {
         </div>
       </Section>
 
-      <Section title="Input · Chip">
+      <Section title="Champ · Puce">
         <Row>
           <div className="w-60">
             <Input
@@ -341,7 +341,7 @@ function Showcase() {
         </Immersive>
       </Section>
 
-      <Section title="EmptyState · Spinner · PillBar · Toaster">
+      <Section title="État vide · Chargement · Pilule · Notification">
         <div className="rounded-xl border border-border-subtle">
           <EmptyState
             icon={<Images />}
@@ -387,16 +387,13 @@ function Showcase() {
         </Row>
       </Section>
 
-      <Section title="Avatar · MediaBadge · FormatBadge · glyphes">
+      <Section title="Avatar · Badge média · Badge format · Glyphes">
         <Row>
           <Avatar name="Claude Devs" handle="ClaudeDevs" />
           <Avatar name="GamesLover with a Preference" handle="tofi_lover0930" />
           <Avatar name="Martin G" handle="TurtlesFatherG" size={28} />
           <Avatar name="Photo cassée" handle="broken" src="recolt://mock/avatars/missing.jpg" />
-          <div
-            className="relative h-24 w-44 rounded-md"
-            style={{ background: 'linear-gradient(135deg, #c8b49c, #6f86a3)' }}
-          >
+          <div className="relative h-24 w-44 rounded-md bg-[var(--skeleton)]">
             <MediaBadge kind="video" className="absolute right-2 top-2" />
             <MediaBadge kind="carousel" label="1/6" className="absolute left-2 top-2" />
             <MediaBadge kind="gif" className="absolute bottom-2 left-2" />

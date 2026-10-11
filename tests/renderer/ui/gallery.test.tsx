@@ -1,9 +1,11 @@
+// @vitest-environment happy-dom
 import './_setup'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import Gallery from '../../../src/renderer/src/components/gallery/Gallery'
+import { isGalleryRequested } from '../../../src/renderer/src/components/gallery/request'
 import { Toaster, toast } from '../../../src/renderer/src/components/ui/Toaster'
 
 const COMPONENTS_DIR = resolve(process.cwd(), 'src/renderer/src/components')
@@ -67,6 +69,17 @@ describe('galerie : tokens uniquement', () => {
     }
   })
 
+  it('aucun style inline en couleur hexadécimale (tokens seulement)', () => {
+    const { container } = render(<Gallery />)
+    const inline = [...container.querySelectorAll('[style]')].map(
+      (e) => e.getAttribute('style') ?? '',
+    )
+    expect(inline.length).toBeGreaterThan(0)
+    expect(inline.filter((st) => /#[0-9a-fA-F]{3,8}\b/.test(st))).toEqual([])
+    const gallerySource = readFileSync(resolve(COMPONENTS_DIR, 'gallery/Gallery.tsx'), 'utf8')
+    expect(/#[0-9a-fA-F]{3,8}\b/.test(gallerySource)).toBe(false)
+  })
+
   it('tous les boutons sans texte ont un aria-label FR non vide ; tout slider est nommé', () => {
     const { container } = render(<Gallery />)
     const iconOnly = [...container.querySelectorAll('button')].filter(
@@ -99,5 +112,21 @@ describe('Toaster : pilule §2.7', () => {
     const action = screen.getByRole('button', { name: 'Annuler' })
     expect(action.className).toContain('bg-accent')
     fireEvent.click(action)
+  })
+})
+
+describe('isGalleryRequested : ?gallery=1 en développement seulement', () => {
+  it('vrai uniquement avec ?gallery=1 en dev', () => {
+    expect(isGalleryRequested('?gallery=1', true)).toBe(true)
+    expect(isGalleryRequested('?foo=1&gallery=1', true)).toBe(true)
+  })
+  it('faux en production, même avec ?gallery=1', () => {
+    expect(isGalleryRequested('?gallery=1', false)).toBe(false)
+  })
+  it('faux sans paramètre, avec une autre valeur ou sans le paramètre', () => {
+    expect(isGalleryRequested('', true)).toBe(false)
+    expect(isGalleryRequested('?gallery=0', true)).toBe(false)
+    expect(isGalleryRequested('?gallery=true', true)).toBe(false)
+    expect(isGalleryRequested('?other=1', true)).toBe(false)
   })
 })

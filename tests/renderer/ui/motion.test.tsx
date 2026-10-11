@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import './_setup'
 import { act, renderHook } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
