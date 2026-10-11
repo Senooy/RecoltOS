@@ -1,0 +1,166 @@
+{
+  "data": {
+    "bookmark_timeline_v2": {
+      "timeline": {
+        "instructions": [
+          {
+            "type": "TimelineAddEntries",
+            "entries": [
+              {
+                "entryId": "tweet-1870000000000000002",
+                "sortIndex": "1889999999998000000",
+                "content": {
+                  "entryType": "TimelineTimelineItem",
+                  "__typename": "TimelineTimelineItem",
+                  "itemContent": {
+                    "itemType": "TimelineTweet",
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1870000000000000002",
+                        "core": {
+                          "user_results": {
+                            "result": {
+                              "__typename": "User",
+                              "id": "VXNlcjo9100000002",
+                              "rest_id": "9100000002",
+                              "core": {
+                                "name": "Typo Atelier",
+                                "screen_name": "typoatelier",
+                                "created_at": "Mon Jan 01 10:00:00 +0000 2018"
+                              },
+                              "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/9100000002/a2_normal.jpg"
+                              },
+                              "legacy": {
+                                "name": "Typo Atelier",
+                                "screen_name": "typoatelier",
+                                "profile_image_url_https": "https://pbs.twimg.com/profile_images/9100000002/a2_normal.jpg",
+                                "followers_count": 1200
+                              }
+                            }
+                          }
+                        },
+                        "legacy": {
+                          "created_at": "Wed Oct 08 12:00:00 +0000 2026",
+                          "full_text": "Trois essais de lettrage https://t.co/m3d1aPh0t0",
+                          "id_str": "1870000000000000002",
+                          "conversation_id_str": "1870000000000000002",
+                          "lang": "fr",
+                          "favorite_count": 12,
+                          "retweet_count": 3,
+                          "bookmarked": true,
+                          "entities": {
+                            "hashtags": [],
+                            "urls": [],
+                            "user_mentions": [],
+                            "media": [
+                              {
+                                "url": "https://t.co/m3d1aPh0t0",
+                                "type": "photo"
+                              }
+                            ]
+                          },
+                          "extended_entities": {
+                            "media": [
+                              {
+                                "type": "photo",
+                                "id_str": "7710000000",
+                                "media_key": "3_GaLeTtRe1",
+                                "url": "https://t.co/m3d1aPh0t0",
+                                "display_url": "pic.x.com/m3d1aPh0t0",
+                                "media_url_https": "https://pbs.twimg.com/media/GaLeTtRe1.jpg",
+                                "original_info": {
+                                  "width": 1600,
+                                  "height": 2000
+                                },
+                                "sizes": {
+                                  "large": {
+                                    "w": 1600,
+                                    "h": 2000,
+                                    "resize": "fit"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "photo",
+                                "id_str": "7720000000",
+                                "media_key": "3_GaLeTtRe2",
+                                "url": "https://t.co/m3d1aPh0t0",
+                                "display_url": "pic.x.com/m3d1aPh0t0",
+                                "media_url_https": "https://pbs.twimg.com/media/GaLeTtRe2.jpg",
+                                "original_info": {
+                                  "width": 1600,
+                                  "height": 1600
+                                },
+                                "sizes": {
+                                  "large": {
+                                    "w": 1600,
+                                    "h": 1600,
+                                    "resize": "fit"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "photo",
+                                "id_str": "7730000000",
+                                "media_key": "3_GaLeTtRe3",
+                                "url": "https://t.co/m3d1aPh0t0",
+                                "display_url": "pic.x.com/m3d1aPh0t0",
+                                "media_url_https": "https://pbs.twimg.com/media/GaLeTtRe3.jpg",
+                                "original_info": {
+                                  "width": 2000,
+                                  "height": 1200
+                                },
+                                "sizes": {
+                                  "large": {
+                                    "w": 2000,
+                                    "h": 1200,
+                                    "resize": "fit"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "views": {
+                          "count": "4200",
+                          "state": "EnabledWithCount"
+                        }
+                      }
+                    },
+                    "tweetDisplayType": "Tweet"
+                  }
+                }
+              },
+              {
+                "entryId": "cursor-top-1999999999999999999",
+                "sortIndex": "1999999999999999999",
+                "content": {
+                  "entryType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "Q1VSU09SLWhhdXQ",
+                  "cursorType": "Top"
+                }
+              },
+              {
+                "entryId": "cursor-bottom-1000000000000000000",
+                "sortIndex": "1000000000000000000",
+                "content": {
+                  "entryType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "Q1VSU09SLWZpbg",
+                  "cursorType": "Bottom"
+                }
+              }
+            ]
+          }
+        ],
+        "responseObjects": {
+          "feedbackActions": []
+        }
+      }
+    }
+  }
+}

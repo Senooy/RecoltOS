@@ -1,0 +1,54 @@
+{
+  "data": {
+    "allElementsV2": {
+      "items": [
+        {
+          "id": "1400000004",
+          "createdAt": "2026-10-01T06:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000004",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 4"
+          },
+          "source": {
+            "url": "https://example.com/source/4",
+            "author": "auteur source"
+          },
+          "media": null,
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": "Une note texte 4"
+        },
+        {
+          "id": "1400000005",
+          "createdAt": "2026-10-01T05:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000005",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 5"
+          },
+          "source": {
+            "url": "https://example.com/source/5",
+            "author": "auteur source"
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-aaaa-4b3a-9f8e-7d6c5b4a3005?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": null
+        }
+      ],
+      "meta": {
+        "nextPageCursor": null,
+        "count": 2
+      }
+    }
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "data": {
+    "allElementsV2": {
+      "items": [
+        {
+          "id": "1400000010",
+          "createdAt": "2026-10-01T00:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000010",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 10"
+          },
+          "source": {
+            "url": "https://example.com/source/10",
+            "author": "auteur source"
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-aaaa-4b3a-9f8e-7d6c5b4a3010?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": null
+        },
+        {
+          "id": "1400000011",
+          "createdAt": "2026-09-30T23:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000011",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 11"
+          },
+          "source": {
+            "url": "https://example.com/source/11",
+            "author": "auteur source"
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-aaaa-4b3a-9f8e-7d6c5b4a3011?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": null
+        },
+        {
+          "id": "1400000012",
+          "createdAt": "2026-09-30T22:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000012",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 12"
+          },
+          "source": {
+            "url": "https://example.com/source/12",
+            "author": "auteur source"
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-aaaa-4b3a-9f8e-7d6c5b4a3012?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": null
+        },
+        {
+          "id": "1400000013",
+          "createdAt": "2026-09-30T21:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000013",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 13"
+          },
+          "source": {
+            "url": "https://example.com/site/13",
+            "author": ""
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-ffff-4b3a-9f8e-7d6c5b4a3013?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": "Site de référence 13",
+          "text": null
+        },
+        {
+          "id": "1400000014",
+          "createdAt": "2026-09-30T20:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000014",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 14"
+          },
+          "source": {
+            "url": "https://example.com/source/14",
+            "author": "auteur source"
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-aaaa-4b3a-9f8e-7d6c5b4a3014?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": null
+        },
+        {
+          "id": "1400000015",
+          "createdAt": "2026-09-30T19:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000015",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 15"
+          },
+          "source": {
+            "url": "https://example.com/source/15",
+            "author": "auteur source"
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-aaaa-4b3a-9f8e-7d6c5b4a3015?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": null
+        },
+        {
+          "id": "1400000016",
+          "createdAt": "2026-09-30T18:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000016",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 16"
+          },
+          "source": {
+            "url": "https://example.com/source/16",
+            "author": "auteur source"
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-aaaa-4b3a-9f8e-7d6c5b4a3016?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": null,
+          "text": null
+        },
+        {
+          "id": "1400000017",
+          "createdAt": "2026-09-30T17:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000017",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 17"
+          },
+          "source": {
+            "url": "https://example.com/site/17",
+            "author": ""
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-ffff-4b3a-9f8e-7d6c5b4a3017?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": "Site de référence 17",
+          "text": null
+        }
+      ],
+      "meta": {
+        "nextPageCursor": "Y29zbW9zLXBhZ2UtMg",
+        "count": 8
+      }
+    }
+  }
+}

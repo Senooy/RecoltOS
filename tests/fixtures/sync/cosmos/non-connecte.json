@@ -1,0 +1,13 @@
+{
+  "data": {
+    "me": null
+  },
+  "errors": [
+    {
+      "message": "Not authenticated",
+      "extensions": {
+        "code": "UNAUTHENTICATED"
+      }
+    }
+  ]
+}

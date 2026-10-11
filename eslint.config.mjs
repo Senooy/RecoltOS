@@ -34,6 +34,7 @@ export default defineConfig(
       '.bin-cache',
       '.worktrees',
       'docs',
+      'tests/fixtures/sync',
     ],
   },
   js.configs.recommended,

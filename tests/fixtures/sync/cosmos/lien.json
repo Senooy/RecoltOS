@@ -1,0 +1,35 @@
+{
+  "data": {
+    "allElementsV2": {
+      "items": [
+        {
+          "id": "1400000002",
+          "createdAt": "2026-10-01T08:00:00.000Z",
+          "shareUrl": "https://www.cosmos.so/e/1400000002",
+          "ownerId": "8800001",
+          "generatedCaption": {
+            "text": "Description générée 2"
+          },
+          "source": {
+            "url": "https://example.com/site/2",
+            "author": ""
+          },
+          "media": {
+            "url": "https://cdn.cosmos.so/0f0e0d0c-ffff-4b3a-9f8e-7d6c5b4a3002?format=webp",
+            "width": 1200,
+            "height": 1500
+          },
+          "multipleMedia": null,
+          "video": null,
+          "mux": null,
+          "websiteTitle": "Site de référence 2",
+          "text": null
+        }
+      ],
+      "meta": {
+        "nextPageCursor": null,
+        "count": 1
+      }
+    }
+  }
+}

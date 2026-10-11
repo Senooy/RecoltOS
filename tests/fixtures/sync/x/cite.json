@@ -1,0 +1,190 @@
+{
+  "data": {
+    "bookmark_timeline_v2": {
+      "timeline": {
+        "instructions": [
+          {
+            "type": "TimelineAddEntries",
+            "entries": [
+              {
+                "entryId": "tweet-1870000000000000003",
+                "sortIndex": "1889999999997000000",
+                "content": {
+                  "entryType": "TimelineTimelineItem",
+                  "__typename": "TimelineTimelineItem",
+                  "itemContent": {
+                    "itemType": "TimelineTweet",
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1870000000000000003",
+                        "core": {
+                          "user_results": {
+                            "result": {
+                              "__typename": "User",
+                              "id": "VXNlcjo9100000001",
+                              "rest_id": "9100000001",
+                              "core": {
+                                "name": "Studio Lumen",
+                                "screen_name": "studiolumen",
+                                "created_at": "Mon Jan 01 10:00:00 +0000 2018"
+                              },
+                              "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/9100000001/a1_normal.jpg"
+                              },
+                              "legacy": {
+                                "name": "Studio Lumen",
+                                "screen_name": "studiolumen",
+                                "profile_image_url_https": "https://pbs.twimg.com/profile_images/9100000001/a1_normal.jpg",
+                                "followers_count": 1200
+                              }
+                            }
+                          }
+                        },
+                        "legacy": {
+                          "created_at": "Wed Oct 08 12:00:00 +0000 2026",
+                          "full_text": "Exactement ce que je cherchais https://t.co/qu0teL1nk0",
+                          "id_str": "1870000000000000003",
+                          "conversation_id_str": "1870000000000000003",
+                          "lang": "fr",
+                          "favorite_count": 12,
+                          "retweet_count": 3,
+                          "bookmarked": true,
+                          "entities": {
+                            "hashtags": [],
+                            "urls": [
+                              {
+                                "url": "https://t.co/qu0teL1nk0",
+                                "expanded_url": "https://x.com/motionlab/status/1870000000000000030",
+                                "display_url": "x.com/motionlab/status/1870000000000000030",
+                                "indices": [
+                                  0,
+                                  23
+                                ]
+                              }
+                            ],
+                            "user_mentions": []
+                          },
+                          "is_quote_status": true
+                        },
+                        "views": {
+                          "count": "4200",
+                          "state": "EnabledWithCount"
+                        },
+                        "quoted_status_result": {
+                          "result": {
+                            "__typename": "TweetWithVisibilityResults",
+                            "tweet": {
+                              "__typename": "Tweet",
+                              "rest_id": "1870000000000000030",
+                              "core": {
+                                "user_results": {
+                                  "result": {
+                                    "__typename": "User",
+                                    "id": "VXNlcjo9100000003",
+                                    "rest_id": "9100000003",
+                                    "core": {
+                                      "name": "Motion Lab",
+                                      "screen_name": "motionlab",
+                                      "created_at": "Mon Jan 01 10:00:00 +0000 2018"
+                                    },
+                                    "avatar": {
+                                      "image_url": "https://pbs.twimg.com/profile_images/9100000003/a3_normal.jpg"
+                                    },
+                                    "legacy": {
+                                      "name": "Motion Lab",
+                                      "screen_name": "motionlab",
+                                      "profile_image_url_https": "https://pbs.twimg.com/profile_images/9100000003/a3_normal.jpg",
+                                      "followers_count": 1200
+                                    }
+                                  }
+                                }
+                              },
+                              "legacy": {
+                                "created_at": "Wed Oct 08 12:00:00 +0000 2026",
+                                "full_text": "Le poster original https://t.co/m3d1aPh0t0",
+                                "id_str": "1870000000000000030",
+                                "conversation_id_str": "1870000000000000030",
+                                "lang": "fr",
+                                "favorite_count": 12,
+                                "retweet_count": 3,
+                                "bookmarked": true,
+                                "entities": {
+                                  "hashtags": [],
+                                  "urls": [],
+                                  "user_mentions": [],
+                                  "media": [
+                                    {
+                                      "url": "https://t.co/m3d1aPh0t0",
+                                      "type": "photo"
+                                    }
+                                  ]
+                                },
+                                "extended_entities": {
+                                  "media": [
+                                    {
+                                      "type": "photo",
+                                      "id_str": "7700000000",
+                                      "media_key": "3_QuOtEdImG",
+                                      "url": "https://t.co/m3d1aPh0t0",
+                                      "display_url": "pic.x.com/m3d1aPh0t0",
+                                      "media_url_https": "https://pbs.twimg.com/media/QuOtEdImG.jpg",
+                                      "original_info": {
+                                        "width": 1600,
+                                        "height": 1200
+                                      },
+                                      "sizes": {
+                                        "large": {
+                                          "w": 1600,
+                                          "h": 1200,
+                                          "resize": "fit"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              "views": {
+                                "count": "4200",
+                                "state": "EnabledWithCount"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "tweetDisplayType": "Tweet"
+                  }
+                }
+              },
+              {
+                "entryId": "cursor-top-1999999999999999999",
+                "sortIndex": "1999999999999999999",
+                "content": {
+                  "entryType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "Q1VSU09SLWhhdXQ",
+                  "cursorType": "Top"
+                }
+              },
+              {
+                "entryId": "cursor-bottom-1000000000000000000",
+                "sortIndex": "1000000000000000000",
+                "content": {
+                  "entryType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "Q1VSU09SLWZpbg",
+                  "cursorType": "Bottom"
+                }
+              }
+            ]
+          }
+        ],
+        "responseObjects": {
+          "feedbackActions": []
+        }
+      }
+    }
+  }
+}

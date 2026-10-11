@@ -1,0 +1,12 @@
+{
+  "errors": [
+    {
+      "message": "The following features cannot be null: graphql_timeline_v2_bookmark_timeline, rweb_tipjar_consumption_enabled",
+      "extensions": {
+        "name": "BadRequestError",
+        "code": 336
+      },
+      "code": 336
+    }
+  ]
+}

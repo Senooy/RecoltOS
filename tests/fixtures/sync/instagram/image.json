@@ -1,0 +1,50 @@
+{
+  "items": [
+    {
+      "media": {
+        "pk": "3700000000000000001",
+        "id": "3700000000000000001_5100000001",
+        "code": "DSyNtH00001",
+        "taken_at": 1759900060,
+        "media_type": 1,
+        "product_type": "feed",
+        "original_width": 1080,
+        "original_height": 1350,
+        "image_versions2": {
+          "candidates": [
+            {
+              "url": "https://scontent-cdg4-1.cdninstagram.com/v/t51.2885-15/img1_1080.jpg?stp=dst-jpg_e35&_nc_ht=scontent-cdg4-1.cdninstagram.com&oe=6A7B8C9D&_nc_sid=10d13b",
+              "width": 1080,
+              "height": 1350
+            },
+            {
+              "url": "https://scontent-cdg4-1.cdninstagram.com/v/t51.2885-15/img1_640.jpg?stp=dst-jpg_e35&_nc_ht=scontent-cdg4-1.cdninstagram.com&oe=6A7B8C9D&_nc_sid=10d13b",
+              "width": 640,
+              "height": 800
+            }
+          ]
+        },
+        "user": {
+          "pk": "5100000001",
+          "pk_id": "5100000001",
+          "username": "atelier.papier",
+          "full_name": "Atelier Papier",
+          "is_private": false,
+          "is_verified": false,
+          "profile_pic_url": "https://scontent-cdg4-1.cdninstagram.com/v/t51.2885-19/profil5100000001.jpg?stp=dst-jpg_s150x150&oe=6A7B8C9D"
+        },
+        "caption": {
+          "pk": "171",
+          "text": "Légende de la publication 1 #affiche"
+        },
+        "saved_collection_ids": [],
+        "has_liked": false
+      }
+    }
+  ],
+  "num_results": 1,
+  "more_available": false,
+  "next_max_id": null,
+  "auto_load_more_enabled": true,
+  "status": "ok"
+}

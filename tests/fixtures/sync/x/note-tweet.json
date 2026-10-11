@@ -1,0 +1,107 @@
+{
+  "data": {
+    "bookmark_timeline_v2": {
+      "timeline": {
+        "instructions": [
+          {
+            "type": "TimelineAddEntries",
+            "entries": [
+              {
+                "entryId": "tweet-1870000000000000005",
+                "sortIndex": "1889999999995000000",
+                "content": {
+                  "entryType": "TimelineTimelineItem",
+                  "__typename": "TimelineTimelineItem",
+                  "itemContent": {
+                    "itemType": "TimelineTweet",
+                    "__typename": "TimelineTweet",
+                    "tweet_results": {
+                      "result": {
+                        "__typename": "Tweet",
+                        "rest_id": "1870000000000000005",
+                        "core": {
+                          "user_results": {
+                            "result": {
+                              "__typename": "User",
+                              "id": "VXNlcjo9100000003",
+                              "rest_id": "9100000003",
+                              "core": {
+                                "name": "Motion Lab",
+                                "screen_name": "motionlab",
+                                "created_at": "Mon Jan 01 10:00:00 +0000 2018"
+                              },
+                              "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/9100000003/a3_normal.jpg"
+                              },
+                              "legacy": {
+                                "name": "Motion Lab",
+                                "screen_name": "motionlab",
+                                "profile_image_url_https": "https://pbs.twimg.com/profile_images/9100000003/a3_normal.jpg",
+                                "followers_count": 1200
+                              }
+                            }
+                          }
+                        },
+                        "legacy": {
+                          "created_at": "Wed Oct 08 12:00:00 +0000 2026",
+                          "full_text": "Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte …",
+                          "id_str": "1870000000000000005",
+                          "conversation_id_str": "1870000000000000005",
+                          "lang": "fr",
+                          "favorite_count": 12,
+                          "retweet_count": 3,
+                          "bookmarked": true,
+                          "entities": {
+                            "hashtags": [],
+                            "urls": [],
+                            "user_mentions": []
+                          }
+                        },
+                        "views": {
+                          "count": "4200",
+                          "state": "EnabledWithCount"
+                        },
+                        "note_tweet": {
+                          "is_expandable": true,
+                          "note_tweet_results": {
+                            "result": {
+                              "text": "Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Un long texte de note pour tester la limite des 280 caractères. Fin."
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "tweetDisplayType": "Tweet"
+                  }
+                }
+              },
+              {
+                "entryId": "cursor-top-1999999999999999999",
+                "sortIndex": "1999999999999999999",
+                "content": {
+                  "entryType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "Q1VSU09SLWhhdXQ",
+                  "cursorType": "Top"
+                }
+              },
+              {
+                "entryId": "cursor-bottom-1000000000000000000",
+                "sortIndex": "1000000000000000000",
+                "content": {
+                  "entryType": "TimelineTimelineCursor",
+                  "__typename": "TimelineTimelineCursor",
+                  "value": "Q1VSU09SLWZpbg",
+                  "cursorType": "Bottom"
+                }
+              }
+            ]
+          }
+        ],
+        "responseObjects": {
+          "feedbackActions": []
+        }
+      }
+    }
+  }
+}
