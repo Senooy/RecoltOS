@@ -17,17 +17,24 @@ const root = __dirname
 
 /**
  * Hôte natif de l'extension (exécutable Node SEA séparé, ERRATA §D) : produit par `build:host`
- * (WP-52) dans `out/native-host/`. Réservé ici : copié vers `Contents/Resources/native-host/` dès
- * qu'il existe, sans casser le build tant que le lot hôte n'est pas livré.
+ * (WP-52) dans `out/native-host/recolt-host`, copié seul vers `Contents/Resources/native-host/`.
  */
-const nativeHost = fs.existsSync(path.join(root, 'out', 'native-host'))
-  ? [{ from: 'out/native-host', to: 'native-host' }]
+const nativeHost = fs.existsSync(path.join(root, 'out', 'native-host', 'recolt-host'))
+  ? [{ from: 'out/native-host', to: 'native-host', filter: ['recolt-host'] }]
   : []
 
-/** Extension navigateur buildée (`build:ext` → `dist-extension/`), embarquée si présente. */
-const extension = fs.existsSync(path.join(root, 'dist-extension'))
-  ? [{ from: 'dist-extension', to: 'extension' }]
-  : []
+/**
+ * Extension navigateur buildée (`build:ext` → `dist-extension/{chromium,firefox}/`, WP-53), et
+ * l'extension Firefox signée si `pnpm run sign:firefox` a été fait (`dist-extension/signed/*.xpi`).
+ */
+const extension = [
+  ...(fs.existsSync(path.join(root, 'dist-extension', 'chromium'))
+    ? [{ from: 'dist-extension', to: 'extension', filter: ['chromium/**', 'firefox/**'] }]
+    : []),
+  ...(fs.existsSync(path.join(root, 'dist-extension', 'signed'))
+    ? [{ from: 'dist-extension/signed', to: 'extension', filter: ['*.xpi'] }]
+    : []),
+]
 
 /**
  * Identité de signature demandée. electron-builder 26 ne bloque pas si l'identité nommée est absente ou

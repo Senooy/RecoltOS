@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "dev:demo": "tsx --tsconfig tsconfig.node.json scripts/make-fixtures.mts --out \"$PWD/.tmp/demo-userdata\" --if-missing && RECOLTOS_USER_DATA=\"$PWD/.tmp/demo-userdata\" electron-vite dev",
-    "build": "run-s build:app build:host",
+    "build": "run-s build:app build:host build:ext",
     "build:app": "electron-vite build",
     "build:host": "tsx --tsconfig tsconfig.node.json scripts/build-host.mts",
     "build:ext": "tsx --tsconfig tsconfig.node.json scripts/build-ext.mts",

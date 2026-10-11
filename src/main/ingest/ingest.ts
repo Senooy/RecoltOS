@@ -5,7 +5,8 @@
  * tags, collection), porte IA, `items.changed{created}` AVANT les dérivés, puis job `media.derive`.
  *
  * Entrées livrées en M1 : `file`, `capture`, `clipboard`, `url` (média direct ou capture de page
- * si `captureUrl` est fourni). `extension` et `sync` arrivent avec M5 (`not_implemented`).
+ * si `captureUrl` est fourni). M5 : `extension` (`SaveRequest` de l'extension, `ingestExtension`) ;
+ * les publications synchronisées passent par `sync/ingest.ts` (une transaction par page).
  */
 import { mkdir, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname } from 'node:path'
@@ -13,6 +14,7 @@ import { AppError } from '../../shared/errors'
 import { newUuid } from '../../shared/ids'
 import { JOB_PRIORITY } from '../../shared/jobs'
 import type { PostMeta } from '../../shared/post-meta'
+import type { SaveRequest } from '../../shared/bridge/save'
 import type { ItemSourceValue, NewItem } from '../db/repos/items'
 import type { NewMedia } from '../db/repos/media'
 import { fetchToFile, assertWebUrl } from '../jobs/fetch'
@@ -28,7 +30,7 @@ export type IngestInput =
   | { type: 'url'; url: string }
   | { type: 'capture'; path: string; mode: 'region' | 'window' | 'screen' }
   | { type: 'clipboard'; image: Buffer; mime: string }
-  | { type: 'extension'; payload: unknown }
+  | { type: 'extension'; payload: SaveRequest; uploadPath?: string }
   | { type: 'sync'; source: 'x' | 'instagram' | 'cosmos'; post: unknown; batchSize: number }
 
 export interface IngestOptions {
@@ -36,6 +38,8 @@ export interface IngestOptions {
   spaceUuid?: string
   title?: string
   tags?: string[]
+  /** Note de l'utilisateur (popup de l'extension). */
+  notes?: string
 }
 
 export interface IngestResult {
@@ -66,6 +70,7 @@ interface LocalSource {
   sourceUrl: string | null
   kindOverride?: 'url'
   role?: 'original' | 'screenshot'
+  origin?: 'app' | 'extension' | 'capture'
   title?: string | null
   postMeta?: PostMeta | null
 }
@@ -187,8 +192,9 @@ async function ingestLocal(
         title: opts.title ?? src.title ?? null,
         titleSource: opts.title ? 'user' : src.title ? 'source' : null,
         postMeta: src.postMeta ?? null,
+        notes: opts.notes ?? null,
         aiState,
-        origin: src.source === 'capture' ? 'capture' : 'app',
+        origin: src.origin ?? (src.source === 'capture' ? 'capture' : 'app'),
         createdAt: at,
       }
       const media: NewMedia = {
@@ -354,7 +360,111 @@ export async function ingest(
     }
     case 'url':
       return ingestUrl(input.url, opts, deps)
+    case 'extension':
+      return ingestExtension(input.payload, opts, deps, input.uploadPath)
     default:
       throw new AppError('not_implemented', `ingestion ${input.type} non disponible`)
   }
+}
+
+/** Source d'un enregistrement d'après l'hôte de la page (SYNC §6.3). */
+export function sourceFromPageUrl(pageUrl: string): ItemSourceValue {
+  let host = ''
+  try {
+    host = new URL(pageUrl).hostname.toLowerCase()
+  } catch {
+    return 'web'
+  }
+  const is = (d: string) => host === d || host.endsWith(`.${d}`)
+  if (is('x.com') || is('twitter.com')) return 'x'
+  if (is('instagram.com')) return 'instagram'
+  if (is('cosmos.so')) return 'cosmos'
+  return 'web'
+}
+
+const DATA_URL = /^data:([a-z0-9.+/-]+)?(;base64)?,/i
+
+/**
+ * Enregistrement venu de l'extension (`save.create`, SYNC §2.2, §6.3) : image / vidéo (URL http(s)
+ * téléchargée par l'app, `data:`, inline ≤ 8 Mio ou fichier assemblé par `media.chunk`), page
+ * (capture d'onglet), lien (capture hors écran par l'app). Les publications (`kind: 'post'`) passent
+ * par la sync (`sync/ingest.ts`).
+ */
+export async function ingestExtension(
+  req: SaveRequest,
+  opts: IngestOptions,
+  deps: IngestDeps,
+  uploadPath?: string,
+): Promise<IngestResult> {
+  const source = sourceFromPageUrl(req.pageUrl)
+  const base = { source, sourceUrl: req.pageUrl, origin: 'extension' as const }
+  const tmp = (ext: string) => deps.lib.paths.abs(rel.tmp(`${newUuid()}.${ext}`))
+  const writeTmp = async (b64: string, ext: string) => {
+    const abs = tmp(ext)
+    await mkdir(dirname(abs), { recursive: true })
+    await writeFile(abs, Buffer.from(b64, 'base64'))
+    return abs
+  }
+  if (req.kind === 'image' || req.kind === 'video') {
+    if (uploadPath) {
+      return ingestLocal({ ...base, abs: uploadPath, owned: true, name: 'envoi' }, opts, deps)
+    }
+    if (req.inlineMedia) {
+      const abs = await writeTmp(req.inlineMedia.dataBase64, 'inline')
+      return ingestLocal({ ...base, abs, owned: true, name: 'image' }, opts, deps)
+    }
+    const src = req.srcUrl ?? ''
+    const data = DATA_URL.exec(src)
+    if (data) {
+      if (!data[2]) throw new AppError('unsupported', 'Image intégrée non prise en charge.')
+      const abs = await writeTmp(src.slice(data[0].length), 'data')
+      return ingestLocal({ ...base, abs, owned: true, name: 'image' }, opts, deps)
+    }
+    const u = assertWebUrl(src)
+    const abs = tmp('dl')
+    await fetchToFile(deps.fetch, src, abs)
+    return ingestLocal(
+      { ...base, abs, owned: true, name: basename(u.pathname) || u.hostname },
+      opts,
+      deps,
+    )
+  }
+  if (req.kind === 'page' && req.screenshot) {
+    const abs = await writeTmp(
+      req.screenshot.dataBase64,
+      req.screenshot.mime === 'image/png' ? 'png' : 'jpg',
+    )
+    const postMeta: PostMeta = {
+      v: 1,
+      platform: 'web',
+      author: null,
+      text: req.pageMeta?.description ?? null,
+      url: req.pageUrl,
+      postedAt: null,
+      media: [],
+      quoted: null,
+      thread: [],
+    }
+    return ingestLocal(
+      {
+        abs,
+        owned: true,
+        name: 'page',
+        source: 'web',
+        sourceUrl: req.pageUrl,
+        origin: 'extension',
+        kindOverride: 'url',
+        role: 'screenshot',
+        title: req.pageTitle ?? req.pageMeta?.ogTitle ?? null,
+        postMeta,
+      },
+      opts,
+      deps,
+    )
+  }
+  if (req.kind === 'page' || req.kind === 'link') {
+    const target = req.kind === 'link' ? (req.linkUrl ?? '') : req.pageUrl
+    return ingestUrl(target, opts, deps)
+  }
+  throw new AppError('unsupported', 'Type d’enregistrement non pris en charge.')
 }

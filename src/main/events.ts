@@ -28,10 +28,25 @@ export function emitItemsChanged(uuids: readonly string[], reason: ItemsChangedR
   emitFn?.('items.changed', { uuids: [...uuids], reason })
 }
 
+const collectionsListeners = new Set<(uuids: readonly string[]) => void>()
+
+/** Abonnement interne au main (menus de l'extension, WP-53) ; rend la fonction de retrait. */
+export function onCollectionsChanged(fn: (uuids: readonly string[]) => void): () => void {
+  collectionsListeners.add(fn)
+  return () => collectionsListeners.delete(fn)
+}
+
 export function emitCollectionsChanged(uuids: readonly string[]): void {
   const lib = getActiveLibrary()
   if (lib) invalidateCounts(lib.db)
   emitFn?.('collections.changed', { uuids: [...uuids] })
+  for (const fn of collectionsListeners) {
+    try {
+      fn(uuids)
+    } catch {
+      // un abonné défaillant n'empêche pas les autres
+    }
+  }
 }
 
 /** Émission d'un autre événement métier (`export.progress`…) ; sans effet hors Electron. */
