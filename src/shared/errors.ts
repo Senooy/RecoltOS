@@ -29,6 +29,22 @@ export type KnownAppErrorCode = (typeof APP_ERROR_CODES)[number]
 /** Les lots peuvent introduire des codes propres à leur domaine (préfixés), d'où `string`. */
 export type AppErrorCode = KnownAppErrorCode | (string & {})
 
+/**
+ * Message lisible d'une liste d'anomalies zod, en français (règle §2.6). Remplace
+ * `z.prettifyError`, qui insère « at » et des libellés anglais dans les toasts.
+ */
+export function formatIssues(
+  issues: readonly { message: string; path: readonly PropertyKey[] }[],
+): string {
+  if (issues.length === 0) return 'Entrée invalide'
+  return issues
+    .map((i) => {
+      const where = i.path.length > 0 ? ` (champ ${i.path.map(String).join('.')})` : ''
+      return `${i.message}${where}`
+    })
+    .join(' ; ')
+}
+
 export interface AppErrorShape {
   code: AppErrorCode
   message: string

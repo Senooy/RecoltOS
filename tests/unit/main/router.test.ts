@@ -130,3 +130,33 @@ describe('makeSenderCheck', () => {
     }
   })
 })
+
+describe('messages d’erreur en français (règle §2.6)', () => {
+  it('aucun « at » anglais dans error.message, ni pour l’entrée ni pour la sortie', async () => {
+    const bad = await dispatch(
+      'items.list',
+      { scope: 'nope' },
+      {},
+      { handlers: {}, validateOutput: false },
+    )
+    const badPatch = await dispatch(
+      'prefs.set',
+      { patch: { ai: { provider: 'x' } } },
+      {},
+      { handlers: {}, validateOutput: false },
+    )
+    const badOutput = await dispatch(
+      'items.counts',
+      {},
+      {},
+      { handlers: { 'items.counts': () => ({ count: 'x' }) } as never, validateOutput: true },
+    )
+    for (const r of [bad, badPatch, badOutput]) {
+      expect(r.ok).toBe(false)
+      if (!r.ok) {
+        expect(r.error.message).not.toMatch(/\bat\b/)
+        expect(r.error.message).not.toMatch(/Invalid|expected/)
+      }
+    }
+  })
+})

@@ -7,7 +7,13 @@ import type { IpcMain, IpcMainInvokeEvent, WebContents } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
-import { AppError, isAppErrorShape, type AppErrorShape, type RpcResult } from '../../shared/errors'
+import {
+  AppError,
+  formatIssues,
+  isAppErrorShape,
+  type AppErrorShape,
+  type RpcResult,
+} from '../../shared/errors'
 import {
   CHANNELS,
   EVENT_PREFIX,
@@ -60,7 +66,7 @@ export interface DispatchOptions {
 function toErrorShape(err: unknown): AppErrorShape {
   if (err instanceof AppError) return err.toJSON()
   if (err instanceof z.ZodError) {
-    return { code: 'validation', message: z.prettifyError(err), details: err.issues }
+    return { code: 'validation', message: formatIssues(err.issues), details: err.issues }
   }
   if (isAppErrorShape(err)) return { code: err.code, message: err.message }
   return { code: 'internal', message: err instanceof Error ? err.message : String(err) }
@@ -86,7 +92,7 @@ export async function dispatch(
       ok: false,
       error: {
         code: 'validation',
-        message: z.prettifyError(parsed.error),
+        message: formatIssues(parsed.error.issues),
         details: parsed.error.issues,
       },
     }
@@ -110,7 +116,7 @@ export async function dispatch(
           ok: false,
           error: {
             code: 'invalid_output',
-            message: z.prettifyError(out.error),
+            message: formatIssues(out.error.issues),
             details: out.error.issues,
           },
         }

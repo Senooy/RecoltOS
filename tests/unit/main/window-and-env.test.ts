@@ -91,4 +91,21 @@ describe('open-file', () => {
     expect(got).toEqual([['/a.png'], ['/b.png']])
     expect(filesFromArgv(['/Applications/RecoltOS.app/x', '--flag', '/c.jpg'])).toEqual(['/c.jpg'])
   })
+
+  it('ignore l’entrée de script, le dossier de l’app et ses contenus dans un argv de seconde instance', () => {
+    const app = '/Users/me/RecoltOS'
+    const argv = [
+      '/usr/bin/electron',
+      '/Users/me/RecoltOS/out/main/index.js',
+      '/Users/me/RecoltOS',
+      '/Users/me/RecoltOS/docs/a.png',
+      '/Users/me/Photos/b.jpg',
+      '/Users/me/RecoltOSbis/c.jpg',
+    ]
+    expect(filesFromArgv(argv, { appPath: app })).toEqual([
+      '/Users/me/Photos/b.jpg',
+      '/Users/me/RecoltOSbis/c.jpg',
+    ])
+    expect(filesFromArgv(['/exe', '/abs/autre/index.cjs', '/d.png'])).toEqual(['/d.png'])
+  })
 })

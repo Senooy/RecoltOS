@@ -41,7 +41,7 @@ export function preReady(): { gotLock: boolean } {
       w.show()
       w.focus()
     }
-    queueOpenFiles(filesFromArgv(argv))
+    queueOpenFiles(filesFromArgv(argv, { appPath: app.getAppPath() }))
   })
 
   return { gotLock }
