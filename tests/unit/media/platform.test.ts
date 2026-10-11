@@ -247,3 +247,29 @@ describe('trash', () => {
     ])
   })
 })
+
+describe('trash : erreurs de lstat', () => {
+  it('EACCES (dossier parent sans droit de parcours) → failed, pas missing', async () => {
+    if (process.getuid?.() === 0) return // root traverse les dossiers : pas de EACCES à produire
+    const dir = join(tmp.dir, 'locked')
+    mkdirSync(dir, { recursive: true })
+    const target = join(dir, 'secret.jpg')
+    writeFileSync(target, 'x')
+    chmodSync(dir, 0o000)
+    try {
+      const trashed: string[] = []
+      const r = await moveToTrash([target], (p) => {
+        trashed.push(p)
+        return Promise.resolve()
+      })
+      expect(r.missing).toEqual([])
+      expect(r.trashed).toEqual([])
+      expect(trashed).toEqual([])
+      expect(r.failed).toHaveLength(1)
+      expect(r.failed[0]!.path).toBe(target)
+      expect(r.failed[0]!.message).toMatch(/EACCES/)
+    } finally {
+      chmodSync(dir, 0o755)
+    }
+  })
+})

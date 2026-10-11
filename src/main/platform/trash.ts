@@ -32,8 +32,14 @@ export async function moveToTrash(
     }
     try {
       await lstat(p)
-    } catch {
-      report.missing.push(p)
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code
+      if (code === 'ENOENT' || code === 'ENOTDIR') {
+        report.missing.push(p)
+      } else {
+        // EACCES, EPERM, EIO… : le fichier existe peut-être, il n'est pas « déjà absent ».
+        report.failed.push({ path: p, message: err instanceof Error ? err.message : String(err) })
+      }
       continue
     }
     try {
