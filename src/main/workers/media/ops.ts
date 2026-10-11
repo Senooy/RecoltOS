@@ -9,7 +9,7 @@ import { cloneFile, hashFile, toPng, zipLibrary } from './files'
 import { decodeForeign } from './foreign'
 import { palette } from './palette'
 import { probeImage, probeVideo } from './probe'
-import { makeDisplay, makeLarge, makeThumb } from './thumbs'
+import { makeAvatar, makeDisplay, makeLarge, makeThumb } from './thumbs'
 import { makePoster, makePreview } from './video'
 
 export interface OpContext {
@@ -29,6 +29,7 @@ export const MEDIA_OPS: { [O in MediaOp]: Impl<O> } = {
   makePoster: (a, c) => makePoster(a, c.tools, c.signal),
   makePreview: (a, c) => makePreview(a, c.tools, c.signal),
   makeDisplay: (a, c) => makeDisplay(a, c.tools, c.signal),
+  makeAvatar: (a, c) => makeAvatar(a, c.tools, c.signal),
   palette: (a, c) => palette(a, c.tools, c.signal),
   toPng: (a, c) => toPng(a, c.tools, c.signal),
   hashFile: (a) => hashFile(a),

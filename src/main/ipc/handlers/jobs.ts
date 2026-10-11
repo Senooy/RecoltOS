@@ -1,7 +1,28 @@
 /**
- * Handlers `jobs.*`. Stub `not_implemented` créé par WP-00, possédé ensuite par WP-10.
- * Remplacer par un objet `DomainHandlers<'jobs'>` complet (le typage impose chaque canal du contrat).
+ * Handlers `jobs.*` (WP-10, ARCHI §5.3) : état par type, « Réessayer » les échecs, pause/reprise
+ * (par type ou globale, persistée dans `settings['jobs.paused']`).
  */
-import { notImplemented, type DomainHandlers } from '../router'
+import { AppError } from '../../../shared/errors'
+import { getJobQueue, requireJobServices } from '../../jobs/runtime'
+import type { DomainHandlers } from '../router'
 
-export const jobsHandlers: DomainHandlers<'jobs'> = notImplemented('jobs')
+function queue() {
+  const q = getJobQueue()
+  if (!q) throw new AppError('library_unavailable', 'File de jobs indisponible.')
+  return q
+}
+
+export const jobsHandlers: DomainHandlers<'jobs'> = {
+  'jobs.status': () => queue().status(),
+  'jobs.retryFailed': ({ type }) => {
+    const count = requireJobServices().lib.repos.jobs.requeueFailed(type)
+    queue().kick()
+    return { count }
+  },
+  'jobs.pause': ({ type }) => {
+    queue().pauseType(type ?? null, null, 'user')
+  },
+  'jobs.resume': ({ type }) => {
+    queue().resumeType(type ?? null)
+  },
+}

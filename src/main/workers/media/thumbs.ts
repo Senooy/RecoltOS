@@ -106,3 +106,37 @@ export async function makeDisplay(
   )
   return { width: r.width, height: r.height }
 }
+
+export const AVATAR = { size: 128, quality: 86 } as const
+
+/** Avatar d'auteur : carré 128 px recadré au centre, JPEG (`avatars/<platform>/<k>.jpg`). */
+export async function makeAvatar(
+  a: { src: string; dst: string; size: 128 },
+  tools: MediaTools,
+  signal?: AbortSignal,
+): Promise<MediaResult<'makeAvatar'>> {
+  const size = checkWidth(a.size, AVATAR.size, 'size')
+  const s = assertAbs(a.src, 'src')
+  const d = assertAbs(a.dst, 'dst')
+  await assertDistinct(s, d)
+  return withReadable(s, tools, signal, async ({ input }) => {
+    try {
+      return await writeAtomic(
+        d,
+        async (tmp) => {
+          const info = await sharp(input, { animated: false })
+            .rotate()
+            .resize({ width: size, height: size, fit: 'cover' })
+            .flatten({ background: '#ffffff' })
+            .jpeg({ quality: AVATAR.quality, mozjpeg: true })
+            .toFile(tmp)
+          return { width: info.width, height: info.height, bytes: info.size }
+        },
+        '.jpg',
+      )
+    } catch (err) {
+      if (err instanceof AppError) throw err
+      throw new AppError('decode_failed', 'image illisible', rawError(err))
+    }
+  })
+}

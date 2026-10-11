@@ -59,6 +59,12 @@ export interface MediaOps {
     bytes: number
   }
   makeDisplay(a: { src: string; dst: string; maxEdge: 2048 }): { width: number; height: number }
+  /** `avatars/<platform>/<k>.jpg` : carré 128 px, JPEG. */
+  makeAvatar(a: { src: string; dst: string; size: 128 }): {
+    width: number
+    height: number
+    bytes: number
+  }
   palette(a: { src: string; k?: 8 }): {
     hex: string[]
     lab: [number, number, number][]

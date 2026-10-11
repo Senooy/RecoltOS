@@ -6,11 +6,13 @@ import { JOB_TYPES, type JobRecord } from '../../../src/shared/jobs'
 import { SERVICES, SERVICE_DOMAINS, initServices } from '../../../src/main/bootstrap/services'
 import type { ServiceContext } from '../../../src/main/bootstrap/context'
 import { handlers, handlersByDomain } from '../../../src/main/ipc/handlers'
-import { jobHandlers } from '../../../src/main/jobs/handlers'
+import { jobHandlers, type JobContext } from '../../../src/main/jobs/handlers'
 import { dispatch } from '../../../src/main/ipc/router'
 
 /** Domaines IPC déjà implémentés (les autres sont encore des stubs `not_implemented`). */
-const IMPLEMENTED_DOMAINS: readonly string[] = ['prefs', 'libraries', 'system']
+const IMPLEMENTED_DOMAINS: readonly string[] = ['prefs', 'libraries', 'system', 'ingest', 'jobs']
+/** Types de jobs encore en stub (IA : M4). */
+const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']
 
 function fakeCtx(userData: string = makeTmpDir('recolt-registries-')): ServiceContext {
   return {
@@ -61,10 +63,10 @@ describe('registre des jobs', () => {
   it('table type → handler complète, stubs not_implemented', async () => {
     expect(Object.keys(jobHandlers).sort()).toEqual([...JOB_TYPES].sort())
     for (const t of JOB_TYPES) {
+      if (!STUB_JOB_TYPES.includes(t)) continue
       const job = { id: 1, type: t } as JobRecord
-      await expect(
-        jobHandlers[t](job, { signal: new AbortController().signal, now: () => 0 }),
-      ).rejects.toMatchObject({ code: 'not_implemented' })
+      const ctx = { signal: new AbortController().signal, now: () => 0 } as unknown as JobContext
+      await expect(jobHandlers[t](job, ctx)).rejects.toMatchObject({ code: 'not_implemented' })
     }
   })
 })

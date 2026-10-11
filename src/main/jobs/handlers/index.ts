@@ -4,15 +4,15 @@
 import type { JobType } from '../../../shared/jobs'
 import { aiEnrich } from './ai-enrich'
 import { aiPrompt } from './ai-prompt'
-import { avatarFetch } from './avatar-fetch'
-import { mediaDerive } from './media-derive'
-import { mediaDownload } from './media-download'
+import { avatarFetch, avatarFetchFailed } from './avatar-fetch'
+import { mediaDerive, mediaDeriveFailed } from './media-derive'
+import { mediaDownload, mediaDownloadFailed } from './media-download'
 import { mediaPreview } from './media-preview'
 import { purgeFiles } from './purge-files'
 import { remoteFetch } from './remote-fetch'
-import type { JobHandler } from './types'
+import type { JobFailureHook, JobHandler } from './types'
 
-export type { JobContext, JobHandler } from './types'
+export type { JobContext, JobFailureHook, JobHandler, JobServices } from './types'
 
 export const jobHandlers: Readonly<Record<JobType, JobHandler>> = {
   'media.derive': mediaDerive,
@@ -23,4 +23,12 @@ export const jobHandlers: Readonly<Record<JobType, JobHandler>> = {
   'ai.enrich': aiEnrich,
   'ai.prompt': aiPrompt,
   'purge.files': purgeFiles,
+}
+
+/** Effets de bord d'un échec définitif (statut du média, de l'avatar). */
+export const jobFailureHooks: Partial<Record<JobType, JobFailureHook>> = {
+  'media.derive': mediaDeriveFailed,
+  'media.preview': () => undefined,
+  'media.download': mediaDownloadFailed,
+  'avatar.fetch': avatarFetchFailed,
 }
