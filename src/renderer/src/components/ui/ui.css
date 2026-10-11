@@ -1,0 +1,216 @@
+/*
+ * Kit UI : animations des primitives Radix (DESIGN §1.9) et jetons propres aux composants.
+ * Importé par chaque composant qui en dépend ; ne redéfinit aucun token de `tokens.css`.
+ *
+ * Mouvement réduit (`prefers-reduced-motion` OU `<html data-reduce-motion="1">`) : durées ≤ 80 ms,
+ * ni translation ni mise à l'échelle (fondus seulement). Miroir CSS de `motion.ts`.
+ */
+:root {
+  /* échelle de départ des popovers / dialogues, translation de la modale */
+  --ui-scale-from: 0.97;
+  --ui-dialog-scale-from: 0.98;
+  --ui-dialog-y-from: -6px;
+  /* menus : 140 ms à l'ouverture, 100 ms à la fermeture ; modale : 240 ms ; voile : 160 ms */
+  --ui-menu-in: 140ms;
+  --ui-menu-out: 100ms;
+  --ui-dialog-in: 240ms;
+  --ui-dialog-out: 160ms;
+  --ui-fade: 160ms;
+  --ui-tooltip: var(--dur-base, 180ms);
+  /* survol d'un bouton primaire (DESIGN §1.8) */
+  --ui-accent-hover: #262626;
+  /* survol du bouton rond du viewer (--viewer-btn plus soutenu) */
+  --ui-viewer-btn-hover: rgba(255, 255, 255, 0.2);
+  /* surlignage d'un item de menu : --hover × 1,25 (DESIGN §3.9) */
+  --ui-menu-highlight: rgba(0, 0, 0, 0.05);
+  /* teinte de repli des avatars à initiales : saturation et luminosité par thème */
+  --ui-avatar-s: 20%;
+  --ui-avatar-l: 90%;
+}
+[data-theme='dark'] {
+  --ui-accent-hover: #e5e5e7;
+  --ui-menu-highlight: rgba(255, 255, 255, 0.0625);
+  --ui-avatar-s: 12%;
+  --ui-avatar-l: 24%;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ui-scale-from: 1;
+    --ui-dialog-scale-from: 1;
+    --ui-dialog-y-from: 0px;
+    --ui-menu-in: 80ms;
+    --ui-menu-out: 80ms;
+    --ui-dialog-in: 80ms;
+    --ui-dialog-out: 80ms;
+    --ui-fade: 80ms;
+    --ui-tooltip: 80ms;
+  }
+}
+:root[data-reduce-motion='1'] {
+  --ui-scale-from: 1;
+  --ui-dialog-scale-from: 1;
+  --ui-dialog-y-from: 0px;
+  --ui-menu-in: 80ms;
+  --ui-menu-out: 80ms;
+  --ui-dialog-in: 80ms;
+  --ui-dialog-out: 80ms;
+  --ui-fade: 80ms;
+  --ui-tooltip: 80ms;
+}
+
+/* ---- Popovers : menus, popover, tooltip --------------------------------------------------- */
+@keyframes ui-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--ui-scale-from));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes ui-pop-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(var(--ui-scale-from));
+  }
+}
+.ui-pop {
+  transform-origin: var(--radix-popper-transform-origin);
+}
+.ui-pop[data-state='open'],
+.ui-pop[data-state='delayed-open'],
+.ui-pop[data-state='instant-open'] {
+  animation: ui-pop-in var(--ui-menu-in) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.ui-pop[data-state='closed'] {
+  animation: ui-pop-out var(--ui-menu-out) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.ui-pop-tooltip[data-state='delayed-open'],
+.ui-pop-tooltip[data-state='instant-open'],
+.ui-pop-tooltip[data-state='closed'] {
+  animation-duration: var(--ui-tooltip);
+}
+
+/* ---- Dialogues : voile en fondu, panneau opacity + scale + y ------------------------------ */
+@keyframes ui-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ui-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes ui-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--ui-dialog-y-from)) scale(var(--ui-dialog-scale-from));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ui-dialog-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(var(--ui-dialog-y-from)) scale(var(--ui-dialog-scale-from));
+  }
+}
+.ui-scrim[data-state='open'] {
+  animation: ui-fade-in var(--ui-fade) ease-out both;
+}
+.ui-scrim[data-state='closed'] {
+  animation: ui-fade-out var(--ui-fade) ease-out both;
+}
+.ui-scrim-modal {
+  background: var(--scrim-modal);
+  backdrop-filter: blur(3px);
+}
+.ui-scrim-palette {
+  background: var(--scrim-palette);
+}
+.ui-dialog {
+  /* centrage par la propriété `translate` : `transform` reste libre pour l'animation */
+  translate: -50% -50%;
+}
+.ui-dialog[data-state='open'] {
+  animation: ui-dialog-in var(--ui-dialog-in) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+.ui-dialog[data-state='closed'] {
+  animation: ui-dialog-out var(--ui-dialog-out) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
+}
+
+/* ---- Menus : surlignage ------------------------------------------------------------------- */
+.ui-menu-item[data-highlighted],
+.ui-menu-item[data-state='open'] {
+  background: var(--ui-menu-highlight);
+}
+.ui-menu-item-danger[data-highlighted],
+.ui-menu-item-danger[data-state='open'] {
+  background: var(--danger-soft);
+}
+.ui-menu-item[data-disabled] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ---- Spinner ------------------------------------------------------------------------------ */
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ui-spinner > svg {
+  animation: ui-spin 0.8s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-spinner > svg {
+    animation: none !important;
+  }
+}
+:root[data-reduce-motion='1'] .ui-spinner > svg {
+  animation: none !important;
+}
+
+/* ---- Avatar : teinte de repli par hash du handle ------------------------------------------ */
+.ui-avatar-tint {
+  background: hsl(var(--avatar-hue, 0) var(--ui-avatar-s) var(--ui-avatar-l));
+}
+
+/* ---- Toasts (sonner) : mouvement réduit = fondu seul ------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast] {
+    transition: opacity 80ms linear !important;
+  }
+}
+:root[data-reduce-motion='1'] [data-sonner-toast] {
+  transition: opacity 80ms linear !important;
+}
+
+/* ---- Focus : conteneurs non interactifs ---------------------------------------------------
+ * `globals.css` (non layered) donne l'anneau `:focus-visible` à tout élément. Les conteneurs que
+ * Radix focalise par programmation (panneau de dialogue, contenu de menu/popover) et les items de
+ * menu (déjà surlignés par `data-highlighted`) n'affichent pas d'anneau ; boutons, champs et
+ * pouces de slider gardent l'anneau clavier. */
+.ui-dialog:focus-visible,
+.ui-pop:focus-visible,
+.ui-menu-item:focus-visible {
+  outline: none;
+}
