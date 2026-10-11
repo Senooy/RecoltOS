@@ -357,7 +357,7 @@ export class SyncCoordinator {
    * Démarre un run si les conditions le permettent ; rend l'identifiant ou `null` (état mis à jour :
    * `no_browser`, `auth_required`, `rate_limited`…). Jamais deux runs pour une même plateforme.
    */
-  start(p: BridgePlatform, mode: SyncMode, reason: RunReason): string | null {
+  start(p: BridgePlatform, mode: SyncMode, reason: RunReason, maxPages?: number): string | null {
     const lib = this.d.lib()
     const bridge = this.d.bridge()
     if (!lib || !bridge) return null
@@ -422,7 +422,7 @@ export class SyncCoordinator {
       mode,
       trigger: reason,
       startCursor: ctx.requestCursor,
-      maxPages: MAX_PAGES[mode][p],
+      maxPages: maxPages ?? MAX_PAGES[mode][p],
       allowBackgroundTab: !!st.allow_background_tab,
     })
     if (!sent) this.finish(ctx, 'network', 'extension injoignable')
@@ -479,7 +479,7 @@ export class SyncCoordinator {
     if (old) clearTimeout(old)
     const t = setTimeout(() => {
       this.hintTimers.delete(p)
-      this.start(p, 'incremental', 'hint')
+      this.start(p, 'incremental', 'hint', 1)
     }, HINT_DEBOUNCE_MS)
     t.unref?.()
     this.hintTimers.set(p, t)
