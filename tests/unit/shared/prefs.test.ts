@@ -29,6 +29,7 @@ describe('PrefsSchema', () => {
         hideApp: true,
         copyToClipboard: false,
         promptShown: false,
+        dropFolderInit: false,
       },
       sync: { x: false, instagram: false, cosmos: false },
       ai: {

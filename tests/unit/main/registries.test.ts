@@ -23,6 +23,7 @@ const IMPLEMENTED_DOMAINS: readonly string[] = [
   'search',
   'data',
   'rediscover',
+  'capture',
 ]
 /** Types de jobs encore en stub (IA : M4). */
 const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']

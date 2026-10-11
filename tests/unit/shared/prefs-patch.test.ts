@@ -43,9 +43,10 @@ describe('prefs.set : patch strict', () => {
     expect(ok({ capture: { shortcut: 'S' } })).toBe(false)
     expect(ok({ capture: { shortcut: 'CommandOrControl+Shift+S' } })).toBe(true)
     expect(ok({ capture: { shortcut: 'CommandOrControl+Alt+X' } })).toBe(true)
+    // `capture.setShortcut` valide dans le handler (`reserved` / `invalid` dans le résultat, WP-33).
     expect(
       contract['capture.setShortcut'].input.safeParse({ accel: 'Command+Q', label: 'Q' }).success,
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('rejette les clés inconnues à tous les niveaux et les mauvais types', () => {

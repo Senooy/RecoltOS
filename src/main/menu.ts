@@ -14,16 +14,28 @@ const accelOf = (id: string): string | undefined => {
   return s?.accel ?? undefined
 }
 
+export interface MenuOverrides {
+  /**
+   * Accélérateur de « Capturer l'écran » (WP-33) : celui du réglage si la touche imprimée
+   * correspond (SPACES §2.2), `null` = aucun (le raccourci global reste actif).
+   */
+  capture?: string | null
+}
+
 export function buildMenuTemplate(
   send: (cmd: MenuCommand) => void,
   appName = 'RecoltOS',
+  overrides: MenuOverrides = {},
 ): MenuItemConstructorOptions[] {
   const cmd = (
     id: MenuCommand,
     label: string,
     extra: Partial<MenuItemConstructorOptions> = {},
   ): MenuItemConstructorOptions => {
-    const accelerator = accelOf(id)
+    const accelerator =
+      id === 'capture' && overrides.capture !== undefined
+        ? (overrides.capture ?? undefined)
+        : accelOf(id)
     return {
       id,
       label,
@@ -57,6 +69,7 @@ export function buildMenuTemplate(
         { type: 'separator' },
         cmd('importFiles', 'Importer des fichiers…'),
         cmd('capture', 'Capturer l’écran'),
+        cmd('importFolder', 'Importer un dossier…'),
         cmd('importGatheros', 'Importer depuis GatherOS…'),
         { type: 'separator' },
         cmd('exportZip', 'Exporter la bibliothèque…'),
@@ -130,10 +143,25 @@ export function buildMenuTemplate(
   ]
 }
 
+let menuCtx: ServiceContext | null = null
+let menuOverrides: MenuOverrides = {}
+
 export function initMenu(ctx: ServiceContext): void {
-  if (typeof Menu?.buildFromTemplate !== 'function') return
+  menuCtx = ctx
+  rebuildMenu()
+}
+
+/** Reconstruit le menu natif (raccourci de capture modifié). */
+export function rebuildMenu(overrides?: MenuOverrides): void {
+  if (overrides) menuOverrides = { ...menuOverrides, ...overrides }
+  const ctx = menuCtx
+  if (!ctx || typeof Menu?.buildFromTemplate !== 'function') return
   const menu = Menu.buildFromTemplate(
-    buildMenuTemplate((cmd) => ctx.emit('menu.command', { cmd }), app.getName() || 'RecoltOS'),
+    buildMenuTemplate(
+      (cmd) => ctx.emit('menu.command', { cmd }),
+      app.getName() || 'RecoltOS',
+      menuOverrides,
+    ),
   )
   Menu.setApplicationMenu(menu)
 }

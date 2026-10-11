@@ -34,8 +34,9 @@ export const CaptureStatus = z.object({
 })
 export type CaptureStatus = z.output<typeof CaptureStatus>
 
+/** `taken` : la combinaison est déjà prise par une autre app (`register` → false), ancien conservé. */
 export const ShortcutResult = z.object({
   ok: z.boolean(),
-  error: z.enum(['conflict', 'invalid', 'reserved']).optional(),
+  error: z.enum(['taken', 'invalid', 'reserved']).optional(),
 })
 export type ShortcutResult = z.output<typeof ShortcutResult>

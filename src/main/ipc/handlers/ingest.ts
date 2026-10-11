@@ -10,7 +10,8 @@ import { emitIngestProgress, getPageCapture, requireJobServices } from '../../jo
 import { notImplemented, type DomainHandlers, type HandlerContext } from '../router'
 import type { IngestDeps } from '../../ingest/ingest'
 
-function deps(): IngestDeps {
+/** Services d'ingestion de la bibliothèque active (+ capture de page hors écran). */
+export function ingestDeps(): IngestDeps {
   const capture = getPageCapture()
   return capture ? { ...requireJobServices(), captureUrl: capture } : requireJobServices()
 }
@@ -27,7 +28,7 @@ async function pick(ctx: HandlerContext, folder: boolean): Promise<string[] | nu
 }
 
 const run = (paths: string[], collectionUuid?: string): Promise<IngestReport> =>
-  ingestPaths(paths, collectionUuid ? { collectionUuid } : {}, deps(), emitIngestProgress)
+  ingestPaths(paths, collectionUuid ? { collectionUuid } : {}, ingestDeps(), emitIngestProgress)
 
 export const ingestHandlers: DomainHandlers<'ingest'> = {
   ...notImplemented('ingest'),
@@ -43,7 +44,11 @@ export const ingestHandlers: DomainHandlers<'ingest'> = {
   'ingest.url': async ({ url, collectionUuid }) => {
     const report: IngestReport = { added: [], duplicates: [], failed: [] }
     try {
-      const r = await ingest({ type: 'url', url }, collectionUuid ? { collectionUuid } : {}, deps())
+      const r = await ingest(
+        { type: 'url', url },
+        collectionUuid ? { collectionUuid } : {},
+        ingestDeps(),
+      )
       if (r.status === 'created') report.added.push({ itemUuid: r.itemUuid })
       else report.duplicates.push({ itemUuid: r.itemUuid })
     } catch (err) {

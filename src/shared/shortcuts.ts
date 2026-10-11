@@ -244,6 +244,8 @@ export const MENU_COMMANDS = [
   'zoomReset',
   'quickLook',
   'importGatheros',
+  'importFolder',
+  'pasteUrl',
   'exportZip',
   'snapshot',
 ] as const

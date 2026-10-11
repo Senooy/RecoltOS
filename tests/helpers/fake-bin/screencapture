@@ -1,0 +1,16 @@
+#!/bin/sh
+# Faux `screencapture` (WP-33) pour les tests : RECOLTOS_SCREENCAPTURE_BIN=<ce fichier>.
+# FAKE_SCREENCAPTURE_MODE : ok (défaut, PNG 64×40 + sel FAKE_SCREENCAPTURE_SALT) | cancel (Échap :
+# aucun fichier, code 1) | fail (code 2). Journalise ses arguments dans FAKE_SCREENCAPTURE_LOG.
+out=""
+for a in "$@"; do out="$a"; done
+if [ -n "$FAKE_SCREENCAPTURE_LOG" ]; then echo "$*" >> "$FAKE_SCREENCAPTURE_LOG"; fi
+case "${FAKE_SCREENCAPTURE_MODE:-ok}" in
+  cancel) exit 1 ;;
+  fail) echo "erreur simulée" >&2; exit 2 ;;
+esac
+/usr/bin/base64 -D > "$out" <<'PNG'
+iVBORw0KGgoAAAANSUhEUgAAAEAAAAAoCAIAAADBrGu+AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAb0lEQVRYhe2SQQkAQRDDqinv868iYk5GGbZQAUlo/Di91AmcAPWK7kLcXeoEToB6RXch7i51AidAvaK7EHeXOoEToF7RXYi7S53ACVCv6C7E3aVO4ASoV3QX4u5SJ3AC1Cu6C3F3qRM4AeoVfflCP/ap5LW3XavGAAAAAElFTkSuQmCC
+PNG
+if [ -n "$FAKE_SCREENCAPTURE_SALT" ]; then printf '%s' "$FAKE_SCREENCAPTURE_SALT" >> "$out"; fi
+exit 0

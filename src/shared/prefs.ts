@@ -31,6 +31,8 @@ export const CapturePrefs = z.object({
   hideApp: z.boolean().default(true),
   copyToClipboard: z.boolean().default(false),
   promptShown: z.boolean().default(false),
+  /** Le Bureau a été proposé comme dossier de dépôt au premier lancement (WP-33). */
+  dropFolderInit: z.boolean().default(false),
 })
 
 export const SyncPrefs = z.object({
