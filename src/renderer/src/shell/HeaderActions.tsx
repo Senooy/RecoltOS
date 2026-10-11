@@ -6,6 +6,7 @@ import { Compass, Moon, Search, Settings, Sun } from 'lucide-react'
 import { IconButton, Kbd } from '../components/ui'
 import { fr } from '../i18n/fr'
 import { cn } from '../lib/cn'
+import { AiStatusPill } from '../features/ai/AiStatusPill'
 
 export function HeaderActions({
   compact,
@@ -24,6 +25,7 @@ export function HeaderActions({
 }) {
   return (
     <div className="app-no-drag absolute right-6 top-[41px] flex h-7 items-center gap-2">
+      <AiStatusPill />
       {compact ? (
         <IconButton
           icon={<Search size={14} strokeWidth={1.75} />}

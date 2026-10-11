@@ -55,7 +55,13 @@ try {
 } catch {
   // stdin fermé
 }
-const need = ['--ephemeral', '--ignore-user-config', '--ignore-rules', '--skip-git-repo-check', '--json']
+const need = [
+  '--ephemeral',
+  '--ignore-user-config',
+  '--ignore-rules',
+  '--skip-git-repo-check',
+  '--json',
+]
 for (const n of need)
   if (!args.includes(n)) {
     console.error(`argv inattendu : ${n} manquant`)
@@ -99,7 +105,10 @@ if (mode === 'not_logged') {
 }
 out({ type: 'item.completed', item: { id: 'i0', type: 'reasoning', text: '…' } })
 if (mode === 'tool_violation') {
-  out({ type: 'item.started', item: { id: 'i1', type: 'command_execution', command: 'cat ~/.zshrc' } })
+  out({
+    type: 'item.started',
+    item: { id: 'i1', type: 'command_execution', command: 'cat ~/.zshrc' },
+  })
   return void setTimeout(() => process.exit(0), 60_000)
 }
 const value = {}
@@ -112,6 +121,12 @@ for (const p of Object.keys(schema.properties || {})) {
   if (p === 'style') value.style = 'flat'
 }
 fs.writeFileSync(outPath, JSON.stringify(value))
-out({ type: 'item.completed', item: { id: 'i2', type: 'agent_message', text: JSON.stringify(value) } })
-out({ type: 'turn.completed', usage: { input_tokens: 3200, cached_input_tokens: 0, output_tokens: 40 } })
+out({
+  type: 'item.completed',
+  item: { id: 'i2', type: 'agent_message', text: JSON.stringify(value) },
+})
+out({
+  type: 'turn.completed',
+  usage: { input_tokens: 3200, cached_input_tokens: 0, output_tokens: 40 },
+})
 process.exit(0)

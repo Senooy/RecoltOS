@@ -355,6 +355,8 @@ export class AiService {
     }
     this.hardCapped = null
     lib.db.prepare('UPDATE jobs SET provider = ? WHERE id = ?').run(provider, job.id)
+    // Le panneau Détails passe de « En file d'attente » à « Analyse en cours ».
+    ctx.changed([item.uuid], 'updated')
 
     const jobDir = join(this.providers.sandboxDir(provider), 'jobs', String(job.id))
     const lastCode = this.lastErrorCode(lib, job.id)
@@ -434,7 +436,9 @@ export class AiService {
           errorCode: e.code,
         })
       }
-      return this.onError(e, job, provider, item, lib, ctx)
+      const outcome = this.onError(e, job, provider, item, lib, ctx)
+      ctx.changed([item.uuid], 'updated')
+      return outcome
     } finally {
       await rm(jobDir, { recursive: true, force: true }).catch(() => undefined)
     }
@@ -832,11 +836,22 @@ export class AiService {
 
   /** Aperçu exact de l'envoi (AI §11.2) : JPEG préparés, prompt système et prompt complet. */
   async previewPayload(
-    itemUuid: string,
+    itemUuid: string | undefined,
     task: AiTask,
-  ): Promise<PayloadPreview & { provider: AiCliId }> {
+  ): Promise<PayloadPreview & { provider: AiCliId; itemUuid: string }> {
     const s = this.requireServices()
-    const item = s.lib.repos.items.getByUuid(itemUuid)
+    const pick =
+      itemUuid ??
+      (
+        s.lib.db
+          .prepare(
+            `SELECT i.uuid FROM items i WHERE ${ELIGIBLE} AND i.hidden_at IS NULL
+             ORDER BY (coalesce(i.ai_description, '') = '') DESC, i.created_at DESC LIMIT 1`,
+          )
+          .get() as { uuid: string } | undefined
+      )?.uuid
+    if (!pick) throw new AppError('not_found', 'Aucun élément à prévisualiser.')
+    const item = s.lib.repos.items.getByUuid(pick)
     if (!item || item.deleted_at !== null) throw new AppError('not_found', 'Élément introuvable.')
     const pref = this.deps.prefs().ai.provider
     const provider: AiCliId = pref === 'off' ? 'claude' : pref
@@ -852,7 +867,7 @@ export class AiService {
         task === 'imagePrompt'
           ? buildImagePromptPrompt(input, provider)
           : buildAnalyzePrompt(input, provider)
-      return { provider, ...(await previewOf(input, SYSTEM_FR, prompt)) }
+      return { provider, itemUuid: item.uuid, ...(await previewOf(input, SYSTEM_FR, prompt)) }
     } catch (err) {
       const e = toAiError(err)
       throw new AppError(e.code === 'FILE_MISSING' ? 'not_found' : 'internal', e.message)

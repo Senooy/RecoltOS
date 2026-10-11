@@ -156,7 +156,12 @@ test.describe('import GatherOS depuis Réglages › Bibliothèques', () => {
     const summary = page.locator('[data-testid="import-summary"]')
     await expect(summary).toBeVisible({ timeout: 30_000 })
     await expect(summary).toContainText('10 éléments importés')
-    await expect(page.locator('[data-testid="import-enrich"]')).toBeDisabled()
+    // M4 : « Enrichir » ouvre la boîte d'enrichissement (moteur à choisir : aucun appel).
+    await page.locator('[data-testid="import-enrich"]').click()
+    await expect(page.locator('[data-testid="ai-enrich"]')).toBeVisible()
+    await expect(page.locator('[data-testid="ai-enrich-start"]')).toHaveText('Changer')
+    await page.keyboard.press('Escape')
+    await expect(page.locator('[data-testid="ai-enrich"]')).toBeHidden()
     await page.keyboard.press('Escape')
     await expect(page.locator('[data-testid="grid"] [data-testid="card"]')).toHaveCount(8)
   })

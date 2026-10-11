@@ -1,0 +1,211 @@
+/* Réglages › IA (WP-44), recalés sur `o8zko5` (k = 1, modale 749 × 571). */
+.ai-card {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  background: #ececec;
+  padding: 9px 12px 10px 13px;
+}
+:root[data-theme='dark'] .ai-card {
+  border-color: var(--border);
+  background: var(--surface);
+}
+.ai-card-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--fg);
+}
+.ai-card-help {
+  margin-top: 1px;
+  font-size: 12.5px;
+  line-height: 15px;
+  color: #959595;
+}
+.ai-pill-black {
+  display: inline-flex;
+  height: 30px;
+  min-width: 74px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #000;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  transition: background-color 120ms;
+}
+.ai-pill-black:hover {
+  background: #262626;
+}
+:root[data-theme='dark'] .ai-pill-black {
+  background: #fff;
+  color: #000;
+}
+.ai-rule {
+  height: 1px;
+  background: #ececec;
+}
+:root[data-theme='dark'] .ai-rule {
+  background: var(--border-subtle);
+}
+.ai-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #ececec;
+  padding: 15px 0 17px;
+}
+/* o8zko5 : la 1re ligne est décalée de 30 pt sous le filet de l'encart. */
+.ai-row:first-child {
+  padding-top: 30px;
+  padding-bottom: 15px;
+}
+.ai-row:last-child {
+  border-bottom: 0;
+}
+:root[data-theme='dark'] .ai-row {
+  border-color: var(--border-subtle);
+}
+.ai-row-label {
+  font-size: 14.5px;
+  line-height: 18px;
+  color: var(--fg);
+}
+.ai-row-help {
+  margin-top: 2px;
+  max-width: 420px;
+  font-size: 12.5px;
+  line-height: 16px;
+  color: #959595;
+}
+.ai-fold {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ececec;
+  padding: 14px 0;
+  text-align: left;
+  font-size: 14.5px;
+  color: var(--fg);
+}
+:root[data-theme='dark'] .ai-fold {
+  border-color: var(--border-subtle);
+}
+.ai-fold svg {
+  color: var(--fg-muted);
+  transition: transform 160ms;
+}
+.ai-fold[aria-expanded='true'] svg {
+  transform: rotate(90deg);
+}
+.ai-sub {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13.5px;
+}
+.ai-sub-label {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg);
+}
+.ai-select {
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-size: 13px;
+  color: var(--fg);
+}
+.ai-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.ai-table th,
+.ai-table td {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 6px 8px 6px 0;
+  text-align: left;
+  vertical-align: top;
+}
+.ai-table th {
+  width: 92px;
+  font-weight: 500;
+  color: var(--fg);
+}
+.ai-table td {
+  color: var(--fg-muted);
+}
+.ai-radio {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+}
+.ai-radio[aria-checked='true'] {
+  border-color: var(--fg);
+}
+.ai-dot {
+  display: inline-block;
+  height: 7px;
+  width: 7px;
+  border-radius: 999px;
+  background: #b3b3b3;
+}
+.ai-dot.ok {
+  background: #30a46c;
+}
+.ai-dot.warn {
+  background: #f5a524;
+}
+.ai-dot.err {
+  background: #e5484d;
+}
+.ai-mono {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11.5px;
+  line-height: 16px;
+}
+.ai-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--viewer-fg-subtle, #888) 0%,
+    var(--viewer-fg-2, #ddd) 50%,
+    var(--viewer-fg-subtle, #888) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ai-shimmer 1.6s linear infinite;
+}
+@keyframes ai-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-shimmer {
+    animation: none;
+    color: var(--viewer-fg-2, #ddd);
+  }
+}

@@ -15,6 +15,7 @@ import { usePrefs } from '../../../state/prefs'
 import { useUi } from '../../../state/ui'
 import { useLibraries } from '../../../shell/LibraryPicker'
 import { SettingsTitle } from '../SettingsDialog'
+import { useAi } from '../../ai/ai-store'
 
 type Detect = Awaited<ReturnType<typeof rpc<'import.gatheros.detect'>>>
 
@@ -422,7 +423,8 @@ export function ImportPanel() {
               variant="secondary"
               size="sm"
               data-testid="import-enrich"
-              disabled={provider === 'off'}
+              disabled={report.missingDescription === 0}
+              onClick={() => useAi.getState().openEnrich('import')}
             >
               {fr.importUi.enrich(report.missingDescription)}
             </Button>

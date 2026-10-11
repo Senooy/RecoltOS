@@ -14,6 +14,7 @@ import { flattenTree, followCollections, useCollections } from '../state/collect
 import { useUi, type Route } from '../state/ui'
 import { useUndo } from '../state/undo'
 import { Dialogs } from './Dialogs'
+import { AiDialogs } from '../features/ai/AiDialogs'
 import { DropOverlay } from './DropOverlay'
 import { FabMenu } from './FabMenu'
 import { HeaderActions } from './HeaderActions'
@@ -210,6 +211,7 @@ export function AppShell({ dark }: { dark: boolean }) {
           </Suspense>
         ) : null}
         <Dialogs />
+        <AiDialogs />
         <Toaster />
       </div>
     </TooltipProvider>

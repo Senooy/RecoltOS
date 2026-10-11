@@ -15,6 +15,9 @@ import { NBSP, bytes, count, dateShort } from '../../lib/format'
 import { mediaSrc } from '../../lib/media-url'
 import { RpcError, isNotImplemented, rpc } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
+import { analyzeItems, setAiExcluded } from '../ai/ai-actions'
+import { aiReady, useAi } from '../ai/ai-store'
+import '../ai/ai.css'
 import { CollectionPickerPopover } from '../collections/CollectionPicker'
 import { addToCollection, removeFromCollection } from '../grid/actions'
 import { PaletteSwatches } from './PaletteSwatches'
@@ -331,33 +334,72 @@ function TagsField({ detail }: { detail: ItemDetail }) {
 
 function AiSection({ detail }: { detail: ItemDetail }) {
   const provider = usePrefs((s) => s.prefs.ai.provider)
-  const off = provider === 'off'
-  const via = detail.aiProvider ?? (off ? null : provider)
+  const consent = useAi((s) => s.consentVersion)
+  const ready = aiReady(provider, consent)
+  const job = detail.aiJob
+  const busy = job?.type === 'ai.enrich'
+  const promptBusy = job?.type === 'ai.prompt'
+  const failed = detail.aiState === 'failed' && !job
+  const via = detail.aiProvider && detail.aiProvider !== 'gatheros' ? detail.aiProvider : null
+  const t = fr.aiUi
   return (
-    <div>
-      {detail.aiDescription ? (
-        <p className="select-text text-[13px] leading-[19px] text-[var(--viewer-fg-2)]">
+    <div data-testid="detail-ai" data-state={busy ? job.state : failed ? 'failed' : detail.aiState}>
+      {busy ? (
+        <p className="ai-shimmer text-[13px] leading-[19px]" data-testid="detail-ai-busy">
+          {job.state === 'running' ? t.generating : t.queued}
+        </p>
+      ) : detail.aiDescription ? (
+        <p
+          className="select-text text-[13px] leading-[19px] text-[var(--viewer-fg-2)]"
+          data-testid="detail-ai-description"
+        >
           {detail.aiDescription}
         </p>
       ) : (
         <p className="text-[12.5px] text-[var(--viewer-fg-subtle)]">{fr.viewerUi.aiNone}</p>
       )}
-      <div className="mt-2.5 flex items-center gap-2.5">
-        <button
-          type="button"
-          disabled={off}
-          title={off ? fr.viewerUi.aiUnavailable : undefined}
-          className="viewer-pill"
-        >
-          <Sparkles size={13} strokeWidth={1.75} />
-          {detail.aiDescription ? fr.viewer.regenerate : fr.viewer.generate}
-        </button>
-        {via ? (
-          <span className="text-[11px] text-[var(--viewer-fg-subtle)]">
-            {fr.viewer.via(fr.viewerUi.providers[via] ?? via)}
-          </span>
-        ) : null}
-      </div>
+      {failed || (job && detail.aiError) ? (
+        <p className="mt-1.5 text-[12px] text-[#ff8a80]" data-testid="detail-ai-error">
+          {failed ? `${t.failed} ` : ''}
+          <span className="text-[var(--viewer-fg-subtle)]">{detail.aiError?.message}</span>
+        </p>
+      ) : null}
+      {detail.aiExcluded ? (
+        <div className="mt-2.5 flex items-center gap-2.5">
+          <span className="viewer-chip">{t.excluded}</span>
+          <button
+            type="button"
+            className="text-[11.5px] text-[var(--viewer-fg-muted)] hover:text-white"
+            onClick={() => void setAiExcluded([detail.uuid], false)}
+          >
+            {t.include}
+          </button>
+        </div>
+      ) : (
+        <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            data-testid="detail-ai-generate"
+            disabled={busy}
+            title={ready ? undefined : fr.viewerUi.aiUnavailable}
+            className="viewer-pill"
+            onClick={() =>
+              void analyzeItems([detail.uuid], { force: Boolean(detail.aiDescription) || failed })
+            }
+          >
+            <Sparkles size={13} strokeWidth={1.75} />
+            {failed ? t.retry : detail.aiDescription ? fr.viewer.regenerate : fr.viewer.generate}
+          </button>
+          {via ? (
+            <span
+              className="text-[11px] text-[var(--viewer-fg-subtle)]"
+              data-testid="detail-ai-via"
+            >
+              {t.via(t.shortNames[via] ?? via, provider !== 'off' && via !== provider)}
+            </span>
+          ) : null}
+        </div>
+      )}
       {detail.aiPrompt ? (
         <div className="viewer-prompt mt-3">
           <div className="flex items-center justify-between text-[11px] text-[var(--viewer-fg-muted)]">
@@ -368,7 +410,7 @@ function AiSection({ detail }: { detail: ItemDetail }) {
               className="text-[var(--viewer-fg-muted)] hover:text-white"
               onClick={() =>
                 void rpc('system.copyText', { text: detail.aiPrompt ?? '' })
-                  .then(() => toast(fr.toast.copied))
+                  .then(() => toast(t.copied))
                   .catch(fail)
               }
             >
@@ -379,6 +421,19 @@ function AiSection({ detail }: { detail: ItemDetail }) {
             {detail.aiPrompt}
           </p>
         </div>
+      ) : detail.kind !== 'tweet' && !detail.aiExcluded ? (
+        <button
+          type="button"
+          className={cn(
+            'mt-2.5 text-[11.5px] text-[var(--viewer-fg-muted)] hover:text-white',
+            promptBusy && 'ai-shimmer',
+          )}
+          disabled={promptBusy}
+          data-testid="detail-ai-prompt"
+          onClick={() => void analyzeItems([detail.uuid], { task: 'imagePrompt' })}
+        >
+          {promptBusy ? t.generating : t.generatePrompt}
+        </button>
       ) : null}
     </div>
   )
@@ -474,6 +529,52 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
               <span className="text-fg-muted">{fr.viewerUi.identifier}</span>
               <span className="select-text truncate font-mono text-[11px]">{card.uuid}</span>
             </div>
+            {detail ? (
+              <div
+                className="mt-2.5 flex flex-col items-start gap-1 border-t border-border-subtle pt-2"
+                data-testid="detail-ai-menu"
+              >
+                <button
+                  type="button"
+                  className="hover:underline"
+                  onClick={() => void analyzeItems([card.uuid], { force: true })}
+                >
+                  {fr.ai.analyze}
+                </button>
+                <button
+                  type="button"
+                  className="hover:underline"
+                  onClick={() => void analyzeItems([card.uuid], { force: true, fields: ['title'] })}
+                >
+                  {fr.ai.regenerateTitle}
+                </button>
+                <button
+                  type="button"
+                  className="hover:underline"
+                  onClick={() =>
+                    void analyzeItems([card.uuid], { force: true, fields: ['description'] })
+                  }
+                >
+                  {fr.ai.regenerateDescription}
+                </button>
+                <button
+                  type="button"
+                  className="hover:underline"
+                  onClick={() => useAi.getState().openPreview(card.uuid)}
+                >
+                  {fr.ai.previewPayload}
+                </button>
+                <label className="mt-1 flex items-center gap-1.5">
+                  <input
+                    type="checkbox"
+                    data-testid="detail-ai-exclude"
+                    checked={detail.aiExcluded}
+                    onChange={(e) => void setAiExcluded([card.uuid], e.target.checked)}
+                  />
+                  {fr.ai.neverSend}
+                </label>
+              </div>
+            ) : null}
           </Popover.Content>
         </Popover.Root>
       </div>

@@ -14,6 +14,7 @@ import {
   FolderOpen,
   FolderPlus,
   Image as ImageIcon,
+  Sparkles,
   Trash,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -23,6 +24,8 @@ import { fr } from '../../i18n/fr'
 import { rpc } from '../../lib/rpc'
 import { flattenTree, useCollections } from '../../state/collections'
 import { askName } from '../../state/dialogs'
+import { usePrefs } from '../../state/prefs'
+import { analyzeItems } from '../ai/ai-actions'
 import {
   addToCollection,
   copyFor,
@@ -89,6 +92,8 @@ export function SaveContextMenuContent({
   const uuids = cards.map((c) => c.uuid)
   const n = cards.length
   const one = n === 1 ? cards[0]! : null
+  // « Analyser avec l'IA » seulement quand un moteur est actif (le menu reste celui de 4d1v4s sinon).
+  const aiOn = usePrefs((st) => st.prefs.ai.provider) !== 'off'
   const newCollection = async () => {
     const name = await askName({
       title: fr.collection.new,
@@ -184,6 +189,15 @@ export function SaveContextMenuContent({
       {one ? (
         <Menu.Context.Item icon={<FolderOpen />} onSelect={() => void reveal(one)}>
           {fr.menu.revealInFinder}
+        </Menu.Context.Item>
+      ) : null}
+      {aiOn ? (
+        <Menu.Context.Item
+          icon={<Sparkles />}
+          data-testid="ctx-ai-analyze"
+          onSelect={() => void analyzeItems(uuids, { force: true })}
+        >
+          {fr.ai.analyze}
         </Menu.Context.Item>
       ) : null}
       <Menu.Context.Item icon={<Download />} onSelect={() => void download(uuids)}>

@@ -29,6 +29,7 @@ import { LibrariesSection } from './sections/Libraries'
 import { StorageSection } from './sections/Storage'
 import { TagsSection } from './sections/Tags'
 import { CaptureSettings } from '../capture/CaptureSettings'
+import { AiSettings } from '../ai/AiSettings'
 
 const NAV: { key: SettingsSection; label: string; Icon: typeof Palette }[] = [
   { key: 'appearance', label: fr.settings.nav.appearance, Icon: Palette },
@@ -143,6 +144,8 @@ export default function SettingsDialog() {
               <AppearanceSection />
             ) : section === 'libraries' ? (
               <LibrariesSection />
+            ) : section === 'ai' ? (
+              <AiSettings />
             ) : section === 'tags' ? (
               <TagsSection />
             ) : section === 'capture' ? (

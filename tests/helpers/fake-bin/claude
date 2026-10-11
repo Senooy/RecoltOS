@@ -121,7 +121,12 @@ if (mode === 'tool_violation') {
   return void hang()
 }
 if (mode === 'is_error_limit') {
-  out({ type: 'result', subtype: 'error', is_error: true, result: 'Claude AI usage limit reached|1791800000' })
+  out({
+    type: 'result',
+    subtype: 'error',
+    is_error: true,
+    result: 'Claude AI usage limit reached|1791800000',
+  })
   process.exit(1)
 }
 const props = Object.keys(schema.properties || {})
@@ -147,7 +152,12 @@ const result = {
   permission_denials: [],
   duration_ms: 12,
   total_cost_usd: 0.01,
-  usage: { input_tokens: 10, cache_creation_input_tokens: 100, cache_read_input_tokens: 0, output_tokens: 20 },
+  usage: {
+    input_tokens: 10,
+    cache_creation_input_tokens: 100,
+    cache_read_input_tokens: 0,
+    output_tokens: 20,
+  },
   modelUsage: { [model]: {} },
 }
 out(result)

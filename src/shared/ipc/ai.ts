@@ -14,6 +14,8 @@ const Task = z.enum(AI_TASKS)
 
 export const AiFilter = z.object({
   missingDescription: z.boolean().optional(),
+  /** Descriptions existantes qui ne sont pas en français (« Régénérer en français »). */
+  regenerateFr: z.boolean().optional(),
   importRunId: z.number().int().optional(),
   collectionUuid: Uuid.optional(),
   itemUuids: z.array(Uuid).max(10_000).optional(),
@@ -36,9 +38,11 @@ export const aiContract = {
   'ai.test': { input: z.object({ provider: Cli, live: z.boolean() }), output: ProviderTestResult },
   'ai.consent': { input: z.object({ version: z.number().int().min(1) }), output: Void },
   'ai.previewPayload': {
-    input: z.object({ itemUuid: Uuid, task: Task }),
+    /** Sans `itemUuid` : le premier élément éligible sans description (sinon le plus récent). */
+    input: z.object({ itemUuid: Uuid.optional(), task: Task }),
     output: z.object({
       provider: Cli,
+      itemUuid: Uuid,
       /** Prompt système (AI §5.1), envoyé avant `prompt`. */
       system: z.string(),
       prompt: z.string(),
