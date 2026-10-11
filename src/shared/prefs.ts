@@ -80,6 +80,8 @@ export const AiPrefs = z.object({
   consentAt: z.number().int().optional(),
 })
 
+export type AiPrefs = z.output<typeof AiPrefs>
+
 export const ToolsPrefs = z.object({
   ffmpeg: z.string().optional(),
   ffprobe: z.string().optional(),

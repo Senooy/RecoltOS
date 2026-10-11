@@ -1,23 +1,117 @@
 #!/usr/bin/env node
-/** Faux `codex` pour les tests (voir `claude` : mêmes variables FAKE_CLI_MODE / FAKE_CLI_LOG). */
+/**
+ * Faux `codex` (WP-42) : imite `codex exec --json` sans réseau. Vérifie l'argv d'isolation
+ * (--ephemeral, --ignore-user-config, --ignore-rules, --sandbox read-only, --skip-git-repo-check,
+ * `--` avant le prompt, --disable shell_tool) et que stdin est FERMÉ (pas un tube).
+ * Journalise l'argv dans $FAKE_CLI_LOG. $FAKE_CLI_MODE : ok | tool_violation | rate_limit |
+ * turn_failed | not_logged | api_key | crash | slow.
+ */
 'use strict'
 const fs = require('node:fs')
 const args = process.argv.slice(2)
 if (process.env.FAKE_CLI_LOG)
-  fs.appendFileSync(process.env.FAKE_CLI_LOG, JSON.stringify(args) + '\n')
+  fs.appendFileSync(process.env.FAKE_CLI_LOG, JSON.stringify({ bin: 'codex', args }) + '\n')
+const mode = process.env.FAKE_CLI_MODE || 'ok'
+const out = (o) => process.stdout.write(JSON.stringify(o) + '\n')
+
 if (args.includes('--version')) {
   console.log('codex-cli 0.159.0')
   process.exit(0)
 }
-const mode = process.env.FAKE_CLI_MODE || 'ok'
-if (mode === 'error') {
+if (args[0] === 'login' && args[1] === 'status') {
+  if (mode === 'not_logged') console.log('Not logged in')
+  else if (mode === 'api_key') console.log('Logged in using an API key - sk-***')
+  else console.log('Logged in using ChatGPT')
+  process.exit(0)
+}
+if (args[0] === 'features' && args[1] === 'list') {
+  console.log(
+    [
+      'apps                                     stable             true',
+      'apply_patch_freeform                     removed            false',
+      'browser_use                              stable             true',
+      'hooks                                    stable             true',
+      'image_generation                         stable             true',
+      'memories                                 stable             false',
+      'multi_agent                              stable             true',
+      'shell_tool                               stable             true',
+      'unified_exec                             stable             true',
+      'view_image                               stable             true',
+      'web_search_request                       deprecated         false',
+    ].join('\n'),
+  )
+  process.exit(0)
+}
+if (args[0] !== 'exec') {
+  console.error('commande inconnue')
+  process.exit(2)
+}
+try {
+  const st = fs.fstatSync(0)
+  if (st.isFIFO() || st.isFile()) {
+    console.error('stdin ouvert : il serait ajouté au prompt')
+    process.exit(66)
+  }
+} catch {
+  // stdin fermé
+}
+const need = ['--ephemeral', '--ignore-user-config', '--ignore-rules', '--skip-git-repo-check', '--json']
+for (const n of need)
+  if (!args.includes(n)) {
+    console.error(`argv inattendu : ${n} manquant`)
+    process.exit(65)
+  }
+if (args[args.indexOf('--sandbox') + 1] !== 'read-only') {
+  console.error('sandbox non read-only')
+  process.exit(65)
+}
+const dd = args.indexOf('--')
+if (dd < 0 || dd !== args.length - 2) {
+  console.error('`--` absent ou prompt non isolé')
+  process.exit(65)
+}
+const disabled = args.filter((a, i) => args[i - 1] === '--disable')
+if (!disabled.includes('shell_tool') || disabled.includes('apply_patch_freeform')) {
+  console.error('--disable incorrects')
+  process.exit(65)
+}
+const schemaPath = args[args.indexOf('--output-schema') + 1]
+const outPath = args[args.indexOf('-o') + 1]
+const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'))
+if (mode === 'crash') {
   console.error('erreur simulée')
   process.exit(1)
 }
-console.log(
-  JSON.stringify({
-    title: 'Titre synthétique',
-    description: 'Description synthétique.',
-    tags: ['test'],
-  }),
-)
+if (mode === 'slow') return void setTimeout(() => process.exit(0), 60_000)
+out({ type: 'thread.started', thread_id: 't1' })
+out({ type: 'turn.started' })
+if (mode === 'rate_limit') {
+  out({ type: 'error', message: "You've hit your usage limit. Try again later." })
+  process.exit(1)
+}
+if (mode === 'turn_failed') {
+  out({ type: 'turn.failed', error: { message: 'stream disconnected' } })
+  process.exit(1)
+}
+if (mode === 'not_logged') {
+  out({ type: 'error', message: '401 Unauthorized: please login' })
+  process.exit(1)
+}
+out({ type: 'item.completed', item: { id: 'i0', type: 'reasoning', text: '…' } })
+if (mode === 'tool_violation') {
+  out({ type: 'item.started', item: { id: 'i1', type: 'command_execution', command: 'cat ~/.zshrc' } })
+  return void setTimeout(() => process.exit(0), 60_000)
+}
+const value = {}
+for (const p of Object.keys(schema.properties || {})) {
+  if (p === 'title') value.title = 'Titre Codex'
+  if (p === 'description') value.description = 'Description Codex.'
+  if (p === 'tags') value.tags = ['affiche']
+  if (p === 'ocr') value.ocr = ''
+  if (p === 'prompt') value.prompt = 'A prompt.'
+  if (p === 'style') value.style = 'flat'
+}
+fs.writeFileSync(outPath, JSON.stringify(value))
+out({ type: 'item.completed', item: { id: 'i2', type: 'agent_message', text: JSON.stringify(value) } })
+out({ type: 'turn.completed', usage: { input_tokens: 3200, cached_input_tokens: 0, output_tokens: 40 } })
+process.exit(0)

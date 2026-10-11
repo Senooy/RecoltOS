@@ -77,6 +77,10 @@ export interface AiCallOptions {
   model?: string
   effort?: 'low' | 'medium'
   jobId?: number
+  /** Dossier du job (`<sandbox>/jobs/<id>`) : JPEG préparés, `schema.json`, `out.json` (codex). */
+  jobDir?: string
+  /** 2ᵉ essai après une sortie invalide : prompt renforcé (AI §5.4). */
+  retry?: boolean
 }
 
 export const AI_ERROR_CODES = [
@@ -116,6 +120,8 @@ export const ProviderStatus = z.object({
   installed: z.boolean(),
   path: z.string().optional(),
   version: z.string().optional(),
+  /** Copies trouvées par le shell de login (feuille « Changer »). */
+  candidates: z.array(z.object({ path: z.string(), version: z.string().optional() })).optional(),
   loggedIn: z.boolean().optional(),
   /** 'max', 'ChatGPT'… */
   plan: z.string().optional(),

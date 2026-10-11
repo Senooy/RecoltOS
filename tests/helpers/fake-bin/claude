@@ -1,40 +1,154 @@
 #!/usr/bin/env node
 /**
- * Faux `claude` pour les tests (WP-42 fournit la version complète sous tests/fixtures/fake-bin/).
- * Comportement piloté par FAKE_CLI_MODE : ok (défaut) | rate_limited | error | slow.
- * Journalise ses arguments dans $FAKE_CLI_LOG s'il est défini. Aucun réseau.
+ * Faux `claude` (WP-42) : imite `claude -p … --output-format stream-json` (constats S0) sans réseau.
+ * Vérifie l'argv exact : refuse `--bare`, exige --safe-mode, --tools Read, --permission-mode dontAsk,
+ * --no-session-persistence, --json-schema. Journalise l'argv dans $FAKE_CLI_LOG (une ligne JSON).
+ * $FAKE_CLI_MODE : ok (défaut) | ok_429 | bad_json | rate_limit | rate_limit_event | not_logged |
+ *   tool_violation | mcp | is_error_limit | slow | crash | api_key | logged_out
+ * $FAKE_CLI_TITLE : titre renvoyé (défaut « Titre synthétique »).
  */
 'use strict'
 const fs = require('node:fs')
 const args = process.argv.slice(2)
 if (process.env.FAKE_CLI_LOG)
-  fs.appendFileSync(process.env.FAKE_CLI_LOG, JSON.stringify(args) + '\n')
+  fs.appendFileSync(process.env.FAKE_CLI_LOG, JSON.stringify({ bin: 'claude', args }) + '\n')
+const mode = process.env.FAKE_CLI_MODE || 'ok'
+const out = (o) => process.stdout.write(JSON.stringify(o) + '\n')
+
 if (args.includes('--version')) {
   console.log('2.1.284 (Claude Code)')
   process.exit(0)
 }
-const mode = process.env.FAKE_CLI_MODE || 'ok'
+if (args[0] === '--help' || args.includes('--help')) {
+  console.log(
+    [
+      'Usage: claude [options]',
+      '  --bare  --safe-mode  --json-schema <schema>  --no-session-persistence',
+      '  --permission-prompts <target>  --effort <level>  --tools <tools...>  --restricted',
+      '  --strict-mcp-config  --disable-slash-commands  --system-prompt <prompt>',
+    ].join('\n'),
+  )
+  process.exit(0)
+}
+if (args[0] === 'auth' && args[1] === 'status') {
+  if (mode === 'logged_out') out({ loggedIn: false })
+  else
+    out({
+      loggedIn: true,
+      authMethod: mode === 'api_key' ? 'api_key' : 'claude.ai',
+      apiProvider: 'firstParty',
+      subscriptionType: 'max',
+      email: 'secret@example.com',
+      orgId: 'org-secret',
+      orgName: 'Secret Org',
+    })
+  process.exit(0)
+}
 if (args.includes('--bare')) {
   console.error('--bare est interdit')
   process.exit(64)
 }
-if (mode === 'error') {
+const need = [
+  ['--safe-mode'],
+  ['--tools', 'Read'],
+  ['--allowedTools', 'Read'],
+  ['--permission-mode', 'dontAsk'],
+  ['--no-session-persistence'],
+  ['--strict-mcp-config'],
+]
+for (const n of need) {
+  const i = args.indexOf(n[0])
+  if (i < 0 || (n[1] && args[i + 1] !== n[1])) {
+    console.error(`argv inattendu : ${n.join(' ')} manquant`)
+    process.exit(65)
+  }
+}
+const pi = args.indexOf('-p')
+const prompt = pi >= 0 ? args[pi + 1] : ''
+const si = args.indexOf('--json-schema')
+if (si < 0) {
+  console.error('--json-schema manquant')
+  process.exit(65)
+}
+const schema = JSON.parse(args[si + 1])
+const mi = args.indexOf('--model')
+const model = mi >= 0 ? args[mi + 1] : 'claude-sonnet'
+const json = args[args.indexOf('--output-format') + 1] === 'json'
+
+if (mode === 'crash') {
   console.error('erreur simulée')
   process.exit(1)
 }
-if (mode === 'rate_limited') {
-  console.error('rate limit reached')
-  process.exit(2)
+const tools = mode === 'mcp' ? ['Read', 'StructuredOutput'] : ['Read', 'StructuredOutput']
+if (!json)
+  out({
+    type: 'system',
+    subtype: 'init',
+    tools: mode === 'tool_violation_init' ? ['Read', 'Bash'] : tools,
+    mcp_servers: mode === 'mcp' ? [{ name: 'x', status: 'connected' }] : [],
+    model,
+    permissionMode: 'dontAsk',
+    apiKeySource: 'none',
+  })
+const paths = [...prompt.matchAll(/(\/[^\s;]+\.jpg)/g)].map((m) => m[1])
+
+const hang = () => setTimeout(() => process.exit(0), 60_000)
+if (mode === 'slow') return void hang()
+if (mode === 'rate_limit' || mode === 'not_logged') {
+  out({
+    type: 'system',
+    subtype: 'api_retry',
+    error: mode === 'rate_limit' ? 'rate_limit' : 'authentication_failed',
+    attempt: 1,
+  })
+  return void hang()
 }
-const out = {
+if (mode === 'rate_limit_event') {
+  out({ type: 'rate_limit_event', rate_limit_info: { status: 'rejected', resetsAt: 1791800000 } })
+  return void hang()
+}
+if (!json && paths[0])
+  out({
+    type: 'assistant',
+    message: { content: [{ type: 'tool_use', name: 'Read', input: { file_path: paths[0] } }] },
+  })
+out({ type: 'rate_limit_event', rate_limit_info: { status: 'allowed', resetsAt: 1791800000 } })
+if (mode === 'tool_violation') {
+  out({
+    type: 'assistant',
+    message: { content: [{ type: 'tool_use', name: 'Bash', input: { command: 'cat ~/.zshrc' } }] },
+  })
+  return void hang()
+}
+if (mode === 'is_error_limit') {
+  out({ type: 'result', subtype: 'error', is_error: true, result: 'Claude AI usage limit reached|1791800000' })
+  process.exit(1)
+}
+const props = Object.keys(schema.properties || {})
+const value = {}
+const title = process.env.FAKE_CLI_TITLE || 'Titre synthétique'
+for (const p of props) {
+  if (p === 'title') value.title = title
+  if (p === 'description') value.description = 'Description synthétique en français.'
+  if (p === 'tags') value.tags = ['affiche', 'typographie', 'Graphic Design', 'photo']
+  if (p === 'ocr')
+    value.ocr = mode === 'ok_429' ? '429 Too Many Requests | authentication failed' : 'TEXTE'
+  if (p === 'prompt') value.prompt = 'A synthetic test image, flat colours.'
+  if (p === 'style') value.style = 'flat, minimal'
+}
+const reinforced = prompt.includes("n'était pas un JSON valide")
+const bad = mode === 'bad_json' && !reinforced
+const result = {
   type: 'result',
   subtype: 'success',
   is_error: false,
-  result: '{"title":"Titre synthétique","description":"Description synthétique.","tags":["test"]}',
+  result: bad ? 'Voici ma réponse : ce n’est pas du JSON' : JSON.stringify(value),
+  ...(bad ? {} : { structured_output: value }),
+  permission_denials: [],
+  duration_ms: 12,
+  total_cost_usd: 0.01,
+  usage: { input_tokens: 10, cache_creation_input_tokens: 100, cache_read_input_tokens: 0, output_tokens: 20 },
+  modelUsage: { [model]: {} },
 }
-const emit = () => {
-  console.log(JSON.stringify(out))
-  process.exit(0)
-}
-if (mode === 'slow') setTimeout(emit, 2000)
-else emit()
+out(result)
+process.exit(0)
