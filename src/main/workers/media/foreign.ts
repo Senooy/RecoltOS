@@ -50,29 +50,18 @@ function sipsPath(tools: MediaTools): string {
   return tools.sips ?? DEFAULT_SIPS
 }
 
-/** `sips -g pixelWidth -g pixelHeight -g hasAlpha` (sans décoder les pixels). */
-export async function sipsProbe(
-  abs: string,
-  tools: MediaTools,
-  signal?: AbortSignal,
-): Promise<{ width: number; height: number; hasAlpha: boolean }> {
-  const { stdout } = await run(
-    sipsPath(tools),
-    ['-g', 'pixelWidth', '-g', 'pixelHeight', '-g', 'hasAlpha', abs],
-    { tool: 'sips', timeoutMs: 30_000, signal },
-  ).catch((err: unknown) => {
-    throw asDecodeFailed(err)
-  })
-  const num = (key: string): number => {
-    const m = new RegExp(`${key}:\\s*(\\d+)`).exec(stdout)
-    return m?.[1] ? Number(m[1]) : NaN
-  }
-  const width = num('pixelWidth')
-  const height = num('pixelHeight')
-  if (!(width > 0 && height > 0)) {
-    throw new AppError('decode_failed', 'sips ne lit pas ce fichier')
-  }
-  return { width, height, hasAlpha: /hasAlpha:\s*yes/i.test(stdout) }
+/**
+ * Dimensions affichées : orientation EXIF 5 à 8 (rotation de 90°) → largeur et hauteur
+ * permutées. sips recopie l'orientation HEIF dans le PNG/JPEG décodé sans tourner les pixels.
+ */
+export function orientedSize(meta: { width: number; height: number; orientation?: number }): {
+  width: number
+  height: number
+} {
+  const o = meta.orientation
+  return o !== undefined && o >= 5 && o <= 8
+    ? { width: meta.height, height: meta.width }
+    : { width: meta.width, height: meta.height }
 }
 
 function asDecodeFailed(err: unknown): unknown {
@@ -108,8 +97,8 @@ export async function decodeForeign(
     },
     ext,
   )
-  const meta = await sharp(dst).metadata()
-  return { width: meta.width, height: meta.height }
+  // Dimensions affichées (comme makeDisplay et probeImage), pas celles des pixels stockés.
+  return orientedSize(await sharp(dst).metadata())
 }
 
 export interface Readable {

@@ -4,6 +4,8 @@
  * - `exif6.jpg` 300×200 avec orientation EXIF 6 (affichée 200×300) ;
  * - `anim.webp` 3 images 120×80 (rouge, vert, bleu) ;
  * - `photo.png` 320×200 avec alpha → `photo.heic`, `photo.psd` (sips), `photo.tiff` (sharp) ;
+ * - `portrait.heic` 300×200 stocké avec orientation 6 (affiché 200×300), coin rouge en haut à
+ *   gauche des pixels stockés → en haut à droite une fois redressé (ImageIO via `swift`) ;
  * - `rot90.mp4` 320×240, 2 s, avec audio, matrice d'affichage 90° (ffmpeg `-display_rotation`) ;
  * - `long.mp4` 1280×720, 10 s, avec audio (aperçu ≤ 8 s) ;
  * - `blocks.webp` vignette 4 bandes de couleurs (palette).
@@ -33,6 +35,8 @@ export interface MediaFixtures {
   animWebp: string
   alphaPng: string
   heic?: string
+  /** Absent si `swift` (outils en ligne de commande Xcode) n'est pas utilisable. */
+  heicOriented?: string
   psd?: string
   tiff: string
   rot90Mp4?: string
@@ -112,6 +116,7 @@ export async function generateMediaFixtures(dir: string): Promise<MediaFixtures>
     f.psd = join(dir, 'photo.psd')
     execFileSync(SIPS, ['-s', 'format', 'heic', f.alphaPng, '--out', f.heic], { stdio: 'ignore' })
     execFileSync(SIPS, ['-s', 'format', 'psd', f.alphaPng, '--out', f.psd], { stdio: 'ignore' })
+    f.heicOriented = await orientedHeic(dir)
   }
 
   if (FFMPEG) {
@@ -162,4 +167,38 @@ export async function generateMediaFixtures(dir: string): Promise<MediaFixtures>
     ])
   }
   return f
+}
+
+const HEIC_ORIENT_SWIFT = join(import.meta.dirname, 'heic-orient.swift')
+
+/**
+ * HEIC 300×200 avec orientation 6, coin 60×60 rouge en haut à gauche des pixels stockés.
+ * `/usr/bin/swift` existe même sans les outils Xcode (il échoue alors) : on l'exécute
+ * réellement et on renvoie `undefined` en cas d'échec.
+ */
+async function orientedHeic(dir: string): Promise<string | undefined> {
+  const w = 300
+  const h = 200
+  const raw = Buffer.alloc(w * h * 3)
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const o = (y * w + x) * 3
+      if (x < 60 && y < 60) raw[o] = 255
+      else raw[o + 2] = 200
+    }
+  }
+  const src = join(dir, 'portrait-src.png')
+  await sharp(raw, { raw: { width: w, height: h, channels: 3 } })
+    .png()
+    .toFile(src)
+  const dst = join(dir, 'portrait.heic')
+  try {
+    execFileSync('/usr/bin/swift', [HEIC_ORIENT_SWIFT, src, dst, '6'], {
+      stdio: 'ignore',
+      timeout: 120_000,
+    })
+  } catch {
+    return undefined
+  }
+  return existsSync(dst) ? dst : undefined
 }

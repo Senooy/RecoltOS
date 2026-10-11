@@ -72,6 +72,49 @@ describe('probeImage', () => {
     })
   })
 
+  it('HEIC orienté (6) : dimensions affichées = celles des dérivés', async (ctx) => {
+    if (!fx.heicOriented) return ctx.skip() // swift indisponible : fixture non générée
+    // sips ignore l'orientation HEIF : dimensions stockées 300×200.
+    expect(await sniffForeign(fx.heicOriented)).toBe('heic')
+    const before = sha256(fx.heicOriented)
+    const p = await probeImage({ abs: fx.heicOriented }, TOOLS)
+    expect(p).toEqual({
+      width: 200,
+      height: 300,
+      mime: 'image/heic',
+      isAnimated: false,
+      hasAlpha: false,
+    })
+    const dec = await decodeForeign(
+      { src: fx.heicOriented, dst: out('tmp/portrait.decoded.png'), format: 'png' },
+      TOOLS,
+    )
+    expect(dec).toEqual({ width: 200, height: 300 })
+    const d = await makeDisplay(
+      { src: fx.heicOriented, dst: out('display/portrait.webp'), maxEdge: 2048 },
+      TOOLS,
+    )
+    expect(d).toEqual({ width: p.width, height: p.height })
+    // Pixels redressés : le coin rouge (haut-gauche stocké) est en haut à droite.
+    const { data, info } = await sharp(out('display/portrait.webp'))
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    const px = (x: number, y: number) => {
+      const o = (y * info.width + x) * info.channels
+      return [data[o]!, data[o + 1]!, data[o + 2]!]
+    }
+    expect(px(info.width - 10, 10)[0]).toBeGreaterThan(200)
+    expect(px(10, 10)[0]).toBeLessThan(60)
+    const t = await makeThumb(
+      { src: fx.heicOriented, dst: out('thumbs/portrait.webp'), width: 800 },
+      TOOLS,
+    )
+    expect(t).toMatchObject({ width: 200, height: 300 })
+    const png = await toPng({ abs: fx.heicOriented, maxEdge: 128 }, TOOLS)
+    expect([png.width, png.height]).toEqual([85, 128])
+    expect(sha256(fx.heicOriented)).toBe(before)
+  })
+
   it('fichier illisible → decode_failed ; chemin relatif → validation', async () => {
     await expect(probeImage({ abs: join(fx.dir, '..', 'fx', 'nope.jpg') }, TOOLS)).rejects.toThrow()
     await expect(probeImage({ abs: 'relatif.jpg' }, TOOLS)).rejects.toMatchObject({

@@ -5,7 +5,7 @@ import sharp, { type Metadata } from 'sharp'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
 import { assertAbs, requireTool, run, type MediaTools } from './exec'
-import { FOREIGN_MIME, sipsProbe, sniffForeign } from './foreign'
+import { FOREIGN_MIME, orientedSize, sniffForeign, withReadable } from './foreign'
 
 const MIME_BY_FORMAT: Record<string, string> = {
   jpeg: 'image/jpeg',
@@ -26,12 +26,19 @@ export async function probeImage(
   const abs = assertAbs(a.abs, 'abs')
   const foreign = await sniffForeign(abs)
   if (foreign) {
-    const p = await sipsProbe(abs, tools, signal)
+    // HEIC/HEIF/PSD : on mesure la sortie décodée par sips (et son orientation), pas les
+    // dimensions stockées (`sips -g pixelWidth` ignore l'orientation HEIF : photo iPhone en
+    // portrait vue en paysage, en contradiction avec les dérivés redressés).
+    const p = await withReadable(abs, tools, signal, (r) => probeSharp(r.input))
     return { ...p, mime: FOREIGN_MIME[foreign], isAnimated: false }
   }
+  return probeSharp(abs)
+}
+
+async function probeSharp(input: string): Promise<MediaResult<'probeImage'>> {
   let meta: Metadata
   try {
-    meta = await sharp(abs).metadata()
+    meta = await sharp(input).metadata()
   } catch (err) {
     throw new AppError('decode_failed', `image illisible : ${(err as Error).message}`)
   }
@@ -39,12 +46,12 @@ export async function probeImage(
   const mime = MIME_BY_FORMAT[format]
   if (!mime) throw new AppError('unsupported', `format d'image non pris en charge : ${format}`)
   // Pour une image animée, sharp rend la hauteur d'une page (première image).
-  let width = meta.width
-  let height = meta.pageHeight ?? meta.height
   // Orientation EXIF 5 à 8 : rotation de 90° → dimensions permutées.
-  if (meta.orientation !== undefined && meta.orientation >= 5 && meta.orientation <= 8) {
-    ;[width, height] = [height, width]
-  }
+  const { width, height } = orientedSize({
+    width: meta.width,
+    height: meta.pageHeight ?? meta.height,
+    ...(meta.orientation === undefined ? {} : { orientation: meta.orientation }),
+  })
   return {
     width,
     height,
