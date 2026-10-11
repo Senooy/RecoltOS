@@ -93,4 +93,26 @@ describe('PrefsSchema', () => {
     expect(parsePrefsLenient({ theme: 'violet' })).toEqual(DEFAULT_PREFS)
     expect(parsePrefsLenient({ theme: 'dark' }).theme).toBe('dark')
   })
+
+  it('parsePrefsLenient répare champ par champ : une valeur hors bornes ne perd pas le reste', () => {
+    const p = parsePrefsLenient({
+      theme: 'dark',
+      defaultColumns: 10,
+      ai: { provider: 'claude', consentVersion: 2, consentAt: 1700000000000 },
+      capture: { shortcut: 'CommandOrControl+Alt+X' },
+    })
+    expect(p.theme).toBe('dark')
+    expect(p.defaultColumns).toBe(DEFAULT_PREFS.defaultColumns)
+    expect(p.ai.provider).toBe('claude')
+    expect(p.ai.consentVersion).toBe(2)
+    expect(p.ai.consentAt).toBe(1700000000000)
+    expect(p.capture.shortcut).toBe('CommandOrControl+Alt+X')
+  })
+
+  it('parsePrefsLenient : un sous-objet mal typé revient à son défaut sans toucher au reste', () => {
+    const p = parsePrefsLenient({ theme: 'light', ai: 'off', defaultSort: 'name' })
+    expect(p.ai).toEqual(DEFAULT_PREFS.ai)
+    expect(p.theme).toBe('light')
+    expect(p.defaultSort).toBe('name')
+  })
 })

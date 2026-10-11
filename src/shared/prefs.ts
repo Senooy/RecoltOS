@@ -148,8 +148,41 @@ export function mergePrefs(current: Prefs, patch: PrefsPatch): Prefs {
   return PrefsSchema.parse(deepMerge(current, patch))
 }
 
-/** Lecture tolérante d'un `prefs.json` : valeurs invalides → défauts. */
+/** Retire `key` d'un objet (copie) : évite `delete` et la mutation de l'entrée. */
+function omitKey(obj: Record<string, unknown>, key: string): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([k]) => k !== key))
+}
+
+/**
+ * Retire du brut la valeur située à `path` (ou, si un ancêtre n'est pas un objet, la branche
+ * entière). Renvoie `undefined` si rien ne peut être retiré.
+ */
+function withoutPath(
+  root: unknown,
+  path: readonly PropertyKey[],
+): Record<string, unknown> | undefined {
+  if (!isPlainObject(root) || path.length === 0) return undefined
+  const [head, ...rest] = path
+  const key = String(head)
+  if (rest.length === 0) return omitKey(root, key)
+  const nextChild = withoutPath(root[key], rest)
+  return nextChild === undefined ? omitKey(root, key) : { ...root, [key]: nextChild }
+}
+
+/**
+ * Lecture tolérante d'un `prefs.json` : réparation champ par champ. Chaque erreur de validation
+ * retire seulement le chemin fautif (son défaut s'applique via `.default()`/`.prefault()`), puis
+ * on revalide. Les autres réglages valides (thème, consentement IA, raccourci) sont conservés.
+ */
 export function parsePrefsLenient(raw: unknown): Prefs {
-  const r = PrefsSchema.safeParse(raw)
-  return r.success ? r.data : DEFAULT_PREFS
+  let candidate: unknown = raw
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const r = PrefsSchema.safeParse(candidate)
+    if (r.success) return r.data
+    const issue = r.error.issues[0]
+    const next = issue ? withoutPath(candidate, issue.path) : undefined
+    if (next === undefined) break
+    candidate = next
+  }
+  return DEFAULT_PREFS
 }
