@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { EVENT_PREFIX, PRELOAD_ARG, RAW_CHANNELS } from '../../../src/shared/ipc/channels'
+import { EVENT_NAME_LIST } from '../../../src/shared/ipc/event-names'
 import {
   CHANNELS,
   DOMAINS,
@@ -152,6 +153,8 @@ describe('contrat IPC', () => {
   it('noms d’événements compatibles avec le preload', () => {
     const re = /^[a-z][a-zA-Z]*(\.[a-zA-Z]+)+$/
     for (const e of EVENT_NAMES) expect(e).toMatch(re)
+    // La liste blanche du preload (sans dépendance) reste égale aux événements réels.
+    expect([...EVENT_NAME_LIST].sort()).toEqual([...EVENT_NAMES].sort())
     expect(EVENT_NAMES).toEqual(
       expect.arrayContaining([
         'items.changed',

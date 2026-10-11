@@ -5,9 +5,10 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { RpcResult } from '../shared/errors'
 import { EVENT_PREFIX, PRELOAD_ARG, RAW_CHANNELS } from '../shared/ipc/channels'
+import { EVENT_NAME_LIST } from '../shared/ipc/event-names'
 import type { RecoltApi, RecoltFlags } from './api'
 
-const EVENT_NAME = /^[a-z][a-zA-Z]*(\.[a-zA-Z]+)+$/
+const KNOWN_EVENTS: ReadonlySet<string> = new Set(EVENT_NAME_LIST)
 
 function readFlags(argv: readonly string[]): RecoltFlags {
   const theme = argv.find((a) => a.startsWith(PRELOAD_ARG.theme))?.slice(PRELOAD_ARG.theme.length)
@@ -18,7 +19,7 @@ const api: RecoltApi = {
   invoke: (channel, input) =>
     ipcRenderer.invoke(RAW_CHANNELS.rpc, channel, input) as Promise<RpcResult<unknown>>,
   on: (event, cb) => {
-    if (!EVENT_NAME.test(event)) throw new Error(`événement invalide : ${event}`)
+    if (!KNOWN_EVENTS.has(event)) throw new Error(`événement inconnu : ${event}`)
     const channel = `${EVENT_PREFIX}${event}`
     const listener = (_e: unknown, payload: unknown) => cb(payload)
     ipcRenderer.on(channel, listener)
