@@ -18,7 +18,7 @@ import {
   createMainWindow,
   getMainWindow,
   installQuitHandshake,
-  rendererIndexFileUrl,
+  rendererIndexPath,
 } from './windows/main-window'
 
 const userData = configureUserData()
@@ -57,7 +57,7 @@ if (gotLock) {
       validateOutput: isDev,
       isAllowedSender: makeSenderCheck({
         rendererUrl: flags.rendererUrl,
-        rendererFileUrl: rendererIndexFileUrl(),
+        rendererIndexPath: rendererIndexPath(),
       }),
       onError: (channel, err) => log.error(`[ipc] ${channel}`, err),
     })

@@ -6,7 +6,6 @@ import { BrowserWindow, app, ipcMain, nativeTheme, screen } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { once } from 'node:events'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 import { PRELOAD_ARG, RAW_CHANNELS } from '../../shared/ipc/channels'
 import type { RuntimeFlags } from '../bootstrap/env'
 import { MIN_WINDOW } from '../bootstrap/env'
@@ -31,9 +30,6 @@ export interface MainWindowOptions {
 export function rendererIndexPath(): string {
   return path.join(__dirname, '../renderer/index.html')
 }
-export function rendererIndexFileUrl(): string {
-  return pathToFileURL(rendererIndexPath()).toString()
-}
 export function preloadPath(): string {
   return path.join(__dirname, '../preload/index.js')
 }
@@ -43,6 +39,24 @@ export const getMainWindow = (): BrowserWindow | null =>
 
 export function isDarkNow(): boolean {
   return nativeTheme.shouldUseDarkColors
+}
+
+export const backgroundFor = (dark: boolean): string => (dark ? BG_DARK : BG_LIGHT)
+
+/**
+ * Garde `backgroundColor` aligné sur l'apparence effective (bascule automatique de macOS,
+ * `themeSource` modifié) : sans cela le fond reste dans l'ancien thème jusqu'au redémarrage.
+ * Renvoie la fonction de retrait de l'écouteur.
+ */
+export function followNativeTheme(
+  w: Pick<BrowserWindow, 'isDestroyed' | 'setBackgroundColor'>,
+  theme: Pick<typeof nativeTheme, 'on' | 'removeListener' | 'shouldUseDarkColors'> = nativeTheme,
+): () => void {
+  const onUpdated = () => {
+    if (!w.isDestroyed()) w.setBackgroundColor(backgroundFor(theme.shouldUseDarkColors))
+  }
+  theme.on('updated', onUpdated)
+  return () => theme.removeListener('updated', onUpdated)
 }
 
 function saveState(w: BrowserWindow, userData: string): void {
@@ -91,7 +105,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
     minHeight: MIN_WINDOW.height,
     titleBarStyle: 'hidden',
     trafficLightPosition: { x: 22, y: 17 },
-    backgroundColor: dark ? BG_DARK : BG_LIGHT,
+    backgroundColor: backgroundFor(dark),
     show: false,
     title: 'RecoltOS',
     webPreferences: {
@@ -108,6 +122,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
     },
   })
   win = w
+  const stopThemeFollow = followNativeTheme(w)
 
   if (maximize) w.maximize()
   if (fullScreen) w.setFullScreen(true)
@@ -133,6 +148,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
 
   attachCloseHandshake(w)
   w.on('closed', () => {
+    stopThemeFollow()
     if (win === w) win = null
     closeApproved = false
   })

@@ -61,10 +61,40 @@ export const usePrefs = create<PrefsState>()((set, get) => ({
   },
 }))
 
-/** Suit `evt:prefs.changed` (autre fenêtre, main). */
+export interface SystemThemeQuery {
+  addEventListener(type: 'change', listener: () => void): void
+  removeEventListener(type: 'change', listener: () => void): void
+}
+
+/**
+ * Avec `theme: 'system'`, réapplique le thème quand l'apparence du système change
+ * (bascule automatique de macOS) ; sans effet pour `light` / `dark`.
+ */
+export function followSystemTheme(
+  getPrefs: () => Prefs = () => usePrefs.getState().prefs,
+  mql: SystemThemeQuery | null = typeof matchMedia === 'function'
+    ? matchMedia('(prefers-color-scheme: dark)')
+    : null,
+  root: HTMLElement = document.documentElement,
+): () => void {
+  if (!mql) return () => undefined
+  const onChange = () => {
+    const prefs = getPrefs()
+    if (prefs.theme === 'system') applyPrefsToDocument(prefs, root)
+  }
+  mql.addEventListener('change', onChange)
+  return () => mql.removeEventListener('change', onChange)
+}
+
+/** Suit `evt:prefs.changed` (autre fenêtre, main) et l'apparence du système. */
 export function followPrefsChanges(): () => void {
-  return subscribe('prefs.changed', (prefs) => {
+  const stopSystem = followSystemTheme()
+  const stopEvent = subscribe('prefs.changed', (prefs) => {
     usePrefs.setState({ prefs, loaded: true })
     applyPrefsToDocument(prefs)
   })
+  return () => {
+    stopSystem()
+    stopEvent()
+  }
 }

@@ -4,6 +4,8 @@
  * Le cœur (`dispatch`) n'importe pas `electron` : testable sous Node.
  */
 import type { IpcMain, IpcMainInvokeEvent, WebContents } from 'electron'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 import { AppError, isAppErrorShape, type AppErrorShape, type RpcResult } from '../../shared/errors'
 import {
@@ -126,23 +128,23 @@ export async function dispatch(
 /**
  * Origine autorisée : dev = serveur Vite (`ELECTRON_RENDERER_URL`) ; prod = `index.html`
  * du renderer en `file://`. Les fenêtres hors écran n'ont pas de preload et ne peuvent pas appeler.
+ *
+ * En prod on compare des CHEMINS décodés (`fileURLToPath`), pas des URL : Node encode `[`, `]` et `~`
+ * (`%5B`, `%5D`, `%7E`) dans `pathToFileURL`, Chromium non ; une comparaison de chaînes refuserait
+ * tous les appels si le chemin d'installation contient l'un d'eux. `?` et `#` sont ignorés.
  */
-export function makeSenderCheck(opts: { rendererUrl: string | null; rendererFileUrl: string }) {
+export function makeSenderCheck(opts: { rendererUrl: string | null; rendererIndexPath: string }) {
   const devOrigin = opts.rendererUrl ? new URL(opts.rendererUrl).origin : null
+  const expected = path.normalize(opts.rendererIndexPath)
   return (frameUrl: string | undefined | null): boolean => {
     if (!frameUrl) return false
-    if (devOrigin) {
-      try {
-        return new URL(frameUrl).origin === devOrigin
-      } catch {
-        return false
-      }
+    try {
+      const u = new URL(frameUrl)
+      if (devOrigin) return u.origin === devOrigin
+      return u.protocol === 'file:' && path.normalize(fileURLToPath(u)) === expected
+    } catch {
+      return false
     }
-    return (
-      frameUrl === opts.rendererFileUrl ||
-      frameUrl.startsWith(`${opts.rendererFileUrl}?`) ||
-      frameUrl.startsWith(`${opts.rendererFileUrl}#`)
-    )
   }
 }
 

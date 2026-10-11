@@ -13,7 +13,7 @@
  * (`clearStorageData` + `clearCache`) puis rendue. Le nombre de sessions créées est borné par la
  * concurrence maximale observée, pas par le nombre d'appels (rendu de centaines de cartes).
  */
-import { BrowserWindow, session } from 'electron'
+import { BrowserWindow, session, type Session } from 'electron'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { AppError } from '../../shared/errors'
@@ -55,7 +55,32 @@ let partitionCounter = 0
 /** Partitions inactives, prêtes à être réutilisées. */
 const partitionPool: string[] = []
 
-function acquirePartition(): string {
+/**
+ * Configuration additionnelle de chaque session hors écran. `protocol.handle` ne vaut que pour la
+ * session sur laquelle il est appelé : sans ce point d'accroche, `recolt://` (avatars et médias de
+ * la carte de post, vignettes du stage Spaces) échoue dans les partitions hors écran. WP-05 y
+ * enregistre `recolt:` (lecture seule, mêmes racines que la session par défaut).
+ * La fonction est appelée sur chaque partition créée, et sur celles déjà créées à l'enregistrement.
+ */
+export type OffscreenSessionSetup = (ses: Session) => void
+const sessionSetups: OffscreenSessionSetup[] = []
+const createdSessions: Session[] = []
+
+export function registerOffscreenSessionSetup(fn: OffscreenSessionSetup): void {
+  sessionSetups.push(fn)
+  for (const ses of createdSessions) fn(ses)
+}
+
+/** Tests uniquement. */
+export function resetOffscreenForTests(): void {
+  sessionSetups.length = 0
+  createdSessions.length = 0
+  partitionPool.length = 0
+  partitionCounter = 0
+}
+
+/** Prend une partition du parc ou en crée une (exporté pour les tests). */
+export function acquirePartition(): string {
   const reused = partitionPool.pop()
   if (reused) return reused
   const partition = `recolt-offscreen-${++partitionCounter}`
@@ -63,6 +88,8 @@ function acquirePartition(): string {
   ses.setPermissionRequestHandler((_wc, _permission, callback) => callback(false))
   ses.setPermissionCheckHandler(() => false)
   ses.on('will-download', (event) => event.preventDefault())
+  createdSessions.push(ses)
+  for (const fn of sessionSetups) fn(ses)
   return partition
 }
 

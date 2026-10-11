@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { AppError } from '../../../src/shared/errors'
+import { pathToFileURL } from 'node:url'
 import { dispatch, makeSenderCheck, type AllHandlers } from '../../../src/main/ipc/router'
 
 const U = '0decd148-5f3c-4d7a-9b1e-2a3b4c5d6e7f'
@@ -97,7 +98,7 @@ describe('makeSenderCheck', () => {
   it('dev : même origine que le serveur Vite', () => {
     const check = makeSenderCheck({
       rendererUrl: 'http://localhost:5173',
-      rendererFileUrl: 'file:///x/index.html',
+      rendererIndexPath: '/x/index.html',
     })
     expect(check('http://localhost:5173/')).toBe(true)
     expect(check('http://localhost:5173/offscreen.html')).toBe(true)
@@ -108,11 +109,24 @@ describe('makeSenderCheck', () => {
   it('prod : uniquement index.html du renderer', () => {
     const check = makeSenderCheck({
       rendererUrl: null,
-      rendererFileUrl: 'file:///app/out/renderer/index.html',
+      rendererIndexPath: '/app/out/renderer/index.html',
     })
     expect(check('file:///app/out/renderer/index.html')).toBe(true)
     expect(check('file:///app/out/renderer/index.html#/x')).toBe(true)
     expect(check('file:///app/out/renderer/offscreen.html')).toBe(false)
     expect(check('file:///tmp/evil.html')).toBe(false)
+    expect(check('https://app/out/renderer/index.html')).toBe(false)
+    expect(check('file:///app/out/renderer/index.html/../offscreen.html')).toBe(false)
+  })
+  it('prod : chemins contenant ~, [, ], espace ou accents (Node encode, Chromium non)', () => {
+    for (const dir of ['/rv/proj~old/out', "/Mes Projets é'[x]/out", '/a/[b]/~c']) {
+      const indexPath = `${dir}/renderer/index.html`
+      const check = makeSenderCheck({ rendererUrl: null, rendererIndexPath: indexPath })
+      // Forme Node (encodée) et forme Chromium (caractères laissés tels quels).
+      expect(check(pathToFileURL(indexPath).toString())).toBe(true)
+      expect(check(`file://${indexPath}`)).toBe(true)
+      expect(check(`file://${indexPath}?x=1#/y`)).toBe(true)
+      expect(check(`file://${dir}/renderer/offscreen.html`)).toBe(false)
+    }
   })
 })
