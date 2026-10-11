@@ -85,19 +85,12 @@ export function previewArgs(src: string, out: string, encoder: PreviewEncoder): 
     `scale=-2:'trunc(min(${PREVIEW.height},ih)/2)*2':flags=bicubic`,
     'format=yuv420p',
   ].join(',')
-  const codec =
-    encoder === 'h264_videotoolbox'
-      ? [
-          '-c:v',
-          'h264_videotoolbox',
-          '-b:v',
-          PREVIEW.bitrate,
-          '-profile:v',
-          'main',
-          '-allow_sw',
-          '1',
-        ]
-      : ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-profile:v', 'main']
+  const extras: Record<PreviewEncoder, string[]> = {
+    h264_videotoolbox: ['-b:v', PREVIEW.bitrate, '-profile:v', 'main', '-allow_sw', '1'],
+    libx264: ['-preset', 'veryfast', '-crf', '26', '-profile:v', 'main'],
+  }
+  // L'encodeur est passé tel quel : un encodeur indisponible fait échouer ffmpeg (repli).
+  const codec = ['-c:v', encoder, ...(Object.hasOwn(extras, encoder) ? extras[encoder] : [])]
   return [
     '-hide_banner',
     '-loglevel',

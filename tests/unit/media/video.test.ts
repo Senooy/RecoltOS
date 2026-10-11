@@ -177,8 +177,18 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     },
   )
 
-  it('encodeur indisponible → repli sur le suivant', async () => {
-    const dst = out('previews/fallback.mp4')
+  it('encodeur indisponible → échec réel, puis repli sur le suivant, sans fichier résiduel', async () => {
+    // Seul, l'encodeur inconnu fait vraiment échouer ffmpeg.
+    await expect(
+      makePreview(
+        { src: fx.rot90Mp4!, dst: out('fallback/never.mp4'), maxSeconds: 8, height: 540 },
+        TOOLS,
+        undefined,
+        ['nope_encoder' as never],
+      ),
+    ).rejects.toMatchObject({ code: 'tool_failed' })
+    expect(readdirSync(out('fallback'))).toEqual([])
+    const dst = out('fallback/ok.mp4')
     const r = await makePreview(
       { src: fx.rot90Mp4!, dst, maxSeconds: 8, height: 540 },
       TOOLS,
@@ -186,7 +196,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
       ['nope_encoder' as never, 'libx264'],
     )
     expect(r.height).toBe(320)
-    expect(existsSync(dst)).toBe(true)
+    expect(readdirSync(out('fallback'))).toEqual(['ok.mp4'])
   })
 })
 
