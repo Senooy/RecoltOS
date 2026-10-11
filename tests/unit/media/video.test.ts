@@ -7,6 +7,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import type { AppError } from '../../../src/shared/errors'
 import { parseFfprobe, probeVideo } from '../../../src/main/workers/media/probe'
 import { makePoster, makePreview, previewArgs } from '../../../src/main/workers/media/video'
 import {
@@ -218,6 +219,66 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     }
   })
 
+  it.runIf(HAS_FF)(
+    'source corrompue ou sans piste vidéo → decode_failed partout, message français, sans repli',
+    async () => {
+      const audio = join(tmp.dir, 'audio.m4a')
+      execFileSync(
+        FFMPEG!,
+        ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=duration=1', '-c:a', 'aac', audio],
+        { stdio: 'ignore' },
+      )
+      const junk = join(tmp.dir, 'junk.mp4')
+      writeFileSync(junk, Buffer.alloc(4096, 7))
+      // Vidéo tronquée : ffprobe peut la laisser passer, ffmpeg échoue ensuite.
+      const cut = join(tmp.dir, 'cut.mp4')
+      writeFileSync(cut, readFileSync(fx.longMp4!).subarray(0, 3000))
+      for (const src of [audio, junk, cut]) {
+        const name = src.slice(src.lastIndexOf('/') + 1)
+        const calls: [string, () => Promise<unknown>][] = [
+          ['probeVideo', () => probeVideo({ abs: src }, TOOLS)],
+          ['makePoster', () => makePoster({ src, dst: out(`bad/${name}.jpg`), atMs: 0 }, TOOLS)],
+          [
+            'makePoster@1s',
+            () => makePoster({ src, dst: out(`bad/${name}-1.jpg`), atMs: 1000 }, TOOLS),
+          ],
+          [
+            'makePreview',
+            () =>
+              makePreview({ src, dst: out(`bad/${name}.mp4`), maxSeconds: 8, height: 540 }, TOOLS),
+          ],
+        ]
+        for (const [label, call] of calls) {
+          const err = (await call().then(
+            () => null,
+            (e: unknown) => e,
+          )) as AppError | null
+          expect([name, label, err?.code]).toEqual([name, label, 'decode_failed'])
+          // Message en français : jamais le stderr anglais de ffmpeg ; le brut va dans details.
+          expect(err?.message).not.toMatch(/Invalid data|does not contain|Failed to set|option/)
+        }
+      }
+      // Aucun fichier résiduel (ni temporaire ni destination).
+      expect(existsSync(out('bad')) ? readdirSync(out('bad')) : []).toEqual([])
+    },
+    60_000,
+  )
+
+  it.runIf(HAS_FF)(
+    'source valide mais encodeur cassé → tool_failed (et non decode_failed)',
+    async () => {
+      const err = await makePreview(
+        { src: fx.rot90Mp4!, dst: out('enc/x.mp4'), maxSeconds: 8, height: 540 },
+        TOOLS,
+        undefined,
+        ['nope_encoder' as never],
+      ).catch((e: unknown) => e as AppError)
+      expect(err).toMatchObject({ code: 'tool_failed' })
+      expect((err as AppError).message).toMatch(/^ffmpeg a échoué \(code \d+\)$/)
+      expect((err as AppError).details).toMatchObject({ tool: 'ffmpeg' })
+    },
+  )
+
   it.runIf(process.platform === 'darwin')(
     'h264_videotoolbox seul : encode sur ce Mac',
     async () => {
@@ -281,8 +342,8 @@ describe('outils absents → tool_missing, pas de crash', () => {
       /brew install ffmpeg/,
     )
     await expect(probeVideo({ abs: src }, bogus)).rejects.toMatchObject({ code: 'tool_missing' })
-    expect(existsSync(out('p'))).toBe(true)
-    expect(readdirSync(out('p'))).toEqual([])
+    // Échec avant toute écriture : aucun fichier (temporaire ou final) n'est laissé.
+    expect(existsSync(out('p')) ? readdirSync(out('p')) : []).toEqual([])
   })
 
   it('arguments d’aperçu : muet, 8 s, +faststart, sans métadonnées', () => {

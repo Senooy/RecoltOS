@@ -4,7 +4,7 @@
 import sharp, { type Metadata } from 'sharp'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
-import { assertAbs, assertFile, requireTool, run, type MediaTools } from './exec'
+import { assertAbs, assertFile, requireTool, run, toolStderr, type MediaTools } from './exec'
 import { FOREIGN_MIME, orientedSize, sniffForeign, withReadable } from './foreign'
 
 const MIME_BY_FORMAT: Record<string, string> = {
@@ -134,7 +134,9 @@ export async function probeVideo(
     { tool: 'ffprobe', timeoutMs: 60_000, signal },
   ).catch((err: unknown) => {
     if (err instanceof AppError && err.code === 'tool_failed') {
-      throw new AppError('decode_failed', err.message)
+      throw new AppError('decode_failed', 'le fichier est illisible ou corrompu', {
+        stderr: toolStderr(err),
+      })
     }
     throw err
   })

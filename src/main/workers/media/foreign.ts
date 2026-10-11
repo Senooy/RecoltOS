@@ -84,7 +84,7 @@ export function orientedSize(meta: { width: number; height: number; orientation?
 
 function asDecodeFailed(err: unknown): unknown {
   if (err instanceof AppError && err.code === 'tool_failed') {
-    return new AppError('decode_failed', err.message)
+    return new AppError('decode_failed', err.message, err.details)
   }
   return err
 }

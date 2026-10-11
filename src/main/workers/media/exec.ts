@@ -137,17 +137,44 @@ export function run(cmd: string, args: readonly string[], opts: RunOptions): Pro
         } else if (code === 0) {
           resolve({ stdout, stderr })
         } else {
+          // Message en français (PLAN §2.6) ; le stderr brut, en anglais, reste dans `details`.
           const tail = stderr.trim().split('\n').slice(-3).join(' | ').slice(0, 500)
+          const status = code ?? signal ?? '?'
           reject(
-            new AppError(
-              'tool_failed',
-              `${basename(cmd)} a échoué (${code ?? signal ?? '?'})${tail ? ` : ${tail}` : ''}`,
-            ),
+            new AppError('tool_failed', `${basename(cmd)} a échoué (code ${status})`, {
+              tool: opts.tool,
+              code: status,
+              stderr: tail,
+            }),
           )
         }
       })
     })
   })
+}
+
+/** Stderr brut (tronqué) d'un `tool_failed` produit par `run`, sinon chaîne vide. */
+export function toolStderr(err: unknown): string {
+  if (!(err instanceof AppError) || err.code !== 'tool_failed') return ''
+  const d = err.details as { stderr?: unknown } | undefined
+  return typeof d?.stderr === 'string' ? d.stderr : ''
+}
+
+const SOURCE_STDERR =
+  /Invalid data found when processing input|does not contain any stream|moov atom not found|matches no streams/i
+
+/**
+ * Un échec ffmpeg dû à la source (fichier corrompu, sans piste exploitable) devient
+ * `decode_failed` (message français, stderr dans `details`) ; toute autre erreur est rendue
+ * telle quelle. Distingue « fichier cassé » de « outil cassé » (ARCHI §1.4 : seul le second
+ * mène à Re-détecter).
+ */
+export function sourceFailure(err: unknown): unknown {
+  const stderr = toolStderr(err)
+  if (stderr && SOURCE_STDERR.test(stderr)) {
+    return new AppError('decode_failed', 'le fichier est illisible ou corrompu', { stderr })
+  }
+  return err
 }
 
 /** Environnement réduit : pas d'héritage de secrets ; locale stable pour parser les sorties. */

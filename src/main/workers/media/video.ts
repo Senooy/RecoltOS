@@ -7,7 +7,15 @@ import { stat } from 'node:fs/promises'
 import sharp from 'sharp'
 import { AppError } from '../../../shared/errors'
 import type { MediaResult } from '../../../shared/worker-protocol'
-import { assertAbs, assertFile, requireTool, run, writeAtomic, type MediaTools } from './exec'
+import {
+  assertAbs,
+  assertFile,
+  requireTool,
+  run,
+  sourceFailure,
+  writeAtomic,
+  type MediaTools,
+} from './exec'
 import { probeVideo } from './probe'
 
 export const POSTER_MAX_WIDTH = 1280
@@ -51,7 +59,10 @@ export async function makePoster(
   const dst = assertAbs(a.dst, 'dst')
   if (!Number.isFinite(a.atMs)) throw new AppError('validation', 'atMs invalide')
   const ffmpeg = requireTool(tools, 'ffmpeg')
+  requireTool(tools, 'ffprobe')
   await assertFile(src)
+  // Source illisible ou sans piste vidéo → `decode_failed` (jamais un `tool_failed` brut).
+  await probeVideo({ abs: src }, tools, signal)
   return writeAtomic(
     dst,
     async (tmp) => {
@@ -63,12 +74,19 @@ export async function makePoster(
           signal,
         })
       } catch (err) {
-        if (!(err instanceof AppError && err.code === 'tool_failed') || a.atMs <= 0) throw err
-        firstErr = err
+        const e = sourceFailure(err)
+        if (!(e instanceof AppError && e.code === 'tool_failed') || a.atMs <= 0) throw e
+        firstErr = e
       }
       // Au-delà de la fin (vidéo plus courte que prévu), ffmpeg n'écrit rien : repli à 0.
       if ((firstErr || !(await nonEmpty(tmp))) && a.atMs > 0) {
-        await run(ffmpeg, posterArgs(src, tmp, 0), { tool: 'ffmpeg', timeoutMs: 60_000, signal })
+        await run(ffmpeg, posterArgs(src, tmp, 0), {
+          tool: 'ffmpeg',
+          timeoutMs: 60_000,
+          signal,
+        }).catch((err: unknown) => {
+          throw sourceFailure(err)
+        })
       }
       if (!(await nonEmpty(tmp))) throw new AppError('decode_failed', 'aucune image extraite')
       const meta = await sharp(tmp).metadata()
@@ -139,6 +157,9 @@ export async function makePreview(
   const ffmpeg = requireTool(tools, 'ffmpeg')
   requireTool(tools, 'ffprobe')
   await assertFile(src)
+  // Source illisible ou sans piste vidéo → `decode_failed` avant tout encodage : inutile de
+  // relancer libx264 (jusqu'à 300 s) pour un problème qui vient du fichier.
+  await probeVideo({ abs: src }, tools, signal)
   return writeAtomic(
     dst,
     async (tmp) => {
@@ -156,9 +177,11 @@ export async function makePreview(
           }
           lastErr = new AppError('tool_failed', `${enc} n'a rien produit`)
         } catch (err) {
-          // Binaire absent ou annulation : inutile d'essayer l'encodeur suivant.
-          if (err instanceof AppError && err.code !== 'tool_failed') throw err
-          lastErr = err
+          // Binaire absent ou annulation : inutile d'essayer l'encodeur suivant. Idem si le
+          // stderr désigne la source (fichier tronqué que ffprobe a laissé passer).
+          const e = sourceFailure(err)
+          if (e instanceof AppError && e.code !== 'tool_failed') throw e
+          lastErr = e
         }
       }
       if (lastErr) throw lastErr instanceof Error ? lastErr : new Error('encodage impossible')
