@@ -28,6 +28,7 @@ export default defineConfig(
       'test-results',
       'playwright-report',
       'design/reference',
+      'design/logos',
       '.visual',
       '.tmp',
       '.tmp-*',

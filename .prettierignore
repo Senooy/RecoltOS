@@ -6,6 +6,8 @@ test-results
 playwright-report
 pnpm-lock.yaml
 design/reference
+# Fichiers de travail du logo (planches, SVG/PNG), pas du code de l'app.
+design/logos
 tests/visual/__snapshots__
 .visual
 .bin-cache
