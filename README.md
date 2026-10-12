@@ -1,208 +1,224 @@
-# RecoltOS
+<p align="center">
+  <img src="docs/screenshots/icon.png" width="128" height="128" alt="Icône de RecoltOS">
+</p>
 
-> **In English, in short.** RecoltOS is a local-first visual inspiration library for macOS (Electron,
-> Apple Silicon). It keeps images, videos, web pages, screenshots and saved posts in a masonry grid,
-> collections and free-form canvases ("Spaces"), entirely on your Mac, with no account and no
-> telemetry. Optional AI tagging runs through the `claude` / `codex` command-line tools you already use.
-> The interface is in French. RecoltOS is an independent project released under the MIT license; it is
-> not affiliated with GatherOS, X Corp., Meta/Instagram or Cosmos. The optional sync relies on
-> unofficial web requests made with your own browser session: it may break at any time and may go
-> against those services' terms of use. Use it at your own risk.
+<h1 align="center">RecoltOS</h1>
 
-RecoltOS est une **bibliothèque d'inspiration visuelle locale pour macOS** : images, vidéos, pages web,
-captures d'écran et publications enregistrées (X, Instagram, Cosmos) rangées dans une grille, des
-collections et des Spaces (toiles libres). Tout reste sur ton Mac : pas de compte, pas de télémétrie,
-pas de mise à jour automatique. Interface en français.
+<p align="center">
+  <strong>Ta bibliothèque d'inspiration visuelle, sur ton Mac.</strong><br>
+  Images, vidéos, pages web, captures d'écran et posts enregistrés, rangés dans une seule app rapide, belle et 100 % locale.
+</p>
 
-![Bibliothèque (données de démonstration)](tests/visual/__snapshots__/library-all-light.png)
+<p align="center">
+  <a href="https://github.com/Senooy/RecoltOS/releases/latest"><strong>Télécharger pour macOS (Apple Silicon)</strong></a>
+  ·
+  <a href="#fonctionnalités">Fonctionnalités</a>
+  ·
+  <a href="#installation">Installation</a>
+  ·
+  <a href="#développement">Développement</a>
+</p>
 
-![Étagère des collections, thème sombre (données de démonstration)](tests/visual/__snapshots__/collections-shelf-dark.png)
+<p align="center">
+  <img src="docs/screenshots/library-all-light.png" alt="La bibliothèque de RecoltOS, thème clair">
+</p>
 
-_Captures issues des tests de régression visuelle, sur une bibliothèque de démonstration entièrement
-factice._
+> **English summary.** RecoltOS is a free, open-source, local-first visual inspiration library for
+> macOS (Apple Silicon). Save images, videos, web pages, screenshots and bookmarked posts from X,
+> Instagram and Cosmos, then browse them in a masonry grid, organize them in collections, rediscover
+> them, and lay them out on free-form canvases. Everything stays on your Mac: no account, no cloud, no
+> telemetry. Optional AI titles, descriptions and tags run through the `claude` / `codex` CLIs you
+> already use. The interface is in French. MIT licensed.
 
-## Avertissements
+---
 
-- **Projet indépendant.** RecoltOS n'est ni affilié, ni soutenu, ni approuvé par GatherOS, X Corp.,
-  Meta / Instagram ou Cosmos. Les noms et marques cités appartiennent à leurs propriétaires respectifs
-  et ne servent qu'à désigner les services avec lesquels l'app interagit.
-- **Synchronisation non officielle.** La synchronisation des favoris X, des enregistrements Instagram
-  et des éléments Cosmos passe par des requêtes web **non officielles**, émises par l'extension avec la
-  session de **ton** navigateur. Elle peut **enfreindre les conditions d'utilisation** de ces services,
-  entraîner des vérifications ou des restrictions de ton compte, et **cesser de fonctionner à tout
-  moment** si ces sites changent. Elle est désactivée par défaut ; tu l'actives **à tes propres
-  risques**.
-- **Aucune garantie.** Le logiciel est fourni « tel quel » (voir [`LICENSE`](LICENSE)). Fais des
-  sauvegardes de tes données.
+## Pourquoi RecoltOS
+
+On passe ses journées à croiser des choses qu'on veut garder : une interface bien pensée sur X, un reel
+Instagram, une affiche, une palette, une capture d'écran. Elles finissent éparpillées entre les favoris
+de trois réseaux, un dossier de captures et des onglets jamais refermés.
+
+RecoltOS les **récolte** au même endroit, et en fait une bibliothèque qu'on a envie d'ouvrir :
+
+- **Tout est local.** Tes fichiers et ta base restent sur ton disque. Pas de compte, pas de serveur,
+  pas d'abonnement, pas de télémétrie.
+- **L'image d'abord.** L'interface s'efface : grille dense, vue détail immersive dont l'ambiance se
+  teinte aux couleurs du média, animations discrètes.
+- **Rapide.** Démarrage sous la seconde, défilement fluide à 60 images/s, recherche instantanée même sur
+  10 000 éléments.
+- **Ouvert.** Code source sous licence MIT, format de données documenté (SQLite), export zip complet à
+  tout moment.
 
 ## Fonctionnalités
 
-- **Bibliothèque** : grille masonry, onglets (Tout, Enregistrés, Non classés, Corbeille, Masqués),
-  tris, filtres, recherche plein texte locale (SQLite FTS5) et par couleur, vue détail (image, vidéo,
-  post, carrousel), Redécouvrir, palette de commandes ⌘K, thèmes clair et sombre.
-- **Collections** et sous-collections, étagère 3D ; **Spaces** : notes, formes, texte, éléments de la
-  bibliothèque, export PNG.
-- **Ajout** : glisser-déposer, coller (⌘V), URL, capture d'écran ⌘⇧S, « Ouvrir avec RecoltOS »,
-  extension navigateur (clic droit › « Enregistrer dans RecoltOS »).
-- **Synchronisation** (facultative, voir les avertissements) des favoris X, enregistrements Instagram
-  et éléments Cosmos, par l'extension, en arrière-plan, sans onglet ouvert.
-- **IA** (facultative) : nom, description, tags et texte détecté, produits par les CLI `claude` ou
-  `codex` de tes propres abonnements.
-- **Import depuis GatherOS** : Réglages › Bibliothèques › « Importer depuis GatherOS » copie les
-  éléments, collections, tags et notes d'une bibliothèque GatherOS existante, sans la modifier.
-- **Données** : export zip, instantanés et restauration.
+### Collecter
 
-## Prérequis
+- **Glisser-déposer** de fichiers ou de dossiers entiers, **coller** une image ou une URL (⌘V),
+  « Ouvrir avec RecoltOS » depuis le Finder.
+- **Capture d'écran** globale (⌘⇧S) : zone, fenêtre ou plein écran, directement dans la bibliothèque.
+- **Extension navigateur** pour Firefox et Chrome / Brave / Edge / Vivaldi : clic droit sur une image,
+  une vidéo, un lien ou une page › « Enregistrer dans RecoltOS ».
+- **Synchronisation** (facultative) de tes **favoris X**, de tes **enregistrements Instagram** et de tes
+  **saves Cosmos**, en arrière-plan, sans onglet ouvert, tant que ton navigateur tourne.
+- **Import depuis GatherOS** : si tu utilises GatherOS, RecoltOS reprend ta bibliothèque existante
+  (éléments, collections, tags, notes) sans modifier l'originale.
 
-- macOS sur Apple Silicon (le build est `arm64`).
-- Node `22.22.2+` ou `24.15.0+`, et pnpm 12.6.0 via corepack (`corepack enable`).
-- `ffmpeg` et `ffprobe` (`brew install ffmpeg`) : vignettes et aperçus des vidéos.
-- Facultatif mais conseillé : un certificat de signature local **« RecoltOS Local »** (voir plus bas),
-  pour que macOS garde les permissions (Enregistrement de l'écran…) d'un build à l'autre.
+### Organiser
 
-`pnpm run check:env` vérifie l'environnement (Node, pnpm, ffmpeg, certificat).
+- **Grille masonry** avec onglets Tout, Enregistrés, Non classés, Corbeille et Masqués, tri, taille de
+  colonnes réglable.
+- **Collections** et sous-collections, présentées dans une **étagère 3D** ; glisse une carte et le
+  panneau des collections s'ouvre pour l'y déposer.
+- **Tags**, notes, renommage, corbeille avec restauration, annulation (⌘Z) partout.
 
-## Installation et build
+<p align="center">
+  <img src="docs/screenshots/collections-shelf-dark.png" width="49%" alt="Étagère 3D des collections">
+  <img src="docs/screenshots/library-all-dark.png" width="49%" alt="Bibliothèque, thème sombre">
+</p>
+
+### Retrouver et redécouvrir
+
+- **Recherche plein texte** sur les titres, notes, textes des posts, texte lu dans les images et
+  descriptions IA, avec filtres par type, source, période, collection et **couleur**.
+- **Palette de commandes** ⌘K pour tout atteindre au clavier.
+- **Vue détail** plein écran : lecteur vidéo, carrousels, carte du post d'origine, palette de couleurs,
+  **pipette** pour copier une couleur de l'image.
+- **Redécouvrir** (⌘⇧R) : une pile de cartes à trier au clavier ou en les glissant. Garder, ranger dans
+  une collection, mettre à la corbeille.
+
+<p align="center">
+  <img src="docs/screenshots/detail-image-dark.png" width="49%" alt="Vue détail immersive">
+  <img src="docs/screenshots/rediscover-dark.png" width="49%" alt="Redécouvrir">
+</p>
+
+### Composer
+
+- **Spaces** : des toiles infinies pour composer des moodboards. Notes de couleur, formes, texte libre,
+  images et éléments de ta bibliothèque ; zoom, magnétisme, rotation, alignement, export PNG.
+
+### Enrichir avec l'IA (facultatif)
+
+- Titres, descriptions, tags et texte lu dans les images, générés par les CLI **`claude`** (Claude
+  Code) ou **`codex`** (OpenAI) **de ton propre abonnement**. Aucune clé d'API, aucun modèle embarqué.
+- Rien n'est envoyé sans ton consentement explicite ; aperçu exact de chaque envoi, budget d'appels par
+  heure, journal consultable.
+
+<p align="center">
+  <img src="docs/screenshots/search-light.png" width="70%" alt="Recherche">
+</p>
+
+_Toutes les captures sont faites sur une bibliothèque de démonstration entièrement factice._
+
+## Installation
+
+### Télécharger
+
+1. Télécharge le fichier `.dmg` de la [dernière version](https://github.com/Senooy/RecoltOS/releases/latest)
+   (Mac Apple Silicon, macOS 13 ou plus récent).
+2. Ouvre le `.dmg` et glisse **RecoltOS** dans **Applications**.
+3. L'app n'est pas notarisée par Apple : au premier lancement, macOS la bloque. Deux possibilités :
+   - Réglages Système › Confidentialité et sécurité › « Ouvrir quand même » ;
+   - ou, dans le Terminal :
+
+     ```sh
+     xattr -dr com.apple.quarantine /Applications/RecoltOS.app
+     ```
+
+4. Installe **ffmpeg**, utilisé pour les vignettes et aperçus vidéo :
+
+   ```sh
+   brew install ffmpeg
+   ```
+
+### Premiers pas
+
+- **Capture d'écran** : fais ⌘⇧S, puis autorise RecoltOS dans Réglages Système › Confidentialité et
+  sécurité › Enregistrement de l'écran, et relance l'app.
+- **Extension navigateur** : l'app place l'extension dans
+  `~/Library/Application Support/RecoltOS/extension/`. Détails et installation pour chaque navigateur
+  dans [`docs/extension.md`](docs/extension.md).
+  - Firefox : `about:debugging#/runtime/this-firefox` › « Charger un module complémentaire
+    temporaire… » › `extension/firefox/manifest.json` (ou une version signée, voir la doc).
+  - Chrome / Brave / Edge : `chrome://extensions` › Mode développeur › « Charger l'extension non
+    empaquetée » › `extension/chromium/`.
+- **Synchronisation** : reste connecté à X, Instagram ou Cosmos dans ton navigateur, puis Réglages ›
+  Synchronisation.
+- **IA** : installe et connecte `claude` ou `codex`, puis Réglages › IA › « Changer ».
+
+### Construire depuis les sources
+
+Prérequis : Mac Apple Silicon, Node 22.22+ ou 24.15+, pnpm 12.6 via corepack, ffmpeg.
 
 ```sh
+corepack enable
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 pnpm install
-RECOLTOS_SIGN_IDENTITY="RecoltOS Local" pnpm run pack   # → dist/mac-arm64/RecoltOS.app, signé
+RECOLTOS_SIGN_IDENTITY="RecoltOS Local" pnpm run pack   # → dist/mac-arm64/RecoltOS.app
 pnpm run app:install                                     # copie dans /Applications et lance l'app
+pnpm run dist:dmg                                        # → dist/RecoltOS-<version>-arm64.dmg
 ```
 
-- Sans `RECOLTOS_SIGN_IDENTITY`, la signature est « ad hoc » (`-`) : l'app fonctionne, mais macOS
-  redemande l'autorisation Enregistrement de l'écran après chaque nouveau build.
-- `pnpm run dist` = contrôles rapides (`verify:fast`) + `pack` + vérification du paquet (`check:dist` :
-  fuses, hôte natif signé, extensions embarquées).
-- `app:install` vérifie la signature avant de remplacer l'app installée et ne touche jamais à tes
-  données. Variables : `RECOLTOS_INSTALL_DIR` (défaut `/Applications`), `RECOLTOS_NO_OPEN=1`.
-- L'app n'est pas notarisée : chacun la construit et la signe sur sa machine.
+`RECOLTOS_SIGN_IDENTITY` est facultatif mais conseillé : avec un certificat de signature local stable,
+macOS conserve les permissions (Enregistrement de l'écran) d'un build à l'autre. Création du certificat
+en deux minutes : [`docs/signature.md`](docs/signature.md).
 
-### Certificat « RecoltOS Local »
+## Tes données
 
-À créer une fois dans **Trousseau d'accès › Assistant de certification › Créer un certificat…** :
-nom `RecoltOS Local`, type d'identité « Auto-signé racine », type « Signature de code », puis
-« Se fier › Signature de code : Toujours approuver ». Vérification :
-`security find-identity -v -p codesigning` doit lister `"RecoltOS Local"`.
-Procédure détaillée et raisons : [`docs/signature.md`](docs/signature.md).
+- Tout est dans `~/Library/Application Support/RecoltOS/` : base SQLite, médias et dérivés, Spaces,
+  réglages.
+- Réglages › Données : **export zip** complet, instantanés automatiques et restauration.
+- L'interface n'a aucun accès réseau. L'app ne télécharge que les médias des posts synchronisés (option
+  désactivable), et l'IA n'envoie que ce que tu as accepté, via tes propres CLI.
 
-### Première utilisation
+## Avertissements
 
-1. **Capture d'écran** : ⌘⇧S, puis autorise RecoltOS dans Réglages Système › Confidentialité et
-   sécurité › Enregistrement de l'écran et de l'audio système, et relance l'app.
-2. **Extension** et **synchronisation** : voir ci-dessous.
-3. **IA** : Réglages › IA (voir plus bas).
-
-## Extension navigateur (Firefox et Chromium)
-
-Une base de code (`extension/`), deux builds : Firefox et Chromium (Chrome, Brave, Edge, Vivaldi).
-L'extension parle à l'app par native messaging (aucun port réseau). L'app installée recopie les
-extensions dans `~/Library/Application Support/RecoltOS/extension/{firefox,chromium}/` et écrit les
-manifests `com.recoltos.host.json` des navigateurs présents.
-
-- **Firefox, chargement temporaire** (disparaît au redémarrage de Firefox) :
-  `about:debugging#/runtime/this-firefox` › « Charger un module complémentaire temporaire… » ›
-  `~/Library/Application Support/RecoltOS/extension/firefox/manifest.json`.
-- **Firefox, installation permanente** : Firefox release exige une extension signée. Avec tes propres
-  identifiants d'API addons.mozilla.org (jamais écrits dans un fichier du dépôt) :
-
-  ```sh
-  export WEB_EXT_API_KEY='user:…'   # émetteur JWT
-  export WEB_EXT_API_SECRET='…'     # secret JWT
-  pnpm run build:ext && pnpm run sign:firefox      # → dist-extension/signed/*.xpi (non répertoriée)
-  RECOLTOS_SIGN_IDENTITY="RecoltOS Local" pnpm run pack && pnpm run app:install
-  ```
-
-  puis glisse le `.xpi` dans une fenêtre Firefox. Chaque nouvelle signature exige une nouvelle version
-  (`EXTENSION_VERSION`, `src/shared/bridge/constants.ts`).
-
-- **Chrome / Brave / Edge** : `chrome://extensions` › Mode développeur › « Charger l'extension non
-  empaquetée » › `~/Library/Application Support/RecoltOS/extension/chromium/`.
-
-**Synchronisation** : reste connecté à X, Instagram ou Cosmos dans le navigateur, puis Réglages ›
-Synchronisation › active la source (après avoir lu l'avertissement). La synchro tourne en arrière-plan
-tant que le navigateur est ouvert, sans ouvrir d'onglet ; les cookies ne quittent jamais le navigateur
-et l'app télécharge les médias sans cookie. Détails, autorisations Firefox et dépannage :
-[`docs/extension.md`](docs/extension.md).
-
-## IA via tes CLI `claude` / `codex`
-
-RecoltOS n'utilise **aucune clé d'API** et n'embarque aucun modèle : il appelle les CLI officiels déjà
-installés et connectés à ton abonnement (`claude` de Claude Code, `codex` d'OpenAI). Réglages › IA ›
-« Changer » : choisis le moteur, lis et accepte le consentement ; rien n'est envoyé avant. Budget par
-défaut de 120 appels par heure, moteur de secours facultatif, aperçu exact de chaque envoi et journal
-dans Réglages › IA. Les CLI sont cherchés dans le PATH de ton shell interactif et dans les dossiers
-d'installation courants. Les appels consomment ton quota et sont soumis aux conditions de ces services.
-
-## Données locales
-
-- Tout est sous `~/Library/Application Support/RecoltOS/` : `prefs.json`, `libraries.json`,
-  `libraries/<id>/recolt.db` (SQLite), médias et dérivés, `spaces/`, `logs/`, `extension/`.
-- Réglages › Données : export zip de la bibliothèque, instantanés et restauration.
-- Rien n'est envoyé ailleurs : le renderer n'a aucun accès réseau (CSP sans `https:`) ; l'app ne
-  télécharge que les médias et avatars des publications synchronisées (Réglages › Stockage, interrupteur
-  « Télécharger les médias distants »), et l'IA n'envoie que ce que tu as accepté.
-
-### Désinstallation
-
-```sh
-/Applications/RecoltOS.app/Contents/MacOS/RecoltOS --uninstall-native-hosts   # retire com.recoltos.host.json
-rm -rf /Applications/RecoltOS.app
-rm -rf ~/Library/Application\ Support/RecoltOS          # efface TOUTES tes données RecoltOS
-tccutil reset ScreenCapture com.recoltos.app             # facultatif : oublie la permission
-```
-
-Retire aussi l'extension de tes navigateurs. Les fichiers des autres applications ne sont jamais
-touchés.
+- **Projet indépendant**, non affilié à X Corp., Meta / Instagram ou Cosmos. Les marques citées
+  appartiennent à leurs propriétaires et ne servent qu'à désigner les services avec lesquels l'app
+  interagit.
+- **Synchronisation non officielle.** Elle passe par des requêtes web non officielles, émises par
+  l'extension avec la session de **ton** navigateur. Elle peut **enfreindre les conditions
+  d'utilisation** de ces services, entraîner des vérifications ou restrictions de ton compte, et cesser
+  de fonctionner à tout moment. Elle est désactivée par défaut : tu l'actives **à tes propres risques**.
+- **Aucune garantie.** Le logiciel est fourni « tel quel » (voir [`LICENSE`](LICENSE)). Fais des
+  sauvegardes.
 
 ## Limites connues
 
-- **X** peut exiger un en-tête signé (`x-client-transaction-id`) que l'extension ne reproduit pas. Si
-  la ligne X indique « X refuse la requête de l'extension », ouvre une fois x.com/i/bookmarks : les
-  favoris affichés sont récupérés par la page.
-- La synchro ne tourne que **navigateur ouvert** ; Safari n'est pas pris en charge.
-- Instagram : budget strict (20 appels par synchro, 200 par jour) pour limiter les vérifications de
-  compte, sans garantie.
-- `ffmpeg` (Homebrew) est requis : l'app n'est pas portable telle quelle sur un Mac sans Homebrew.
-- Apple Silicon seulement ; pas de recherche visuelle par embeddings ; pas de mise à jour automatique.
-- Mémoire : une toile Spaces de 500 nœuds tient vers 0,5–0,7 Go d'empreinte ([`docs/perf.md`](docs/perf.md)).
+- Apple Silicon uniquement ; interface en français.
+- ffmpeg (Homebrew) est requis.
+- La synchronisation ne tourne que navigateur ouvert ; Safari n'est pas pris en charge.
+- X peut exiger un en-tête de requête signé que l'extension ne reproduit pas : dans ce cas, ouvrir une
+  fois x.com/i/bookmarks récupère les favoris affichés.
+- Pas de mise à jour automatique : télécharge les nouvelles versions depuis les Releases.
 
 ## Développement
 
 ```sh
-pnpm run dev                                  # electron-vite (Vite + main + preload)
-pnpm run dev:demo                             # avec une bibliothèque de démonstration isolée
-RECOLTOS_USER_DATA="$PWD/.tmp/userdata" pnpm run dev   # données isolées
+pnpm run dev        # electron-vite : renderer Vite + main + preload
+pnpm run dev:demo   # avec une bibliothèque de démonstration isolée
+pnpm run verify     # format, lint, typecheck, tests unitaires, e2e, régression visuelle
 ```
 
-Toujours `pnpm run <script>` (jamais `pnpm doctor` / `pnpm rebuild`, commandes intégrées de pnpm).
+Stack : Electron, React, TypeScript, Vite, Tailwind CSS, SQLite (better-sqlite3, FTS5), sharp,
+ffmpeg, Playwright et Vitest. L'extension est en Manifest V3 et communique avec l'app par native
+messaging (aucun port réseau ouvert).
 
-| Script                          | Rôle                                                                                 |
-| ------------------------------- | ------------------------------------------------------------------------------------ |
-| `verify:fast`                   | format, lint, typecheck, `check:pkg`, tests unitaires                                |
-| `verify`                        | `verify:fast` + e2e + régression visuelle + garde des données (`guard`)              |
-| `verify:full`                   | `verify` + `test:real` + `dist` + `test:packaged` + `test:perf`                      |
-| `test:e2e` / `test:visual`      | Playwright sur l'app Electron (dont `tests/e2e/security.spec.ts`, parcours complet)  |
-| `test:packaged`                 | app packagée : grille rendue, hôte natif                                             |
-| `test:perf`                     | grille et toile Spaces ([`docs/perf.md`](docs/perf.md))                              |
-| `test:ext` / `test:ext:firefox` | extension dans le Chromium de Playwright / dans Firefox (opt-in)                     |
-| `build:ext` / `sign:firefox`    | builds de l'extension / signature Firefox `unlisted`                                 |
-| `pack` / `dist` / `app:install` | paquet signé, paquet + contrôles, installation dans `/Applications`                  |
-| `shots`                         | captures d'écran de l'app sur la bibliothèque de démo (`.visual/current/`)           |
-| `guard`                         | échoue si une base SQLite, des réglages utilisateur ou un secret sont suivis par git |
+| Script                          | Rôle                                                               |
+| ------------------------------- | ------------------------------------------------------------------ |
+| `verify:fast`                   | format, lint, typecheck, contrôle des dépendances, tests unitaires |
+| `verify`                        | `verify:fast` + e2e + régression visuelle + garde des données      |
+| `test:e2e` / `test:visual`      | Playwright sur l'app Electron                                      |
+| `test:packaged`                 | app packagée : rendu et hôte natif                                 |
+| `test:ext` / `test:ext:firefox` | extension dans un Chromium / un Firefox de test                    |
+| `build:ext` / `sign:firefox`    | builds de l'extension / signature Firefox non répertoriée          |
+| `pack` / `dist` / `dist:dmg`    | app signée, app + contrôles du paquet, image disque                |
+| `app:install`                   | installation dans `/Applications`                                  |
 
-Variables de test : `RECOLTOS_USER_DATA`, `RECOLTOS_E2E=1`, `RECOLTOS_WINDOW=1280x820`,
-`RECOLTOS_HOME`. Les tests n'utilisent jamais tes navigateurs, tes profils ni tes comptes ; le parcours
-e2e complet tourne sur une bibliothèque de démonstration, ou sur une copie désignée par
-`RECOLTOS_E2E_REAL=<dossier>`.
+Les tests n'utilisent jamais tes navigateurs, tes profils ni tes comptes : ils tournent sur une
+bibliothèque de démonstration factice.
 
-## Documents
-
-- [`docs/extension.md`](docs/extension.md) : extension, synchronisation, autorisations, tests.
-- [`docs/signature.md`](docs/signature.md) : signature locale et permissions macOS.
-- [`docs/perf.md`](docs/perf.md) : budgets et mesures de performance.
-- [`docs/checklist-manuelle.md`](docs/checklist-manuelle.md) : checklist de test manuel.
+Documents : [`docs/extension.md`](docs/extension.md) · [`docs/signature.md`](docs/signature.md) ·
+[`docs/perf.md`](docs/perf.md) · [`docs/checklist-manuelle.md`](docs/checklist-manuelle.md)
 
 ## Licence
 

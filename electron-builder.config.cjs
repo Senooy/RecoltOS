@@ -2,7 +2,7 @@
  * Configuration electron-builder (fuses du build livré, `fileAssociations`, `check-dist`, budgets
  * de taille).
  *
- * - arm64 uniquement, cible `dir` : `dist/mac-arm64/RecoltOS.app` (pas de dmg/zip, pas de mise à jour).
+ * - arm64 uniquement, cible `dir` : `dist/mac-arm64/RecoltOS.app` ; image disque via `pnpm run dist:dmg` (pas de mise à jour automatique).
  * - Identité de signature : `RECOLTOS_SIGN_IDENTITY` (certificat local « RecoltOS Local », voir
  *   `docs/signature.md`), sinon `'-'` = signature ad hoc explicite (dev seulement). `identity: null`
  *   est piégé : sur arm64 il ne laisse que la signature du linker, refusée au lancement.

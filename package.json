@@ -51,6 +51,7 @@
     "check:dist": "tsx --tsconfig tsconfig.node.json scripts/check-dist.mts",
     "check:dist:test": "tsx --tsconfig tsconfig.node.json scripts/check-dist.mts --profile test --app dist/test/mac-arm64/RecoltOS.app",
     "dist": "run-s verify:fast pack check:dist",
+    "dist:dmg": "pnpm run build && electron-builder --config electron-builder.config.cjs --mac dmg --arm64",
     "dist:test": "RECOLTOS_DIST_PROFILE=test run-s pack check:dist:test",
     "app:install": "sh scripts/install-local.sh",
     "guard": "sh scripts/guard-data.sh",
