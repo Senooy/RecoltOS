@@ -1,5 +1,5 @@
 /**
- * Fixtures de sync synthétiques (WP-50) : déterministes et sans secret.
+ * Fixtures de sync synthétiques : déterministes et sans secret.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -9,6 +9,7 @@ import {
   igFixtures,
   xBundleFixtures,
   xFixtures,
+  xWebFixtures,
 } from '../../../scripts/make-sync-fixtures.mjs'
 
 const DIR = join(import.meta.dirname, '../../fixtures/sync')
@@ -31,6 +32,7 @@ describe('fixtures de sync', () => {
     const groups: [string, Record<string, unknown>][] = [
       ['x', xFixtures()],
       ['x/bundle', xBundleFixtures()],
+      ['x/xweb', xWebFixtures()],
       ['instagram', igFixtures()],
       ['cosmos', cosmosFixtures()],
     ]
@@ -42,7 +44,7 @@ describe('fixtures de sync', () => {
     }
   })
 
-  it('couvrent les cas exigés par WP-50', () => {
+  it('couvrent les cas attendus', () => {
     const names = walk(DIR).map((p) => p.slice(DIR.length + 1))
     for (const n of [
       'x/simple.json',

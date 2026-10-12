@@ -1,0 +1,1 @@
+export const op={ast:{kind:"Operation",name:"bookmarksQuery"},params:{id:"DemoQueryId00000001",metadata:{},name:"bookmarksQuery",operationKind:"query",text:null,providedVariables:{__relay_internal__pv__demoviewerisloggedinprovider:true,__relay_internal__pv__demotranslationprovider:false}}};

@@ -96,7 +96,7 @@ export async function startFakePlatforms(port = 0, hostName = '127.0.0.1'): Prom
         '<!doctype html><html><head><title>Page de test</title><meta property="og:image" content="/img.png"></head><body><img id="i" src="/img.png" width="64" height="64"></body></html>',
       )
     }
-    // ---- X : client x-web (extraits réels minimaux), passerelle des requêtes persistées
+    // ---- X : client x-web factice, passerelle des requêtes persistées
     if (p === '/x/') {
       res.writeHead(200, { 'content-type': 'text/html' })
       return res.end(

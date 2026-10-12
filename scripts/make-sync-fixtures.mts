@@ -1,6 +1,6 @@
 /**
- * Fixtures de synchronisation SYNTHÉTIQUES (WP-50, ERRATA §G.2 n°3) : formes publiques connues des
- * réponses X (GraphQL `Bookmarks`), Instagram (`feed/saved/posts`, `media/<pk>/info`) et Cosmos
+ * Fixtures de synchronisation SYNTHÉTIQUES : formes publiques connues des
+ * réponses X (GraphQL `Bookmarks`, client web factice), Instagram (`feed/saved/posts`, `media/<pk>/info`) et Cosmos
  * (`GetAllElements`, `me`). Aucun contenu réel, aucun cookie ni jeton : identifiants, textes et chemins
  * de médias sont fabriqués ici. Déterministe : `pnpm exec tsx scripts/make-sync-fixtures.mts` réécrit
  * `tests/fixtures/sync/**` à l'identique.
@@ -371,14 +371,42 @@ export function xFixtures(): Record<string, unknown> {
   }
 }
 
-/** Page d'accueil x.com et bundle web factices (découverte du `queryId` depuis l'arrière-plan). */
+/** Jeton public factice des fixtures (même forme que le vrai, valeur inventée). */
+const FAKE_PUBLIC_TOKEN =
+  'AAAAAAAAAAAAAAAAAAAAAFaKeXwEbPuBlIcToKeN%3DfIxTuReSaNoNyMiSeEs0000000000000000000000000000000000000000'
+
+/**
+ * Ancien client web factice : page d'accueil qui référence `main.<hash>.js` et bundle minimal qui
+ * déclare deux opérations GraphQL (identifiants, fonctionnalités et jeton inventés).
+ */
 export function xBundleFixtures(): Record<string, string> {
   return {
     'accueil.html': `<!doctype html><html><head>
-<link rel="preload" as="script" crossorigin="anonymous" href="https://abs.twimg.com/responsive-web/client-web/vendor.f00dcafe.js">
-<script type="text/javascript" charset="utf-8" nonce="test" crossorigin="anonymous" src="https://abs.twimg.com/responsive-web/client-web/main.a1b2c3d4.js"></script>
+<script type="text/javascript" nonce="test" src="https://abs.twimg.com/responsive-web/client-web/main.a1b2c3d4.js"></script>
 </head><body></body></html>\n`,
-    'main.js': `(self.webpackChunk=self.webpackChunk||[]).push([[1],{1:e=>{e.exports={queryId:"TwEeTdEtAiLqUeRy01",operationName:"TweetDetail",operationType:"query",metadata:{featureSwitches:["a"],fieldToggles:[]}}},2:e=>{e.exports={queryId:"BoOkMaRkSqUeRy0001",operationName:"Bookmarks",operationType:"query",metadata:{featureSwitches:["graphql_timeline_v2_bookmark_timeline","responsive_web_graphql_timeline_navigation_enabled","rweb_tipjar_consumption_enabled"],fieldToggles:["withAuxiliaryUserLabels"]}}},3:(e,t,n)=>{const r="AAAAAAAAAAAAAAAAAAAAAFaKeWeBcLiEnToKeNfOrTeStS000000000000000000000000000000000000000000";n.d(t,{t:()=>r})}}]);\n`,
+    'main.js': `var operations=[{queryId:"DemoTweetDetail01",operationName:"TweetDetail",operationType:"query",metadata:{featureSwitches:["demo_feature"],fieldToggles:[]}},{queryId:"DemoBookmarks0001",operationName:"Bookmarks",operationType:"query",metadata:{featureSwitches:["demo_bookmarks_feature","demo_navigation_feature","demo_extra_feature"],fieldToggles:["withDemoToggle"]}}];var publicToken="AAAAAAAAAAAAAAAAAAAAAFaKeWeBcLiEnToKeNfOrTeStS000000000000000000000000000000000000000000";\n`,
+  }
+}
+
+/**
+ * Client web « x-web » factice (modules ES) : seule la STRUCTURE utile à la découverte est
+ * reproduite — script d'entrée dans le HTML, graphe de chunks (imports statiques, `import()`, liste
+ * de dépendances), opérations persistées `params:{id,name,operationKind,providedVariables}` et jeton
+ * public. Noms de chunks, identifiants et variables sont inventés.
+ */
+export function xWebFixtures(): Record<string, string> {
+  const pv = (n: string) => `__relay_internal__pv__${n}`
+  return {
+    'accueil.html': `<!doctype html><html lang="fr" data-app-version="demo-version-0001"><head><meta charset="utf-8"><script type="module" async src="https://abs.twimg.com/x-web/x-web/entry-client-logged-out-Demo0001.js" nonce="test"></script><link rel="stylesheet" href="https://abs.twimg.com/x-web/x-web/assets/styles-Demo0000.css"></head><body></body></html>\n`,
+    'entry-client-logged-out-Demo0001.js': `import{routes as a}from"./assets/routes-Demo0002.js";import{headers as b}from"./assets/guest-token-Demo0003.js";import{logo as c}from"./assets/icon-logo-Demo0004.js";export{a,b,c};\n`,
+    'routes-Demo0002.js': `import{deps as h}from"./history-Demo0005.js";export const routes=[{path:"/i/bookmarks",deps:h,load:()=>import("./bookmarks-Demo0006.js")}];\n`,
+    'history-Demo0005.js': `export const deps=["./bookmarks-Demo0007.js","./bookmark-folders-Demo0008.js","./bookmarks-folder-modals-Demo0009.js"];\n`,
+    'bookmarks-Demo0006.js': `export const component=()=>null;\n`,
+    'bookmarks-Demo0007.js': `export const op={ast:{kind:"Operation",name:"bookmarksQuery"},params:{id:"DemoQueryId00000001",metadata:{},name:"bookmarksQuery",operationKind:"query",text:null,providedVariables:{${pv('demoviewerisloggedinprovider')}:true,${pv('demotranslationprovider')}:false}}};\n`,
+    'bookmark-folders-Demo0008.js': `export const op={params:{id:"DemoQueryId00000002",metadata:{},name:"bookmarkFoldersQuery",operationKind:"query",text:null}};\n`,
+    'bookmarks-folder-modals-Demo0009.js': `export const op={params:{id:"DemoQueryId00000003",metadata:{},name:"bookmarksFolderEditMutation",operationKind:"mutation",text:null}};\n`,
+    'guest-token-Demo0003.js': `export function headers(){const h=new Map;h.set("Authorization",\`${FAKE_PUBLIC_TOKEN}\`);return h}\n`,
+    'sw.js': `self.addEventListener("fetch",()=>{});const auth=\`${FAKE_PUBLIC_TOKEN}\`;\n`,
   }
 }
 
@@ -612,6 +640,7 @@ export function writeSyncFixtures(root = ROOT): string[] {
   }
   put('x', xFixtures())
   put('x/bundle', xBundleFixtures())
+  put('x/xweb', xWebFixtures())
   put('instagram', igFixtures())
   put('cosmos', cosmosFixtures())
   return written

@@ -1,7 +1,7 @@
 /**
- * Sync en arrière-plan de l'extension (WP-54, ERRATA §G.3) : politique de cible (aucun onglet sans
- * option), découverte de la configuration X sur le client web x-web (extraits RÉELS minimaux relevés
- * sans cookie le 2026-10-12 : `fixtures/sync/x/xweb/`) et sur l'ancien bundle, réparation des
+ * Sync en arrière-plan de l'extension : politique de cible (aucun onglet sans option), découverte de
+ * la configuration X sur un client web x-web FACTICE (`fixtures/sync/x/xweb/`, généré par
+ * `scripts/make-sync-fixtures.mts`) et sur l'ancien bundle factice, réparation des
  * variables / `features`, en-têtes CSRF, jeton Cosmos par `/api/refresh-token`, classement des
  * erreurs, boucle de pages pilotée par `sync.ack`, captures sans en-têtes.
  */
@@ -59,16 +59,15 @@ const ok = (json: unknown, headers: Record<string, string> = {}): FetchResult =>
 
 const XWEB = 'https://abs.twimg.com/x-web/x-web/'
 /**
- * Jeton public des extraits, anonymisé (même forme, valeur factice, préfixe d'en-tête retiré : la garde
+ * Jeton public des fixtures, factice (même forme, préfixe d'en-tête retiré : la garde
  * `fixtures.test.ts` refuse tout jeton dans les fixtures).
  */
 const FIXTURE_BEARER =
   'AAAAAAAAAAAAAAAAAAAAAFaKeXwEbPuBlIcToKeN%3DfIxTuReSaNoNyMiSeEs0000000000000000000000000000000000000000'
-const PV_LOGGED = '__relay_internal__pv__xclientsfeaturesappviewerisloggedinrelayprovider'
-const PV_TRANSLATION =
-  '__relay_internal__pv__xclientsfeaturestranslationnoteautotranslationenabledrelayprovider'
+const PV_LOGGED = '__relay_internal__pv__demoviewerisloggedinprovider'
+const PV_TRANSLATION = '__relay_internal__pv__demotranslationprovider'
 
-/** Faux réseau du client web x-web servi depuis les extraits réels (`x/xweb/`). */
+/** Faux réseau du client web x-web servi depuis les fixtures factices (`x/xweb/`). */
 function xwebSite(overrides: Record<string, string | null> = {}): FetchFn & { urls: string[] } {
   const urls: string[] = []
   const serve = (name: string): FetchResult => {
@@ -109,7 +108,7 @@ function fakeJwt(payload: Record<string, unknown>): string {
 
 const XWEB_CONFIG: XConfig = {
   api: 'xweb',
-  queryId: 'S0GjncHMwHQK1YOfxslymQ',
+  queryId: 'DemoQueryId00000001',
   operationName: 'bookmarksQuery',
   bearer: 'B',
   providedVariables: { [PV_LOGGED]: true },
@@ -149,10 +148,10 @@ describe('X', () => {
       'https://abs.twimg.com/responsive-web/client-web/main.a1b2c3d4.js',
     )
     const cfg = parseBundle(text('x/bundle/main.js'))
-    expect(cfg?.queryId).toBe('BoOkMaRkSqUeRy0001')
+    expect(cfg?.queryId).toBe('DemoBookmarks0001')
     expect(cfg?.bearer).toMatch(/^AAAAAAAAAAAAAAAAAAAAA/)
-    expect(Object.keys(cfg?.features ?? {})).toContain('graphql_timeline_v2_bookmark_timeline')
-    expect(cfg?.fieldToggles).toEqual({ withAuxiliaryUserLabels: false })
+    expect(Object.keys(cfg?.features ?? {})).toContain('demo_bookmarks_feature')
+    expect(cfg?.fieldToggles).toEqual({ withDemoToggle: false })
   })
 
   it('features manquantes extraites du message 400', () => {
@@ -201,7 +200,7 @@ describe('X', () => {
     const bm = calls.filter((x) => x.url.includes('/Bookmarks?'))
     expect(bm[0]!.headers['x-csrf-token']).toBe('jeton-csrf')
     expect(bm[0]!.headers.authorization).toMatch(/^Bearer AAAA/)
-    expect(bm[0]!.url).toContain('/BoOkMaRkSqUeRy0001/Bookmarks?')
+    expect(bm[0]!.url).toContain('/DemoBookmarks0001/Bookmarks?')
     const f2 = JSON.parse(new URL(bm[1]!.url).searchParams.get('features') ?? '{}') as Record<
       string,
       boolean
@@ -245,12 +244,12 @@ describe('X', () => {
   })
 })
 
-describe('X — client x-web (extraits réels)', () => {
+describe('X — client x-web (fixtures factices)', () => {
   it('HTML : version du client et script d’entrée module, quel que soit l’ordre des attributs', () => {
     const html = text('x/xweb/accueil.html')
-    expect(appVersion(html)).toBe('3baf5ddf7cf0fe60635f3681052c1f9cbd982a38')
+    expect(appVersion(html)).toBe('demo-version-0001')
     expect(findEntryScripts(html, 'https://x.com/')).toEqual([
-      `${XWEB}entry-client-logged-out-Cyu8aWGq.js`,
+      `${XWEB}entry-client-logged-out-Demo0001.js`,
     ])
     expect(
       findEntryScripts(
@@ -263,16 +262,16 @@ describe('X — client x-web (extraits réels)', () => {
   })
 
   it('params Relay persistés : nom, id, provided variables ; mutation et AST ignorés', () => {
-    const ops = parsePersistedOps(text('x/xweb/bookmarks-CXtFauZD.js'))
+    const ops = parsePersistedOps(text('x/xweb/bookmarks-Demo0007.js'))
     expect(ops).toEqual([
       {
-        id: 'S0GjncHMwHQK1YOfxslymQ',
+        id: 'DemoQueryId00000001',
         name: 'bookmarksQuery',
         providedVariables: [PV_LOGGED, PV_TRANSLATION],
       },
     ])
-    expect(parsePersistedOps(text('x/xweb/bookmarks-folder-modals-Czv1HVNa.js'))).toEqual([])
-    expect(parsePersistedOps(text('x/xweb/bookmark-folders-BF_gvkt4.js'))[0]?.name).toBe(
+    expect(parsePersistedOps(text('x/xweb/bookmarks-folder-modals-Demo0009.js'))).toEqual([])
+    expect(parsePersistedOps(text('x/xweb/bookmark-folders-Demo0008.js'))[0]?.name).toBe(
       'bookmarkFoldersQuery',
     )
     // Guillemets ordinaires et ordre des clés différent.
@@ -285,15 +284,15 @@ describe('X — client x-web (extraits réels)', () => {
 
   it('jeton public, priorités de parcours, erreurs de la passerelle', () => {
     expect(findBearer(text('x/xweb/sw.js'))).toBe(FIXTURE_BEARER)
-    expect(findBearer(text('x/xweb/guest-token-RWAebql4.js'))).toBe(FIXTURE_BEARER)
+    expect(findBearer(text('x/xweb/guest-token-Demo0003.js'))).toBe(FIXTURE_BEARER)
     // Forme réelle : `n.set(\`Authorization\`,\`Bearer AAAA…\`)`.
     expect(findBearer(`n.set(\`Authorization\`,\`Bearer ${X_PUBLIC_BEARER}\`)`)).toBe(
       X_PUBLIC_BEARER,
     )
-    expect(chunkPriority(`${XWEB}assets/bookmarks-CXtFauZD.js`)).toBe(0)
-    expect(chunkPriority(`${XWEB}assets/history-DtLSeQQ0.js`)).toBe(1)
-    expect(chunkPriority(`${XWEB}assets/icon-bookmarks-DM1mZAb_.js`)).toBeNull()
-    expect(chunkPriority(`${XWEB}assets/sentry-filter-BY-NuQPN.js`)).toBe(2)
+    expect(chunkPriority(`${XWEB}assets/bookmarks-Demo0007.js`)).toBe(0)
+    expect(chunkPriority(`${XWEB}assets/history-Demo0005.js`)).toBe(1)
+    expect(chunkPriority(`${XWEB}assets/icon-bookmarks-Demo0010.js`)).toBeNull()
+    expect(chunkPriority(`${XWEB}assets/routes-Demo0002.js`)).toBe(2)
     // Réponses relevées sur la passerelle (requête invitée publique).
     expect(
       missingVariables({
@@ -322,27 +321,27 @@ describe('X — client x-web (extraits réels)', () => {
     expect(r).toMatchObject({
       ok: true,
       value: {
-        queryId: 'S0GjncHMwHQK1YOfxslymQ',
+        queryId: 'DemoQueryId00000001',
         operationName: 'bookmarksQuery',
         providedVariables: { [PV_LOGGED]: true, [PV_TRANSLATION]: false },
         bearer: FIXTURE_BEARER,
         bearerSource: 'bundle',
-        appVersion: '3baf5ddf7cf0fe60635f3681052c1f9cbd982a38',
-        bundleUrl: `${XWEB}assets/bookmarks-CXtFauZD.js`,
+        appVersion: 'demo-version-0001',
+        bundleUrl: `${XWEB}assets/bookmarks-Demo0007.js`,
       },
     })
     expect(calls.every((c) => c.credentials === 'omit')).toBe(true)
-    expect(site.urls).toContain(`${XWEB}assets/history-DtLSeQQ0.js`)
+    expect(site.urls).toContain(`${XWEB}assets/history-Demo0005.js`)
     expect(site.urls.some((u) => u.includes('icon-'))).toBe(false)
     expect(site.urls.length).toBeLessThan(20)
   })
 
   it('découverte : jeton lu dans sw.js, sinon constante ; erreurs précises à chaque étape', async () => {
     const opts = { homeUrl: 'https://x.com/', swUrl: 'https://x.com/sw.js' }
-    const noGuest = await discoverXWeb(xwebSite({ 'guest-token-RWAebql4.js': null }), opts)
+    const noGuest = await discoverXWeb(xwebSite({ 'guest-token-Demo0003.js': null }), opts)
     expect(noGuest).toMatchObject({ ok: true, value: { bearerSource: 'sw' } })
     const none = await discoverXWeb(
-      xwebSite({ 'guest-token-RWAebql4.js': null, 'sw.js': null }),
+      xwebSite({ 'guest-token-Demo0003.js': null, 'sw.js': null }),
       opts,
     )
     expect(none).toMatchObject({
@@ -354,7 +353,7 @@ describe('X — client x-web (extraits réels)', () => {
       ok: false,
       error: expect.stringMatching(/aucun script x-web \(entry-client\)/) as unknown,
     })
-    const noOp = await discoverXWeb(xwebSite({ 'bookmarks-CXtFauZD.js': 'export{}' }), opts)
+    const noOp = await discoverXWeb(xwebSite({ 'bookmarks-Demo0007.js': 'export{}' }), opts)
     expect(noOp).toEqual({
       ok: false,
       error: expect.stringMatching(
@@ -405,7 +404,7 @@ describe('X — client x-web (extraits réels)', () => {
     expect(page.kind).toBe('page')
     expect(gql).toHaveLength(2)
     const u = new URL(gql[1]!.url)
-    expect(u.pathname).toBe('/i/api/graphql/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery')
+    expect(u.pathname).toBe('/i/api/graphql/DemoQueryId00000001/bookmarksQuery')
     expect(u.searchParams.get('features')).toBeNull()
     expect(JSON.parse(u.searchParams.get('variables')!)).toEqual({
       count: 20,
@@ -443,7 +442,7 @@ describe('X — client x-web (extraits réels)', () => {
       return site(url, init)
     }
     const r = await new XClient().fetchPage(null, notFound)
-    expect(ids).toEqual(['PeRiMe000000', 'S0GjncHMwHQK1YOfxslymQ'])
+    expect(ids).toEqual(['PeRiMe000000', 'DemoQueryId00000001'])
     expect(r).toMatchObject({ kind: 'error', outcome: 'api_changed' })
     expect((r as { error: string }).error).toMatch(/Query not found/)
 
@@ -461,7 +460,7 @@ describe('X — client x-web (extraits réels)', () => {
     const old = Date.now() - 7 * 3_600_000
     fake.local.set('x.config', {
       ...XWEB_CONFIG,
-      appVersion: '3baf5ddf7cf0fe60635f3681052c1f9cbd982a38',
+      appVersion: 'demo-version-0001',
       at: old,
     })
     const site = xwebSite()
@@ -488,7 +487,7 @@ describe('X — client x-web (extraits réels)', () => {
       }
       return site2(url, init)
     })
-    expect(ids).toEqual(['S0GjncHMwHQK1YOfxslymQ'])
+    expect(ids).toEqual(['DemoQueryId00000001'])
     // Ancien format de cache (sans `api`) : ignoré.
     fake.local.set('x.config', {
       queryId: 'Q',
@@ -505,7 +504,7 @@ describe('X — client x-web (extraits réels)', () => {
         ? Promise.resolve(ok(fx('x/xweb-page-1.json')))
         : site3(url, init),
     )
-    expect(site3.urls.some((u) => u.endsWith('bookmarks-CXtFauZD.js'))).toBe(true)
+    expect(site3.urls.some((u) => u.endsWith('bookmarks-Demo0007.js'))).toBe(true)
   })
 
   it('échec de découverte : message précis remonté (api_changed)', async () => {
@@ -707,7 +706,7 @@ describe('captures du hook', () => {
     )
     const out = classify(
       ev(
-        `https://api.x.com/graphql/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery?variables=${vars}`,
+        `https://api.x.com/graphql/DemoQueryId00000001/bookmarksQuery?variables=${vars}`,
         'GET',
         { authorization: 'Bearer PUBLIC', 'x-client-transaction-id': 'signature' },
         fx('x/xweb-page-1.json'),
@@ -716,12 +715,12 @@ describe('captures du hook', () => {
     expect(out[0]).toEqual({
       type: 'content:x-template',
       payload: {
-        queryId: 'S0GjncHMwHQK1YOfxslymQ',
+        queryId: 'DemoQueryId00000001',
         operationName: 'bookmarksQuery',
         providedVariables: { [PV_LOGGED]: true, [PV_TRANSLATION]: false },
         bearer: 'PUBLIC',
         tid: 'signature',
-        path: '/graphql/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery',
+        path: '/graphql/DemoQueryId00000001/bookmarksQuery',
       },
     })
     expect(out[1]).toMatchObject({ type: 'content:capture', payload: { op: 'Bookmarks' } })
