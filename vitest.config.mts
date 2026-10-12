@@ -40,7 +40,7 @@ export default defineConfig({
           ],
           testTimeout: 20_000,
           env: { TZ: 'UTC' },
-          setupFiles: ['tests/setup/node.ts'],
+          setupFiles: ['tests/setup/node.ts', 'tests/setup/lang.ts'],
           globalSetup: ['tests/setup/global-host.ts'],
         },
       },
@@ -52,6 +52,7 @@ export default defineConfig({
           include: ['tests/renderer/**/*.test.{ts,tsx}'],
           testTimeout: 20_000,
           env: { TZ: 'UTC' },
+          setupFiles: ['tests/setup/lang.ts'],
         },
       },
       {

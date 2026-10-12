@@ -51,6 +51,7 @@ async function launchOnce(
       RECOLTOS_USER_DATA: userData,
       RECOLTOS_HOME: home,
       LANG: 'fr_FR.UTF-8',
+      RECOLTOS_LANG: 'fr',
     },
     stdio: 'ignore',
   })

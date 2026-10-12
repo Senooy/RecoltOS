@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { AiInput } from '../../../src/shared/ai-types'
 import {
   SYSTEM_FR,
+  systemPrompt,
   buildAnalyzePrompt,
   buildImagePromptPrompt,
   clip,
@@ -85,6 +86,20 @@ describe('prompts', () => {
       expect(buildAnalyzePrompt(input, 'codex')).toMatchSnapshot()
     })
   }
+
+  it('langue de sortie : français par défaut, anglais si l’interface est en anglais', () => {
+    expect(systemPrompt('fr')).toBe(SYSTEM_FR)
+    expect(systemPrompt('en')).toContain('Langue de sortie : anglais,')
+    expect(systemPrompt('en')).not.toContain('Langue de sortie : français')
+    const en = buildAnalyzePrompt(inputs.image!, 'claude', { lang: 'en' })
+    expect(en).toContain('titre court en anglais')
+    expect(en).toContain('phrases en anglais')
+    expect(en).toContain('mots-clés en anglais')
+    expect(en).not.toContain('en français')
+    expect(buildAnalyzePrompt(inputs.image!, 'claude')).toBe(
+      buildAnalyzePrompt(inputs.image!, 'claude', { lang: 'fr' }),
+    )
+  })
 
   it('champ unique et 2ᵉ essai renforcé', () => {
     const p = buildAnalyzePrompt(inputs.image!, 'claude', { fields: ['title'], retry: true })

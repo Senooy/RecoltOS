@@ -17,12 +17,16 @@ import {
   type SaveDeps,
 } from '../../../extension/src/background/save'
 import { relTime, STATUS_TEXT, syncLine } from '../../../extension/src/popup/index'
+import { extEn, extFr, setExtLang } from '../../../extension/src/lib/i18n'
 import type { PopupState } from '../../../extension/src/lib/popup-protocol'
 import { buildExt } from '../../../scripts/build-ext.mjs'
 import { EXTENSION_KEY, GECKO_ID } from '../../../src/shared/bridge/constants'
 import { makeTmpDir } from '../../helpers/tmpdir'
 
 const MIB = 1024 * 1024
+
+// Node expose `navigator.language` : les assertions ci-dessous portent sur les textes français.
+beforeAll(() => setExtLang('fr'))
 
 function deps(over: Partial<SaveDeps> & { ack?: unknown; blobSize?: number } = {}) {
   const requests: { type: string; payload: Record<string, unknown> }[] = []
@@ -230,6 +234,25 @@ describe('popup', () => {
     expect(syncLine('instagram', st)).toBe('Instagram — non connecté dans ce navigateur')
     expect(syncLine('cosmos', st)).toBe('Cosmos — accès au site à autoriser')
   })
+
+  it('anglais : mêmes clés, textes traduits, la langue de l’app prime', () => {
+    const keys = (o: object): string[] =>
+      Object.entries(o)
+        .flatMap(([k, v]) =>
+          v && typeof v === 'object' ? keys(v as object).map((x) => `${k}.${x}`) : [k],
+        )
+        .sort()
+    expect(keys(extEn)).toEqual(keys(extFr))
+    setExtLang('en')
+    try {
+      expect(STATUS_TEXT.app_closed!.label).toBe('RecoltOS closed')
+      expect(relTime(0, 4 * 60_000)).toBe('4 min ago')
+      expect(TOAST.saved).toBe('Saved to RecoltOS')
+      expect(menuItems([])[0]!.title).toBe('Save to RecoltOS')
+    } finally {
+      setExtLang('fr')
+    }
+  })
 })
 
 describe('manifests et build', () => {
@@ -264,8 +287,22 @@ describe('manifests et build', () => {
       for (const f of ['background.js', 'popup.js', 'content/hook.js', 'content/bridge.js']) {
         expect(readFileSync(join(dir, f), 'utf8'), f).not.toMatch(/^\s*(import|export)\s/m)
       }
-      const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { version: string }
+      const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as {
+        version: string
+        default_locale: string
+        description: string
+      }
       expect(m.version).toBe(EXTENSION_VERSION)
+      // Textes du manifest localisés : `_locales/en` (défaut) et `_locales/fr`.
+      expect(m.default_locale).toBe('en')
+      expect(m.description).toBe('__MSG_extDescription__')
+      for (const lang of ['en', 'fr']) {
+        const msgs = JSON.parse(
+          readFileSync(join(dir, '_locales', lang, 'messages.json'), 'utf8'),
+        ) as Record<string, { message: string }>
+        expect(msgs.extDescription?.message).toBeTruthy()
+        expect(msgs.actionTitle?.message).toBeTruthy()
+      }
     }
   })
 })

@@ -2,8 +2,11 @@
  * Boutons « Enregistrer dans RecoltOS » injectés sur un DOM synthétique de x.com et
  * d'instagram.com : un bouton par publication, idempotent, identifiant et repli DOM corrects.
  */
-import { describe, expect, it } from 'vitest'
-import { BUTTON_LABEL, injectInto, type PostRef } from '../../../extension/src/lib/inject'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { extFr, setExtLang } from '../../../extension/src/lib/i18n'
+import { buttonLabel, injectInto, type PostRef } from '../../../extension/src/lib/inject'
+
+beforeAll(() => setExtLang('fr'))
 
 describe('injection X', () => {
   it('un bouton par tweet, à côté du groupe d’actions ; idempotent', async () => {
@@ -23,7 +26,7 @@ describe('injection X', () => {
     }
     expect(injectInto(document, 'x.com', 'https://x.com', save)).toBe(1)
     expect(injectInto(document, 'x.com', 'https://x.com', save)).toBe(0)
-    const btn = document.querySelector<HTMLButtonElement>(`[aria-label="${BUTTON_LABEL}"]`)!
+    const btn = document.querySelector<HTMLButtonElement>(`[aria-label="${buttonLabel()}"]`)!
     btn.click()
     await new Promise((r) => setTimeout(r, 0))
     expect(saved[0]).toEqual({
@@ -54,8 +57,26 @@ describe('injection Instagram', () => {
         return Promise.resolve({ status: 'duplicate' })
       }),
     ).toBe(1)
-    document.querySelector<HTMLButtonElement>(`[aria-label="${BUTTON_LABEL}"]`)!.click()
+    document.querySelector<HTMLButtonElement>(`[aria-label="${buttonLabel()}"]`)!.click()
     expect(saved[0]?.externalId).toBe('DSyNtH00001')
     expect(saved[0]?.url).toBe('https://www.instagram.com/p/DSyNtH00001/')
+  })
+})
+
+describe('langue des boutons', () => {
+  it('libellé en anglais quand l’app (ou le navigateur) est en anglais', () => {
+    setExtLang('en')
+    try {
+      document.body.innerHTML = `
+        <article data-testid="tweet">
+          <a href="/a/status/1"><time>1 h</time></a>
+          <div role="group"></div>
+        </article>`
+      injectInto(document, 'x.com', 'https://x.com', () => Promise.resolve({ status: 'saved' }))
+      expect(document.querySelector('[aria-label="Save to RecoltOS"]')).not.toBeNull()
+      expect(buttonLabel()).not.toBe(extFr.menu.save)
+    } finally {
+      setExtLang('fr')
+    }
   })
 })

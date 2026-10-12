@@ -31,6 +31,7 @@ function ctx(over: Partial<ServiceContext> = {}): ServiceContext {
       home: path.join(base, 'home'),
       rendererUrl: null,
       installDevHost: false,
+      systemLang: null,
     },
     isPackaged: false,
     getMainWindow: () => null,
@@ -162,6 +163,7 @@ describe('handlers libraries.*', () => {
           home: null,
           rendererUrl: null,
           installDevHost: false,
+          systemLang: null,
         },
       }),
     )

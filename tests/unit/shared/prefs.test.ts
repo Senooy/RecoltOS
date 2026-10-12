@@ -58,6 +58,7 @@ describe('PrefsSchema', () => {
       },
       tools: {},
       storage: { downloadRemoteMedia: true },
+      ui: { language: 'system' },
     })
     expect(DEFAULT_PREFS).toEqual(p)
   })

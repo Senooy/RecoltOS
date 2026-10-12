@@ -59,7 +59,14 @@ import { makeTmpDir } from '../../helpers/tmpdir'
 function ctx(): ServiceContext {
   return {
     userData: '/tmp/u',
-    flags: { e2e: true, windowSize: null, home: null, rendererUrl: null, installDevHost: false },
+    flags: {
+      e2e: true,
+      windowSize: null,
+      home: null,
+      rendererUrl: null,
+      installDevHost: false,
+      systemLang: null,
+    },
     isPackaged: false,
     getMainWindow: () => null,
     emit: () => undefined,

@@ -35,7 +35,14 @@ const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']
 function fakeCtx(userData: string = makeTmpDir('recolt-registries-')): ServiceContext {
   return {
     userData,
-    flags: { e2e: true, windowSize: null, home: null, rendererUrl: null, installDevHost: false },
+    flags: {
+      e2e: true,
+      windowSize: null,
+      home: null,
+      rendererUrl: null,
+      installDevHost: false,
+      systemLang: null,
+    },
     isPackaged: false,
     getMainWindow: () => null,
     emit: () => undefined,

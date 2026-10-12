@@ -57,6 +57,7 @@ test('build de test (dist:test) : Playwright pilote l’app packagée, grille vi
       RECOLTOS_USER_DATA: userData,
       RECOLTOS_HOME: makeTmpDir('pkg-pw-home'),
       RECOLTOS_E2E: '1',
+      RECOLTOS_LANG: 'fr',
     },
   })
   try {

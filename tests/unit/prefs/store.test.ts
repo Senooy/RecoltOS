@@ -3,13 +3,16 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const electron = vi.hoisted(() => ({ nativeTheme: { themeSource: 'system' } }))
+const electron = vi.hoisted(() => ({
+  nativeTheme: { themeSource: 'system' },
+  app: { getPreferredSystemLanguages: () => ['fr-FR', 'en-US'], getLocale: () => 'fr' },
+}))
 vi.mock('electron', () => electron)
 
 import { DEFAULT_PREFS } from '../../../src/shared/prefs'
 import { dispatch } from '../../../src/main/ipc/router'
 import { prefsHandlers } from '../../../src/main/ipc/handlers/prefs'
-import { initPrefs } from '../../../src/main/prefs/init'
+import { detectSystemLang, initPrefs } from '../../../src/main/prefs/init'
 import {
   createPrefsStore,
   getPrefsStore,
@@ -17,6 +20,7 @@ import {
   setPrefsStore,
 } from '../../../src/main/prefs/store'
 import type { ServiceContext } from '../../../src/main/bootstrap/context'
+import { getLang, onLangChange, setLang } from '../../../src/shared/i18n/lang'
 
 let dir: string
 let file: string
@@ -108,7 +112,14 @@ describe('prefs/store', () => {
 describe('initPrefs + handlers prefs.*', () => {
   const ctx = (emit: ServiceContext['emit']): ServiceContext => ({
     userData: dir,
-    flags: { e2e: true, windowSize: null, home: null, rendererUrl: null, installDevHost: false },
+    flags: {
+      e2e: true,
+      windowSize: null,
+      home: null,
+      rendererUrl: null,
+      installDevHost: false,
+      systemLang: null,
+    },
     isPackaged: false,
     getMainWindow: () => null,
     emit,
@@ -143,12 +154,51 @@ describe('initPrefs + handlers prefs.*', () => {
     await dispose()
     expect(getPrefsStore()).toBeNull()
   })
+
+  it('langue du système : première langue préférée du Mac, sauf RECOLTOS_LANG', () => {
+    expect(detectSystemLang(null)).toBe('fr')
+    expect(detectSystemLang('en')).toBe('en')
+    const spy = vi
+      .spyOn(electron.app, 'getPreferredSystemLanguages')
+      .mockReturnValue(['en-GB', 'fr-FR'])
+    expect(detectSystemLang(null)).toBe('en')
+    spy.mockReturnValue([])
+    expect(detectSystemLang(null)).toBe('fr')
+    spy.mockRestore()
+  })
+
+  it('langue : système simulé, puis ui.language appliqué à chaud (onLangChange)', async () => {
+    const seen: string[] = []
+    const off = onLangChange((l) => seen.push(l))
+    const base = ctx(vi.fn())
+    const dispose = initPrefs({ ...base, flags: { ...base.flags, systemLang: 'en' } })
+    try {
+      expect(getLang()).toBe('en')
+      await call('prefs.set', { patch: { ui: { language: 'fr' } } })
+      expect(getLang()).toBe('fr')
+      await call('prefs.set', { patch: { ui: { language: 'system' } } })
+      expect(getLang()).toBe('en')
+      expect(seen).toEqual(['en', 'fr', 'en'])
+      expect(onDisk()).toMatchObject({ ui: { language: 'system' } })
+    } finally {
+      off()
+      await dispose()
+      setLang('fr')
+    }
+  })
 })
 
 describe('prefs.json écrit au premier lancement et après réparation', () => {
   const serviceCtx = (): ServiceContext => ({
     userData: dir,
-    flags: { e2e: true, windowSize: null, home: null, rendererUrl: null, installDevHost: false },
+    flags: {
+      e2e: true,
+      windowSize: null,
+      home: null,
+      rendererUrl: null,
+      installDevHost: false,
+      systemLang: null,
+    },
     isPackaged: false,
     getMainWindow: () => null,
     emit: vi.fn(),

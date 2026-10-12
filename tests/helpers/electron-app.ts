@@ -125,6 +125,9 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
           RECOLTOS_WINDOW: options.windowSize ?? '1280x820',
           TZ: 'Europe/Paris',
           LANG: 'fr_FR.UTF-8',
+          // Langue du système simulée : français, comme les baselines visuelles et les assertions
+          // e2e. Un test en anglais passe `env: { RECOLTOS_LANG: 'en' }` ou le réglage `ui.language`.
+          RECOLTOS_LANG: 'fr',
         },
         options.env,
       ),

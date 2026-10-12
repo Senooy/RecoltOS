@@ -1,5 +1,5 @@
 /**
- * `pnpm run shots [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--out dir]`
+ * `pnpm run shots [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--lang fr|en] [--out dir]`
  * lance l'app comme les tests e2e (build automatique, `userData` neuf) en
  * `--force-device-scale-factor=2` et écrit `.visual/current/<scène>-<thème>.png` (2560×1640) plus
  * `manifest.json` (résultat de chaque scène : ok / indisponible + raison).
@@ -7,7 +7,8 @@
  * `--library demo` (défaut) : bibliothèque de démo de `make-fixtures.mts` ; `--library real` : copie
  * d'un dossier `userData` RecoltOS, depuis `RECOLTOS_REAL_USERDATA` (une COPIE, jamais le dossier
  * vivant sous `~/Library/Application Support`) ;
- * `--library none` : app vide.
+ * `--library none` : app vide. `--lang en` : interface en anglais (réglage `ui.language`) ; par défaut
+ * le français, comme les baselines visuelles.
  */
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -30,6 +31,7 @@ export interface ShotResult {
 
 export const LIBRARY_MODES = ['demo', 'real', 'none'] as const
 export const THEME_MODES = ['light', 'dark', 'both'] as const
+export const LANG_MODES = ['fr', 'en'] as const
 
 /** Message d'usage (français) si `--library` n'est pas `demo`, `real` ou `none` ; sinon `null`. */
 export function libraryUsageError(value: string): string | null {
@@ -65,19 +67,25 @@ export function realSourceRefusal(src: string): string | null {
   return null
 }
 
-async function prepareUserData(library: string, theme: string, empty: boolean): Promise<string> {
+async function prepareUserData(
+  library: string,
+  theme: string,
+  empty: boolean,
+  lang = 'fr',
+): Promise<string> {
   const dir = makeTmpDir(`shots-${theme}`)
   if (!empty && library === 'demo') await makeDemoLibrary(dir, { count: 60, collections: 6 })
   else if (!empty && library === 'real') {
     const src = process.env.RECOLTOS_REAL_USERDATA as string
     cloneDir(resolve(src), dir)
   }
-  writeFileSync(join(dir, 'prefs.json'), JSON.stringify({ version: 1, theme }) + '\n')
+  const ui = lang === 'en' ? { ui: { language: 'en' } } : {}
+  writeFileSync(join(dir, 'prefs.json'), JSON.stringify({ version: 1, theme, ...ui }) + '\n')
   return dir
 }
 
 const USAGE =
-  'usage : shots.mts [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--out dir] [--list]'
+  'usage : shots.mts [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--lang fr|en] [--out dir] [--list]'
 
 function parseShotOptions(argv: readonly string[]) {
   return parseArgs({
@@ -86,6 +94,7 @@ function parseShotOptions(argv: readonly string[]) {
       scene: { type: 'string' },
       library: { type: 'string', default: 'demo' },
       theme: { type: 'string', default: 'light' },
+      lang: { type: 'string', default: 'fr' },
       out: { type: 'string' },
       list: { type: 'boolean', default: false },
     },
@@ -114,7 +123,10 @@ async function main(argv: readonly string[]): Promise<number> {
       : library === 'real'
         ? realSourceRefusal(process.env.RECOLTOS_REAL_USERDATA as string)
         : null
-  const usageError = libraryError ?? themeError ?? realError
+  const langError = (LANG_MODES as readonly string[]).includes(values.lang ?? 'fr')
+    ? null
+    : `--lang « ${values.lang} » inconnu (valeurs : ${LANG_MODES.join(', ')})`
+  const usageError = libraryError ?? themeError ?? realError ?? langError
   if (usageError) {
     console.error(`shots : ${usageError}`)
     console.error(USAGE)
@@ -129,7 +141,12 @@ async function main(argv: readonly string[]): Promise<number> {
   const results: ShotResult[] = []
   for (const theme of themes) {
     for (const scene of scenes) {
-      const userData = await prepareUserData(values.library ?? 'demo', theme, scene.empty === true)
+      const userData = await prepareUserData(
+        values.library ?? 'demo',
+        theme,
+        scene.empty === true,
+        values.lang ?? 'fr',
+      )
       const handle = await launchApp({ userData, deviceScaleFactor: 2, windowSize: '1280x820' })
       const file = join(out, `${scene.id}-${theme}.png`)
       try {
