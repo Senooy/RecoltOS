@@ -41,9 +41,10 @@ Ce qui tient la mémoire :
    leur image libérée avec eux.
 3. **Vidéos** : affiche tant qu'une vidéo n'est ni survolée, ni sélectionnée, ni grande à l'écran
    (≥ 480 px CSS) ; **2 lecteurs actifs au plus** ; lecteur libéré au démontage.
-4. **Budgets GPU de Chromium** (`src/main/bootstrap/memory.ts`, avant `ready`) : tuiles du compositeur
-   96 Mo, cache GPU des images décodées 64 Mo. Mesures A/B : `RECOLTOS_GPU_TILE_MB` /
-   `RECOLTOS_GPU_DISCARDABLE_MB` (`0` = défaut Chromium).
+4. **Budgets GPU de Chromium** (`src/main/bootstrap/memory.ts`) : plus de plafond par défaut. Les
+   96 Mo de tuiles / 64 Mo d'images décodées d'abord posés pour la toile mettaient la vue détail en
+   manque de tuiles en Retina (aplats sombres pendant les navigations). Mesures A/B :
+   `RECOLTOS_GPU_TILE_MB` / `RECOLTOS_GPU_DISCARDABLE_MB` (`0` ou absent = défaut Chromium).
 5. **Renderer minifié** (`electron.vite.config.ts`).
 
 ## Grille : défilement, tas, cycles (`tests/perf/grid.spec.ts`)

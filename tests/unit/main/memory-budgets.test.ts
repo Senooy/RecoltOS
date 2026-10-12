@@ -11,14 +11,22 @@ function sink() {
 }
 
 describe('applyMemoryBudgets', () => {
-  it('pose les deux budgets GPU par défaut', () => {
+  it('aucun plafond GPU par défaut (valeurs de Chromium)', () => {
     const s = sink()
     const out = applyMemoryBudgets(s, {})
+    expect(GPU_TILE_MB).toBe(0)
+    expect(GPU_DISCARDABLE_MB).toBe(0)
+    expect(s.calls).toEqual([])
+    expect(out).toEqual({})
+  })
+
+  it('pose les plafonds demandés pour une mesure A/B', () => {
+    const s = sink()
+    applyMemoryBudgets(s, { RECOLTOS_GPU_TILE_MB: '96', RECOLTOS_GPU_DISCARDABLE_MB: '64' })
     expect(s.calls).toEqual([
-      ['force-gpu-mem-available-mb', String(GPU_TILE_MB)],
-      ['force-gpu-mem-discardable-limit-mb', String(GPU_DISCARDABLE_MB)],
+      ['force-gpu-mem-available-mb', '96'],
+      ['force-gpu-mem-discardable-limit-mb', '64'],
     ])
-    expect(out['force-gpu-mem-available-mb']).toBe('96')
   })
 
   it('accepte des valeurs de mesure et `0` pour laisser le défaut de Chromium', () => {
@@ -27,9 +35,9 @@ describe('applyMemoryBudgets', () => {
     expect(s.calls).toEqual([['force-gpu-mem-discardable-limit-mb', '128']])
   })
 
-  it('ignore une valeur invalide', () => {
+  it('ignore une valeur invalide (valeur par défaut : aucun plafond)', () => {
     const s = sink()
     applyMemoryBudgets(s, { RECOLTOS_GPU_TILE_MB: 'beaucoup', RECOLTOS_GPU_DISCARDABLE_MB: '-3' })
-    expect(s.calls.map((c) => c[1])).toEqual([String(GPU_TILE_MB), String(GPU_DISCARDABLE_MB)])
+    expect(s.calls).toEqual([])
   })
 })

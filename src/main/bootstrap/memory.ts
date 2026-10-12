@@ -1,18 +1,19 @@
 /**
- * Budgets mémoire GPU de Chromium. Mesuré sur la toile de 500 nœuds en Retina
- * (`tests/perf/spaces.spec.ts`, `docs/perf.md`) : sans borne, le processus GPU gardait jusqu'à
- * ~750 Mo de textures (tuiles de prérendu et images décodées) après un zoom ou une exploration ;
- * ces deux budgets le ramènent à ~250–400 Mo sans perte de fluidité (60 images/s, p95 ≤ 18 ms).
+ * Budgets mémoire GPU de Chromium : par défaut AUCUN plafond (`0` = valeur de Chromium, qui
+ * s'adapte à la taille de l'écran : ≈ 625 Mo de tuiles pour un écran Retina 3024 × 1890).
  *
- *  - `force-gpu-mem-available-mb` : mémoire des tuiles du compositeur. 96 Mo ≈ 4 écrans Retina
- *    3024 × 1890 : la vue et son prérendu tiennent largement.
- *  - `force-gpu-mem-discardable-limit-mb` : cache GPU des images décodées (jetable).
+ * Un plafond de 96 Mo de tuiles (`force-gpu-mem-available-mb`) et de 64 Mo d'images décodées
+ * (`force-gpu-mem-discardable-limit-mb`) avait été posé pour la toile Spaces. Il ne tenait pas la vue
+ * détail : ambiance plein écran, verre flouté, média et panneau dépassent 96 Mo de tuiles en Retina,
+ * le gestionnaire de tuiles restait en manque de mémoire (`did_oom_on_last_assign`) et le compositeur
+ * dessinait des tuiles absentes, en aplats sombres, à chaque navigation. Ces commutateurs valent
+ * pour tout le processus (impossible de les limiter à une vue) : la fluidité prime.
  *
- * Doit être appelé AVANT `ready`. `RECOLTOS_GPU_TILE_MB` / `RECOLTOS_GPU_DISCARDABLE_MB`
- * remplacent les valeurs (mesures A/B) ; `0` laisse la valeur par défaut de Chromium.
+ * Doit être appelé AVANT `ready`. `RECOLTOS_GPU_TILE_MB` / `RECOLTOS_GPU_DISCARDABLE_MB` posent un
+ * plafond (mesures A/B) ; `0` ou absent laisse la valeur de Chromium.
  */
-export const GPU_TILE_MB = 96
-export const GPU_DISCARDABLE_MB = 64
+export const GPU_TILE_MB = 0
+export const GPU_DISCARDABLE_MB = 0
 
 export interface SwitchSink {
   appendSwitch(name: string, value?: string): void
