@@ -2,6 +2,8 @@
  * Point d'entrée du renderer. Le thème est posé AVANT le premier rendu (couleur de la première
  * image = `backgroundColor` de la fenêtre, PLAN §1.13).
  */
+// Avant tout schéma zod : pas de `new Function` sous la CSP (voir le module).
+import './lib/zod-jitless'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'

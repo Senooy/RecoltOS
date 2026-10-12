@@ -2,6 +2,8 @@
  * Entrée des fenêtres hors écran (`offscreen.html?render=<route>`, ERRATA §B) : sans preload,
  * jamais `window.recolt`. Routes : `tweet-card` (WP-56), `space-stage` (WP-63). Stub WP-00.
  */
+// Avant tout schéma zod : pas de `new Function` sous la CSP (voir le module).
+import './lib/zod-jitless'
 import { StrictMode, Suspense, lazy } from 'react'
 import { createRoot } from 'react-dom/client'
 import './styles/tokens.css'
