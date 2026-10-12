@@ -147,7 +147,11 @@ module.exports = {
     '**/node_modules/sharp/**',
     '**/node_modules/@img/**',
   ],
-  extraResources: [...nativeHost, ...extension],
+  extraResources: [
+    ...nativeHost,
+    ...extension,
+    { from: 'build/locales/fr.lproj/InfoPlist.strings', to: 'fr.lproj/InfoPlist.strings' },
+  ],
   // "Open with RecoltOS": `Alternate` = listed in "Open with" without
   // becoming the default app; explicit `Viewer` (the default is `Editor`).
   fileAssociations: [
@@ -169,7 +173,7 @@ module.exports = {
         'm4v',
         'webm',
       ],
-      name: 'Image ou vidéo',
+      name: 'Image or video',
       role: 'Viewer',
       rank: 'Alternate',
     },
@@ -188,16 +192,17 @@ module.exports = {
     darkModeSupport: true,
     extendInfo: {
       LSMinimumSystemVersion: '13.0',
+      // English by default; French in build/locales/fr.lproj/InfoPlist.strings.
+      CFBundleDevelopmentRegion: 'en',
       NSDesktopFolderUsageDescription:
-        'RecoltOS enregistre tes captures dans ce dossier si tu l’as choisi.',
-      NSDocumentsFolderUsageDescription: 'RecoltOS importe les fichiers que tu lui confies.',
-      NSDownloadsFolderUsageDescription: 'RecoltOS importe les fichiers que tu lui confies.',
-      // Replaces Electron's default English texts: no English text visible.
-      NSCameraUsageDescription: "RecoltOS n'utilise pas la caméra.",
-      NSMicrophoneUsageDescription: "RecoltOS n'utilise pas le micro.",
-      NSAudioCaptureUsageDescription: "RecoltOS n'enregistre pas le son.",
-      NSBluetoothAlwaysUsageDescription: "RecoltOS n'utilise pas le Bluetooth.",
-      NSBluetoothPeripheralUsageDescription: "RecoltOS n'utilise pas le Bluetooth.",
+        'RecoltOS saves your screenshots to this folder if you chose it.',
+      NSDocumentsFolderUsageDescription: 'RecoltOS imports the files you give it.',
+      NSDownloadsFolderUsageDescription: 'RecoltOS imports the files you give it.',
+      NSCameraUsageDescription: 'RecoltOS does not use the camera.',
+      NSMicrophoneUsageDescription: 'RecoltOS does not use the microphone.',
+      NSAudioCaptureUsageDescription: 'RecoltOS does not record audio.',
+      NSBluetoothAlwaysUsageDescription: 'RecoltOS does not use Bluetooth.',
+      NSBluetoothPeripheralUsageDescription: 'RecoltOS does not use Bluetooth.',
     },
   },
 }

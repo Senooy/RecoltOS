@@ -1,0 +1,10 @@
+/* French texts for the macOS permission prompts and document type. */
+"Image or video" = "Image ou vidéo";
+NSDesktopFolderUsageDescription = "RecoltOS enregistre tes captures dans ce dossier si tu l’as choisi.";
+NSDocumentsFolderUsageDescription = "RecoltOS importe les fichiers que tu lui confies.";
+NSDownloadsFolderUsageDescription = "RecoltOS importe les fichiers que tu lui confies.";
+NSCameraUsageDescription = "RecoltOS n’utilise pas la caméra.";
+NSMicrophoneUsageDescription = "RecoltOS n’utilise pas le micro.";
+NSAudioCaptureUsageDescription = "RecoltOS n’enregistre pas le son.";
+NSBluetoothAlwaysUsageDescription = "RecoltOS n’utilise pas le Bluetooth.";
+NSBluetoothPeripheralUsageDescription = "RecoltOS n’utilise pas le Bluetooth.";
