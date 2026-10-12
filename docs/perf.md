@@ -39,11 +39,22 @@ Fluidité (médiane des 3 exécutions ; « pic » = pire image des 3) :
 | Pan à 100 %          | 60 fps, p95 17,4 ms               | 60 fps, p95 17,6 ms                |
 | Zoom à 100 %         | 60 fps, p95 17,5 ms, pic 34 ms    | 60 fps, p95 17,6 ms, pic 17,7 ms   |
 
-Lecture : l'objectif « < 600 Mo pour l'app entière » est atteint en résident sur l'exploration et au retour en
-vue d'ensemble (516 / 500 / 498 Mo) ; à 100 % juste après le zoom, le résident médian reste à 657 Mo (renderer
-≈ 300 Mo résident dont ≈ 100 Mo de code partagé, plancher Electron ≈ 375 Mo) : cible **non tenue à cette étape**,
-voir « Points ouverts ». En empreinte physique (ce que montre le Moniteur d'activité), la toile passe de
-1,0–1,4 Go à 0,43–0,68 Go à toutes les étapes. Aucune perte de fluidité ; le pic de 100 ms au dézoom disparaît.
+Re-mesure sur le code **final** (après les commits WP-70 de la même journée), médiane de 3 :
+
+| Étape                    | Résident (3 exécutions) | Empreinte (3 exécutions) | dont GPU |
+| ------------------------ | ----------------------- | ------------------------ | -------: |
+| Bibliothèque             | 516 / 521 / 567         | 458 / 459 / 563          |      271 |
+| Vue d'ensemble           | 584 / 609 / 620         | 430 / 430 / 450          |      173 |
+| 100 % après pan/zoom     | 630 / 685 / 720         | 583 / 601 / 611          |      254 |
+| Exploration à 150 %      | 644 / 676 / 681         | 633 / 642 / 699          |      383 |
+| Retour en vue d'ensemble | 610 / 630 / 632         | 546 / 551 / 553          |      277 |
+
+Lecture : l'objectif « < 600 Mo pour l'app entière » n'est **pas tenu de façon fiable en résident** : selon
+l'exécution, l'exploration donne 516 à 681 Mo (pire cas avant : 829, M6 : 891). Le résident compte le code
+partagé d'Electron dans chacun des 4 processus (plancher d'une app Electron vide : 304–375 Mo) et varie de
+±100 Mo d'une exécution à l'autre. En **empreinte physique** (ce que montre le Moniteur d'activité), la toile
+passe de 1,0–1,4 Go à 0,43–0,70 Go à toutes les étapes, de façon stable : c'est le gain réel (textures GPU).
+Aucune perte de fluidité ; le pic de 100 ms au dézoom disparaît.
 
 ### Ce qui a changé
 
@@ -163,7 +174,8 @@ pnpm exec tsx --tsconfig tsconfig.node.json scripts/perf-startup.mts --user-data
 
 ## Points ouverts
 
-- Toile à 100 % juste après un zoom : résident médian 657 Mo (> 600). Le reste est le renderer (≈ 300 Mo
+- Résident de la toile encore > 600 Mo dans la plupart des exécutions (100 % : 630–720 ; exploration :
+  516–681). Le reste est le renderer (≈ 300 Mo
   résident, ≈ 220 Mo d'empreinte : Blink, cache d'images décodées côté renderer) ; une pression mémoire simulée
   n'en libère que ≈ 40 Mo. Leviers non retenus : vignettes plus petites (dérivé 400w) pour la vue
   d'ensemble, décodage à l'échelle (Blink ne le fait que pour le JPEG, nos vignettes sont en WebP).
