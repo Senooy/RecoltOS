@@ -9,7 +9,7 @@ import { create } from 'zustand'
 import { NodeContent } from './nodes/NodeContent'
 import { useCamera, useSpace } from './store/spaceStore'
 
-/** Vidéos actives (≤ 3, SPACES §1.4.4), calculées par le viewport en fin de geste. */
+/** Vidéos actives (≤ 2, WP-71 ; SPACES §1.4.4 en prévoyait 3), calculées par le viewport en fin de geste. */
 export const useVideos = create<{ ids: readonly string[] }>()(() => ({ ids: [] }))
 
 /** Paliers du niveau de détail (zoom × densité) : re-rendu seulement au franchissement. */

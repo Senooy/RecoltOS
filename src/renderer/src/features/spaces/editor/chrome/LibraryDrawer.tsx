@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import type { ItemCard } from '../../../../../../shared/dto/items'
 import { fr } from '../../../../i18n/fr'
 import { cn } from '../../../../lib/cn'
+import { lruSet } from '../../../../lib/lru'
 import { cardThumbSrc } from '../../../../lib/media-url'
 import { rpc } from '../../../../lib/rpc'
 import { flattenTree, useCollections } from '../../../../state/collections'
@@ -20,8 +21,9 @@ export const ITEMS_MIME = 'application/x-recoltos-items'
 const COL_W = 150
 const GAP = 8
 
-/** Cartes chargées par le tiroir (glisser → toile sans nouvel aller-retour IPC). */
+/** Cartes chargées par le tiroir (glisser → toile sans nouvel aller-retour IPC), bornées. */
 const cache = new Map<string, ItemCard>()
+const CACHE_MAX = 2_000
 export const cachedCards = (): ReadonlyMap<string, ItemCard> => cache
 
 function heightOf(c: ItemCard): number {
@@ -128,7 +130,7 @@ export function LibraryDrawer({ spaceUuid }: { spaceUuid: string }) {
                 })
               : await rpc('items.list', { scope: 'library', tab: 'all', limit: 200 })
           if (id !== seq.current) return
-          for (const c of r.items) cache.set(c.uuid, c)
+          for (const c of r.items) lruSet(cache, c.uuid, c, CACHE_MAX)
           setItems(r.items)
         }
         void run().catch(() => {

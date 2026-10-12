@@ -1,8 +1,8 @@
 /**
  * Viewport de la toile (SPACES §1.4, §1.5) : caméra appliquée IMPÉRATIVEMENT sur `.space-world`
  * (aucun état React par image), fond à points recalé par variables CSS, culling AABB avec
- * hystérésis (vue + 50 %, recalcul seulement quand la caméra sort du dernier rectangle), ≤ 3 vidéos
- * actives, gestes au pointeur (pan, déplacement avec magnétisme, redimensionnement, rotation,
+ * hystérésis (vue + 50 %, recalcul seulement quand la caméra sort du dernier rectangle ; un nœud
+ * hors du rectangle est démonté, ce qui libère son image), ≤ 2 vidéos actives, gestes au pointeur (pan, déplacement avec magnétisme, redimensionnement, rotation,
  * marquee, création), molette (⌃ = pincement, ⌘ ou réglage = zoom, sinon défilement).
  * `will-change: transform` seulement pendant un geste (texte net après zoom).
  */
@@ -37,7 +37,10 @@ import {
 
 const MOVE_THRESHOLD = 3
 const SETTLE_MS = 150
-const MAX_VIDEOS = 3
+/** Lecteurs vidéo actifs au plus (WP-71 : 1–2) ; les autres vidéos montrent leur affiche. */
+const MAX_VIDEOS = 2
+/** Côté à l'écran (px CSS) à partir duquel une vidéo non survolée est jugée « zoomée ». */
+const VIDEO_ZOOMED_PX = 480
 
 type Gesture =
   | { kind: 'pan'; start: Vec; cam0: Camera; moved: boolean }
@@ -202,7 +205,8 @@ export function Viewport({
     return out.map((n) => n.uuid)
   }, [nodes, cull, selection])
 
-  // Vidéos actives : visibles, zoom ≥ 0,2, survol / sélection d'abord, puis plus grande surface.
+  // Vidéos actives : à l'écran ET survolées, sélectionnées ou grandes à l'écran (zoomées) ; survol /
+  // sélection d'abord, puis plus grande surface ; ≤ MAX_VIDEOS. Les autres gardent leur affiche.
   const settledZoom = useCamera((s) => s.settled.zoom)
   useEffect(() => {
     if (settledZoom < 0.2) {
@@ -222,7 +226,13 @@ export function Viewport({
         return false
       })
     const vr = viewRect(useCamera.getState().settled, useCamera.getState().view)
-    const onScreen = vids.filter((n) => rectsIntersect(aabb(n), vr))
+    const onScreen = vids.filter(
+      (n) =>
+        rectsIntersect(aabb(n), vr) &&
+        (n.uuid === hoverId ||
+          sel.has(n.uuid) ||
+          Math.max(n.width, n.height) * settledZoom >= VIDEO_ZOOMED_PX),
+    )
     onScreen.sort((a, b) => {
       const pa = a.uuid === hoverId || sel.has(a.uuid) ? 1 : 0
       const pb = b.uuid === hoverId || sel.has(b.uuid) ? 1 : 0

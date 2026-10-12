@@ -4,12 +4,15 @@
  */
 import { app, protocol } from 'electron'
 import { getMainWindow } from '../windows/main-window'
+import { applyMemoryBudgets } from './memory'
 import { filesFromArgv, queueOpenFiles } from './open-files'
 
 /** Doit précéder `app.whenReady()` (ARCHI §2.5). Le handler est posé par `protocol/init.ts` (WP-05). */
 export const RECOLT_SCHEME = 'recolt'
 
 export function preReady(): { gotLock: boolean } {
+  // Budgets mémoire GPU (WP-71, `bootstrap/memory.ts`) : commutateurs Chromium, avant `ready`.
+  applyMemoryBudgets(app.commandLine)
   protocol.registerSchemesAsPrivileged([
     {
       scheme: RECOLT_SCHEME,

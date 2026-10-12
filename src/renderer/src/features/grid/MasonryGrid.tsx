@@ -22,6 +22,7 @@ import type { ItemCard } from '../../../../shared/dto/items'
 import { Menu, isReducedMotion } from '../../components/ui'
 import { on } from '../../lib/bus'
 import { fr } from '../../i18n/fr'
+import { lruSet } from '../../lib/lru'
 import { startCardDrag } from '../../lib/dnd'
 import { askConfirm } from '../../state/dialogs'
 import { useUi } from '../../state/ui'
@@ -59,8 +60,9 @@ function useWidth(ref: RefObject<HTMLElement | null>): number {
   return w
 }
 
-/** Hauteurs mesurées des posts texte, par largeur de colonne (`${uuid}:${colW}`). */
+/** Hauteurs mesurées des posts texte, par largeur de colonne (`${uuid}:${colW}`), bornées. */
 const tweetHeightCache = new Map<string, number>()
+const TWEET_HEIGHT_CACHE_MAX = 20_000
 
 function useTweetHeights(items: readonly ItemCard[], colW: number) {
   const tweets = useMemo(() => items.filter((i) => i.kind === 'tweet'), [items])
@@ -92,7 +94,13 @@ function useTweetHeights(items: readonly ItemCard[], colW: number) {
     if (!layer || !fontsReady || missingKey === '') return
     for (const el of Array.from(layer.children) as HTMLElement[]) {
       const u = el.dataset.measure
-      if (u) tweetHeightCache.set(`${u}:${colW.toFixed(1)}`, el.getBoundingClientRect().height)
+      if (u)
+        lruSet(
+          tweetHeightCache,
+          `${u}:${colW.toFixed(1)}`,
+          el.getBoundingClientRect().height,
+          TWEET_HEIGHT_CACHE_MAX,
+        )
     }
     bump((n) => n + 1)
   }, [missingKey, fontsReady, colW])

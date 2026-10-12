@@ -119,6 +119,9 @@ export default defineConfig({
     server: { watch: { ignored: watchIgnored } },
     build: {
       outDir: resolve(root, 'out/renderer'),
+      // WP-71 : code minifié (electron-vite ne minifie pas par défaut) : moins à analyser au
+      // démarrage et moins de mémoire V8 (source et bytecode) dans le renderer.
+      minify: true,
       rollupOptions: {
         input: {
           index: resolve(root, 'src/renderer/index.html'),

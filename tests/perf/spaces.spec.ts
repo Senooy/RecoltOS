@@ -1,12 +1,15 @@
 /**
  * Spikes Spaces mesurés (WP-61 S1, WP-63 S5) — projet Playwright `perf` (hors `verify`).
- *   S1 : 500 nœuds (480 images, 20 vidéos dont ≤ 3 actives), pan / zoom synthétiques à la molette
+ *   S1 : 500 nœuds (480 images, 20 vidéos dont ≤ 2 actives), pan / zoom synthétiques à la molette
  *        pendant 2 × 2 s, durée des images (rAF), mémoire de l'app, `will-change` retiré au repos.
+ *        WP-71 : mémoire par type de processus à chaque étape (bibliothèque, vue d'ensemble, 100 %,
+ *        exploration de 12 arrêts à 150 %, retour en vue d'ensemble) et variantes d'images montées.
  *   S5 : export PNG d'un monde ~4 000 × 3 000 à 2× (20 images, 1 post, 1 vidéo, notes) par la
  *        fenêtre stage : durée, dimensions, pixel de référence, couture entre tuiles.
  * Bibliothèque : copie APFS de la vraie bibliothèque si `RECOLTOS_S1_USERDATA` est défini (ex.
  * `.tmp/m6-s1`, clone de `.tmp/m3-real`), sinon bibliothèque de démo. Rapport : `.tmp/m6-perf.json`.
  */
+import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -87,11 +90,37 @@ function itemNode(c: Card, i: number, x: number, y: number) {
   }
 }
 
+/** Empreinte physique (Mo) de chaque processus, lue par `top` (colonne MEM). */
+function footprintMb(pids: number[]): Map<number, number> {
+  const out = execFileSync(
+    'top',
+    ['-l', '1', '-stats', 'pid,mem', ...pids.flatMap((p) => ['-pid', String(p)])],
+    {
+      encoding: 'utf8',
+    },
+  )
+  const unit: Record<string, number> = { B: 1 / 2 ** 20, K: 1 / 1024, M: 1, G: 1024 }
+  const mb = new Map<number, number>()
+  for (const line of out.split('\n')) {
+    const m = /^\s*(\d+)\s+([\d.]+)([BKMG])\+?-?\s*$/.exec(line)
+    if (m && pids.includes(Number(m[1]))) mb.set(Number(m[1]), Number(m[2]) * unit[m[3]!]!)
+  }
+  return mb
+}
+
 test.describe.configure({ mode: 'serial' })
 const dsf = process.env.RECOLTOS_S1_DSF === '2' ? 2 : 1
 test.use(
   userData
-    ? { appLaunch: { userData, windowSize: '1512x945', deviceScaleFactor: dsf } }
+    ? {
+        appLaunch: {
+          userData,
+          windowSize: '1512x945',
+          deviceScaleFactor: dsf,
+          // Commutateurs Chromium à essayer (mesure seulement), séparés par des espaces.
+          args: process.env.RECOLTOS_S1_ARGS?.split(' ').filter(Boolean),
+        },
+      }
     : {
         demoLibrary: { count: 60, collections: 2 },
         appLaunch: { windowSize: '1512x945', deviceScaleFactor: dsf },
@@ -106,6 +135,48 @@ test.afterAll(() => {
 test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
   test.setTimeout(240_000)
   await expect(page.locator(t('app-shell'))).toBeVisible()
+  // Mémoire par type de processus (Mo) : `workingSetSize` (résident, compte le code partagé dans
+  // chaque processus ; métrique du spike M6) et empreinte physique (`top`, colonne « Mémoire » du
+  // Moniteur d'activité, plus stable), tas JS et variantes d'images montées.
+  const memory = async () => {
+    const metrics = await app.evaluate(({ app: a }) =>
+      a.getAppMetrics().map((m) => ({ type: m.type, pid: m.pid, kb: m.memory.workingSetSize })),
+    )
+    const out: Record<string, number> = { processes: metrics.length }
+    for (const m of metrics) out[m.type] = (out[m.type] ?? 0) + m.kb
+    for (const k of Object.keys(out)) if (k !== 'processes') out[k] = Math.round(out[k]! / 1024)
+    out.total = Math.round(metrics.reduce((s, m) => s + m.kb, 0) / 1024)
+    const fp = footprintMb(metrics.map((m) => m.pid))
+    out.footprint = Math.round([...fp.values()].reduce((a, b) => a + b, 0))
+    for (const m of metrics)
+      out[`fp${m.type}`] = Math.round((out[`fp${m.type}`] ?? 0) + (fp.get(m.pid) ?? 0))
+    const mainHeap = await app.evaluate(() => process.memoryUsage().heapUsed)
+    out.mainHeap = Math.round(mainHeap / 2 ** 20)
+    out.rendererHeap = await page.evaluate(() =>
+      Math.round(
+        (performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize /
+          2 ** 20,
+      ),
+    )
+    return out
+  }
+  const images = () =>
+    page.evaluate(() => {
+      const imgs = [
+        ...document.querySelectorAll<HTMLImageElement>('[data-testid="space-world"] img'),
+      ]
+      const src = (i: HTMLImageElement) => i.currentSrc || i.getAttribute('src') || ''
+      return {
+        mounted: imgs.length,
+        thumbs: imgs.filter((i) => src(i).includes('/thumbs/')).length,
+        large: imgs.filter((i) => src(i).includes('/large/')).length,
+        other: imgs.filter((i) => src(i) && !/\/(thumbs|large)\//.test(src(i))).length,
+        videos: document.querySelectorAll('[data-testid="space-world"] video').length,
+      }
+    })
+  // Bibliothèque (grille) avant d'ouvrir la toile : socle de l'app.
+  await page.waitForTimeout(3000)
+  const libraryIdle = { memory: await memory() }
   const { imgs, vids, total } = await pickItems(page, 480, 20)
   report.library = {
     items: total,
@@ -170,12 +241,40 @@ test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
   }
   // Vue d'ensemble (toutes les images visibles) puis 100 %.
   await page.keyboard.press('Shift+Digit1')
-  await page.waitForTimeout(1200)
+  await page.waitForTimeout(3000)
+  const overviewIdle = { memory: await memory(), images: await images() }
   const overview = { pan: stats(await run('pan', 2000)), zoom: stats(await run('zoom', 2000)) }
   await page.keyboard.press('Meta+Digit0')
   await page.waitForTimeout(1200)
   const z100 = { pan: stats(await run('pan', 2000)), zoom: stats(await run('zoom', 2000)) }
-  await page.waitForTimeout(600)
+  await page.waitForTimeout(3000)
+  const z100Idle = { memory: await memory(), images: await images() }
+  // Exploration : 12 arrêts à 150 % répartis sur la toile, puis retour à la vue d'ensemble
+  // (accumulation d'images décodées ou gardées hors écran).
+  for (let k = 0; k < 12; k++) {
+    await page.evaluate((i) => {
+      const cam = (
+        window as unknown as {
+          __recoltSpaces: {
+            useCamera: {
+              setState(p: unknown): void
+              getState(): { view: { w: number; h: number } }
+            }
+          }
+        }
+      ).__recoltSpaces.useCamera
+      const { view } = cam.getState()
+      const wx = ((i % 4) + 0.5) * (9000 / 4)
+      const wy = (Math.floor(i / 4) + 0.5) * (13600 / 3)
+      const zoom = 1.5
+      cam.setState({ camera: { zoom, x: view.w / 2 - wx * zoom, y: view.h / 2 - wy * zoom } })
+    }, k)
+    await page.waitForTimeout(900)
+  }
+  const tourIdle = { memory: await memory(), images: await images() }
+  await page.keyboard.press('Shift+Digit1')
+  await page.waitForTimeout(3000)
+  const afterTour = { memory: await memory(), images: await images() }
   const idle = await page.evaluate(() => ({
     moving: document.querySelector('[data-testid="space-world"]')!.classList.contains('is-moving'),
     mounted: document.querySelectorAll('[data-testid="space-world"] .space-node').length,
@@ -200,10 +299,15 @@ test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
     zoom100: z100,
     idle,
     memory: { totalMb, rendererMb },
+    libraryIdle,
+    overviewIdle,
+    z100Idle,
+    tourIdle,
+    afterTour,
   }
   console.warn('S1', JSON.stringify(report.s1))
   expect(idle.moving).toBe(false)
-  expect(idle.videos).toBeLessThanOrEqual(3)
+  expect(idle.videos).toBeLessThanOrEqual(2)
 })
 
 test('S5 : export PNG 4 000 × 3 000 à 2×, tuiles sans couture', async ({ app, page }) => {

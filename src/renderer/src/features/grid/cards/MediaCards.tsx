@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import type { ItemCard, Slide } from '../../../../../shared/dto/items'
 import { MediaBadge } from '../../../components/ui'
 import { fr } from '../../../i18n/fr'
+import { lruSet } from '../../../lib/lru'
 import { mediaSrc } from '../../../lib/media-url'
 import { releaseDetached } from '../../../lib/video-guard'
 import { rpc } from '../../../lib/rpc'
@@ -133,7 +134,9 @@ export function VideoCard({
   )
 }
 
+/** Diapositives des carrousels déjà parcourus (borné : 300 carrousels). */
 const slideCache = new Map<string, Slide[]>()
+const SLIDE_CACHE_MAX = 300
 
 export function CarouselCard({ card, width }: { card: ItemCard; width: number }) {
   const [index, setIndex] = useState(0)
@@ -147,7 +150,7 @@ export function CarouselCard({ card, width }: { card: ItemCard; width: number })
       try {
         const d = await rpc('items.get', { uuid: card.uuid })
         list = d.slides
-        slideCache.set(card.uuid, list)
+        lruSet(slideCache, card.uuid, list, SLIDE_CACHE_MAX)
         setSlides(list)
       } catch {
         return

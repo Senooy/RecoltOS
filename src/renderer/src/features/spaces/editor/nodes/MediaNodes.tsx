@@ -1,16 +1,22 @@
 /**
  * Nœuds média (SPACES §1.4.4, DESIGN §3.11) : `ItemNode` réutilise les cartes de la bibliothèque
- * (post via `TweetCard` rendu à 360 px puis mis à l'échelle, page via `PageCard`, image via
- * `CardImage` dont le `srcset` choisit 800w / 1440w selon la taille À L'ÉCRAN), `ImageNode` pour
- * les assets (vignette ou original selon la taille à l'écran). Vidéos : vignette ; lecteur muet
- * seulement pour les ≤ 3 vidéos actives. Contenu inerte (`pointer-events: none`).
+ * (post via `TweetCard` rendu à 360 px puis mis à l'échelle, page via `PageCard`), image via
+ * `SpaceImage` : variante choisie EXPLICITEMENT (pas de `srcset`) selon la largeur en pixels
+ * physiques (`node.width × palier(zoom × DPR)`) : vignette 800w tant qu'elle suffit, `large`
+ * 1440w au-delà, jamais l'original (WP-71). Un `srcset` gardait la 1440w en cache une fois
+ * chargée, même revenu en vue d'ensemble. `ImageNode` pour les assets (vignette, original
+ * seulement quand la vignette ne suffit plus : les assets n'ont pas de variante 1440w).
+ * Vidéos : affiche ; lecteur muet seulement pour les ≤ 2 vidéos actives (survolées,
+ * sélectionnées ou grandes à l'écran), libéré au démontage. Contenu inerte (`pointer-events: none`).
  */
 import type { ItemCard } from '../../../../../../shared/dto/items'
 import type { SpaceNode } from '../../../../../../shared/spaces-schema'
+import { useState, type SyntheticEvent } from 'react'
 import { MediaBadge } from '../../../../components/ui'
 import { fr } from '../../../../i18n/fr'
 import { mediaSrc } from '../../../../lib/media-url'
-import { CardImage, PageCard } from '../../../grid/cards/MediaCards'
+import { releaseOnUnmount } from '../../../../lib/video-guard'
+import { PageCard } from '../../../grid/cards/MediaCards'
 import { cardKind } from '../../../grid/cards/SaveCard'
 import { TweetCard } from '../../../grid/cards/TweetCard'
 
@@ -18,6 +24,63 @@ import { TweetCard } from '../../../grid/cards/TweetCard'
 export const POST_RENDER_WIDTH = 360
 /** Côté des vignettes d'assets (`makeThumb` 800 px). */
 export const THUMB_MAX_EDGE = 800
+/** Largeur des vignettes dérivées (`thumbs/` 800w). */
+export const THUMB_W = 800
+/**
+ * Agrandissement toléré de la vignette avant de passer à `large` (1440w) : 1,2 × 800 = 960 px
+ * physiques, soit un nœud de 320 px jusqu'à 150 % en Retina. Invisible sur une photo, et c'est le
+ * palier du niveau de détail juste au-dessus de 100 % (zoom × DPR = 3 → 960 px).
+ */
+export const THUMB_UPSCALE = 1.2
+
+/**
+ * Variante d'image d'un nœud de la toile pour `devicePx` pixels physiques de large. La vignette
+ * n'est une vraie 800w que si elle est dérivée (`thumbs/….webp`) ; sinon (repli `legacyThumb`,
+ * `display`…) on prend `large` s'il existe.
+ */
+export function pickSpaceVariant(
+  thumb: string | undefined,
+  large: string | undefined,
+  devicePx: number,
+): string | undefined {
+  const derived = Boolean(thumb?.includes('/thumbs/') && thumb.includes('.webp'))
+  if (!large) return thumb
+  if (!thumb || !derived) return large
+  return devicePx <= THUMB_W * THUMB_UPSCALE + 0.5 ? thumb : large
+}
+
+/** Image d'un nœud `item` : `src` explicite (voir `pickSpaceVariant`), décodage asynchrone. */
+function SpaceImage({
+  thumbUrl,
+  largeUrl,
+  devicePx,
+  className,
+}: {
+  thumbUrl: string | null
+  largeUrl: string | null
+  devicePx: number
+  className: string
+}) {
+  const [loaded, setLoaded] = useState(false)
+  const src = pickSpaceVariant(mediaSrc(thumbUrl), mediaSrc(largeUrl), devicePx)
+  if (!src) return null
+  return (
+    <img
+      src={src}
+      alt=""
+      crossOrigin="anonymous"
+      decoding="async"
+      loading="lazy"
+      draggable={false}
+      data-loaded={loaded ? '1' : '0'}
+      className={`card-img ${className}`}
+      onLoad={() => setLoaded(true)}
+      onError={(e: SyntheticEvent<HTMLImageElement>) => {
+        e.currentTarget.style.visibility = 'hidden'
+      }}
+    />
+  )
+}
 
 type ItemN = Extract<SpaceNode, { type: 'item' }>
 type ImageN = Extract<SpaceNode, { type: 'image' }>
@@ -72,14 +135,15 @@ export function ItemNodeView({
       className="sp-media relative"
       style={{ borderRadius: radius, background: card.dominant ?? 'var(--skeleton)' }}
     >
-      <CardImage
+      <SpaceImage
         thumbUrl={kind === 'video' ? (card.thumbUrl ?? card.posterUrl) : card.thumbUrl}
         largeUrl={card.largeUrl}
-        width={node.width * screenScale}
+        devicePx={node.width * screenScale}
         className={`h-full w-full ${fit}`}
       />
       {videoActive && preview ? (
         <video
+          ref={releaseOnUnmount}
           src={preview}
           muted
           loop
@@ -128,6 +192,7 @@ export function ImageNodeView({
       ) : null}
       {video && videoActive && full ? (
         <video
+          ref={releaseOnUnmount}
           src={full}
           muted
           loop
