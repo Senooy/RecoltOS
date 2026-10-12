@@ -378,7 +378,7 @@ export default function SearchPage() {
       aria-label={fr.nav.search}
     >
       <div className="mx-auto w-full max-w-[700px] px-0 pt-7">
-        <div className="search-field relative flex h-14 items-center rounded-xl border border-border bg-surface shadow-[0_1px_2px_rgba(0,0,0,.03)] transition-[border-color,box-shadow] focus-within:border-border-strong focus-within:shadow-[0_0_0_3px_rgba(0,0,0,.04)]">
+        <div className="search-field relative flex h-14 items-center rounded-xl border border-border bg-surface shadow-[var(--shadow-field)] transition-[border-color,box-shadow] focus-within:border-border-strong focus-within:shadow-[0_0_0_3px_rgba(0,0,0,.04)]">
           <Search
             size={18}
             strokeWidth={1.75}

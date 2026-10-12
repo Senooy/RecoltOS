@@ -59,8 +59,10 @@ export function TweetCard({
     <article
       data-tweet=""
       className={cn(
-        'tweet-card relative flex flex-col rounded-md border px-4 pb-[18px] pt-4 text-left',
-        variant === 'light' ? 'border-border-subtle bg-surface text-fg' : 'tweet-overlay',
+        'tweet-card relative flex flex-col rounded-md border px-[14px] pb-[14px] pt-[13px] text-left',
+        variant === 'light'
+          ? 'border-border-subtle bg-surface text-fg'
+          : 'tweet-overlay light-island',
         variant === 'cover' && 'w-[300px]',
         detail && 'tweet-detail w-[560px] select-text',
         className,
@@ -75,19 +77,23 @@ export function TweetCard({
           size={36}
         />
         <div className="min-w-0">
-          <div className="truncate text-[15px] font-semibold leading-5">{name}</div>
+          <div className="truncate text-[14px] font-semibold leading-[18px]">{name}</div>
           {handle ? (
-            <div className="truncate text-[14px] leading-[18px] text-fg-social">@{handle}</div>
+            <div className="truncate text-[13px] leading-[18px] text-fg-social">@{handle}</div>
           ) : null}
         </div>
       </header>
-      <span className="absolute right-4 top-4" data-testid="source-glyph" data-source={card.source}>
+      <span
+        className="absolute right-[14px] top-[13px]"
+        data-testid="source-glyph"
+        data-source={card.source}
+      >
         <SourceGlyph source={card.source} />
       </span>
       {text ? (
         <p
           className={cn(
-            'mt-[14px] whitespace-pre-wrap break-words text-[15px] leading-[21px]',
+            'tweet-text mt-[10px] whitespace-pre-wrap break-words pr-1',
             !detail && 'tweet-body',
           )}
         >
@@ -98,7 +104,7 @@ export function TweetCard({
       {thread.map((t, i) => (
         <p
           key={i}
-          className="mt-3 whitespace-pre-wrap break-words border-t border-[#ededed] pt-3 text-[15px] leading-[21px]"
+          className="tweet-text mt-3 whitespace-pre-wrap break-words border-t border-border-subtle pt-3"
         >
           {t.text}
         </p>

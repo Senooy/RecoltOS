@@ -56,7 +56,7 @@ export function AppearanceSection() {
                   update({ defaultColumns })
                 }}
               />
-              <span className="w-4 text-right text-small tnum">{prefs.defaultColumns}</span>
+              <span className="w-4 text-right text-[11.5px] tnum">{prefs.defaultColumns}</span>
             </div>
           }
         />
@@ -65,7 +65,7 @@ export function AppearanceSection() {
           control={
             <select
               aria-label={fr.settings.appearance.defaultSort}
-              className="h-[34px] rounded-[10px] border border-[#e9e9e9] bg-bg px-3 text-ui dark:border-border"
+              className="h-[34px] rounded-[10px] border border-[var(--set-field-border)] bg-[var(--set-field-bg)] px-3 text-[12.5px]"
               value={prefs.defaultSort}
               onChange={(e) => update({ defaultSort: e.target.value as SortMode })}
             >

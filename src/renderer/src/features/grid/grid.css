@@ -31,9 +31,14 @@
     opacity: 0;
   }
 }
+/* Texte des posts : mesuré sur c7j4tx (k = 1) et uqre2k (k = 1,072), Geist ≈ 14,3 px, pas de 20,5 pt. */
+.tweet-text {
+  font-size: 14.3px;
+  line-height: 20.5px;
+}
 .tweet-body {
   display: -webkit-box;
-  -webkit-line-clamp: 8;
+  -webkit-line-clamp: 7;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

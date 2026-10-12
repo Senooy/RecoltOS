@@ -92,7 +92,7 @@ export function ShortcutRecorder() {
         }}
       >
         {recording ? (
-          <span className="flex h-[22px] items-center rounded-md border border-dashed border-[var(--accent-blue)] px-2 text-[12px] text-fg-muted">
+          <span className="flex h-[22px] items-center rounded-md border border-dashed border-[var(--accent-blue)] px-2 text-[11px] text-fg-muted">
             {fr.captureUi.recording}
           </span>
         ) : (
@@ -103,11 +103,11 @@ export function ShortcutRecorder() {
           ))
         )}
       </button>
-      <p className="mt-[6px] text-[12.5px] text-[#959595]">
+      <p className="mt-[6px] text-[11px] text-[var(--set-help)]">
         {recording ? fr.settings.capture.recordHint : fr.captureUi.recordHelp}
       </p>
       {error ? (
-        <p className="mt-1 text-[12.5px] text-danger" data-testid="shortcut-error" role="alert">
+        <p className="mt-1 text-[11px] text-danger" data-testid="shortcut-error" role="alert">
           {error}
         </p>
       ) : null}

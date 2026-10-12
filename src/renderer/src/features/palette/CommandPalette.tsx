@@ -192,7 +192,7 @@ export default function CommandPalette() {
             onKeyDown={onKeyDown}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="flex h-[52px] shrink-0 items-center gap-3 border-b border-[rgba(0,0,0,.06)] px-4 dark:border-[rgba(255,255,255,.08)]">
+            <div className="flex h-[52px] shrink-0 items-center gap-3 border-b border-[var(--palette-rule)] px-4">
               <Search size={16} strokeWidth={2} className="shrink-0 text-fg-subtle" />
               <Command.Input
                 autoFocus
@@ -200,7 +200,7 @@ export default function CommandPalette() {
                 value={search}
                 onValueChange={setSearch}
                 placeholder={fr.palette.placeholder}
-                className="h-full min-w-0 flex-1 bg-transparent text-[18px] leading-6 text-fg outline-none placeholder:text-[#848484] focus-visible:outline-none"
+                className="h-full min-w-0 flex-1 bg-transparent text-[18px] leading-6 text-fg outline-none placeholder:text-[var(--palette-placeholder)] focus-visible:outline-none"
               />
               <span className="palette-kbd">{fr.paletteUi.escape}</span>
             </div>
@@ -304,7 +304,7 @@ export default function CommandPalette() {
             </Command.List>
             <div
               data-testid="palette-footer"
-              className="flex h-8 shrink-0 items-center gap-4 border-t border-[rgba(0,0,0,.06)] px-[14px] text-[11.5px] text-[#9b9b9b] dark:border-[rgba(255,255,255,.08)]"
+              className="flex h-8 shrink-0 items-center gap-4 border-t border-[var(--palette-rule)] px-[14px] text-[11.5px] text-[var(--palette-hint)]"
             >
               <span className="flex items-center gap-1.5">
                 <span className="palette-kbd">↑↓</span>

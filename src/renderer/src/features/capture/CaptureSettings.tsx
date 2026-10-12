@@ -35,12 +35,16 @@ export function CaptureSettings() {
   return (
     <div data-testid="capture-settings">
       <SettingsTitle description={fr.captureUi.desc}>{fr.settings.nav.capture}</SettingsTitle>
-      <div className="mt-[9px] text-[12.5px] text-[#969696]">{fr.settings.capture.shortcut}</div>
+      <div className="mt-[9px] text-[11px] text-[var(--set-label)]">
+        {fr.settings.capture.shortcut}
+      </div>
       <div className="mt-[2px]">
         <ShortcutRecorder />
       </div>
       <div className="capture-rule mt-[18px]" />
-      <div className="mt-[18px] text-[12.5px] text-[#969696]">{fr.settings.capture.dropFolder}</div>
+      <div className="mt-[18px] text-[11px] text-[var(--set-label)]">
+        {fr.settings.capture.dropFolder}
+      </div>
       <div className="mt-[5px] flex items-center gap-2.5">
         <input
           readOnly
@@ -70,11 +74,11 @@ export function CaptureSettings() {
           {fr.settings.capture.clear}
         </Button>
       </div>
-      <p className="mt-[10px] max-w-[480px] text-[12.5px] text-[#959595]">
+      <p className="mt-[10px] max-w-[480px] text-[11px] text-[var(--set-help)]">
         {fr.settings.capture.dropHint}
       </p>
       {status?.lastDropError ? (
-        <p className="mt-1 text-[12.5px] text-danger">
+        <p className="mt-1 text-[11px] text-danger">
           {fr.captureUi.dropError(status.lastDropError)}
         </p>
       ) : null}
@@ -128,9 +132,9 @@ export function CaptureSettings() {
         label={
           <span className="flex items-center gap-2" data-testid="permission-status">
             {status?.access === 'granted' ? (
-              <CheckCircle2 size={15} className="text-[#28a745]" />
+              <CheckCircle2 size={15} className="text-[var(--tone-ok)]" />
             ) : (
-              <CircleAlert size={15} className="text-[#d97706]" />
+              <CircleAlert size={15} className="text-[var(--tone-caution)]" />
             )}
             {fr.captureUi.permission} :{' '}
             {status?.access === 'granted' ? fr.captureUi.granted : fr.captureUi.denied}

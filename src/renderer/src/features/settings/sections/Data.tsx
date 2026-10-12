@@ -139,25 +139,29 @@ export function DataSection() {
             </Button>
           }
         />
-        <div className="mt-[18px] text-[12.5px] text-[#969696]">
+        <div className="mt-[18px] text-[11px] text-[var(--set-label)]">
           {fr.settingsMoreUi.snapshotsGroup}
         </div>
-        <div className="mt-1.5 overflow-hidden rounded-[10px] border border-[#ececec] dark:border-border">
+        <div className="mt-1.5 overflow-hidden rounded-[10px] border border-[var(--set-rule)]">
           {snapshots.length === 0 ? (
-            <p className="px-4 py-3 text-small text-fg-faint">{fr.settingsMoreUi.snapshotsEmpty}</p>
+            <p className="px-4 py-3 text-[11.5px] text-fg-faint">
+              {fr.settingsMoreUi.snapshotsEmpty}
+            </p>
           ) : (
             snapshots.slice(0, 50).map((s) => (
               <div
                 key={s.name}
                 data-testid="snapshot-row"
                 data-name={s.name}
-                className="flex h-11 items-center gap-3 border-b border-[#ececec] px-4 last:border-b-0 dark:border-border-subtle"
+                className="flex h-11 items-center gap-3 border-b border-[var(--set-rule)] px-4 last:border-b-0"
               >
-                <span className="text-[13.5px] text-fg tnum">
+                <span className="text-[12px] text-fg tnum">
                   {dateShort(s.createdAt)} {time(s.createdAt)}
                 </span>
-                <span className="text-[12.5px] text-[#959595]">{reasonLabel(s.reason)}</span>
-                <span className="ml-auto text-[12.5px] text-[#959595] tnum">{bytes(s.bytes)}</span>
+                <span className="text-[11px] text-[var(--set-help)]">{reasonLabel(s.reason)}</span>
+                <span className="ml-auto text-[11px] text-[var(--set-help)] tnum">
+                  {bytes(s.bytes)}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"

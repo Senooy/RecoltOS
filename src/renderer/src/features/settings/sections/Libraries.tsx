@@ -51,14 +51,14 @@ function LibrariesList() {
           data-testid="library-row"
         >
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 text-[14.5px] font-medium">
+            <div className="flex items-center gap-2 text-[13px] font-medium">
               {l.name}
               {l.id === active ? (
                 <Check size={14} className="text-fg-subtle" aria-label={fr.settingsUi.active} />
               ) : null}
             </div>
-            <div className="truncate font-mono text-[12px] text-fg-subtle">{l.path ?? l.id}</div>
-            <div className="text-[12.5px] text-[#959595]">{fr.count.items(l.itemCount)}</div>
+            <div className="truncate font-mono text-[11px] text-fg-subtle">{l.path ?? l.id}</div>
+            <div className="text-[11px] text-[var(--set-help)]">{fr.count.items(l.itemCount)}</div>
           </div>
           {l.id !== active ? (
             <Button
@@ -116,7 +116,7 @@ function Check2({
   children: string
 }) {
   return (
-    <label className="flex cursor-default items-center gap-2 py-1 text-[13.5px]">
+    <label className="flex cursor-default items-center gap-2 py-1 text-[12px]">
       <input
         type="checkbox"
         className="h-3.5 w-3.5 accent-[var(--accent)]"
@@ -221,25 +221,25 @@ export function ImportPanel() {
   return (
     <section
       data-testid="import-panel"
-      className="mt-6 rounded-[10px] border border-[#e3e3e3] bg-surface-info px-4 py-3 dark:border-border"
+      className="mt-6 rounded-[10px] border border-[var(--set-box-border)] bg-surface-info px-4 py-3"
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-[14.5px] font-semibold">{fr.settings.libraries.importTitle}</div>
-          <p className="mt-0.5 text-[12.5px] text-fg-muted">{fr.settings.libraries.importBody}</p>
+          <div className="text-[13px] font-semibold">{fr.settings.libraries.importTitle}</div>
+          <p className="mt-0.5 text-[11px] text-fg-muted">{fr.settings.libraries.importBody}</p>
         </div>
       </div>
 
       {detecting && !detect ? (
-        <p className="mt-3 text-small text-fg-muted">{fr.importUi.detecting}</p>
+        <p className="mt-3 text-[11.5px] text-fg-muted">{fr.importUi.detecting}</p>
       ) : null}
       {detect && !detect.found ? (
-        <p className="mt-3 text-small text-fg-muted">{fr.importUi.notFound}</p>
+        <p className="mt-3 text-[11.5px] text-fg-muted">{fr.importUi.notFound}</p>
       ) : null}
 
       {detect?.found && c ? (
         <div
-          className="mt-3 rounded-lg border border-border bg-bg px-3 py-2.5 text-small"
+          className="mt-3 rounded-lg border border-border bg-bg px-3 py-2.5 text-[11.5px]"
           data-testid="import-detect"
         >
           <div className="font-medium">{fr.importUi.found(detect.libraryName ?? 'Library')}</div>
@@ -290,7 +290,7 @@ export function ImportPanel() {
               {`${fr.importUi.advanced} : ${fr.importUi.ignoreTombstones}`}
             </Check2>
           </div>
-          <div className="mt-2 flex items-center gap-3 text-[13.5px]">
+          <div className="mt-2 flex items-center gap-3 text-[12px]">
             <span className="text-fg-muted">{fr.importUi.target}</span>
             <label className="flex items-center gap-1.5">
               <input
@@ -312,7 +312,10 @@ export function ImportPanel() {
             </label>
           </div>
           {detect.running ? (
-            <div className="mt-3 flex items-center gap-3 text-small" data-testid="import-running">
+            <div
+              className="mt-3 flex items-center gap-3 text-[11.5px]"
+              data-testid="import-running"
+            >
               <span className="text-danger">{fr.importUi.running}</span>
               <Button size="sm" variant="secondary" onClick={runDetect}>
                 {fr.importUi.retry}
@@ -340,7 +343,7 @@ export function ImportPanel() {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="mt-1.5 flex items-center justify-between text-small text-fg-muted">
+          <div className="mt-1.5 flex items-center justify-between text-[11.5px] text-fg-muted">
             <span className="tnum">
               {progress && progress.total > 0
                 ? fr.settings.libraries.importing(progress.done, progress.total, phaseLabel)
@@ -358,7 +361,7 @@ export function ImportPanel() {
       ) : null}
 
       {report && report.state === 'done' ? (
-        <div className="mt-3 text-small" data-testid="import-summary">
+        <div className="mt-3 text-[11.5px]" data-testid="import-summary">
           <div className="font-medium">{fr.importUi.doneTitle}</div>
           <div className="text-fg-muted">
             {fr.importUi.counts(
@@ -401,7 +404,7 @@ export function ImportPanel() {
             </button>
           </div>
           {details === 'duplicates' ? (
-            <ul className="select-text mt-2 max-h-32 overflow-y-auto rounded-md border border-border bg-bg p-2 font-mono text-[11.5px]">
+            <ul className="select-text mt-2 max-h-32 overflow-y-auto rounded-md border border-border bg-bg p-2 font-mono text-[10.5px]">
               {report.urlDuplicates.map((d) => (
                 <li key={d.url} className="truncate">
                   {d.url} ({d.itemUuids.length})
@@ -410,7 +413,7 @@ export function ImportPanel() {
             </ul>
           ) : null}
           {details === 'missing' ? (
-            <ul className="select-text mt-2 max-h-32 overflow-y-auto rounded-md border border-border bg-bg p-2 font-mono text-[11.5px]">
+            <ul className="select-text mt-2 max-h-32 overflow-y-auto rounded-md border border-border bg-bg p-2 font-mono text-[10.5px]">
               {report.missingFiles.map((m) => (
                 <li key={m.itemUuid + m.file} className="truncate">
                   {m.file}
@@ -431,7 +434,7 @@ export function ImportPanel() {
             {provider === 'off' ? (
               <button
                 type="button"
-                className="text-small text-fg-muted underline-offset-2 hover:underline"
+                className="text-[11.5px] text-fg-muted underline-offset-2 hover:underline"
                 onClick={() => openOverlay({ type: 'settings', section: 'ai' })}
               >
                 {fr.importUi.enrichOff}

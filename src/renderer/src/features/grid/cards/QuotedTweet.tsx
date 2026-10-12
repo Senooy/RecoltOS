@@ -22,12 +22,12 @@ export function QuotedTweet({
   return (
     <div
       className={cn(
-        'mt-3 rounded-xl border px-[14px] py-3',
+        'mt-[9px] rounded-xl border px-3 pb-[11px] pt-[10px]',
         tone === 'viewer' ? 'border-[var(--viewer-card-border)]' : 'border-border',
       )}
     >
       {quoted.author ? (
-        <div className="flex min-w-0 items-baseline gap-1.5 text-[14px] leading-5">
+        <div className="flex min-w-0 items-baseline gap-1.5 text-[13px] leading-[18px]">
           {quoted.author.name ? (
             <span className="truncate font-semibold">{quoted.author.name}</span>
           ) : null}
@@ -39,7 +39,7 @@ export function QuotedTweet({
       {quoted.text ? (
         <p
           className={cn(
-            'mt-0.5 whitespace-pre-wrap break-words text-[14px] leading-5',
+            'mt-[2px] whitespace-pre-wrap break-words text-[13px] leading-[18px]',
             !full && 'quoted-body',
           )}
         >

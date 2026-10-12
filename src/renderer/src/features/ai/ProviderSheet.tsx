@@ -138,7 +138,7 @@ export function ProviderSheet() {
                 </div>
               ) : null}
               {st.warnings.map((w) => (
-                <div key={w} className="mt-1 text-[#b26a00]">
+                <div key={w} className="mt-1 text-[var(--tone-warn)]">
                   {w}
                 </div>
               ))}

@@ -69,14 +69,14 @@ function TagRow({
   return (
     <div
       data-testid="settings-tag-row"
-      className="flex h-11 items-center gap-2 border-b border-[#ececec] dark:border-border-subtle"
+      className="flex h-11 items-center gap-2 border-b border-[var(--set-rule)]"
     >
       <span className="text-fg-disabled">#</span>
       {editing ? (
         <input
           autoFocus
           data-testid="settings-tag-input"
-          className="h-7 min-w-0 flex-1 rounded-[6px] bg-[var(--hover)] px-1.5 text-[14.5px] outline-none"
+          className="h-7 min-w-0 flex-1 rounded-[6px] bg-[var(--hover)] px-1.5 text-[13px] outline-none"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => void commit()}
@@ -92,13 +92,13 @@ function TagRow({
       ) : (
         <button
           type="button"
-          className="min-w-0 flex-1 truncate text-left text-[14.5px] text-fg"
+          className="min-w-0 flex-1 truncate text-left text-[13px] text-fg"
           onClick={() => setEditing(true)}
         >
           {tag.name}
         </button>
       )}
-      <span className="text-[12.5px] text-[#959595] tnum">
+      <span className="text-[11px] text-[var(--set-help)] tnum">
         {fr.settingsMoreUi.tagCount(tag.count)}
       </span>
       <Menu.Dropdown.Root>
@@ -177,7 +177,7 @@ export function TagsSection() {
       <div className="mt-5 flex items-center gap-2">
         <input
           data-testid="settings-tags-filter"
-          className="h-[34px] min-w-0 flex-1 rounded-[10px] border border-[#e9e9e9] bg-bg px-3 text-ui outline-none focus:border-border-strong dark:border-border"
+          className="h-[34px] min-w-0 flex-1 rounded-[10px] border border-[var(--set-field-border)] bg-[var(--set-field-bg)] px-3 text-[12.5px] outline-none focus:border-border-strong"
           placeholder={fr.settings.tags.filter}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -201,7 +201,7 @@ export function TagsSection() {
           />
         ))}
         {shown.length === 0 ? (
-          <p className="py-6 text-center text-small text-fg-faint">
+          <p className="py-6 text-center text-[11.5px] text-fg-faint">
             {tags.length === 0 ? fr.settingsMoreUi.tagsEmpty : fr.settingsMoreUi.tagsNoMatch}
           </p>
         ) : null}

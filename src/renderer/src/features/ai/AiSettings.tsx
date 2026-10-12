@@ -167,12 +167,12 @@ function QueueBlock() {
   return (
     <div data-testid="ai-queue">
       <Sub label={fr.aiUi.queue}>
-        <span className="text-[12.5px] text-fg-muted">
+        <span className="text-[11px] text-fg-muted">
           {queue ? fr.aiUi.queueStats(queue.cli.queued, queue.cli.running, queue.cli.failed) : '…'}
         </span>
       </Sub>
       {queue ? (
-        <p className="-mt-1 mb-2 text-[12px] text-fg-subtle">
+        <p className="-mt-1 mb-2 text-[11px] text-fg-subtle">
           {fr.aiUi.budgetUsed(
             queue.budget.hourUsed,
             queue.budget.hourLimit,
@@ -238,7 +238,7 @@ function CallsLog() {
   return (
     <div data-testid="ai-calls">
       <div className="mb-1 flex items-center justify-between">
-        <div className="text-[13.5px] font-medium">{fr.aiUi.log}</div>
+        <div className="text-[12px] font-medium">{fr.aiUi.log}</div>
         <Button
           size="sm"
           variant="ghost"
@@ -256,7 +256,7 @@ function CallsLog() {
         </Button>
       </div>
       {calls && calls.length === 0 ? (
-        <p className="text-[12.5px] text-fg-muted">{fr.aiUi.logEmpty}</p>
+        <p className="text-[11px] text-fg-muted">{fr.aiUi.logEmpty}</p>
       ) : (
         <div className="max-h-[220px] overflow-y-auto">
           <table className="ai-table">
@@ -382,7 +382,7 @@ export function AiSettings() {
           label={
             <>
               {fr.aiUi.fallback}
-              <div className="text-[12px] text-fg-subtle">{fr.aiUi.fallbackHelp}</div>
+              <div className="text-[11px] text-fg-subtle">{fr.aiUi.fallbackHelp}</div>
             </>
           }
         >
@@ -419,7 +419,7 @@ export function AiSettings() {
           label={
             <>
               {fr.aiUi.rate}
-              <div className="text-[12px] text-fg-subtle">
+              <div className="text-[11px] text-fg-subtle">
                 {fr.aiUi.rateHelp(ai.perHour, ai.perDay, ai.hardPerDay)}
               </div>
             </>
@@ -457,7 +457,7 @@ export function AiSettings() {
         <QueueBlock />
       </Fold>
       <Fold label={fr.aiUi.privacy} testId="ai-privacy">
-        <div className="mb-1 text-[13.5px] font-medium">{fr.aiUi.sentTitle}</div>
+        <div className="mb-1 text-[12px] font-medium">{fr.aiUi.sentTitle}</div>
         <table className="ai-table" data-testid="ai-sent-table">
           <tbody>
             {fr.aiUi.sentRows.map(([k, v]) => (
@@ -468,7 +468,7 @@ export function AiSettings() {
             ))}
           </tbody>
         </table>
-        <p className="mt-2 text-[12px] text-fg-subtle">{fr.aiUi.neverSent}</p>
+        <p className="mt-2 text-[11px] text-fg-subtle">{fr.aiUi.neverSent}</p>
         <div className="mb-4 mt-3">
           <Button size="sm" data-testid="ai-preview" onClick={() => openPreview(null)}>
             {fr.aiUi.preview}

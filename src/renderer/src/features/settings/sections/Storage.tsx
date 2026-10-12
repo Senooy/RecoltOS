@@ -17,7 +17,13 @@ import { SettingsRow, SettingsTitle } from '../SettingsDialog'
 
 type Storage = z.output<typeof StorageBreakdown>
 
-const GREYS = ['#3a3a3a', '#6e6e6e', '#a3a3a3', '#cfcfcf']
+// Gris de la barre d'occupation : tokens par thème (`tokens.css`, --set-storage-1…4).
+const GREYS = [
+  'var(--set-storage-1)',
+  'var(--set-storage-2)',
+  'var(--set-storage-3)',
+  'var(--set-storage-4)',
+]
 
 function fail(err: unknown) {
   toast(err instanceof RpcError ? err.message : fr.errors.generic)
@@ -95,16 +101,16 @@ export function StorageSection() {
             />
           ))}
         </div>
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-fg-muted">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-fg-muted">
           {parts.map((p, i) => (
             <span key={p.label} className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full" style={{ background: GREYS[i] }} />
               {p.label}
-              <span className="text-[#959595] tnum">{bytes(p.value)}</span>
+              <span className="text-[var(--set-help)] tnum">{bytes(p.value)}</span>
             </span>
           ))}
           {sizes ? (
-            <span className="ml-auto text-[#959595] tnum">
+            <span className="ml-auto text-[var(--set-help)] tnum">
               {fr.settingsMoreUi.storageTotal(bytes(sizes.total))}
             </span>
           ) : null}
@@ -131,7 +137,7 @@ export function StorageSection() {
           control={
             <select
               aria-label={fr.settings.storage.autoEmpty}
-              className="h-[34px] rounded-[10px] border border-[#e9e9e9] bg-bg px-3 text-ui dark:border-border"
+              className="h-[34px] rounded-[10px] border border-[var(--set-field-border)] bg-[var(--set-field-bg)] px-3 text-[12.5px]"
               value={prefs.trashAutoEmptyDays}
               onChange={(e) =>
                 update({ trashAutoEmptyDays: Number(e.target.value) as 0 | 7 | 30 | 90 })

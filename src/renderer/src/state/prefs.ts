@@ -21,11 +21,30 @@ export function effectiveTheme(theme: Prefs['theme']): 'light' | 'dark' {
     : 'light'
 }
 
+/**
+ * Bascule de thème INSTANTANÉE : pendant l'image où `data-theme` change, `data-theme-switching`
+ * coupe toutes les transitions (sinon les surfaces animées en 120 ms passent par un état mêlé des
+ * deux thèmes, perçu comme un flash). Retiré deux images plus tard.
+ */
+export function setDocumentTheme(
+  theme: 'light' | 'dark',
+  root: HTMLElement = document.documentElement,
+): void {
+  if (root.dataset.theme === theme) return
+  root.dataset.themeSwitching = '1'
+  root.dataset.theme = theme
+  const raf =
+    typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (cb: () => void) => setTimeout(cb, 16)
+  raf(() => raf(() => delete root.dataset.themeSwitching))
+}
+
 export function applyPrefsToDocument(
   prefs: Prefs,
   root: HTMLElement = document.documentElement,
 ): void {
-  root.dataset.theme = effectiveTheme(prefs.theme)
+  setDocumentTheme(effectiveTheme(prefs.theme), root)
   if (prefs.reduceMotion === 'always') root.dataset.reduceMotion = '1'
   else delete root.dataset.reduceMotion
 }

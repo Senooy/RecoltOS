@@ -1,9 +1,9 @@
 /* Réglages › Synchronisation (WP-57), recalés sur `fte10a` (k = 1, modale 749 × 571). */
 .sync-group {
   margin-top: 9px;
-  font-size: 12.5px;
+  font-size: 11px;
   line-height: 16px;
-  color: #969696;
+  color: var(--set-label);
 }
 .sync-row {
   position: relative;
@@ -11,39 +11,30 @@
   min-height: 58px;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid #ececec;
+  border-bottom: 1px solid var(--set-rule);
   padding: 7px 0;
 }
 .sync-row:last-child {
   border-bottom: 0;
 }
-:root[data-theme='dark'] .sync-row {
-  border-color: var(--border-subtle);
-}
 .sync-row-label {
-  font-size: 14.5px;
+  font-size: 13px;
   line-height: 19px;
   color: var(--fg);
 }
 .sync-row-line {
   margin-top: 1px;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 15px;
-  color: #959595;
+  color: var(--set-help);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .sync-tone-warn {
-  color: #b26b00;
+  color: var(--tone-warn);
 }
 .sync-tone-err {
-  color: #d1342b;
-}
-:root[data-theme='dark'] .sync-tone-warn {
-  color: #ffb340;
-}
-:root[data-theme='dark'] .sync-tone-err {
-  color: #ff6961;
+  color: var(--tone-err);
 }
 /* Ajout RecoltOS : invisible tant que la ligne n'est pas survolée (garde la mise en page `fte10a`). */
 .sync-more {
@@ -68,9 +59,9 @@
 .sync-foot {
   margin-top: 9px;
   max-width: 480px;
-  font-size: 13px;
+  font-size: 11px;
   line-height: 16px;
-  color: #959595;
+  color: var(--set-help);
 }
 .sync-foot-tight {
   margin-top: 6px;
@@ -84,17 +75,13 @@
 }
 .sync-ext {
   margin-top: 18px;
-  border: 1px solid #e3e3e3;
+  border: 1px solid var(--set-box-border);
   border-radius: 10px;
-  background: #f4f4f4;
+  background: var(--set-ext-bg);
   padding: 10px 12px 10px 13px;
 }
-:root[data-theme='dark'] .sync-ext {
-  border-color: var(--border);
-  background: var(--surface);
-}
 .sync-ext-title {
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 18px;
 }
@@ -103,34 +90,31 @@
   align-items: center;
   gap: 6px;
   margin-top: 1px;
-  font-size: 12.5px;
+  font-size: 11px;
   line-height: 16px;
-  color: #959595;
+  color: var(--set-help);
 }
 .sync-ext-state i {
   display: inline-block;
   height: 7px;
   width: 7px;
   border-radius: 50%;
-  background: #b5b5b5;
+  background: var(--tone-off-dot);
 }
 .sync-ext-on i {
-  background: #30c552;
+  background: var(--tone-ok-dot);
 }
 .sync-ext-help {
   margin-top: 6px;
-  font-size: 12.5px;
+  font-size: 11px;
   line-height: 16px;
-  color: #959595;
+  color: var(--set-help);
 }
 .sync-ext-warn {
   margin-top: 6px;
-  font-size: 12.5px;
+  font-size: 11px;
   line-height: 16px;
-  color: #b26b00;
-}
-:root[data-theme='dark'] .sync-ext-warn {
-  color: #ffb340;
+  color: var(--tone-warn);
 }
 .sync-pill {
   display: inline-flex;
@@ -138,19 +122,15 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #000;
+  background: var(--set-pill-bg);
   padding: 0 14px;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 600;
-  color: #fff;
+  color: var(--set-pill-fg);
   white-space: nowrap;
 }
 .sync-pill:hover {
-  background: #262626;
-}
-:root[data-theme='dark'] .sync-pill {
-  background: #fff;
-  color: #000;
+  background: var(--set-pill-hover);
 }
 .sync-bullets {
   list-style: disc;
@@ -173,6 +153,6 @@
 }
 .sync-code {
   font-family: 'Geist Mono Variable', ui-monospace, monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--fg-muted);
 }

@@ -28,7 +28,7 @@ export function NavSegmented({
   tone?: 'light' | 'dark'
 }) {
   const dark = tone === 'dark'
-  const pill = dark ? 'bg-[#f2f2f2]' : 'bg-accent'
+  const pill = dark ? 'bg-[var(--shelf-seg-pill)]' : 'bg-[var(--seg-pill)]'
   return (
     <LayoutGroup id="nav">
       <nav
@@ -36,7 +36,9 @@ export function NavSegmented({
         aria-label={fr.nav.library}
         className={cn(
           'app-no-drag absolute left-1/2 top-[29px] flex h-[52px] w-[480px] -translate-x-1/2 items-center gap-[2px] rounded-full border p-[5px]',
-          dark ? 'border-[#2a2a2c] bg-[#161618]' : 'border-border bg-bg',
+          dark
+            ? 'border-[var(--shelf-seg-border)] bg-[var(--shelf-seg-bg)]'
+            : 'border-[var(--seg-border)] bg-[var(--seg-bg)]',
         )}
         style={{ boxShadow: 'var(--shadow-pill)' }}
       >
@@ -62,11 +64,11 @@ export function NavSegmented({
               'relative',
               value === 'search'
                 ? dark
-                  ? 'text-[#0a0a0a]'
-                  : 'text-accent-fg'
+                  ? 'text-[var(--shelf-seg-pill-fg)]'
+                  : 'text-[var(--seg-pill-fg)]'
                 : dark
-                  ? 'text-white'
-                  : 'text-fg',
+                  ? 'text-[var(--shelf-seg-fg)]'
+                  : 'text-[var(--seg-fg)]',
             )}
           />
         </button>
@@ -93,11 +95,11 @@ export function NavSegmented({
                   'relative flex items-center gap-2',
                   active
                     ? dark
-                      ? 'text-[#0a0a0a]'
-                      : 'text-accent-fg'
+                      ? 'text-[var(--shelf-seg-pill-fg)]'
+                      : 'text-[var(--seg-pill-fg)]'
                     : dark
-                      ? 'text-white'
-                      : 'text-fg',
+                      ? 'text-[var(--shelf-seg-fg)]'
+                      : 'text-[var(--seg-fg)]',
                 )}
               >
                 {active ? <Icon size={18} strokeWidth={1.75} /> : null}

@@ -1,15 +1,26 @@
 /*
- * Design tokens : source unique (DESIGN §1.10 tel quel + PLAN §4.7 : --accent-blue et les
- * 6 couleurs de notes DESIGN §3.11). Thème porté par `<html data-theme="light|dark">`.
- * Tokens sombres « extrapolés » tant que l'observation O1 n'est pas faite (PLAN §1.24).
+ * Design tokens : SOURCE UNIQUE des couleurs et ombres des deux thèmes (DESIGN §1.10 + PLAN §4.7 :
+ * --accent-blue et les 6 couleurs de notes DESIGN §3.11). Thème porté par
+ * `<html data-theme="light|dark">`. Aucune autre feuille ni composant ne définit de couleur dépendant
+ * du thème : ils lisent ces variables (WP-70).
+ *
+ * Thème sombre (WP-70) : les surfaces immersives (étagère, détail, Redécouvrir) sont MESURÉES sur
+ * zzrib6, cfj0gf et q8y7fj ; le reste du sombre est EXTRAPOLÉ (pas encore de capture la référence
+ * sombre de la Bibliothèque, des Réglages, de la Recherche ni de ⌘K), calé sur ces mesures :
+ * segmented #161618 / #2a2a2c / pilule #f3f3f5 (zzrib6), kbd #2a2a2c, pilule #18181a, compteur
+ * #636365 (q8y7fj), champs plus clairs que le panneau (cfj0gf). Pour recaler : ne modifier que le
+ * bloc `[data-theme='dark']` ci-dessous.
+ *
+ * `.light-island` : sous-arbre toujours rendu en clair (posts blancs sur les surfaces immersives).
  */
 @import 'tailwindcss';
 @import '@fontsource-variable/geist';
 @import '@fontsource-variable/geist-mono';
 
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *):not(:where(.light-island, .light-island *)));
 
-:root {
+:root,
+.light-island {
   color-scheme: light;
   --bg: #fafafa;
   --bg-sunken: #f4f4f4;
@@ -91,6 +102,91 @@
   --note-blue: #d6e8ff;
   --note-purple: #e6deff;
   --note-gray: #efefef;
+
+  /* ---- Ombres (DESIGN §1.6) ---- */
+  --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 18px rgba(0, 0, 0, 0.06);
+  --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12);
+  --shadow-popover:
+    0 0 0 1px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-palette: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 24px 64px rgba(0, 0, 0, 0.2);
+  --shadow-modal: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 30px 80px rgba(0, 0, 0, 0.18);
+  --shadow-fab: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 6px 20px rgba(0, 0, 0, 0.14);
+  --shadow-toast: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 8px 28px rgba(0, 0, 0, 0.14);
+  --shadow-swipe: 0 30px 80px rgba(0, 0, 0, 0.6);
+  --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --glass-border: rgba(0, 0, 0, 0.06);
+
+  /* ---- Composants (valeurs claires mesurées écran par écran) ---- */
+  /* survol d'un bouton primaire (DESIGN §1.8), surlignage des menus (--hover × 1,25), avatars */
+  --ui-accent-hover: #262626;
+  --ui-menu-highlight: rgba(0, 0, 0, 0.05);
+  --ui-avatar-s: 20%;
+  --ui-avatar-l: 90%;
+  /* segmented central (DESIGN §2.4) */
+  --seg-bg: var(--bg);
+  --seg-border: var(--border);
+  --seg-pill: var(--accent);
+  --seg-pill-fg: var(--accent-fg);
+  --seg-fg: var(--fg);
+  /* palette ⌘K (25w3t4) */
+  --palette-bg: linear-gradient(180deg, rgba(252, 252, 252, 0.95), rgba(242, 242, 242, 0.86));
+  --palette-rule: rgba(0, 0, 0, 0.06);
+  --palette-icon: #4e4c4d;
+  --palette-placeholder: #848484;
+  --palette-hint: #9b9b9b;
+  --palette-kbd-bg: rgba(0, 0, 0, 0.06);
+  --palette-kbd-fg: #9a9a9a;
+  /* Réglages (fte10a, kgogfx, o8zko5) */
+  --set-help: #959595;
+  --set-label: #969696;
+  --set-nav-title: #909090;
+  --set-nav-border: #eeeeee;
+  --set-close: #6c6c6c;
+  --set-rule: #ececec;
+  --set-box-border: #e3e3e3;
+  --set-field-border: #e9e9e9;
+  --set-field-bg: var(--bg);
+  --set-card-bg: #ececec;
+  --set-ext-bg: #f4f4f4;
+  --set-pill-bg: #000000;
+  --set-pill-fg: #ffffff;
+  --set-pill-hover: #262626;
+  --set-cap-bg: #ffffff;
+  --set-cap-border: #e8e8e8;
+  --set-cap-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  --set-storage-1: #3a3a3a;
+  --set-storage-2: #6e6e6e;
+  --set-storage-3: #a3a3a3;
+  --set-storage-4: #cfcfcf;
+  /* tons d'état (sync, capture, IA) */
+  --tone-ok: #28a745;
+  --tone-ok-dot: #30c552;
+  --tone-warn-dot: #f5a524;
+  --tone-warn: #b26b00;
+  --tone-caution: #d97706;
+  --tone-err: #d1342b;
+  --tone-off-dot: #b5b5b5;
+  /* Spaces (DESIGN §3.11, SPACES §1.4.1) */
+  --sp-ink: #1d1d1f;
+  --sp-gray: #8e8e93;
+  --sp-red: #ff3b30;
+  --sp-orange: #ff9500;
+  --sp-yellow: #ffcc00;
+  --sp-green: #34c759;
+  --sp-blue: #007aff;
+  --sp-purple: #af52de;
+  --sp-white: #ffffff;
+  --sp-guide: #ff2d78;
+  --sp-select: #0a84ff;
+  --sp-note-text: #1d1d1f;
+  --sp-note-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.07);
+  /* segmented sur l'étagère (immersif, mesuré zzrib6 : identique dans les deux thèmes) */
+  --shelf-seg-bg: #161618;
+  --shelf-seg-border: #2a2a2c;
+  --shelf-seg-pill: #f3f3f5;
+  --shelf-seg-pill-fg: #0a0a0a;
+  --shelf-seg-fg: #ffffff;
 }
 [data-theme='dark'] {
   color-scheme: dark;
@@ -131,6 +227,71 @@
   --scrim-modal: rgba(0, 0, 0, 0.55);
   --skeleton: #1c1c1e;
   --canvas-dot: #2a2a2c;
+
+  /* ---- Ombres : anneau blanc, opacités doublées (DESIGN §1.6) ---- */
+  --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(0, 0, 0, 0.12);
+  --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.24);
+  --shadow-popover:
+    0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  --shadow-palette: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 64px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.36);
+  --shadow-fab: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 6px 20px rgba(0, 0, 0, 0.28);
+  --shadow-toast: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 28px rgba(0, 0, 0, 0.28);
+  --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* ---- Composants ---- */
+  --ui-accent-hover: #e5e5e7;
+  --ui-menu-highlight: rgba(255, 255, 255, 0.0625);
+  --ui-avatar-s: 12%;
+  --ui-avatar-l: 24%;
+  /* segmented : mesuré sur l'étagère sombre (zzrib6) */
+  --seg-bg: #161618;
+  --seg-border: #2a2a2c;
+  --seg-pill: #f3f3f5;
+  --seg-pill-fg: #0a0a0a;
+  --seg-fg: #ffffff;
+  --palette-bg: linear-gradient(180deg, rgba(34, 34, 36, 0.95), rgba(24, 24, 26, 0.9));
+  --palette-rule: rgba(255, 255, 255, 0.08);
+  --palette-icon: #8d8d8f;
+  --palette-placeholder: #7c7c80;
+  --palette-hint: #7c7c80;
+  --palette-kbd-bg: rgba(255, 255, 255, 0.08);
+  --palette-kbd-fg: #9a9a9e;
+  --set-help: #8d8d8f;
+  --set-label: #8d8d8f;
+  --set-nav-title: #8d8d8f;
+  --set-nav-border: #232325;
+  --set-close: #a1a1a6;
+  --set-rule: #1f1f21;
+  --set-box-border: #2a2a2c;
+  --set-field-border: #2e2e30;
+  --set-field-bg: #161618;
+  --set-card-bg: #161618;
+  --set-ext-bg: #161618;
+  --set-pill-bg: #f5f5f7;
+  --set-pill-fg: #0a0a0a;
+  --set-pill-hover: #e5e5e7;
+  --set-cap-bg: #1f1f21;
+  --set-cap-border: #333335;
+  --set-cap-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --set-storage-1: #e5e5e7;
+  --set-storage-2: #a1a1a6;
+  --set-storage-3: #6e6e72;
+  --set-storage-4: #48484a;
+  --tone-ok: #32d74b;
+  --tone-ok-dot: #32d74b;
+  --tone-warn-dot: #ffb340;
+  --tone-warn: #ffb340;
+  --tone-caution: #ffb340;
+  --tone-err: #ff6961;
+  --tone-off-dot: #636365;
+  --sp-ink: #f5f5f7;
+  --sp-gray: #98989d;
+  --sp-white: #1c1c1e;
+  --sp-note-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 @theme inline {

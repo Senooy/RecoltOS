@@ -31,6 +31,7 @@ import { TagsSection } from './sections/Tags'
 import { CaptureSettings } from '../capture/CaptureSettings'
 import { AiSettings } from '../ai/AiSettings'
 import { SyncSettings } from '../sync/SyncSettings'
+import './settings.css'
 
 const NAV: { key: SettingsSection; label: string; Icon: typeof Palette }[] = [
   { key: 'appearance', label: fr.settings.nav.appearance, Icon: Palette },
@@ -53,11 +54,9 @@ export function SettingsTitle({
 }) {
   return (
     <>
-      <h2 className="text-display font-bold">{children}</h2>
+      <h2 className="text-[21px] leading-7 font-bold">{children}</h2>
       {description ? (
-        <p className="mt-2 max-w-[470px] text-[13.5px] leading-[18px] text-fg-muted">
-          {description}
-        </p>
+        <p className="mt-2 max-w-[470px] text-[12px] leading-[18px] text-fg-muted">{description}</p>
       ) : null}
     </>
   )
@@ -73,10 +72,12 @@ export function SettingsRow({
   control?: ReactNode
 }) {
   return (
-    <div className="flex min-h-[58px] items-center gap-4 border-b border-[#ececec] py-2 dark:border-border-subtle">
+    <div className="flex min-h-[58px] items-center gap-4 border-b border-[var(--set-rule)] py-2">
       <div className="min-w-0 flex-1">
-        <div className="text-[14.5px] text-fg">{label}</div>
-        {description ? <div className="text-[12.5px] text-[#959595]">{description}</div> : null}
+        <div className="text-[13px] text-fg">{label}</div>
+        {description ? (
+          <div className="text-[11px] text-[var(--set-help)]">{description}</div>
+        ) : null}
       </div>
       {control ? <div className="shrink-0">{control}</div> : null}
     </div>
@@ -113,9 +114,9 @@ export default function SettingsDialog() {
           </VisuallyHidden.Root>
           <nav
             aria-label={fr.settings.title}
-            className="absolute bottom-[11px] left-[11px] top-[11px] flex w-[196px] flex-col rounded-xl border border-[#eeeeee] px-2 py-3 dark:border-border"
+            className="absolute bottom-[11px] left-[11px] top-[11px] flex w-[196px] flex-col rounded-xl border border-[var(--set-nav-border)] px-2 py-3"
           >
-            <div className="px-2.5 pb-3 pt-px text-[12.5px] text-[#909090]">
+            <div className="px-2.5 pb-3 pt-px text-[11px] text-[var(--set-nav-title)]">
               {fr.settings.title}
             </div>
             {NAV.map(({ key, label, Icon }) => (
@@ -125,7 +126,7 @@ export default function SettingsDialog() {
                 data-testid={`settings-nav-${key}`}
                 aria-current={section === key ? 'page' : undefined}
                 className={cn(
-                  'flex h-7 items-center gap-2.5 rounded-lg px-2.5 text-left text-[14.5px]',
+                  'flex h-7 items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px]',
                   section === key
                     ? 'bg-[var(--pressed)] text-fg'
                     : 'text-fg-muted hover:bg-[var(--hover)]',
@@ -138,7 +139,7 @@ export default function SettingsDialog() {
             ))}
           </nav>
           <div
-            className="ml-[239px] min-w-0 flex-1 overflow-y-auto pb-8 pr-8 pt-[32px]"
+            className="settings-content ml-[239px] min-w-0 flex-1 overflow-y-auto pb-8 pr-8 pt-[32px]"
             data-testid={`settings-section-${section}`}
           >
             {section === 'appearance' ? (
@@ -165,7 +166,7 @@ export default function SettingsDialog() {
           </div>
           <DialogPrimitive.Close
             aria-label={fr.settings.close}
-            className="absolute right-[18px] top-4 inline-flex h-7 w-7 items-center justify-center rounded-md text-[#6c6c6c] hover:bg-[var(--hover)]"
+            className="absolute right-[18px] top-4 inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--set-close)] hover:bg-[var(--hover)]"
           >
             <X size={14} strokeWidth={2} />
           </DialogPrimitive.Close>

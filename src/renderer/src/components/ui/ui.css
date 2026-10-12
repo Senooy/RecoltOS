@@ -1,6 +1,7 @@
 /*
  * Kit UI : animations des primitives Radix (DESIGN §1.9) et jetons propres aux composants.
- * Importé par chaque composant qui en dépend ; ne redéfinit aucun token de `tokens.css`.
+ * Importé par chaque composant qui en dépend ; les couleurs par thème (--ui-accent-hover,
+ * --ui-menu-highlight, --ui-avatar-*) sont dans `tokens.css`.
  *
  * Mouvement réduit (`prefers-reduced-motion` OU `<html data-reduce-motion="1">`) : durées ≤ 80 ms,
  * ni translation ni mise à l'échelle (fondus seulement). Miroir CSS de `motion.ts`.
@@ -17,21 +18,8 @@
   --ui-dialog-out: 160ms;
   --ui-fade: 160ms;
   --ui-tooltip: var(--dur-base, 180ms);
-  /* survol d'un bouton primaire (DESIGN §1.8) */
-  --ui-accent-hover: #262626;
   /* survol du bouton rond du viewer (--viewer-btn plus soutenu) */
   --ui-viewer-btn-hover: rgba(255, 255, 255, 0.2);
-  /* surlignage d'un item de menu : --hover × 1,25 (DESIGN §3.9) */
-  --ui-menu-highlight: rgba(0, 0, 0, 0.05);
-  /* teinte de repli des avatars à initiales : saturation et luminosité par thème */
-  --ui-avatar-s: 20%;
-  --ui-avatar-l: 90%;
-}
-[data-theme='dark'] {
-  --ui-accent-hover: #e5e5e7;
-  --ui-menu-highlight: rgba(255, 255, 255, 0.0625);
-  --ui-avatar-s: 12%;
-  --ui-avatar-l: 24%;
 }
 @media (prefers-reduced-motion: reduce) {
   :root {

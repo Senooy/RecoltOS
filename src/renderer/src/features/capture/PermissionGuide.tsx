@@ -37,8 +37,8 @@ export function PermissionGuide({ open, onClose }: { open: boolean; onClose: () 
         title={fr.captureUi.guideTitle}
         className="w-[440px]"
       >
-        <p className="text-[13.5px] leading-[19.5px] text-fg-muted">{fr.captureUi.guideBody}</p>
-        <ol className="mt-4 space-y-3 text-[13.5px]">
+        <p className="text-[12px] leading-[19.5px] text-fg-muted">{fr.captureUi.guideBody}</p>
+        <ol className="mt-4 space-y-3 text-[12px]">
           <li className="flex items-center gap-3">
             <span className="capture-step">1</span>
             <span className="flex-1">{fr.captureUi.guideStep1}</span>
@@ -51,7 +51,7 @@ export function PermissionGuide({ open, onClose }: { open: boolean; onClose: () 
             <span className="flex-1">{fr.captureUi.guideStep2(dev)}</span>
             {granted ? (
               <span
-                className="flex items-center gap-1 text-[12.5px] text-[#28a745]"
+                className="flex items-center gap-1 text-[11px] text-[var(--tone-ok)]"
                 data-testid="permission-granted"
               >
                 <Check size={14} strokeWidth={2.5} /> {fr.captureUi.guideGranted}
@@ -71,7 +71,7 @@ export function PermissionGuide({ open, onClose }: { open: boolean; onClose: () 
           </li>
         </ol>
         {status?.signature === 'adhoc' ? (
-          <p className="mt-4 rounded-[10px] border border-[#e3e3e3] bg-[var(--surface-info)] px-4 py-3 text-[12.5px] text-fg-muted dark:border-border">
+          <p className="mt-4 rounded-[10px] border border-[var(--set-box-border)] bg-[var(--surface-info)] px-4 py-3 text-[11px] text-fg-muted">
             {fr.captureUi.guideAdhoc}
           </p>
         ) : null}

@@ -273,7 +273,7 @@ export function SyncSettings() {
       {status && !status.browserConnected ? null : (
         <button
           type="button"
-          className="sync-link mt-2 text-[12.5px]"
+          className="sync-link mt-2 text-[11px]"
           onClick={() => setInstall(true)}
         >
           {T.extension.install}

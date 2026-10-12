@@ -2,27 +2,7 @@
  * Spaces (DESIGN §3.11, SPACES §1.4.1) : toile maison DOM + transform CSS. Sobre : fond `--bg`,
  * points `--canvas-dot`, sélection bleue `--accent-blue`, guides roses.
  */
-:root {
-  --sp-ink: #1d1d1f;
-  --sp-gray: #8e8e93;
-  --sp-red: #ff3b30;
-  --sp-orange: #ff9500;
-  --sp-yellow: #ffcc00;
-  --sp-green: #34c759;
-  --sp-blue: #007aff;
-  --sp-purple: #af52de;
-  --sp-white: #ffffff;
-  --sp-guide: #ff2d78;
-  --sp-select: #0a84ff;
-  --sp-note-text: #1d1d1f;
-  --sp-note-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.07);
-}
-[data-theme='dark'] {
-  --sp-ink: #f5f5f7;
-  --sp-gray: #98989d;
-  --sp-white: #1c1c1e;
-  --sp-note-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
-}
+/* Couleurs --sp-* (deux thèmes) : `styles/tokens.css`. */
 
 .space-viewport {
   position: relative;

@@ -164,7 +164,12 @@ export const EXTRA_SCENES: Scene[] = [
     id: 'library-picker',
     ref: 'library-picker',
     title: 'Sélecteur de bibliothèque',
-    steps: [{ click: t('library-picker') }, { wait: t('library-picker-menu') }],
+    // La grille d'abord : sinon le menu s'ouvre avant le montage de l'écran (fond vide).
+    steps: [
+      { wait: t('grid') },
+      { click: t('library-picker') },
+      { wait: t('library-picker-menu') },
+    ],
   },
   ...['appearance', 'libraries', 'tags', 'storage', 'data', 'about'].map((s): Scene => ({
     id: `settings-${s}`,
