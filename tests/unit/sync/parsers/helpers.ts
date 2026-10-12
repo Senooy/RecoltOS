@@ -1,5 +1,5 @@
 /**
- * Outils des tests des parseurs de sync (WP-55) : lecture des fixtures de WP-50 et invariants
+ * Outils des tests des parseurs de sync : lecture des fixtures et invariants
  * communs à toute sortie de parseur.
  */
 import { readFileSync, readdirSync } from 'node:fs'

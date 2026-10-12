@@ -1,5 +1,5 @@
 /**
- * Raccourci global de capture (SPACES §2.2) : validation (≥ 1 modificateur parmi ⌘/⌃/⌥ + une
+ * Raccourci global de capture : validation (≥ 1 modificateur parmi ⌘/⌃/⌥ + une
  * touche, refus des raccourcis système), enregistrement IMMÉDIAT avec retour à l'ancien si
  * `register` échoue (`taken`), verrou `inFlight` géré par le service et anti-rebond de 400 ms.
  * `globalShortcut` est injecté (tests).

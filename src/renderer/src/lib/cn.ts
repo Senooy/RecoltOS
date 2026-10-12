@@ -1,5 +1,5 @@
 /**
- * `cn()` : clsx + tailwind-merge avec le thème `text` étendu (DESIGN §4.1).
+ * `cn()` : clsx + tailwind-merge avec le thème `text` étendu.
  * Sans l'extension, tailwind-merge classe `text-caption`… comme des COULEURS et supprime
  * silencieusement l'un des deux dans `cn('text-caption', 'text-fg-faint')`.
  */

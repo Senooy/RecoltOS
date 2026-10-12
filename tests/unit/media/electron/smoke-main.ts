@@ -1,5 +1,5 @@
 /**
- * WP-03 — smoke Electron du media-worker, lancé par `electron-smoke.test.ts` (pas un test vitest :
+ * smoke Electron du media-worker, lancé par `electron-smoke.test.ts` (pas un test vitest :
  * le nom ne contient pas `.test.`). Process main réel : `utilityProcess.fork` via
  * `makeUtilityFork` (le vrai adaptateur de production), `media.worker` bundlé par esbuild.
  *

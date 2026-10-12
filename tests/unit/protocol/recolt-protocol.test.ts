@@ -1,5 +1,5 @@
 /**
- * WP-05 — handler `recolt://` (ARCHI §2.5, PLAN §1.7), appelé avec des `Request` Node :
+ * handler `recolt://`, appelé avec des `Request` Node :
  * 200 / HEAD / 206 + `Content-Range`, `bytes=-500`, 416, `..` et `\0` → 403, racine inconnue → 403,
  * lien symbolique sortant → 403, bibliothèque inconnue → 404, cache `immutable` si `?v`, CORS.
  */

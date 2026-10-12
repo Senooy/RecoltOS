@@ -1,5 +1,5 @@
 /**
- * Drapeaux d'exécution lus une fois au démarrage (QA §2 : contrats de testabilité).
+ * Drapeaux d'exécution lus une fois au démarrage (contrats de testabilité).
  * Sans import `electron` : testable sous Node.
  */
 

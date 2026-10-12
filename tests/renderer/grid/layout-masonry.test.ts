@@ -1,4 +1,4 @@
-/** WP-14 : masonry pure (DESIGN §4.4). */
+/** masonry pure. */
 import { describe, expect, it } from 'vitest'
 import {
   columnGeometry,
@@ -39,7 +39,7 @@ describe('layoutMasonry', () => {
     )
   })
 
-  it('posts : colonne choisie sur la hauteur estimée, position sur la hauteur mesurée (uqre2k)', () => {
+  it('posts : colonne choisie sur la hauteur estimée, position sur la hauteur mesurée', () => {
     const l = layoutMasonry(
       [
         { id: 't1', measured: 217, placementRatio: 0.5 },

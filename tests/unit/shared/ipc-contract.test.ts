@@ -75,7 +75,7 @@ describe('contrat IPC', () => {
     expect(isChannel('toString')).toBe(false)
   })
 
-  it('contient les domaines et canaux de PLAN §4.4, sans recherche visuelle', () => {
+  it('contient les domaines et canaux attendus, sans recherche visuelle', () => {
     for (const ch of [
       'libraries.list',
       'libraries.remove',

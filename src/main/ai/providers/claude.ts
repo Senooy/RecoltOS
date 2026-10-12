@@ -1,5 +1,5 @@
 /**
- * Fournisseur Claude (AI §3.2, S0) : `claude --safe-mode -p … --output-format stream-json --verbose
+ * Fournisseur Claude : `claude --safe-mode -p … --output-format stream-json --verbose
  * --json-schema … --system-prompt … --tools Read --allowedTools Read --permission-mode dontAsk
  * --permission-prompts none --strict-mcp-config --disable-slash-commands --no-session-persistence
  * --restricted --model … --effort …`, cwd FIXE `<userData>/ai-sandbox/claude/`.

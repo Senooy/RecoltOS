@@ -1,5 +1,5 @@
 /**
- * Initialisation du domaine `prefs` (registre `bootstrap/services.ts`, possédé par WP-02) :
+ * Initialisation du domaine `prefs` (registre `bootstrap/services.ts`) :
  * magasin `prefs.json` (écriture atomique), événement `prefs.changed`, thème natif synchronisé
  * (`nativeTheme.themeSource` suit `prefs.theme` ; le fond de fenêtre suit via `followNativeTheme`).
  */

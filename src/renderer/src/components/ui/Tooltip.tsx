@@ -1,5 +1,5 @@
 /**
- * `Tooltip` (DESIGN §2.4) : apparaît après 600 ms, animation `--dur-base`, raccourci optionnel.
+ * `Tooltip` : apparaît après 600 ms, animation `--dur-base`, raccourci optionnel.
  * Chaque instance embarque son `Provider` : aucun montage global requis.
  */
 import { Tooltip as TooltipPrimitive } from 'radix-ui'

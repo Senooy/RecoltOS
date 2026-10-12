@@ -1,6 +1,6 @@
 /**
- * Source UNIQUE des raccourcis (DESIGN §3.13, PLAN §4.7) : le menu natif (WP-13), le renderer
- * et le raccourci global (WP-33) lisent cette table. Un raccourci `menu` n'est jamais rebindé
+ * Source UNIQUE des raccourcis : le menu natif, le renderer
+ * et le raccourci global lisent cette table. Un raccourci `menu` n'est jamais rebindé
  * côté renderer (l'accélérateur du menu consomme la touche), sauf repli explicite `rendererFallback`.
  *
  * AZERTY : chiffres comparés par `e.code` (`Digit1`…), lettres par `e.key.toLowerCase()`.
@@ -258,7 +258,7 @@ export function getShortcut(id: ShortcutId): ShortcutDef {
 }
 
 /**
- * Éditeur Spaces (SPACES §1.5.1) : lettres = touche imprimée (`baseChar`), chiffres = `e.code`.
+ * Éditeur Spaces : lettres = touche imprimée (`baseChar`), chiffres = `e.code`.
  * Pas de ⌘1 pour « 100 % » (⌘1 = Bibliothèque).
  */
 export const SPACES_SHORTCUTS = [

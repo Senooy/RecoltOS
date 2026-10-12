@@ -1,6 +1,6 @@
 /**
- * Pastilles de la palette (DESIGN §3.7, point 9) : 8 pastilles Ø 20, écart 6 ; clic = recherche
- * par couleur (`ui.openSearch({color})`, ERRATA §B) ; ⌥-clic = copier l'hex (toast « #3f3fbf
+ * Pastilles de la palette : 8 pastilles Ø 20, écart 6 ; clic = recherche
+ * par couleur (`ui.openSearch({color})`) ; ⌥-clic = copier l'hex (toast « #3f3fbf
  * copié ») ; infobulle avec l'hex en mono.
  */
 import { Tooltip, toast } from '../../components/ui'

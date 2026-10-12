@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `grid` (WP-14) : grille, cartes, menu contextuel (complète `card` et `menu`).
+ * Textes du domaine `grid` : grille, cartes, menu contextuel (complète `card` et `menu`).
  */
 export const grid = {
   gridUi: {

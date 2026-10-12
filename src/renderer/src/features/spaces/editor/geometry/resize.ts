@@ -1,5 +1,5 @@
 /**
- * Redimensionnement et rotation (SPACES §1.5.4) : calcul dans le repère local du nœud, ancre
+ * Redimensionnement et rotation : calcul dans le repère local du nœud, ancre
  * opposée fixe (testée à 1e-6 pour les 8 poignées et r ∈ {0, 30, 90, 137°}). ⇧ inverse le
  * verrouillage du ratio ; ⌥ redimensionne depuis le centre. Rotation : ⇧ = pas de 15°.
  */

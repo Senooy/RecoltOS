@@ -1,7 +1,7 @@
 /**
- * Fichier principal des posts SANS média (SYNC §3.5) : rendu de la carte `TweetCard light` (même
+ * Fichier principal des posts SANS média : rendu de la carte `TweetCard light` (même
  * composant que la grille) dans une fenêtre hors écran (`withOffscreenWindow` +
- * `offscreen.html?render=tweet-card`, ERRATA §B), capture puis WebP de 960 px de large (rôle
+ * `offscreen.html?render=tweet-card`), capture puis WebP de 960 px de large (rôle
  * `render`, `media.derive` ensuite). File sérielle en mémoire, reprise au démarrage (posts `tweet`
  * synchronisés sans média).
  */

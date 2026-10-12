@@ -1,5 +1,5 @@
 /**
- * État des filtres de la Recherche (DESIGN §3.5) et conversion vers `ItemFilters` (ERRATA §B).
+ * État des filtres de la Recherche et conversion vers `ItemFilters`.
  */
 import { DEFAULT_COLOR_TOLERANCE, NAMED_COLORS } from '../../../../shared/color'
 import type { ItemKind, Source } from '../../../../shared/enums'
@@ -65,7 +65,7 @@ export function toggle<T>(list: readonly T[], v: T): T[] {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v]
 }
 
-/** 12 pastilles nommées (AI §9.2), du rouge au rose puis neutres. */
+/** 12 pastilles nommées, du rouge au rose puis neutres. */
 export const SWATCHES = NAMED_COLORS
 
 /** Libellé d'une couleur du filtre : nom si c'est une pastille, sinon l'hex. */

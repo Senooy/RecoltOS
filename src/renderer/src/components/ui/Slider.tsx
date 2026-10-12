@@ -1,5 +1,5 @@
 /**
- * `Slider` (DESIGN §3.1, §3.7, §3.10), variantes :
+ * `Slider`, variantes :
  * - `columns` : piste fine sans remplissage, pouce Ø 14 (sous-barre, 2 à 8 colonnes) ;
  * - `zoom` : sur fond sombre du viewer, piste `--viewer-track`, remplissage clair, 110 px ;
  * - `settings` : piste + remplissage `--accent`, pouce Ø 16 (Réglages).

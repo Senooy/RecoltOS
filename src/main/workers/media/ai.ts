@@ -1,5 +1,5 @@
 /**
- * Préparation des médias envoyés à l'IA (AI §4, WP-41), dans le media-worker :
+ * Préparation des médias envoyés à l'IA, dans le media-worker :
  * - `aiImage` : JPEG q85, côté ≤ `maxEdge` (1568), orientation appliquée, fond blanc, AUCUNE
  *   métadonnée (EXIF/GPS retirés : pas de `withMetadata`), première image d'une animation ;
  * - `extractFrame` : une image d'une vidéo à `atMs` (ou à `fromEndMs` de la fin, `-sseof`), JPEG
@@ -124,7 +124,7 @@ export async function extractFrame(
       } catch (err) {
         throw sourceFailure(err)
       }
-      // ffmpeg peut sortir avec le code 0 sans rien écrire près de la fin (AI §4).
+      // ffmpeg peut sortir avec le code 0 sans rien écrire près de la fin.
       const size = await stat(tmp).then(
         (s) => s.size,
         () => 0,

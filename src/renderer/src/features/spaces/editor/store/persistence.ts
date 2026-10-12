@@ -1,5 +1,5 @@
 /**
- * Persistance différée (SPACES §1.7.1) : suivi `dirty` HORS de l'état immer, vidage après 500 ms
+ * Persistance différée : suivi `dirty` HORS de l'état immer, vidage après 500 ms
  * d'inactivité (attente max 3 s), en sous-lots de 2 000 nœuds, chaque `spaces.applyBatch` étant
  * atomique ; `dirty` n'est purgé qu'après succès (et seulement si le nœud n'a pas changé entre-temps).
  * `validation` : non réessayable → rejeu nœud par nœud, quarantaine des fautifs, toast. `busy` / `io`

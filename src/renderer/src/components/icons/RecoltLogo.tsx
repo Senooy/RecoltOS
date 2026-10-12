@@ -1,6 +1,6 @@
 /**
  * Logo RecoltOS « Germe double » : une graine pointue et deux feuilles symétriques (même silhouette
- * que l'icône de l'app, `design/logos`), en version plate : tuile arrondie `--fg`, symbole `--bg`.
+ * que l'icône de l'app, `scripts/make-icon.mts`), en version plate : tuile arrondie `--fg`, symbole `--bg`.
  * Les couleurs suivent les tokens : il s'inverse avec le thème.
  */
 import type { SVGProps } from 'react'

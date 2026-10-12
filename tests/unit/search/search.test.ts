@@ -1,4 +1,4 @@
-/** WP-22 : traduction de la requête, recherche FTS + filtres, suggestions, performance. */
+/** traduction de la requête, recherche FTS + filtres, suggestions, performance. */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { runSearch, suggest } from '../../../src/main/search/search'
 import { toFtsQuery } from '../../../src/shared/search-query'

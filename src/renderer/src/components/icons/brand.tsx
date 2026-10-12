@@ -1,5 +1,5 @@
 /**
- * Glyphes de marque dessinés pour RecoltOS (DESIGN §4.1, §0 indépendant) : SVG minimalistes,
+ * Glyphes de marque dessinés pour RecoltOS : SVG minimalistes,
  * `currentColor`, utilisés uniquement pour identifier la source d'un élément (usage nominatif).
  * Aucune dépendance (pas de `simple-icons`).
  */

@@ -1,6 +1,6 @@
 /**
  * Détection d'un processus par nom exact (`pgrep -x`), utilisée pour GatherOS
- * (QA §2 : importeur « quitte GatherOS », coexistence SYNC). Sans shell ; `exec` injectable.
+ * (importeur « quitte GatherOS », coexistence SYNC). Sans shell ; `exec` injectable.
  */
 import { execFile } from 'node:child_process'
 
@@ -45,7 +45,7 @@ export async function isProcessRunning(
   throw new Error(`pgrep a échoué (code ${code})`)
 }
 
-/** Dépendance `isRunning` injectée dans l'importeur (QA §2.4). */
+/** Dépendance `isRunning` injectée dans l'importeur. */
 export function isGatherOSRunning(exec?: ExecFileFn): Promise<boolean> {
   return isProcessRunning(GATHEROS_PROCESS, exec)
 }

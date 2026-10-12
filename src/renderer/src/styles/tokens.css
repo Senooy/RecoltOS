@@ -1,15 +1,13 @@
 /*
- * Design tokens : SOURCE UNIQUE des couleurs et ombres des deux thèmes (DESIGN §1.10 + PLAN §4.7 :
- * --accent-blue et les 6 couleurs de notes DESIGN §3.11). Thème porté par
+ * Design tokens : SOURCE UNIQUE des couleurs et ombres des deux thèmes (dont --accent-blue et les
+ * 6 couleurs de notes). Thème porté par
  * `<html data-theme="light|dark">`. Aucune autre feuille ni composant ne définit de couleur dépendant
- * du thème : ils lisent ces variables (WP-70).
+ * du thème : ils lisent ces variables.
  *
- * Thème sombre (WP-70) : les surfaces immersives (étagère, détail, Redécouvrir) sont MESURÉES sur
- * zzrib6, cfj0gf et q8y7fj ; le reste du sombre est EXTRAPOLÉ (pas encore de capture la référence
- * sombre de la Bibliothèque, des Réglages, de la Recherche ni de ⌘K), calé sur ces mesures :
- * segmented #161618 / #2a2a2c / pilule #f3f3f5 (zzrib6), kbd #2a2a2c, pilule #18181a, compteur
- * #636365 (q8y7fj), champs plus clairs que le panneau (cfj0gf). Pour recaler : ne modifier que le
- * bloc `[data-theme='dark']` ci-dessous.
+ * Thème sombre : les surfaces immersives (étagère, détail, Redécouvrir) servent de base ; le reste
+ * du sombre en dérive : segmented #161618 / #2a2a2c / pilule #f3f3f5, kbd #2a2a2c, pilule #18181a,
+ * compteur #636365, champs plus clairs que le panneau. Pour ajuster : ne modifier que le bloc
+ * `[data-theme='dark']` ci-dessous.
  *
  * `.light-island` : sous-arbre toujours rendu en clair (posts blancs sur les surfaces immersives).
  */
@@ -69,7 +67,7 @@
   --viewer-mid: #191718;
   --viewer-glow: rgba(255, 255, 255, 0.11);
   --viewer-divider: #2b2b2d;
-  --viewer-panel: #141315; /* recalé WP-70 sur cfj0gf (#131112–#151517) */
+  --viewer-panel: #141315; /* panneau de la vue détail */
   --viewer-panel-border: #1d1b1c;
   --viewer-card: #2c2c2e;
   --viewer-card-border: #303032;
@@ -93,9 +91,9 @@
   --rd-pill: #171719;
   --rd-pill-kbd: #343436;
   --rd-counter: #aeaeb0;
-  /* PLAN §4.7 : sélection Spaces, anneau bleu macOS */
+  /* sélection Spaces, anneau bleu macOS */
   --accent-blue: #0a84ff;
-  /* PLAN §4.7 / DESIGN §3.11 : 6 couleurs de notes (identiques dans les deux thèmes) */
+  /* 6 couleurs de notes (identiques dans les deux thèmes) */
   --note-yellow: #fff4b8;
   --note-pink: #ffd6e0;
   --note-green: #d8f5d0;
@@ -103,7 +101,7 @@
   --note-purple: #e6deff;
   --note-gray: #efefef;
 
-  /* ---- Ombres (DESIGN §1.6) ---- */
+  /* ---- Ombres ---- */
   --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 18px rgba(0, 0, 0, 0.06);
   --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12);
@@ -118,18 +116,18 @@
   --glass-border: rgba(0, 0, 0, 0.06);
 
   /* ---- Composants (valeurs claires mesurées écran par écran) ---- */
-  /* survol d'un bouton primaire (DESIGN §1.8), surlignage des menus (--hover × 1,25), avatars */
+  /* survol d'un bouton primaire, surlignage des menus (--hover × 1,25), avatars */
   --ui-accent-hover: #262626;
   --ui-menu-highlight: rgba(0, 0, 0, 0.05);
   --ui-avatar-s: 20%;
   --ui-avatar-l: 90%;
-  /* segmented central (DESIGN §2.4) */
+  /* segmented central */
   --seg-bg: var(--bg);
   --seg-border: var(--border);
   --seg-pill: var(--accent);
   --seg-pill-fg: var(--accent-fg);
   --seg-fg: var(--fg);
-  /* palette ⌘K (25w3t4) */
+  /* palette ⌘K */
   --palette-bg: linear-gradient(180deg, rgba(252, 252, 252, 0.95), rgba(242, 242, 242, 0.86));
   --palette-rule: rgba(0, 0, 0, 0.06);
   --palette-icon: #4e4c4d;
@@ -137,7 +135,7 @@
   --palette-hint: #9b9b9b;
   --palette-kbd-bg: rgba(0, 0, 0, 0.06);
   --palette-kbd-fg: #9a9a9a;
-  /* Réglages (fte10a, kgogfx, o8zko5) */
+  /* Réglages */
   --set-help: #959595;
   --set-label: #969696;
   --set-nav-title: #909090;
@@ -167,7 +165,7 @@
   --tone-caution: #d97706;
   --tone-err: #d1342b;
   --tone-off-dot: #b5b5b5;
-  /* Spaces (DESIGN §3.11, SPACES §1.4.1) */
+  /* Spaces */
   --sp-ink: #1d1d1f;
   --sp-gray: #8e8e93;
   --sp-red: #ff3b30;
@@ -181,7 +179,7 @@
   --sp-select: #0a84ff;
   --sp-note-text: #1d1d1f;
   --sp-note-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.07);
-  /* segmented sur l'étagère (immersif, mesuré zzrib6 : identique dans les deux thèmes) */
+  /* segmented sur l'étagère (immersif : identique dans les deux thèmes) */
   --shelf-seg-bg: #161618;
   --shelf-seg-border: #2a2a2c;
   --shelf-seg-pill: #f3f3f5;
@@ -233,7 +231,7 @@
   --skeleton: #1c1c1e;
   --canvas-dot: #2a2a2c;
 
-  /* ---- Ombres : anneau blanc, opacités doublées (DESIGN §1.6) ---- */
+  /* ---- Ombres : anneau blanc, opacités doublées ---- */
   --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.1);
   --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(0, 0, 0, 0.12);
   --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.24);
@@ -252,7 +250,7 @@
   --ui-menu-highlight: rgba(255, 255, 255, 0.0625);
   --ui-avatar-s: 12%;
   --ui-avatar-l: 24%;
-  /* segmented : mesuré sur l'étagère sombre (zzrib6) */
+  /* segmented : comme sur l'étagère sombre */
   --seg-bg: #161618;
   --seg-border: #2a2a2c;
   --seg-pill: #f3f3f5;
@@ -376,7 +374,7 @@ body,
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
-} /* texte copiable (§3.7) */
+} /* texte copiable */
 .tnum {
   font-variant-numeric: tabular-nums;
 }

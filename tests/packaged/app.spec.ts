@@ -1,5 +1,5 @@
 /**
- * App PACKAGÉE (WP-72) :
+ * App PACKAGÉE :
  *  - build LIVRÉ (`pnpm run pack` / `dist`, fuses `runAsNode` et inspection CLI fermés) : lancé
  *    comme par le Finder (aucun Playwright, impossible avec ces fuses), il rend la grille d'une
  *    bibliothèque de démo : la marque `grid-painted` arrive dans `logs/perf.jsonl` ;

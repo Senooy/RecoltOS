@@ -1,5 +1,5 @@
 /**
- * Tiroir Bibliothèque (SPACES §1.3.2, §1.6.1) : carte flottante à droite (inset 12 px, 340 px,
+ * Tiroir Bibliothèque : carte flottante à droite (inset 12 px, 340 px,
  * rayon 16, ombre de modale), recherche, sélecteur Tout / une collection, masonry 2 colonnes,
  * pastille ✓ sur les éléments déjà présents. Glisser vers la toile (`application/x-recoltos-items`,
  * sélection multiple ⌘/⇧-clic), double-clic = ajout au centre de la vue.

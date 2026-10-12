@@ -1,4 +1,4 @@
-/** Réglages › À propos (DESIGN §3.10). */
+/** Réglages › À propos. */
 import { useEffect, useState } from 'react'
 import { RecoltLogo } from '../../../components/icons'
 import { fr } from '../../../i18n/fr'

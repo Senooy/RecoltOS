@@ -1,5 +1,5 @@
 /**
- * Typographie française (DESIGN §0, PLAN §2.6) : pourcentages, dates, durées relatives, tailles,
+ * Typographie française : pourcentages, dates, durées relatives, tailles,
  * nombres, pluriels, guillemets. Source unique : aucun composant ne formate à la main.
  *
  * Espaces (vérifiées sous Node 22 / ICU) :
@@ -82,7 +82,7 @@ function calendarDays(t: number, n: number): number {
  * « il y a 4 min », « hier », « avant-hier », « dans 3 min »… (style court pour le temps court).
  * `now` est injectable pour les tests. Moins de 5 s d'écart : « maintenant ».
  *
- * Écarts volontaires avec DESIGN §0 :
+ * Choix volontaires :
  * - mois et années passent en style long (`style: 'long'`) : le style court d'`Intl` écrit « m. »
  *   et « a », illisible ; d'où « le mois dernier » ou « il y a 2 mois » ;
  * - « hier » et « avant-hier » suivent le jour calendaire local (et non un écart en heures) :

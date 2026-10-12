@@ -1,6 +1,6 @@
 /**
  * Opérations fichier du media-worker : PNG pour le presse-papiers, sha256 en flux,
- * clonage APFS (`COPYFILE_FICLONE`) et archive zip (yazl) — ARCHI §2.2, §7.
+ * clonage APFS (`COPYFILE_FICLONE`) et archive zip (yazl)
  */
 import { createHash } from 'node:crypto'
 import { once } from 'node:events'
@@ -23,7 +23,7 @@ import {
 } from './exec'
 import { withReadable } from './foreign'
 
-/** PNG (première image, orientation appliquée) ; `nativeImage` ne lit pas le webp (PLAN §1.12). */
+/** PNG (première image, orientation appliquée) ; `nativeImage` ne lit pas le webp. */
 export function toPng(
   a: { abs: string; maxEdge?: number },
   tools: MediaTools,

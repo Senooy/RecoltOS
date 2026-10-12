@@ -1,5 +1,5 @@
 /**
- * FLIP manuel (DESIGN §1.9, §3.7) : carte → vue détail sur 340 ms `--ease-sheet`.
+ * FLIP manuel : carte → vue détail sur 340 ms `--ease-sheet`.
  * Aucun FLIP en mouvement réduit.
  */
 

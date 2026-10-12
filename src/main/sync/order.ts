@@ -1,5 +1,5 @@
 /**
- * Ordre chronologique des publications synchronisées (SYNC §3.5) : `created_at` attribué par rapport
+ * Ordre chronologique des publications synchronisées : `created_at` attribué par rapport
  * au voisin déjà connu. `incremental` : ancre fixée au début du run, les nouveautés passent en tête
  * dans l'ordre de la plateforme. `backfill`, `deep` et `passive` avec curseur : l'ancre suit le dernier
  * voisin connu (recalage 1 ms dessous) et est persistée entre les tranches de backfill.

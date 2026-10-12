@@ -1,5 +1,5 @@
 /**
- * `items.post_meta` = `PostMetaSchema` v1 (ARCHI §4.4, PLAN §1.2).
+ * `items.post_meta` = `PostMetaSchema` v1.
  * Forme stockée en base. Le renderer ne la voit jamais : il reçoit `PostView` (dto/items.ts).
  */
 import { z } from 'zod'
@@ -55,7 +55,7 @@ export type PostMetaInput = z.input<typeof PostMetaSchema>
 
 /**
  * Lecture tolérante d'un JSON stocké (`safeParse`). Un échec renvoie `null` : la carte
- * s'affiche alors sans les données du post (ARCHI §4.4). `onError` permet de journaliser.
+ * s'affiche alors sans les données du post. `onError` permet de journaliser.
  */
 export function parsePostMeta(
   raw: string | null | undefined,
@@ -77,5 +77,5 @@ export function parsePostMeta(
   return r.data
 }
 
-/** Longueur maximale du texte de post envoyé dans `ItemCard.post.text` (PLAN §4.3). */
+/** Longueur maximale du texte de post envoyé dans `ItemCard.post.text`. */
 export const POST_VIEW_TEXT_MAX = 600

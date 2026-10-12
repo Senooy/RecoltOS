@@ -1,6 +1,6 @@
 /**
- * Dialogues IA montés une fois dans la coque (WP-44) : feuille « Changer », « Enrichir la
- * bibliothèque » (AI §6.6) et « Ce qui sera envoyé » (aperçu exact, AI §11.2).
+ * Dialogues IA montés une fois dans la coque : feuille « Changer », « Enrichir la
+ * bibliothèque » et « Ce qui sera envoyé » (aperçu exact).
  */
 import { useEffect, useState } from 'react'
 import type { AiEstimate } from '../../../../shared/dto/ai'

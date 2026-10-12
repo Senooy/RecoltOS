@@ -1,5 +1,5 @@
 /**
- * Redécouvrir (AI §10, PLAN §1.10) : tirage pondéré sans remise (Efraimidis-Spirakis, clé
+ * Redécouvrir : tirage pondéré sans remise (Efraimidis-Spirakis, clé
  * `u^(1/w)`, PRNG `mulberry32` de graine `seed`) sur les éléments éligibles (ni corbeille ni
  * masqués), ordre complet calculé une fois par (graine, portée) puis servi par pages.
  *
@@ -101,7 +101,7 @@ export function loadCandidates(db: Database.Database, collectionId: number | nul
   }))
 }
 
-/** Les 3 collections les plus récemment utilisées (`MAX(collection_items.added_at)`, ERRATA §G). */
+/** Les 3 collections les plus récemment utilisées (`MAX(collection_items.added_at)`). */
 export function recentCollections(
   db: Database.Database,
   limit = 3,

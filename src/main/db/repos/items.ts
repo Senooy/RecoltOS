@@ -1,7 +1,7 @@
 /**
- * Repo `items` (ARCHI §4.3, §7) : API d'ÉCRITURE gelée (insertion avec médias, upsert par
+ * Repo `items` : API d'ÉCRITURE gelée (insertion avec médias, upsert par
  * `(origin, origin_id)`, mise à jour, corbeille, masquage, vues, purge transactionnelle avec job
- * `purge.files`). Les lectures de liste (onglets, tris, compteurs) appartiennent à WP-12
+ * `purge.files`). Les lectures de liste (onglets, tris, compteurs) appartiennent
  * (`db/queries/**`).
  */
 import type Database from 'better-sqlite3'
@@ -150,7 +150,7 @@ const COLUMNS: Readonly<Record<keyof ItemPatch, ColumnSpec>> = {
   deletedAt: { col: 'deleted_at' },
 }
 
-/** U+FFFF : « sans titre » trié en dernier par le tri Nom (ARCHI §4.3). */
+/** U+FFFF : « sans titre » trié en dernier par le tri Nom. */
 export const UNTITLED_NAME_KEY = '￿'
 
 /** Clé du tri « Nom » : minuscules, sans diacritiques, espaces réduits ; vide → U+FFFF. */
@@ -314,7 +314,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
       ItemRow | undefined
 
   return {
-    /** Insère l'item (couverture NULL), ses médias, puis la couverture : une transaction (§4.3). */
+    /** Insère l'item (couverture NULL), ses médias, puis la couverture : une transaction. */
     insertWithMedia,
 
     insert(item: NewItem): InsertedItem {
@@ -380,7 +380,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
     },
 
     /**
-     * Corbeille (ARCHI §7) : `deleted_at = now` ; pour X / Instagram / Cosmos avec `external_id`,
+     * Corbeille : `deleted_at = now` ; pour X / Instagram / Cosmos avec `external_id`,
      * `sync_dismissed` empêche la sync de le recréer.
      */
     trash(ids: readonly number[], at: number = now()): number {
@@ -436,10 +436,10 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
     filesOf,
 
     /**
-     * Suppression définitive (ARCHI §7) en UNE transaction : liste des fichiers, `DELETE` (cascades,
+     * Suppression définitive en UNE transaction : liste des fichiers, `DELETE` (cascades,
      * FTS, pierres tombales `item` par trigger) et job `purge.files` (`item_id NULL`).
      * Coût : un seul `DELETE … IN json_each` (≈ 213 ms pour 3 000 items, mesuré) et un payload
-     * `purge.files` d'un seul tenant. Les appelants (« Vider la corbeille », purge automatique WP-12)
+     * `purge.files` d'un seul tenant. Les appelants (« Vider la corbeille », purge automatique)
      * DOIVENT donc découper en lots de 500 ids (`chunks(ids, 500)`) : un appel = une transaction
      * = un job `purge.files`.
      */
@@ -464,7 +464,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
       })()
     },
 
-    /** Ids des items en corbeille depuis avant `before` (purge automatique, WP-12). */
+    /** Ids des items en corbeille depuis avant `before` (purge automatique). */
     trashedBefore(before: number): number[] {
       return (
         q('SELECT id FROM items WHERE deleted_at IS NOT NULL AND deleted_at < ? ORDER BY id').all(

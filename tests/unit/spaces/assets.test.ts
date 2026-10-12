@@ -1,5 +1,5 @@
 /**
- * WP-60 : assets des Spaces (copie par empreinte, octets magiques, HEIC/TIFF → affichables par
+ * assets des Spaces (copie par empreinte, octets magiques, HEIC/TIFF → affichables par
  * sips, vignettes), ramasse-miettes (seuls les orphelins), format du presse-papiers interne, import
  * des boards GatherOS (lignes à width/height/rotation NULL).
  */

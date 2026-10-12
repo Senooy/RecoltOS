@@ -1,5 +1,5 @@
 /**
- * WP-05 — glisser vers l'extérieur (ARCHI §2.5) : `startDrag` appelé de façon synchrone avec les
+ * glisser vers l'extérieur : `startDrag` appelé de façon synchrone avec les
  * ORIGINAUX, icône `createFromDataURL` sinon `drag-fallback.png` sinon icône système ; expéditeur
  * et charge validés. Le glisser réel vers le Finder reste une vérification manuelle.
  */

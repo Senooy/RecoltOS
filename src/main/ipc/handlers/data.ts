@@ -1,5 +1,5 @@
 /**
- * Handlers `data.*` (WP-24, ARCHI §7) : export zip (dialogue d'enregistrement, media-worker,
+ * Handlers `data.*` : export zip (dialogue d'enregistrement, media-worker,
  * `export.progress`, affichage dans le Finder), instantanés (création, liste, suppression,
  * restauration), vérification, stockage, régénération des aperçus.
  */

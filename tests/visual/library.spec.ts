@@ -1,7 +1,6 @@
 /**
- * Référence visuelle M1 (WP-1F) : Bibliothèque, onglet Tout, thème clair, bibliothèque de démo
- * déterministe. La boucle de fidélité contre `uqre2k` se fait sur la vraie bibliothèque importée
- * (`pnpm run shots --library real`, hors CI) ; cette baseline garde le rendu stable ensuite.
+ * Régression visuelle : Bibliothèque, onglet Tout, thème clair, bibliothèque de démo
+ * déterministe (données factices).
  */
 import { expect, test } from '../helpers/e2e-fixtures'
 

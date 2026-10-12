@@ -1,7 +1,7 @@
 /**
  * Fonctions injectées dans la page par `scripting.executeScript` (sérialisées : AUCUNE capture de
  * variable extérieure, aucun import). Lecture des métadonnées, lecture d'un blob par morceaux,
- * toast en shadow DOM (SYNC §2.2, §2.5).
+ * toast en shadow DOM.
  */
 
 export interface PageMeta {
@@ -70,7 +70,7 @@ export async function readBlobChunk(
   return data
 }
 
-/** Pilule de confirmation (DESIGN de la Library la référence) : 3 s, bouton noir optionnel. */
+/** Pilule de confirmation : 3 s, bouton noir optionnel. */
 export function showToast(
   text: string,
   kind: 'ok' | 'info' | 'error',

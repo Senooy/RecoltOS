@@ -1,5 +1,5 @@
 /**
- * Table FIGÉE type de job → handler (PLAN §1.26, §4.2). Chaque lot remplit son fichier.
+ * Table FIGÉE type de job → handler. Chaque type de job a son fichier.
  */
 import type { JobType } from '../../../shared/jobs'
 import { aiEnrich, aiEnrichFailed } from './ai-enrich'

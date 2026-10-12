@@ -1,5 +1,5 @@
 /**
- * Classification des erreurs IA (AI §6.5). PRINCIPE : uniquement sur les CANAUX d'erreur (claude
+ * Classification des erreurs IA. PRINCIPE : uniquement sur les CANAUX d'erreur (claude
  * `system/api_retry`, `rate_limit_event` refusé, `result.is_error` ; codex `type:"error"`,
  * `turn.failed` ; code de sortie ; spawn). Jamais sur le message de l'agent (OCR, légendes, page
  * « 429 Too Many Requests » capturée) ni sur l'écho du prompt.
@@ -62,7 +62,7 @@ export const FINAL_CODES: ReadonlySet<AiErrorCode> = new Set([
 
 export const AI_MAX_ATTEMPTS = 4
 
-/** `min(30 s × 2^(n−1), 30 min) × (1 + rand·0,2)` (AI §6.5). */
+/** `min(30 s × 2^(n−1), 30 min) × (1 + rand·0,2)`. */
 export function aiBackoffMs(attempt: number, rand: () => number = Math.random): number {
   const base = Math.min(30_000 * 2 ** Math.max(0, attempt - 1), 30 * 60_000)
   return Math.round(base * (1 + rand() * 0.2))

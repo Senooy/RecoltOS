@@ -1,5 +1,5 @@
 /**
- * Alignement, répartition et ordre (SPACES §1.5.6). Référence = enveloppe de la sélection ; la
+ * Alignement, répartition et ordre. Référence = enveloppe de la sélection ; la
  * répartition (≥ 3 nœuds) égalise les espaces entre enveloppes triées par centre. Les nœuds tournés
  * sont alignés par leur enveloppe (AABB). `reorder` rend de nouveaux `z` 0..n-1.
  */

@@ -1,6 +1,6 @@
 /**
- * DTO des éléments (PLAN §4.3). Construits par main ; les URL média sont déjà résolues
- * (`recolt://`, repli `thumb ?? legacyThumb ?? display ?? original`, PLAN §1.7).
+ * DTO des éléments. Construits par main ; les URL média sont déjà résolues
+ * (`recolt://`, repli `thumb ?? legacyThumb ?? display ?? original`).
  * Aucune URL http(s) de ressource : `sourceUrl` est un lien affiché/ouvert, jamais chargé.
  */
 import { z } from 'zod'
@@ -20,7 +20,7 @@ export const PostAuthorView = z.object({
   name: z.string().nullable(),
   /** Sans '@'. */
   handle: z.string().nullable(),
-  /** `null` → monogramme (avatars Instagram expirés, PLAN §9.4). */
+  /** `null` → monogramme (avatars Instagram expirés). */
   avatarUrl: MediaUrl.nullable(),
 })
 export type PostAuthorView = z.output<typeof PostAuthorView>
@@ -32,7 +32,7 @@ export const QuotedPostView = z.object({
 })
 export type QuotedPostView = z.output<typeof QuotedPostView>
 
-/** Vue de post pour une carte de grille (PLAN §1.2, §4.3). */
+/** Vue de post pour une carte de grille. */
 export const PostView = z.object({
   author: PostAuthorView,
   text: z.string().max(POST_VIEW_TEXT_MAX).nullable(),
@@ -133,7 +133,7 @@ export const ItemsPage = z.object({
 })
 export type ItemsPage = z.output<typeof ItemsPage>
 
-/** Comptes par onglet (servent ailleurs que dans les onglets, ERRATA §C). */
+/** Comptes par onglet (servent ailleurs que dans les onglets). */
 export const TabCounts = z.object({
   all: z.number().int(),
   saved: z.number().int(),

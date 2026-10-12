@@ -1,5 +1,5 @@
 /**
- * Budgets mémoire GPU de Chromium (WP-71). Mesuré sur la toile de 500 nœuds en Retina
+ * Budgets mémoire GPU de Chromium. Mesuré sur la toile de 500 nœuds en Retina
  * (`tests/perf/spaces.spec.ts`, `docs/perf.md`) : sans borne, le processus GPU gardait jusqu'à
  * ~750 Mo de textures (tuiles de prérendu et images décodées) après un zoom ou une exploration ;
  * ces deux budgets le ramènent à ~250–400 Mo sans perte de fluidité (60 images/s, p95 ≤ 18 ms).

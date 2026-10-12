@@ -1,5 +1,5 @@
 /**
- * Mise à jour sans boucle (SYNC §1.7) : un seul `runtime.reload()` par version livrée ; ensuite
+ * Mise à jour sans boucle : un seul `runtime.reload()` par version livrée ; ensuite
  * `ext.stale` (extension chargée depuis un autre dossier).
  */
 import { api } from '../lib/api'

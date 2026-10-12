@@ -1,6 +1,6 @@
 /**
- * Textes du domaine `collection` (WP-20) : vue Collection, sous-collections, sélecteur de
- * collection réutilisable. Le namespace de base `collection` (DESIGN §5.2) reste dans `base.ts`.
+ * Textes du domaine `collection` : vue Collection, sous-collections, sélecteur de
+ * collection réutilisable. Le namespace de base `collection` reste dans `base.ts`.
  */
 import { plural } from '../plural'
 

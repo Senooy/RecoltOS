@@ -1,4 +1,4 @@
-# Réglages pnpm 12 (PLAN §1.15). Une seule package racine : pas de champ `packages`.
+# Réglages pnpm 12. Une seule package racine : pas de champ `packages`.
 nodeLinker: hoisted
 saveExact: true
 autoInstallPeers: true

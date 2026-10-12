@@ -1,5 +1,5 @@
 /**
- * Feuille « Changer » (AI §12.1, §11) : choix du moteur (Claude, ChatGPT / Codex, Aucun), état
+ * Feuille « Changer » : choix du moteur (Claude, ChatGPT / Codex, Aucun), état
  * détecté (chemin, copies, version, connexion), « Vérifier » (niveau 1, gratuit), « Tester un vrai
  * appel » (niveau 2, 1 requête) et consentement. AUCUN appel avant « J'ai compris ».
  */

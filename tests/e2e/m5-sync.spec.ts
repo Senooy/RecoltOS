@@ -1,5 +1,5 @@
 /**
- * M5 (WP-56/57) : Réglages › Synchronisation et sync de bout en bout CÔTÉ APP, avec un FAUX hôte
+ * M5 : Réglages › Synchronisation et sync de bout en bout CÔTÉ APP, avec un FAUX hôte
  * natif branché sur le socket de l'app (`RECOLTOS_BRIDGE=1`) qui rejoue les fixtures synthétiques :
  * activation (feuille de risques), `sync.run` → pages → `sync.ack`, ingestion, ligne d'état, carte de
  * post rendue en WebP 960 px, pilule « nouveaux favoris ». Aucun réseau, aucun compte.

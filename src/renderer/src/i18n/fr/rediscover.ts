@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `rediscover` (WP-32). Le namespace de base `rediscover` (DESIGN §5.2) reste
+ * Textes du domaine `rediscover`. Le namespace de base `rediscover` reste
  * dans `base.ts` ; ce fichier ajoute `rediscoverUi`.
  */
 export const rediscover = {

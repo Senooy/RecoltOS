@@ -1,5 +1,5 @@
 /**
- * Permission « Enregistrement de l'écran » (SPACES §2.4). `getMediaAccessStatus('screen')` ne
+ * Permission « Enregistrement de l'écran ». `getMediaAccessStatus('screen')` ne
  * distingue en pratique que `granted` / pas `granted` ; `desktopCapturer.getSources` provoque le
  * prompt système. Développement / tests : `RECOLTOS_SCREEN_ACCESS=granted|denied` force la valeur
  * (refusé dans l'app empaquetée).

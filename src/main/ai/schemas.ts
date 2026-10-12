@@ -1,5 +1,5 @@
 /**
- * Schémas de sortie (AI §5.4) : JSON Schema STRICT envoyé aux CLI (`--json-schema`,
+ * Schémas de sortie : JSON Schema STRICT envoyé aux CLI (`--json-schema`,
  * `--output-schema`) sans bornes (le mode strict d'OpenAI les refuse) ; bornes appliquées par zod
  * en TRONQUANT plutôt qu'en rejetant. Décodage tolérant du texte (clôtures, première accolade
  * équilibrée).

@@ -1,6 +1,6 @@
 /**
- * Énumérations et primitives zod partagées (PLAN §1.22, §4.3, §4.4 ; ARCHI §2.3).
- * Aucun import `electron` ni `node:*` dans `src/shared/**` (QA §2.4).
+ * Énumérations et primitives zod partagées.
+ * Aucun import `electron` ni `node:*` dans `src/shared/**`.
  */
 import { z } from 'zod'
 import './zod-locale'
@@ -9,7 +9,7 @@ import './zod-locale'
 export const Uuid = z.uuid()
 export type Uuid = z.output<typeof Uuid>
 
-/** Tri de liste (PLAN §1.22). `viewed` = consultés récemment, `mostViewed` = les plus consultés. */
+/** Tri de liste. `viewed` = consultés récemment, `mostViewed` = les plus consultés. */
 export const SORT_MODES = [
   'recent',
   'oldest',
@@ -22,7 +22,7 @@ export const SORT_MODES = [
 export const SortMode = z.enum(SORT_MODES)
 export type SortMode = z.output<typeof SortMode>
 
-/** Onglets de la Bibliothèque (DESIGN §3.1). */
+/** Onglets de la Bibliothèque. */
 export const LIBRARY_TABS = ['all', 'saved', 'unsorted', 'trash', 'hidden'] as const
 export const LibraryTab = z.enum(LIBRARY_TABS)
 export type LibraryTab = z.output<typeof LibraryTab>
@@ -60,15 +60,15 @@ export type HexColor = z.output<typeof HexColor>
 /** Horodatage en millisecondes epoch. */
 export const EpochMs = z.number().int().nonnegative()
 
-/** Identifiant de bibliothèque, compatible avec un nom d'hôte (ARCHI §2.5). */
+/** Identifiant de bibliothèque, compatible avec un nom d'hôte. */
 export const LibraryId = z
   .string()
   .regex(/^[a-z0-9-]{1,40}$/, 'identifiant de bibliothèque invalide')
 export type LibraryId = z.output<typeof LibraryId>
 
 /**
- * URL média rendue au renderer : toujours `recolt://<libraryId>/<root>/<rel>?v=<n>` (PLAN §1.7).
- * Le renderer ne reçoit JAMAIS d'URL http(s) (PLAN §2.4).
+ * URL média rendue au renderer : toujours `recolt://<libraryId>/<root>/<rel>?v=<n>`.
+ * Le renderer ne reçoit JAMAIS d'URL http(s).
  */
 export const MEDIA_ROOTS = [
   'items',
@@ -86,7 +86,7 @@ export type MediaRoot = (typeof MEDIA_ROOTS)[number]
  * Forme : `recolt://<libraryId>/<root>/<rel>[?…]`, `root` ∈ MEDIA_ROOTS, sans fragment ni
  * antislash ; la requête ne contient que des caractères sûrs (`?v=<n>` en production, ou les
  * indications `w=&h=&c=` de la maquette). Aucun segment `.` ou `..` (contournement de racine).
- * La revalidation réelle (realpath, racine) reste côté main (WP-05, handlers).
+ * La revalidation réelle (realpath, racine) reste côté main (handlers).
  */
 const MEDIA_URL_RE = new RegExp(
   `^recolt://[a-z0-9-]{1,40}/(?:${MEDIA_ROOTS.join('|')})/[^?#\\\\\\s]+(?:\\?[A-Za-z0-9=&._-]*)?$`,
@@ -98,7 +98,7 @@ export const MediaUrl = z
     message: 'segment de chemin interdit (. ou ..)',
   })
   // Encodages et segments vides : `%2e%2e`, `..%2f`, `%5c` et `//` contournent le contrôle
-  // littéral. La vraie défense reste côté main (décodage, realpath, racine : WP-05).
+  // littéral. La vraie défense reste côté main (décodage, realpath, racine).
   .refine(
     (u) => {
       const pathPart = (u.split('?')[0] ?? '').slice('recolt://'.length)

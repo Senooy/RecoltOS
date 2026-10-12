@@ -1,5 +1,5 @@
 /**
- * Liste des spaces (route `spaces`, DESIGN §3.11, SPACES §1.3.1). État vide (fidélité `35yuga`) :
+ * Liste des spaces (route `spaces`). État vide :
  * `ChartPie` 32 px `--fg-faint`, 14 px, « Aucun space pour l'instant » 17/22 500, 8 px, texte 13/18
  * `--fg-subtle` (360 px max), 20 px, pilule noire 36 px « Créer ton premier space » ; aucun FAB.
  * Liste : cartes de 240 px, « Nouveau space » en tirets d'abord, puis `SpaceCard` (vignette 16:10 =

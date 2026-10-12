@@ -1,8 +1,8 @@
 /**
  * Garde des dossiers de sortie destructifs (`make-fixtures.mts`, `seed-bench.mts`, `cloneDir`) : ces
  * scripts SUPPRIMENT récursivement `--out` avant d'écrire. Une faute de frappe (`--out ~`, `--out .`,
- * le `userData` réel de RecoltOS, `~/Library/Application Support/GatherOS`) ne doit jamais effacer de
- * données (PLAN §2.1 : GatherOS en lecture seule).
+ * le `userData` réel de RecoltOS, le dossier de l'ancienne app GatherOS, source de l'import) ne doit
+ * jamais effacer de données.
  *
  * Règles de `assertSafeOutDir(out)` :
  *  1. toujours refusés, même avec `force` : `/`, `$HOME` et ses parents, la racine du dépôt et ses
@@ -66,7 +66,7 @@ export function protectedReason(target: string, options: SafeOutOptions = {}): s
   if (within(target, repo)) return 'la racine du dépôt (ou un de ses parents)'
   const segments = target.split(sep)
   if (segments.some((s) => s.toLowerCase() === 'gatheros'))
-    return 'un dossier GatherOS (lecture seule, PLAN §2.1)'
+    return 'un dossier GatherOS (lecture seule)'
   for (let i = 0; i < segments.length; i++) {
     if (segments[i] === 'Library' && i > 0) return 'un dossier Library (données applicatives)'
     if (segments[i] === 'Application Support') return 'un dossier Application Support'

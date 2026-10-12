@@ -1,5 +1,5 @@
 /**
- * File IA (WP-43) : vraie table `jobs`, vraie `JobQueue`, media-worker en processus, faux CLI.
+ * File IA : vraie table `jobs`, vraie `JobQueue`, media-worker en processus, faux CLI.
  * Horloge injectée pour le budget.
  */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'

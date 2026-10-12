@@ -1,5 +1,5 @@
 /**
- * Détection de GatherOS (SYNC §1.9, PLAN §2.1) : application présente (existence du bundle seulement,
+ * Détection de GatherOS : application présente (existence du bundle seulement,
  * aucun fichier interne ouvert), processus en cours, manifests natifs `co.gatheros.host.json`
  * (EXISTENCE seulement : jamais lus, modifiés ni supprimés) et les trois seuls drapeaux de sync de ses
  * réglages (liste blanche de l'importeur ; le jeton de l'extension n'est jamais lu).
@@ -49,7 +49,7 @@ export async function detectGatherOS(
   return { appInstalled, appRunning, hostManifests, syncFlags }
 }
 
-/** Avertissement bloquant pour Instagram (SYNC §1.9). */
+/** Avertissement bloquant pour Instagram. */
 export function blocksInstagram(p: GatherOSPresence): boolean {
   return (p.appInstalled && p.syncFlags?.instagram !== false) || p.hostManifests.length > 0
 }

@@ -9,7 +9,7 @@ import {
 } from '../../../src/main/ai/tags'
 import { openTestLib } from '../db/helpers'
 
-describe('tags (AI §7)', () => {
+describe('tags', () => {
   it('normalizeTag', () => {
     expect(normalizeTag('Graphic Design')).toBe('graphic-design')
     expect(normalizeTag('#Jeu Vidéo')).toBe('jeu-video')
@@ -52,7 +52,7 @@ describe('tags (AI §7)', () => {
   })
 })
 
-describe('schémas (AI §5.4)', () => {
+describe('schémas de sortie', () => {
   it('schéma strict sans bornes', () => {
     const s = analysisSchema()
     expect(s.required).toEqual(['title', 'description', 'tags', 'ocr'])

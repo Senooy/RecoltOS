@@ -1,5 +1,5 @@
 /**
- * M2 (WP-20, WP-21) : étagère 3D des collections et vue Collection (bibliothèque de démo).
+ * M2 : étagère 3D des collections et vue Collection (bibliothèque de démo).
  */
 import type { Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -33,7 +33,7 @@ test.describe('étagère et vue Collection', () => {
       .evaluateAll((els) => els.map((e) => (e as HTMLElement).getBoundingClientRect().x))
     expect(labels[0]).toBeCloseTo(150, 0)
     expect(labels[1]! - labels[0]!).toBeCloseTo(122, 0)
-    // Segmented sombre (DESIGN §3.4) et en-tête réduit.
+    // Segmented sombre et en-tête réduit.
     const nav = page.locator(t('nav-segmented'))
     await expect(nav).toHaveCSS('background-color', 'rgb(22, 22, 24)')
     await expect(page.locator(t('library-picker'))).toHaveCount(0)
@@ -75,7 +75,7 @@ test.describe('étagère et vue Collection', () => {
         .get(parent.id) as { n: number }
     ).n
     await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
-    // Géométrie DESIGN §3.3 (c7j4tx, ±4 px).
+    // Géométrie (±4 px).
     const back = await page.locator(t('collection-back')).boundingBox()
     expect(Math.abs(back!.x - 33)).toBeLessThanOrEqual(4)
     expect(back!.width).toBe(30)

@@ -1,6 +1,6 @@
 /**
  * Ouverture de la vue détail depuis une liste (grille, recherche, palette, notification) : la liste
- * d'origine est conservée pour ←/→ et le compteur « 3 / 408 » (ERRATA §C).
+ * d'origine est conservée pour ←/→ et le compteur « 3 / 408 ».
  */
 import type { ItemCard } from '../../../../shared/dto/items'
 import { useUi } from '../../state/ui'

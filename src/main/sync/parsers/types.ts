@@ -1,10 +1,10 @@
 /**
- * Sortie commune des parseurs de sync (WP-55, SYNC §3.4, §4.2, §5.2 point 4).
+ * Sortie commune des parseurs de sync.
  *
  * Les parseurs sont des fonctions PURES : pas de réseau, pas d'horloge, pas d'exception. Ils
  * reçoivent le `json` brut d'un `sync.page` (ou d'un `capture.passive` / `item.data`) et rendent
  * soit une page normalisée, soit une erreur classée. Les URL distantes produites ici sont des
- * DONNÉES pour le téléchargeur de l'app (WP-56) : elles vivent en base (`post_meta`, jobs) et ne
+ * DONNÉES pour le téléchargeur de l'app : elles vivent en base (`post_meta`, jobs) et ne
  * partent jamais telles quelles vers le renderer (qui reçoit `PostView`).
  */
 import type { BridgePlatform } from '../../../shared/bridge/constants'
@@ -103,7 +103,7 @@ export interface NormalizedPost {
   sourceKey: string
   /** URL canonique de la publication. */
   sourceUrl: string
-  /** `items.kind` visé (SYNC §3.5 / §4.2 / §5.2) : suit le 1er média. */
+  /** `items.kind` visé : suit le 1er média. */
   kind: 'image' | 'video' | 'tweet' | 'url'
   /** Position dans la page (0 = premier rendu par la plateforme, donc le plus récent). */
   position: number
@@ -112,7 +112,7 @@ export interface NormalizedPost {
   /** Date de publication (ms epoch UTC) si connue. */
   postedAt: number | null
   /**
-   * Heure d'ordre attribuée par `order.ts` (WP-56). Toujours `null` en sortie de parseur : les
+   * Heure d'ordre attribuée par `order.ts`. Toujours `null` en sortie de parseur : les
    * parseurs ne lisent pas l'horloge.
    */
   createdAt: number | null
@@ -121,7 +121,7 @@ export interface NormalizedPost {
   authors: NormalizedAuthor[]
   text: string | null
   media: NormalizedMedia[]
-  /** `items.post_meta` v1, validé par `PostMetaSchema` (ERRATA §A). `mediaUuid` = `null`. */
+  /** `items.post_meta` v1, validé par `PostMetaSchema`. `mediaUuid` = `null`. */
   postMeta: PostMeta
   extra: PostExtra
 }

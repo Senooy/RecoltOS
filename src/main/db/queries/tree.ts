@@ -1,5 +1,5 @@
 /**
- * Arbre des collections (ARCHI §7, ERRATA §C) : `count` = membres directs non supprimés (masqués
+ * Arbre des collections : `count` = membres directs non supprimés (masqués
  * compris) ; couvertures ≤ 3 = `cover_item_id`, puis
  * `ORDER BY collection_items.added_at DESC, items.id DESC`, membres en corbeille exclus.
  */

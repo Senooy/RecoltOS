@@ -1,5 +1,5 @@
 /**
- * Rangée de collections (DESIGN §3.1) : carte « Nouvelle collection » en tirets (création en
+ * Rangée de collections : carte « Nouvelle collection » en tirets (création en
  * ligne), cartes 188×181 avec `FanStack` (3 couvertures, posts en `TweetCard cover` réduit à .28),
  * cible de dépôt des cartes de la grille, réordonnancement horizontal (`Reorder`), menu contextuel.
  */

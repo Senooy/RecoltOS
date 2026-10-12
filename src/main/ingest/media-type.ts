@@ -1,5 +1,5 @@
 /**
- * Typage des fichiers par leur contenu (ARCHI §5.2 étape 4) : `file-type` sur les 4 100 premiers
+ * Typage des fichiers par leur contenu : `file-type` sur les 4 100 premiers
  * octets. HEIC, HEIF et PSD passent par sips ; TIFF et formats que Chromium n'affiche pas reçoivent
  * un `display/` webp 2048.
  */

@@ -1,5 +1,5 @@
 /**
- * URL des médias côté renderer (PLAN §1.7). Les DTO portent déjà des URL `recolt://` résolues
+ * URL des médias côté renderer. Les DTO portent déjà des URL `recolt://` résolues
  * par main (repli compris) : le renderer ne construit aucun chemin et refuse tout http(s).
  * Mode maquette (dev) : `recolt://mock/...` → `/__mock/media/...` (middleware Vite, même origine).
  */

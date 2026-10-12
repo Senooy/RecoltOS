@@ -1,6 +1,6 @@
 /**
- * Lancement de l'app Electron pour les projets Playwright e2e / visual / perf (QA §6.1, §7.2).
- * Lance `out/main/index.js` (build non empaqueté) avec les variables de testabilité (QA §2) :
+ * Lancement de l'app Electron pour les projets Playwright e2e / visual / perf.
+ * Lance `out/main/index.js` (build non empaqueté) avec les variables de testabilité :
  * `RECOLTOS_USER_DATA` (un dossier neuf sous `.tmp/`), `RECOLTOS_E2E=1`, `RECOLTOS_HOME`,
  * `RECOLTOS_WINDOW=1280x820`, `TZ=Europe/Paris`, `LANG=fr_FR.UTF-8`. Collecte `console.error` et
  * `pageerror` (y compris les violations CSP, converties en erreurs par le navigateur).
@@ -26,7 +26,7 @@ export interface LaunchOptions {
   home?: string
   /** Taille de fenêtre `LxH` (défaut 1280x820). */
   windowSize?: string
-  /** Densité de pixels : 1 pour les tests (défaut), 2 pour `pnpm run shots` (QA §7.2). */
+  /** Densité de pixels : 1 pour les tests (défaut), 2 pour `pnpm run shots`. */
   deviceScaleFactor?: 1 | 2
   /** Variables d'environnement supplémentaires. */
   env?: Record<string, string>
@@ -67,7 +67,7 @@ export const INHERITED_ELECTRON_ENV_TO_DROP: readonly string[] = [
 
 /**
  * Environnement de l'app lancée : celui du processus de test, sans les variables ci-dessus, puis les
- * réglages de testabilité (QA §2) et enfin `extra` (choix explicite de l'appelant, en dernier).
+ * réglages de testabilité et enfin `extra` (choix explicite de l'appelant, en dernier).
  */
 export function buildLaunchEnv(
   processEnv: NodeJS.ProcessEnv,
@@ -115,7 +115,7 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
         ...(options.args ?? []),
       ],
       // `ELECTRON_RENDERER_URL` et les variables de `INHERITED_ELECTRON_ENV_TO_DROP` ne sont jamais
-      // transmises : l'app lancée n'hérite pas de l'environnement du shell ni d'un autre lot.
+      // transmises : l'app lancée n'hérite pas de l'environnement du shell ni d'un autre test.
       env: buildLaunchEnv(
         process.env,
         {

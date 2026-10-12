@@ -1,5 +1,5 @@
 /**
- * Appels IPC typés de bout en bout (PLAN §4.4) : `rpc('items.list', {...})` → `Out<'items.list'>`.
+ * Appels IPC typés de bout en bout : `rpc('items.list', {...})` → `Out<'items.list'>`.
  * Le renderer n'utilise jamais `window.recolt.invoke` directement.
  */
 import type { AppErrorCode } from '../../../shared/errors'

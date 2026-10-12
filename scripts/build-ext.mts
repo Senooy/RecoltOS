@@ -1,5 +1,5 @@
 /**
- * Extension MV3 (QA §4.4, ERRATA §G.2) : `extension/` → `dist-extension/<cible>/` pour chaque cible
+ * Extension MV3 : `extension/` → `dist-extension/<cible>/` pour chaque cible
  * (`chromium`, `firefox`), une seule base de code.
  *  - manifest généré par `extension/manifest.ts` (`buildManifest(cible)`), version = `EXTENSION_VERSION` ;
  *  - script d'arrière-plan : `extension/src/background/index.ts` → `background.js` (IIFE autonome :
@@ -62,7 +62,7 @@ async function buildTarget(
     alias: { '@shared': join(root, 'src/shared') },
     legalComments: 'none' as const,
     // Constantes de `define` repliées et branches mortes retirées : le build livré ne contient ni
-    // l'auto-test ni les points d'accès du faux serveur (WP-72). Identifiants lisibles conservés.
+    // l'auto-test ni les points d'accès du faux serveur. Identifiants lisibles conservés.
     minifySyntax: true,
     treeShaking: true,
     logLevel: opts.logLevel ?? ('info' as const),

@@ -1,4 +1,4 @@
-/** Étagère (WP-21) : choix des vidéos lues et champ d'étoiles déterministe. */
+/** Étagère : choix des vidéos lues et champ d'étoiles déterministe. */
 import { describe, expect, it } from 'vitest'
 import {
   MAX_PLAYING,

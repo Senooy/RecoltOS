@@ -1,5 +1,5 @@
 /**
- * Menu de tri (DESIGN §3.1) : déclencheur 32 px (rayon 10, bordure), options avec coche.
+ * Menu de tri : déclencheur 32 px (rayon 10, bordure), options avec coche.
  */
 import { Check, ChevronDown, Clock } from 'lucide-react'
 import type { SortMode } from '../../../../shared/enums'

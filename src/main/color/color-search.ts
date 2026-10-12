@@ -1,5 +1,5 @@
 /**
- * Filtre par couleur (AI §9.2) : ΔE2000 via `differenceCiede2000()` de culori (fabrique ; objets
+ * Filtre par couleur : ΔE2000 via `differenceCiede2000()` de culori (fabrique ; objets
  * `{mode:'lab65'}`, jamais des tableaux), tolérance 18 par défaut, entrées de poids ≥ 0,05,
  * classement par `d_eff = d − 8·min(1, w/0,30)` (une couleur dominante pèse plus). Pré-filtre ΔE76
  * sur le `Float32Array` (borne large : ΔE76 ≤ 3·tolérance + 10) pour tenir < 2 ms sur 10 000

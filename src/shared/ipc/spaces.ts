@@ -1,6 +1,6 @@
 /**
- * Contrat `spaces.*` (PLAN §4.4, SPACES §1.7.2 adapté : uuid, `itemUuids`).
- * `exportPng`/`exportCancel` (WP-63) déclarés dès maintenant (extensions incluses en V1, ERRATA §G).
+ * Contrat `spaces.*` (uuid, `itemUuids`).
+ * `exportPng`/`exportCancel` déclarés dès maintenant (extensions incluses en V1).
  */
 import { z } from 'zod'
 import { AssetInfo, SpaceDoc, SpaceSummary } from '../dto/spaces'

@@ -1,5 +1,5 @@
 /**
- * Enveloppe des messages `{ v: 1, id, re?, type, ts, payload }` (SYNC §6.1). Possédé par WP-51.
+ * Enveloppe des messages `{ v: 1, id, re?, type, ts, payload }`.
  * Utilisé par l'app, l'hôte natif (bundle) et l'extension : aucune dépendance hors zod.
  */
 import { z } from 'zod'
@@ -9,7 +9,7 @@ export const Platform = z.enum(BRIDGE_PLATFORMS)
 export const Trigger = z.enum(['schedule', 'hint', 'manual', 'toggle', 'import'])
 export type Trigger = z.output<typeof Trigger>
 
-/** Types de messages connus (SYNC §6.1, + `ext.status`, `app.status`, `host.hello`). */
+/** Types de messages connus (`ext.status`, `app.status`, `host.hello`). */
 export const MESSAGE_TYPES = [
   'host.hello',
   'app.status',

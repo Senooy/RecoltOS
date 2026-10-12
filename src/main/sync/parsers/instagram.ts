@@ -1,9 +1,9 @@
 /**
  * Parseur Instagram : `GET /api/v1/feed/saved/posts/` (REST) et `media/<pk>/info/` → publications
- * normalisées (WP-55, SYNC §4.2). Fonction pure, jamais d'exception.
+ * normalisées. Fonction pure, jamais d'exception.
  *
  * Un adaptateur GraphQL minimal (`data.<connexion>.edges[].node`, `page_info`) produit la même
- * sortie : forme NON VÉRIFIÉE (spike S2 non exécuté avec compte), gardée défensive.
+ * sortie : forme NON VÉRIFIÉE sur un compte réel, gardée défensive.
  */
 import {
   arr,

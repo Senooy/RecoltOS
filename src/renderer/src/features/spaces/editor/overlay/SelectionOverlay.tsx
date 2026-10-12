@@ -1,6 +1,6 @@
 /**
- * Calque écran de la sélection (SPACES §1.3.2, §1.4.1) : contour 1,5 px bleu, 8 poignées 8×8
- * blanches bordées de bleu, poignée de rotation (WP-63), cadre pointillé sans poignées pour une
+ * Calque écran de la sélection : contour 1,5 px bleu, 8 poignées 8×8
+ * blanches bordées de bleu, poignée de rotation, cadre pointillé sans poignées pour une
  * sélection multiple, marquee (fond bleu 8 %), guides d'alignement roses. Épaisseurs constantes
  * à l'écran : seul ce calque suit la caméra à chaque image.
  */

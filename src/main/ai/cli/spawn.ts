@@ -1,5 +1,5 @@
 /**
- * `runCli` (AI §3.3) : process en groupe (`detached`), stdin FERMÉ (`ignore` : codex ajouterait
+ * `runCli` : process en groupe (`detached`), stdin FERMÉ (`ignore` : codex ajouterait
  * stdin au prompt), délai, annulation et garde-fou ligne à ligne (`onLine` → 'kill'), plafond de
  * sortie (8 Mo). Arrêt : SIGTERM au groupe, puis SIGKILL après 3 s.
  */

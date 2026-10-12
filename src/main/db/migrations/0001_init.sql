@@ -1,5 +1,5 @@
--- RecoltOS : schéma initial (ARCHI §4.3 et §4.5 + delta PLAN §4.2, ERRATA §G).
--- Possédé par WP-00 puis Fable ; gelé au tag m1 (ensuite : migrations 0002+).
+-- RecoltOS : schéma initial.
+-- gelé au tag m1 (ensuite : migrations 0002+).
 -- Convention : `id INTEGER PRIMARY KEY` interne (rowid stable, FTS, clés étrangères) et
 -- `uuid TEXT UNIQUE` exposé (IPC, noms de fichiers). Horodatages en ms epoch.
 -- `PRAGMA user_version` est posé par `db/migrate.ts`, pas par ce fichier.
@@ -267,7 +267,7 @@ CREATE TABLE rediscover_log (
 );
 CREATE INDEX ix_rlog_item ON rediscover_log(item_id, shown_at DESC);
 
--- ===================== SYNCHRO (SYNC §6.3, PK `source`) =====================
+-- ===================== SYNCHRO (PK `source`) =====================
 CREATE TABLE sync_state (
   source               TEXT PRIMARY KEY CHECK (source IN ('x','instagram','cosmos')),
   enabled              INTEGER NOT NULL DEFAULT 0,
@@ -377,7 +377,7 @@ CREATE TABLE search_history (
   uses    INTEGER NOT NULL DEFAULT 1
 ) WITHOUT ROWID;
 
--- ===================== RECHERCHE PLEIN TEXTE (FTS5 avec contenu, ARCHI §4.5) =====================
+-- ===================== RECHERCHE PLEIN TEXTE (FTS5 avec contenu) =====================
 CREATE VIRTUAL TABLE items_fts USING fts5(
   title, notes, post_text, ocr_text, ai_text, tags, url,
   tokenize = 'unicode61 remove_diacritics 2',

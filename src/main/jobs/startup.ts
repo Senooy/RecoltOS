@@ -1,5 +1,5 @@
 /**
- * Ménage à l'ouverture d'une bibliothèque (ARCHI §5.3) : jobs `running` → `queued` (reprise après
+ * Ménage à l'ouverture d'une bibliothèque : jobs `running` → `queued` (reprise après
  * crash), jobs terminés de plus de 7 jours supprimés, fichiers temporaires orphelins (`.part`,
  * `.decoded.*`…) supprimés : à ce moment, aucun job ne tourne dans cette bibliothèque.
  */

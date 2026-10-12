@@ -1,4 +1,4 @@
-/** Contrat `sync.*` (PLAN §4.4). */
+/** Contrat `sync.*`. */
 import { z } from 'zod'
 import { ItemCard } from '../dto/items'
 import { SyncRunInfo, SyncStatus } from '../dto/sync'
@@ -18,7 +18,7 @@ export const syncContract = {
     input: z.object({ source: SyncSource, limit: z.number().int().min(1).max(200).default(20) }),
     output: z.array(SyncRunInfo),
   },
-  /** Éléments rattrapés par le backfill, pas encore revus (pilule « Revoir », SYNC §3.6). */
+  /** Éléments rattrapés par le backfill, pas encore revus (pilule « Revoir »). */
   'sync.recovered': {
     input: z.object({ source: SyncSource.optional() }).default({}),
     output: z.object({ items: z.array(ItemCard) }),

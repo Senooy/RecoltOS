@@ -1,5 +1,5 @@
 /**
- * Menus contextuels de la toile (SPACES §1.3.3) : nœud (Copier, Dupliquer, Premier plan,
+ * Menus contextuels de la toile : nœud (Copier, Dupliquer, Premier plan,
  * Arrière-plan, Verrouiller, Ouvrir dans la bibliothèque, Ajouter à la bibliothèque, Supprimer)
  * et toile (Coller, Nouvelle note, Nouveau texte, Tout sélectionner, Ajuster à l'écran).
  */

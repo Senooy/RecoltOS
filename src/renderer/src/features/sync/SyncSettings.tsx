@@ -1,7 +1,6 @@
 /**
- * Réglages › Synchronisation (WP-57, DESIGN §3.10, SYNC §7.2, ERRATA §G.2). Partie haute fidèle à
- * `fte10a` : titre, description, libellé de groupe, trois lignes à interrupteur (58 pt), note de bas.
- * Seuls ajouts : la ligne d'état sous chaque libellé, le lien « En savoir plus », le bouton « … »
+ * Réglages › Synchronisation. En haut : titre, description, libellé de groupe, trois lignes à interrupteur (58 pt), note de bas.
+ * Puis : la ligne d'état sous chaque libellé, le lien « En savoir plus », le bouton « … »
  * (visible au survol) et, SOUS la note, la carte « Extension navigateur ».
  */
 import { MoreHorizontal } from 'lucide-react'

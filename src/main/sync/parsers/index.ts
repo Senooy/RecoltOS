@@ -1,5 +1,5 @@
 /**
- * Parseurs de sync X / Instagram / Cosmos (WP-55). Fonctions pures : `json` brut d'un `sync.page`
+ * Parseurs de sync X / Instagram / Cosmos. Fonctions pures : `json` brut d'un `sync.page`
  * → `PageParseResult` (publications normalisées + curseur, ou erreur classée), jamais d'exception.
  */
 import { parseCosmosSavesPage } from './cosmos'

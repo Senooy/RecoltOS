@@ -1,6 +1,6 @@
 /**
- * Outils du media-worker (ARCHI §1.4, §2.2) : chemins explicites, exécution sans shell,
- * erreurs typées. Les workers ne se fient jamais au `PATH` (ARCHI §2.6).
+ * Outils du media-worker : chemins explicites, exécution sans shell,
+ * erreurs typées. Les workers ne se fient jamais au `PATH`.
  */
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
@@ -50,7 +50,7 @@ export function rawError(err: unknown): { code?: string; message: string } {
 /**
  * Erreur d'E/S Node → AppError typée et en français : ENOENT/ENOTDIR → `not_found`,
  * EISDIR → `validation` (pas un fichier), EACCES/EPERM → `io` « accès refusé », le reste → `io`.
- * Le message Node brut ne sort que dans `details` (journal), jamais dans le texte (PLAN §2.6).
+ * Le message Node brut ne sort que dans `details` (journal), jamais dans le texte.
  */
 export function ioError(err: unknown, p: string): AppError {
   if (err instanceof AppError) return err
@@ -168,7 +168,7 @@ export function run(cmd: string, args: readonly string[], opts: RunOptions): Pro
         } else if (code === 0) {
           resolve({ stdout, stderr })
         } else {
-          // Message en français (PLAN §2.6) ; le stderr brut, en anglais, reste dans `details`.
+          // Message en français ; le stderr brut, en anglais, reste dans `details`.
           const tail = stderr.trim().split('\n').slice(-3).join(' | ').slice(0, 500)
           const status = code ?? signal ?? '?'
           reject(
@@ -197,7 +197,7 @@ const SOURCE_STDERR =
 /**
  * Un échec ffmpeg dû à la source (fichier corrompu, sans piste exploitable) devient
  * `decode_failed` (message français, stderr dans `details`) ; toute autre erreur est rendue
- * telle quelle. Distingue « fichier cassé » de « outil cassé » (ARCHI §1.4 : seul le second
+ * telle quelle. Distingue « fichier cassé » de « outil cassé » (seul le second
  * mène à Re-détecter).
  */
 export function sourceFailure(err: unknown): unknown {

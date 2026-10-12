@@ -1,4 +1,4 @@
-/** Fournisseur « Aucun » (AI §3.2) : toute méthode lève `DISABLED` ; la file n'enfile rien. */
+/** Fournisseur « Aucun » : toute méthode lève `DISABLED` ; la file n'enfile rien. */
 import {
   AiError,
   type AiCallOptions,

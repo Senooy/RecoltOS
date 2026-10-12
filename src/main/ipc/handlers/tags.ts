@@ -1,5 +1,5 @@
 /**
- * Handlers `tags.*` (WP-12, ARCHI §4.5) : liste avec comptes et chips de source virtuelles,
+ * Handlers `tags.*` : liste avec comptes et chips de source virtuelles,
  * ajout / retrait, renommage (`conflict`), suppression, fusion. Noms réservés → `tag_reserved`.
  */
 import { AppError } from '../../../shared/errors'

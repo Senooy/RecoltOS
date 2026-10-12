@@ -1,5 +1,5 @@
 /**
- * Chemins du pont extension ↔ app (PLAN §1.18, §4.6). Sans import `electron` : testable sous Node.
+ * Chemins du pont extension ↔ app. Sans import `electron` : testable sous Node.
  * Tout dépend de `userData` (jamais d'un chemin `~/Library/Application Support/RecoltOS` codé en dur).
  */
 import { createHash } from 'node:crypto'

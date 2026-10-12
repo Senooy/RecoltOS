@@ -1,5 +1,5 @@
 /**
- * `data.verify` (ARCHI §7) : médias dont l'original a disparu (→ `missing` si `fix`), fichiers de
+ * `data.verify` : médias dont l'original a disparu (→ `missing` si `fix`), fichiers de
  * `items/` sans ligne en base (signalés, jamais supprimés), miniatures manquantes (→ job
  * `media.derive` si `fix`). Pas d'import electron.
  */

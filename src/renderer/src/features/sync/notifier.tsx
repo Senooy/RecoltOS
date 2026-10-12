@@ -1,5 +1,5 @@
 /**
- * Pilules de la sync (SYNC §2.5, §3.6) : « 3 nouveaux favoris X » quand une synchro ajoute des
+ * Pilules de la sync : « 3 nouveaux favoris X » quand une synchro ajoute des
  * éléments, « N publications plus anciennes récupérées · Revoir » après un backfill (revue en lot).
  * Branché une fois à la racine (`App.tsx`) ; rien au premier état reçu (pas de rejeu au lancement).
  */

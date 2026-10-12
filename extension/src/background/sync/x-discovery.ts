@@ -1,5 +1,5 @@
 /**
- * Découverte de la configuration X depuis le client web PUBLIC (relevé du 2026-10-12, ERRATA §G.3).
+ * Découverte de la configuration X depuis le client web PUBLIC (relevé du 2026-10-12).
  *
  * Depuis l'automne 2026, x.com sert un nouveau client « x-web » (TanStack Router + Relay, modules ES
  * sous `abs.twimg.com/x-web/x-web/`) à la place de `responsive-web/client-web/main.<hash>.js`. Les

@@ -1,6 +1,6 @@
 /**
- * WP-05 — `initProtocol` (Electron simulé) : `recolt:` enregistré sur la session par défaut et sur
- * chaque session hors écran (ERRATA §B, CONTRATS « Hors écran »), canal `drag`, bibliothèque active
+ * `initProtocol` (Electron simulé) : `recolt:` enregistré sur la session par défaut et sur
+ * chaque session hors écran, canal `drag`, bibliothèque active
  * relue à chaque requête, tout retiré au `dispose`. Hors Electron : aucun enregistrement, pas d'échec.
  */
 import { mkdirSync, writeFileSync } from 'node:fs'

@@ -1,5 +1,5 @@
 /**
- * DTO `CollectionNode` (PLAN §4.3) : arbre, `count` = membres directs non supprimés, `covers` ≤ 3.
+ * DTO `CollectionNode` : arbre, `count` = membres directs non supprimés, `covers` ≤ 3.
  */
 import type Database from 'better-sqlite3'
 import type { CollectionNode } from '../../shared/dto/collections'

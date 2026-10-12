@@ -1,9 +1,9 @@
 /**
  * Fichiers d'un élément, côté main (handlers `system.*`, glisser natif). Lecture synchrone
  * (better-sqlite3, `fs.statSync`) : le glisser doit appeler `startDrag` pendant l'événement IPC,
- * sans aller-retour asynchrone (ARCHI §2.5). Pas d'import `electron`.
+ * sans aller-retour asynchrone. Pas d'import `electron`.
  *
- * Ne mémorise ni `db` ni `repos` : la bibliothèque est relue à chaque appel (contrat WP-02).
+ * Ne mémorise ni `db` ni `repos` : la bibliothèque est relue à chaque appel (contrat).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -82,7 +82,7 @@ export function requireCoverOriginal(lib: Lib, uuid: string): string {
 }
 
 /**
- * Source d'une copie d'image (`system.copyImage`, ARCHI §2.3) : vidéo → poster (sinon vignette) ;
+ * Source d'une copie d'image (`system.copyImage`) : vidéo → poster (sinon vignette) ;
  * image → variante affichable (HEIC, PSD…) sinon original, puis grande image et vignette.
  */
 export function copyImageSource(lib: Lib, uuid: string): string {

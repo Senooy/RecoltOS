@@ -1,5 +1,5 @@
 /**
- * Agrégateur des textes FR (ERRATA §F) : `fr/base.ts` (WP-00/Fable) + un fichier par domaine
+ * Agrégateur des textes FR : `fr/base.ts` + un fichier par domaine
  * UI, liste FIGÉE ci-dessous. Chaque fichier de domaine exporte un objet de namespaces.
  */
 import { ai } from './fr/ai'

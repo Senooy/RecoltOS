@@ -1,6 +1,6 @@
 /**
- * Registre FIGÉ des handlers IPC (PLAN §1.26) : un fichier par domaine de `DOMAINS`
- * (`src/shared/ipc/index.ts`). Chaque lot ne remplit que `handlers/<domaine>.ts`.
+ * Registre FIGÉ des handlers IPC : un fichier par domaine de `DOMAINS`
+ * (`src/shared/ipc/index.ts`). Chaque domaine ne remplit que `handlers/<domaine>.ts`.
  */
 import type { Domain } from '../../../shared/ipc'
 import type { AllHandlers, DomainHandlers } from '../router'

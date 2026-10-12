@@ -1,5 +1,5 @@
 /**
- * Détection des CLI IA (AI §3.4). Une app lancée depuis le Finder n'hérite pas du PATH du shell :
+ * Détection des CLI IA. Une app lancée depuis le Finder n'hérite pas du PATH du shell :
  * on interroge le shell de login (`/bin/zsh -lc 'whence -ap <nom>'`), on dédoublonne par chemin
  * réel, on lit `--version` (env minimal, 5 s) et on garde la version la plus haute. Surcharge
  * manuelle : `prefs.ai.<cli>.path`, puis `prefs.tools.<cli>` (cache de `platform/binaries.ts`).

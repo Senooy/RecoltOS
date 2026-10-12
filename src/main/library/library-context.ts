@@ -1,6 +1,6 @@
 /**
- * Bibliothèque active (ARCHI §2.1) : `{ id, root, paths, db, repos }`, et points d'accroche du
- * cycle de vie pour les autres domaines (WP-03 workers, WP-05 protocole, WP-10 file de jobs).
+ * Bibliothèque active : `{ id, root, paths, db, repos }`, et points d'accroche du
+ * cycle de vie pour les autres domaines (workers, protocole, file de jobs).
  * Une seule bibliothèque est ouverte à la fois. Pas d'import `electron`.
  */
 import type Database from 'better-sqlite3'

@@ -1,5 +1,5 @@
 /**
- * Raccourcis de l'éditeur (SPACES §1.5.1) : table `SPACES_SHORTCUTS` (src/shared/shortcuts.ts).
+ * Raccourcis de l'éditeur : table `SPACES_SHORTCUTS` (src/shared/shortcuts.ts).
  * Lettres = touche IMPRIMÉE (`getLayoutMap()`, insensible à ⌥/⇧ : ⌥A ne donne pas « å »),
  * chiffres = position (`e.code` Digit0/1/2, valable AZERTY et QWERTY), flèches = `e.key`.
  * La carte de disposition est injectable pour les tests (AZERTY / QWERTY simulés).
@@ -87,7 +87,7 @@ export function resolveShortcut(e: KeyLike, l: Layout = layout): SpacesShortcutI
   for (const s of SPACES_SHORTCUTS) {
     if (matches(e, s.match, l)) return s.id
   }
-  // Alias QWERTY non affichés de ⌥⌘↑/↓ (SPACES §1.5.1).
+  // Alias QWERTY non affichés de ⌥⌘↑/↓.
   if (e.metaKey && !e.altKey && !e.ctrlKey) {
     if (e.code === 'BracketRight') return e.shiftKey ? 'bringToFront' : 'bringForward'
     if (e.code === 'BracketLeft') return e.shiftKey ? 'sendToBack' : 'sendBackward'

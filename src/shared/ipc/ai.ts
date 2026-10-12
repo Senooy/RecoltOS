@@ -1,5 +1,5 @@
 /**
- * Contrat `ai.*` (PLAN §4.4, AI §12.3). Aucun appel sans `consentVersion` ni avec `provider = 'off'`.
+ * Contrat `ai.*`. Aucun appel sans `consentVersion` ni avec `provider = 'off'`.
  */
 import { z } from 'zod'
 import { AI_FIELDS, AI_TASKS, ProviderStatus, ProviderTestResult } from '../ai-types'
@@ -43,7 +43,7 @@ export const aiContract = {
     output: z.object({
       provider: Cli,
       itemUuid: Uuid,
-      /** Prompt système (AI §5.1), envoyé avant `prompt`. */
+      /** Prompt système, envoyé avant `prompt`. */
       system: z.string(),
       prompt: z.string(),
       files: z.array(

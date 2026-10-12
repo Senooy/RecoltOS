@@ -1,4 +1,4 @@
-/** Raccourci propre à un domaine UI (portée renderer). Créé par WP-00. */
+/** Raccourci propre à un domaine UI (portée renderer). */
 import type { KeyMatch, Modifiers } from '../../../../shared/shortcuts'
 
 export interface RendererShortcut {

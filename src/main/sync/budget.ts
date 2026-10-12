@@ -1,5 +1,5 @@
 /**
- * Budgets de requêtes par plateforme (SYNC §4.3) : un seul budget pour toutes les requêtes à l'API
+ * Budgets de requêtes par plateforme : un seul budget pour toutes les requêtes à l'API
  * d'une plateforme (pages, `item.refresh`), écart minimum avec gigue, plafond par run et par jour,
  * cooldown partagé doublé à chaque fois (30 min → 6 h). Les téléchargements CDN n'en font pas partie.
  * État persisté dans `sync_state` (`budget_day`, `budget_used`, `cooldown_until`).

@@ -1,6 +1,6 @@
 /**
- * Constantes du protocole extension ↔ app (SYNC §6.1, PLAN §1.18, ERRATA §G.2).
- * Possédé par WP-51 (ERRATA §F). Aucun import : partagé par l'app, l'hôte natif et l'extension.
+ * Constantes du protocole extension ↔ app.
+ * Aucun import : partagé par l'app, l'hôte natif et l'extension.
  */
 
 export const BRIDGE_PROTOCOL_VERSION = 1 as const
@@ -8,7 +8,7 @@ export const BRIDGE_PROTOCOL_VERSION = 1 as const
  * Version de l'extension livrée avec l'app (source unique : le build écrit `manifest.version`). À
  * augmenter à chaque changement du code de l'extension : l'app ne recopie l'extension dans
  * `<userData>/extension/` que si la version (ou le manifest) change, et demande alors à une extension
- * plus ancienne connectée de se recharger. 1.0.1 : sync X x-web et Cosmos (ERRATA §G.3).
+ * plus ancienne connectée de se recharger. 1.0.1 : sync X x-web et Cosmos.
  * 1.0.2 : nouvelles icônes (logo « graine qui germe »).
  */
 export const EXTENSION_VERSION = '1.0.2'
@@ -61,6 +61,6 @@ export type BridgeErrorCode = (typeof BRIDGE_ERROR_CODES)[number]
 export const BRIDGE_PLATFORMS = ['x', 'instagram', 'cosmos'] as const
 export type BridgePlatform = (typeof BRIDGE_PLATFORMS)[number]
 
-/** Cibles de build de l'extension (ERRATA §G.2 n°1). */
+/** Cibles de build de l'extension. */
 export const EXTENSION_TARGETS = ['chromium', 'firefox'] as const
 export type ExtensionTarget = (typeof EXTENSION_TARGETS)[number]

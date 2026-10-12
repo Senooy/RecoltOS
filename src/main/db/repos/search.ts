@@ -1,6 +1,6 @@
 /**
- * Repo de recherche (ARCHI §4.5) : exécution d'une requête FTS5 déjà construite
- * (`search/fts-query.ts`, hors de ce lot), maintenance de l'index et historique.
+ * Repo de recherche : exécution d'une requête FTS5 déjà construite
+ * (`search/fts-query.ts`), maintenance de l'index et historique.
  * Pondération bm25 : title 8, notes 3, post_text 4, ocr 2, ai 2, tags 6, url 0,5.
  */
 import type Database from 'better-sqlite3'

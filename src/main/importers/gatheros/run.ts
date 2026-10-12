@@ -1,8 +1,8 @@
 /**
- * Importeur GatherOS (ARCHI §6) : phases reprenables persistées dans `import_runs`
+ * Importeur GatherOS : phases reprenables persistées dans `import_runs`
  * (snapshot → read → plan → files → items → collections → tags → tombstones → jobs → finalize).
- * Politique : « ajouter ce qui manque, ne jamais écraser, ne jamais ressusciter » (§6.8).
- * Aucun `ai.enrich` : l'enrichissement se propose au résumé (§6.9).
+ * Politique : « ajouter ce qui manque, ne jamais écraser, ne jamais ressusciter ».
+ * Aucun `ai.enrich` : l'enrichissement se propose au résumé.
  * Testable sous Node : hachage et clonage sont injectés (media-worker dans l'app).
  */
 import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -353,7 +353,7 @@ export async function runGatherosImport(
         .get() as { n: number }
     ).n
 
-    // 8. éléments rejetés (`dismissed_tweets`) et pré-remplissage `sync_items` (SYNC §6.5 règle 2).
+    // 8. éléments rejetés (`dismissed_tweets`) et pré-remplissage `sync_items`.
     setPhase('tombstones')
     lib.db.transaction(() => {
       const ins = lib.db.prepare(
@@ -373,7 +373,7 @@ export async function runGatherosImport(
       }
     })()
 
-    // 8 bis. boards → spaces (SPACES §1.10) : tolérant, idempotent par `origin_id`.
+    // 8 bis. boards → spaces : tolérant, idempotent par `origin_id`.
     {
       const legacy = new Database(snap.path, { readonly: true, fileMustExist: true })
       try {

@@ -1,5 +1,5 @@
 /**
- * Smoke des modules natifs DANS le process main d'Electron (WP-00, critère 3) :
+ * Smoke des modules natifs DANS le process main d'Electron (critère 3) :
  * better-sqlite3 ouvre `:memory:`, exécute `0001_init.sql` (user_version = 1), fait un MATCH FTS5,
  * puis sharp redimensionne une image 1×1. Sortie 0 si tout passe, 1 sinon.
  * Lancement : `pnpm run smoke:native` (= `electron scripts/smoke-native.cjs`).

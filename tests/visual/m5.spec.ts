@@ -1,8 +1,7 @@
 /**
- * Références visuelles M5 (WP-57) : Réglages › Synchronisation, état initial (aucune extension
- * connectée, trois sources désactivées). Fidélité contre `fte10a` vérifiée en montage (lignes,
- * interrupteurs, note de bas alignés) ; seuls ajouts : lignes d'état, lien « En savoir plus » et,
- * sous la note, la carte « Extension navigateur ».
+ * Régression visuelle : Réglages › Synchronisation, état initial (aucune extension
+ * connectée, trois sources désactivées) : lignes d'état, lien « En savoir plus » et, sous la
+ * note, la carte « Extension navigateur ».
  */
 import type { Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

@@ -1,6 +1,6 @@
 /**
- * Parseur Cosmos : réponse GraphQL `GetAllElements` (`allElementsV2`) → publications normalisées
- * (WP-55, SYNC §5.2 point 4). Fonction pure, jamais d'exception.
+ * Parseur Cosmos : réponse GraphQL `GetAllElements` (`allElementsV2`) → publications normalisées.
+ * Fonction pure, jamais d'exception.
  *
  *  - image : `media.url` / `multipleMedia[]` sur `cdn.cosmos.so`, SANS `?format=webp` (original) ;
  *    repli `?format=jpeg` dans `fallbackUrl` ;
@@ -8,7 +8,7 @@
  *  - site web : `kind = 'url'`, `extra.linkUrl = source.url`, la vignette de la tuile en média ;
  *  - tuile texte : ignorée en V1 et comptée (`stats.ignored`).
  *
- * Deux formes acceptées (ERRATA §G.3) : l'ancienne (`video` / `mux` au niveau de l'élément,
+ * Deux formes acceptées : l'ancienne (`video` / `mux` au niveau de l'élément,
  * `source.author` chaîne) et celle du schéma relevé le 2026-10-12 (requête de l'extension) : médias
  * typés (`__typename` `StaticImage` / `AnimatedImage` / `Video`) avec `Video.mux.mp4Url`,
  * `Video.thumbnail.url`, `AnimatedImage.video.{url, thumbnailUrl}` ; `source.author` objet

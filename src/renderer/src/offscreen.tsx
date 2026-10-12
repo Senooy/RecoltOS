@@ -1,6 +1,6 @@
 /**
- * Entrée des fenêtres hors écran (`offscreen.html?render=<route>`, ERRATA §B) : sans preload,
- * jamais `window.recolt`. Routes : `tweet-card` (WP-56), `space-stage` (WP-63). Stub WP-00.
+ * Entrée des fenêtres hors écran (`offscreen.html?render=<route>`) : sans preload,
+ * jamais `window.recolt`. Routes : `tweet-card`, `space-stage`. Stub.
  */
 // Avant tout schéma zod : pas de `new Function` sous la CSP (voir le module).
 import './lib/zod-jitless'

@@ -1,5 +1,5 @@
 /**
- * M4 sur la vraie bibliothèque déjà importée (copie APFS, jamais la référence ni l'app installée) :
+ * IA (sans appel réel) sur une COPIE APFS d'un `userData` RecoltOS réel (jamais l'app installée) :
  * `RECOLT_TEST_IMPORTED_USERDATA=<repo>/.tmp/m3-real pnpm exec vitest run --project real`.
  * Aucun appel IA réel ici : estimation, préparation des médias, aperçu.
  */
@@ -31,7 +31,7 @@ describe.skipIf(!SRC)('M4 sur la bibliothèque importée', () => {
   let m: LibraryManager
   let svc: AiService
   beforeAll(async () => {
-    if (/legacy|Application Support/i.test(SRC)) throw new Error('source refusée (lecture seule)')
+    if (/application support/i.test(SRC)) throw new Error('dossier vivant refusé : passe une copie')
     base = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-m4real-'))
     ud = path.join(base, 'userData')
     fs.mkdirSync(ud)

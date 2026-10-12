@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `shell` (WP-13) : coque, sélecteur de bibliothèque, dialogues génériques.
+ * Textes du domaine `shell` : coque, sélecteur de bibliothèque, dialogues génériques.
  */
 export const shell = {
   shell: {

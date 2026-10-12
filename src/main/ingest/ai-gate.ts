@@ -1,5 +1,5 @@
 /**
- * Porte IA à l'ingestion (ARCHI §5.2 étape 8, PLAN §2.5) : `ai_state = 'queued'` seulement si les
+ * Porte IA à l'ingestion : `ai_state = 'queued'` seulement si les
  * cinq conditions sont réunies ; sinon `none` (l'enrichissement se propose ensuite en lot).
  */
 import { AI_CONSENT_VERSION } from '../../shared/ai-types'
@@ -44,7 +44,7 @@ function gatePaused(settings: SettingsRepo, provider: string, now: number): bool
 export function aiGate(i: AiGateInput): 'queued' | 'none' {
   const ai = i.prefs.ai
   if (ai.provider === 'off') return 'none'
-  // Jamais d'appel sans consentement, même si `autoNameOnSave` a été importé à vrai (AI §11).
+  // Jamais d'appel sans consentement, même si `autoNameOnSave` a été importé à vrai.
   if (!ai.consentVersion || ai.consentVersion < AI_CONSENT_VERSION) return 'none'
   if (!ai.autoNameOnSave && !ai.autoAnalyzeOnSave && !ai.autoTag) return 'none'
   if (!i.userAction && (i.batchSize ?? 1) > ai.bulkThreshold) return 'none'

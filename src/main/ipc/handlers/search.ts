@@ -1,5 +1,5 @@
 /**
- * Handlers `search.*` (WP-22, ARCHI §4.5) : recherche FTS5 + filtres, suggestions (tags,
+ * Handlers `search.*` : recherche FTS5 + filtres, suggestions (tags,
  * collections), historique (8 entrées affichées, la base en garde davantage).
  */
 import { toItemCard } from '../../dto/item-card'

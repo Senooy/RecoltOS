@@ -1,5 +1,5 @@
 /**
- * Initialisation du domaine `library` (registre `bootstrap/services.ts`, possédé par WP-02) :
+ * Initialisation du domaine `library` (registre `bootstrap/services.ts`) :
  * gestionnaire de bibliothèques, ouverture de la bibliothèque active, fermeture propre à la sortie.
  */
 import type { Disposer, ServiceContext } from '../bootstrap/context'
@@ -8,7 +8,7 @@ import { createLibraryManager, type LibraryManager } from './library-manager'
 
 let manager: LibraryManager | null = null
 
-/** Gestionnaire initialisé par `initLibrary` (handlers `libraries.*`, restauration WP-24). */
+/** Gestionnaire initialisé par `initLibrary` (handlers `libraries.*`, restauration). */
 export function getLibraryManager(): LibraryManager | null {
   return manager
 }

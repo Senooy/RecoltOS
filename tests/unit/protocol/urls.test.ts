@@ -1,5 +1,5 @@
 /**
- * WP-05 — `assetUrl` et chaîne de repli `resolveMediaUrls` (PLAN §1.7) : URL `recolt://` conformes
+ * `assetUrl` et chaîne de repli `resolveMediaUrls` : URL `recolt://` conformes
  * au contrat `MediaUrl`, jamais d'http(s), `?v=derive_version`.
  */
 import { describe, expect, it } from 'vitest'
@@ -124,7 +124,7 @@ describe('resolveMediaUrls', () => {
     expect(u.previewUrl).toBeNull()
     expect(u.originalUrl).toBe(`recolt://default/items/0d/${U}.mp4?v=2`)
     expect(resolveMediaUrls(lib, { ...v, poster_rel: null }).thumbUrl).toBeNull()
-    // Arbitrage M1 : la miniature la référence sert de repli tant que le poster manque.
+    // La miniature importée sert de repli tant que le poster manque.
     const legacy = `thumbs/0d/${U}.legacy.jpg`
     expect(
       resolveMediaUrls(lib, { ...v, poster_rel: null, legacy_thumb_rel: legacy }).thumbUrl,

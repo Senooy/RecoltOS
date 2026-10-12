@@ -74,7 +74,7 @@ const inputs: Record<string, AiInput> = {
   },
 }
 
-describe('prompts (AI §5)', () => {
+describe('prompts', () => {
   it('prompt système figé', () => {
     expect(SYSTEM_FR).toMatchSnapshot()
   })

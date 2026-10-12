@@ -1,5 +1,5 @@
 /**
- * Contrôles de l'environnement (QA §3.3, PLAN §1.15-1.16, ERRATA §F) utilisés par `doctor.mts`
+ * Contrôles de l'environnement utilisés par `doctor.mts`
  * (`pnpm run check:env`). Trois niveaux : `ok`, `warn` (jamais bloquant : outils optionnels,
  * mauvais pnpm) et `fail` (natifs qui ne chargent pas, FTS5 absent, plateforme/Node non supportés).
  *
@@ -85,12 +85,7 @@ export function checkNodeVersion(versions: { node: string } = process.versions):
 export function checkPlatform(platform = process.platform, arch = process.arch): Check {
   return platform === 'darwin' && arch === 'arm64'
     ? mk('platform', 'ok', 'Plateforme', 'macOS arm64')
-    : mk(
-        'platform',
-        'fail',
-        'Plateforme',
-        `${platform} ${arch} : macOS arm64 uniquement (PLAN §1.17)`,
-      )
+    : mk('platform', 'fail', 'Plateforme', `${platform} ${arch} : macOS arm64 uniquement`)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -187,7 +182,7 @@ export function checkNativesInElectron(root: string): Check {
     : check
 }
 
-/** Même ordre de résolution que `platform/binaries.ts` (PLAN §1.16), plus les emplacements d'outils CLI. */
+/** Même ordre de résolution que `platform/binaries.ts`, plus les emplacements d'outils CLI. */
 export function candidateDirs(): string[] {
   return [
     '/opt/homebrew/bin',

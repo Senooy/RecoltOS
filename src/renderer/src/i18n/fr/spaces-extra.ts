@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `spaces-extra`, possédé par WP-63 (ERRATA §F) : rotation, texte libre, formes
+ * Textes du domaine `spaces-extra` : rotation, texte libre, formes
  * supplémentaires, alignement, export PNG (tutoiement, typographie FR).
  */
 export const spacesExtra = {

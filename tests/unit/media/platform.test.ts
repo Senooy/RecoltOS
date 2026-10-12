@@ -1,5 +1,5 @@
 /**
- * WP-03 — `platform/` : résolution des binaires (PLAN §1.16), shell de login (ARCHI §2.6),
+ * `platform/` : résolution des binaires, shell de login,
  * détection de processus (`pgrep -x`), Corbeille macOS.
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'

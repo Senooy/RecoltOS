@@ -1,6 +1,6 @@
 /**
  * Agrégat des repos d'une bibliothèque ouverte (une connexion, requêtes préparées partagées).
- * Pas de repo d'embeddings : recherche visuelle supprimée de la V1 (ERRATA §G).
+ * Pas de repo d'embeddings : recherche visuelle supprimée de la V1.
  */
 import type Database from 'better-sqlite3'
 import { createAuthorsRepo } from './authors'

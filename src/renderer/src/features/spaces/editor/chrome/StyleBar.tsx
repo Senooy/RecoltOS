@@ -1,5 +1,5 @@
 /**
- * Barre de style contextuelle (SPACES §1.3.2) : pilule 36 px ancrée au-dessus de la sélection
+ * Barre de style contextuelle : pilule 36 px ancrée au-dessus de la sélection
  * (dessous si elle sortirait de la vue), masquée pendant les gestes et l'édition. Contenu selon le
  * type : couleurs de note, taille S/M/L/XL, remplissage / contour / épaisseur / pointillés des
  * formes, couleur / taille / gras du texte, opacité, verrou, dupliquer, supprimer ; dès 2 nœuds,

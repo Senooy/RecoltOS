@@ -1,6 +1,6 @@
 /**
- * Compteurs des onglets (ARCHI §7) : une seule requête `sum(...)`, mise en cache par connexion et
- * invalidée à chaque `items.changed` / changement d'appartenance (ERRATA §C : servent ailleurs que
+ * Compteurs des onglets : une seule requête `sum(...)`, mise en cache par connexion et
+ * invalidée à chaque `items.changed` / changement d'appartenance (servent ailleurs que
  * dans les onglets).
  */
 import type Database from 'better-sqlite3'
@@ -31,7 +31,7 @@ export function invalidateCounts(db?: Database.Database): void {
   if (db) cache.delete(db)
 }
 
-/** Chips de source virtuelles `#x #instagram #cosmos` (PLAN §1.4) : éléments vivants par source. */
+/** Chips de source virtuelles `#x #instagram #cosmos` : éléments vivants par source. */
 export function sourceChips(
   db: Database.Database,
 ): { source: 'x' | 'instagram' | 'cosmos'; count: number }[] {

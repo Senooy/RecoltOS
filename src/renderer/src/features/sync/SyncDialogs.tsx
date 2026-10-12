@@ -1,5 +1,5 @@
 /**
- * Feuilles de Réglages › Synchronisation (WP-57) : première activation (risques, repli onglet décoché,
+ * Feuilles de Réglages › Synchronisation : première activation (risques, repli onglet décoché,
  * coexistence GatherOS bloquante pour Instagram), installation de l'extension (Firefox signé ou
  * temporaire, Chromium en mode développeur), journal des 20 derniers runs, revue des publications
  * récupérées par le backfill.

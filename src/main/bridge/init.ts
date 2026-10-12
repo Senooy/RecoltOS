@@ -1,5 +1,5 @@
 /**
- * Domaine `bridge` (WP-52, SYNC §1.4-1.9, ERRATA §G.2) : `host.json` (socket et spool lus par l'hôte
+ * Domaine `bridge` : `host.json` (socket et spool lus par l'hôte
  * natif, réécrit à chaque lancement), manifests (app packagée, `RECOLTOS_INSTALL_DEV_HOST=1` ou `RECOLTOS_HOME` de test),
  * copie de l'extension dans un chemin fixe, `BridgeServer` (socket), spool `inbox/`, enregistrements
  * de l'extension. Désactivé sous `RECOLTOS_E2E=1` sauf `RECOLTOS_BRIDGE=1` (tests du pont).
@@ -98,7 +98,7 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
     stale: new Set(),
   })
 
-  // Manifests : jamais en dev sans accord explicite (PLAN §1.18) ; `RECOLTOS_HOME` = dossier de test.
+  // Manifests : jamais en dev sans accord explicite ; `RECOLTOS_HOME` = dossier de test.
   const allowManifests = isPackaged || ctx.flags.installDevHost || ctx.flags.home !== null
   if (allowManifests) {
     void reinstallHosts().catch((err: unknown) => ctx.log.warn('[bridge] manifests', err))
@@ -113,7 +113,7 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
 
   server.handle('hello', (m, client) => {
     const p = m.payload
-    // En dev, jamais de rechargement demandé (SYNC §1.7).
+    // En dev, jamais de rechargement demandé.
     const needsReload = isPackaged && isOlderVersion(p.extVersion, EXTENSION_VERSION)
     server.send(
       client.connId,

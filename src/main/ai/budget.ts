@@ -1,5 +1,5 @@
 /**
- * Budget (AI §6.4) ménageant l'abonnement, priorités `priority DESC` (PLAN §1.3) :
+ * Budget ménageant l'abonnement, priorités `priority DESC` :
  * MANUAL (100) ≈ « 0 », INTERACTIVE (80) ≈ « 10 » (capture unitaire), SYNC (60) ≈ « 15 »,
  * BATCH (20) ≈ « 20 ».
  * - plafond dur `hardPerDay` (24 h glissantes, par fournisseur) : TOUTES priorités, sauf

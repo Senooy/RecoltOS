@@ -1,7 +1,7 @@
 /**
- * Réglages › Capture (DESIGN §3.10, SPACES §2.6). Partie haute fidèle à `kgogfx` : titre,
+ * Réglages › Capture. En haut : titre,
  * description, « Raccourci global » (key caps 24×22), aide, filet, « Dossier de dépôt » (champ de
- * 287 pt + « Choisir… » / « Effacer »), aide. Sous un second filet (ajouts RecoltOS) : mode,
+ * 287 pt + « Choisir… » / « Effacer »), aide. Sous un second filet : mode,
  * notification, masquer l'app, presse-papiers, état de la permission.
  */
 import { CheckCircle2, CircleAlert } from 'lucide-react'

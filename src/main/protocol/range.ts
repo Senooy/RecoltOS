@@ -1,5 +1,5 @@
 /**
- * En-tête `Range` (RFC 9110 §14) pour le protocole `recolt://` (ARCHI §2.5). Une seule plage
+ * En-tête `Range` (RFC 9110 §14) pour le protocole `recolt://`. Une seule plage
  * d'octets : c'est ce qu'envoient `<video>`/`<audio>` de Chromium. Pas d'import `electron`.
  */
 
@@ -17,7 +17,7 @@ const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/i
 /**
  * `bytes=a-b`, `bytes=a-` et `bytes=-n` (suffixe). Fin au-delà du fichier : ramenée à `size - 1`.
  * `bytes=-0`, début ≥ taille, début > fin, plages multiples ou unité inconnue : `unsatisfiable`
- * (ARCHI §2.5 : on répond 416 plutôt que d'ignorer une plage incomprise).
+ * (on répond 416 plutôt que d'ignorer une plage incomprise).
  */
 export function parseRange(header: string | null | undefined, size: number): RangeResult {
   if (header === null || header === undefined) return { kind: 'none' }

@@ -1,10 +1,10 @@
 /**
- * `MasonryGrid` (DESIGN §4.4) : disposition déterministe (`layoutMasonry`), cartes en absolu +
+ * `MasonryGrid` : disposition déterministe (`layoutMasonry`), cartes en absolu +
  * `translate`, fenêtrage (recherche binaire, overscan 800 px), posts texte mesurés AVANT le premier
  * rendu (aucun décalage de mise en page), `.reflowing` 300 ms au changement de colonnes, navigation
- * clavier géométrique, `role="list"`, menu contextuel unique, glisser natif. Vue détail (WP-30) :
+ * clavier géométrique, `role="list"`, menu contextuel unique, glisser natif. Vue détail :
  * `grid.scrollTo` amène la carte courante en vue avant le FLIP de fermeture, `grid.cascade` fait
- * réapparaître les cartes visibles en fondu échelonné (rafale la référence `bucdra…cx19x3`).
+ * réapparaître les cartes visibles en fondu échelonné.
  */
 import {
   useCallback,
@@ -210,7 +210,7 @@ export function MasonryGrid({
 
   const visible = useMemo(() => visibleIndices(layout, view.top, view.bottom), [layout, view])
 
-  // Démarrage (QA §11.3, WP-71) : `grid-painted` une seule fois, à la première image peinte qui
+  // Démarrage : `grid-painted` une seule fois, à la première image peinte qui
   // contient des cartes (deux rAF : après le rendu de l'image).
   useEffect(() => {
     if (gridPaintedMarked || visible.length === 0) return

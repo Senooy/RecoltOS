@@ -1,5 +1,5 @@
 /**
- * Banc de la grille et des requêtes (QA §6.4, §11.3 ; WP-71) — projet Playwright `perf`.
+ * Banc de la grille et des requêtes — projet Playwright `perf`.
  *   G1 : défilement de la grille pendant 5 s (sonde rAF, `longtask`), tas renderer après un
  *        défilement complet + 20 ouvertures de la vue détail, croissance sur 5 cycles.
  *   G2 : requêtes à travers l'IPC (page de liste, compteurs, FTS), 30 répétitions, p50 / p95.

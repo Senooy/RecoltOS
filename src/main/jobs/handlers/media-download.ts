@@ -1,8 +1,8 @@
 /**
- * Job `media.download` (ARCHI §5.2 étape 10, §6.4) : média de carrousel distant (`status='remote'`)
+ * Job `media.download` : média de carrousel distant (`status='remote'`)
  * téléchargé dans `items/<ab>/<uuid>.<ext>` (et son poster), puis `media.derive`. Une réponse 4xx
  * le passe en `missing` sans nouvelle tentative. Gouverné par `prefs.storage.downloadRemoteMedia`.
- * Point d'extension : `registerFetchPolicy` (`../fetch`), utilisé par la sync (WP-56).
+ * Point d'extension : `registerFetchPolicy` (`../fetch`), utilisé par la sync.
  */
 import { mkdir, rename, rm } from 'node:fs/promises'
 import { dirname } from 'node:path'

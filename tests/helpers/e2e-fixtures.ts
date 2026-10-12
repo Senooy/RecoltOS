@@ -1,12 +1,12 @@
 /**
- * Fixtures Playwright partagées par les scénarios e2e des lots (`tests/e2e/*.spec.ts`) :
+ * Fixtures Playwright partagées par les scénarios e2e (`tests/e2e/*.spec.ts`) :
  *   import { test, expect } from '../helpers/e2e-fixtures'
  *   test('…', async ({ page, app, userData }) => { … })
  * Chaque test lance l'app avec un `userData` neuf et ÉCHOUE à la fin sur tout `console.error` /
  * `pageerror` non toléré (y compris violation CSP, y compris au chargement initial : relecture des
  * messages retenus par Playwright via `flushErrors()`). Surcharge : `test.use({ allowErrors: [/…/] })`.
  *
- * Bibliothèque de démo (QA §6.1) : `test.use({ demoLibrary: true })` (ou `{ count, collections… }`)
+ * Bibliothèque de démo : `test.use({ demoLibrary: true })` (ou `{ count, collections… }`)
  * clone le cache de `demo-library.ts` (60 saves, 6 collections, médias, avatars) dans `userData`
  * AVANT le lancement ; `openDbReadonly()` ouvre ensuite la base de l'app en lecture seule (fermée
  * en fin de test) pour vérifier ce qu'elle a écrit.

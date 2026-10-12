@@ -1,5 +1,5 @@
 /**
- * Propriétés (fast-check) des parseurs de sync (WP-55) : JSON arbitraire → `{ ok:false, error }` ou
+ * Propriétés (fast-check) des parseurs de sync : JSON arbitraire → `{ ok:false, error }` ou
  * page cohérente, jamais d'exception ; fixtures mutées au hasard → entrées isolées, invariants tenus.
  */
 import fc from 'fast-check'

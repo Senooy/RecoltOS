@@ -1,5 +1,5 @@
 /**
- * M3 (WP-32) : Redécouvrir — ouverture par le menu, exactement 3 cibles, →/←/↑ et glisser à la
+ * M3 : Redécouvrir — ouverture par le menu, exactement 3 cibles, →/←/↑ et glisser à la
  * souris modifient la base, ⌘Z annule, Échap quitte.
  */
 import type { ElectronApplication, Page } from '@playwright/test'

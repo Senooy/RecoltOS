@@ -1,5 +1,5 @@
 /**
- * Enregistrements venus de l'extension (SYNC §2.2, §6.1) : `save.create` → ingestion, envoi découpé
+ * Enregistrements venus de l'extension : `save.create` → ingestion, envoi découpé
  * (`media.chunk` puis `save.create{upload}`), collections pour les menus et la popup.
  * Les publications (`kind: 'post'`) sont confiées au saveur de posts de la sync (`setPostSaver`).
  */
@@ -52,7 +52,7 @@ export class SaveService {
     this.postSaver = fn
   }
 
-  /** Destinataire des morceaux d'un téléchargement proxifié (`media.fetch`, WP-56). */
+  /** Destinataire des morceaux d'un téléchargement proxifié (`media.fetch`). */
   registerChunkSink(jobId: string, fn: (m: MediaChunkMessage) => void): () => void {
     this.sinks.set(jobId, fn)
     return () => this.sinks.delete(jobId)

@@ -1,5 +1,5 @@
 /**
- * Handlers `import.gatheros.*` (WP-11, ARCHI §6) : détection (copie de la base, jamais la source),
+ * Handlers `import.gatheros.*` : détection (copie de la base, jamais la source),
  * lancement en tâche de fond (`import.progress`), annulation, rapport, import interrompu à reprendre.
  */
 import { shell } from 'electron'

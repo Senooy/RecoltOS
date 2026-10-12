@@ -1,6 +1,6 @@
 /**
- * Formats que sharp ne décode pas (HEIC/HEIF en HEVC, PSD) : décodage par `/usr/bin/sips`
- * (ARCHI §5.2 étape 4). L'original n'est jamais modifié.
+ * Formats que sharp ne décode pas (HEIC/HEIF en HEVC, PSD) : décodage par `/usr/bin/sips`.
+ * L'original n'est jamais modifié.
  */
 import { randomBytes } from 'node:crypto'
 import { mkdtemp, open, rm } from 'node:fs/promises'

@@ -1,5 +1,5 @@
 /**
- * Styles par défaut des nœuds Spaces (SPACES §1.2.3, DESIGN §3.11), partagés par le main
+ * Styles par défaut des nœuds Spaces, partagés par le main
  * (`addItems`, assets, import des boards) et l'éditeur.
  */
 import type { z } from 'zod'

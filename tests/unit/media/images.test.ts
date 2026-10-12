@@ -1,5 +1,5 @@
 /**
- * WP-03 — critères 1 (images) et 2 : orientation EXIF, webp animé, HEIC/PSD par sips,
+ * critères 1 (images) et 2 : orientation EXIF, webp animé, HEIC/PSD par sips,
  * TIFF par sharp, dérivés webp, originaux intacts.
  */
 import { mkdirSync, symlinkSync } from 'node:fs'

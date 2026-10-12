@@ -1,5 +1,5 @@
 /**
- * File de jobs persistante (ARCHI §5.3, PLAN §1.3) : une boucle par type, chacune avec son
+ * File de jobs persistante : une boucle par type, chacune avec son
  * plafond ; un type saturé ou en pause ne bloque jamais les autres. Nouvelle tentative à
  * `2^attempts × 30 s` ; 4xx et erreurs définitives non réessayées ; `provider_rate_limited` remet
  * le job en file sans consommer de tentative et met le type en pause ; pauses par type persistées
@@ -29,7 +29,7 @@ export const BACKOFF_BASE_MS = 30_000
 export const RATE_LIMIT_DEFAULT_MS = 3_600_000
 export const PAUSED_SETTING = 'jobs.paused'
 
-/** Codes d'erreur définitifs : aucune nouvelle tentative (ARCHI §5.3, CHANGELOG WP-03). */
+/** Codes d'erreur définitifs : aucune nouvelle tentative. */
 export const FATAL_CODES: ReadonlySet<string> = new Set([
   'not_found',
   'validation',

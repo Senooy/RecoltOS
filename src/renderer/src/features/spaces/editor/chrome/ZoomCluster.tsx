@@ -1,5 +1,5 @@
 /**
- * Cluster de zoom (DESIGN §3.11, SPACES §1.3.2) : bas-gauche, pilule 32 px « − 100 % + » ; clic
+ * Cluster de zoom : bas-gauche, pilule 32 px « − 100 % + » ; clic
  * sur le pourcentage → menu (zoom avant / arrière, 100 % ⌘0, Ajuster tout ⇧1, Ajuster la
  * sélection ⇧2, Molette : défiler / zoomer — réglage `spacesWheel`), puis bouton « Ajuster ».
  */

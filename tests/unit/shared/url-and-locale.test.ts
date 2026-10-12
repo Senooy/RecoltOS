@@ -7,7 +7,7 @@ import { PostMetaSchema } from '../../../src/shared/post-meta'
 
 const LIB = 'recolt://default'
 
-describe('MediaUrl (PLAN §1.7 : recolt://<libraryId>/<root>/<rel>?v=<n>)', () => {
+describe('MediaUrl (recolt://<libraryId>/<root>/<rel>?v=<n>)', () => {
   it('accepte les formes légitimes', () => {
     expect(MediaUrl.safeParse(`${LIB}/thumbs/0d/x.webp?v=1`).success).toBe(true)
     expect(MediaUrl.safeParse(`${LIB}/items/ab/9552f1ec.jpg`).success).toBe(true)
@@ -80,7 +80,7 @@ describe('URL web (post-meta)', () => {
   })
 })
 
-describe('messages de validation en français (règle §2.6)', () => {
+describe('messages de validation en français', () => {
   it('items.list avec un scope inconnu renvoie un message français', () => {
     const r = contract['items.list'].input.safeParse({ scope: 'nope' })
     expect(r.success).toBe(false)

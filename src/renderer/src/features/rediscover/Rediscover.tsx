@@ -1,11 +1,11 @@
 /**
- * Redécouvrir (DESIGN §3.8, AI §10, WP-32) : voile `--rd-scrim` + flou 40 au-dessus de l'app,
+ * Redécouvrir : voile `--rd-scrim` + flou 40 au-dessus de l'app,
  * compteur « 1 / 408 », 3 cibles (Collection ↑, Corbeille ←, Garder →), pile de 3 cartes, geste
  * motion (rotation x/20, validation au-delà de 120 pt ou 600 pt/s, retour en `spring.swipe`),
  * sélecteur de collection ancré sur la cible du haut, raccourcis cachés ↓ (passer) et ⌘Z,
  * pilule d'aide, écran de fin, préchargement de 3 images.
  *
- * Rafales la référence (`su4jd8…l480id`) : pendant le glisser, la carte suit le pointeur et pivote, la
+ * Pendant le glisser, la carte suit le pointeur et pivote, la
  * cible visée s'allume, et les cartes suivantes s'écartent en éventail du côté opposé.
  */
 import {
@@ -284,7 +284,7 @@ export default function Rediscover() {
     }
   }, [index, cards, total, load])
 
-  // Apparition : voile flouté en fondu (~150 ms), comme la référence.
+  // Apparition : voile flouté en fondu (~150 ms).
   useEffect(() => {
     rootRef.current?.animate([{ opacity: 0 }, { opacity: 1 }], {
       duration: motionOff() ? 80 : 160,

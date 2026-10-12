@@ -1,5 +1,5 @@
 /**
- * Contrat IPC agrégé (PLAN §1.8, §4.4) : un canal Electron `rpc` + des événements `evt:<nom>`.
+ * Contrat IPC agrégé : un canal Electron `rpc` + des événements `evt:<nom>`.
  * Un fichier par domaine (`ipc/<domaine>.ts`) ; la liste des domaines est FIGÉE ici et
  * reproduite par `src/main/ipc/handlers/index.ts`. Main valide toujours les entrées et, en dev,
  * les sorties.
@@ -26,7 +26,7 @@ import { tagsContract } from './tags'
 export * from './channels'
 export type { ChannelDef, ContractShape, EventShape } from './define'
 
-/** Domaines IPC (liste figée, ordre = ordre d'enregistrement). Pas de domaine `embed` (ERRATA §G). */
+/** Domaines IPC (liste figée, ordre = ordre d'enregistrement). Pas de domaine `embed`. */
 export const DOMAINS = [
   'items',
   'collections',

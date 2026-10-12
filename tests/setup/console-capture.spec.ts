@@ -1,5 +1,5 @@
 /**
- * Preuve que le critère « 0 erreur console » n'est pas faillible (revue WP-01) : une violation CSP
+ * Preuve que le critère « 0 erreur console » n'est pas faillible : une violation CSP
  * émise PENDANT le chargement initial doit être vue à chaque lancement, et pas seulement quand les
  * écouteurs posés après `electron.launch()` arrivent à temps (course mesurée : 1 fois sur 3).
  * L'app est lancée depuis une copie de `out/` dont `index.html` embarque un script inline (interdit

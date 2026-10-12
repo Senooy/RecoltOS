@@ -1,5 +1,5 @@
 /**
- * Handlers `capture.*` (WP-33, SPACES §2) : lancer une capture, état (permission, raccourci,
+ * Handlers `capture.*` : lancer une capture, état (permission, raccourci,
  * signature, dernier échec du dossier de dépôt), raccourci appliqué immédiatement, volet des
  * Réglages Système, relance, choix du dossier de dépôt.
  */

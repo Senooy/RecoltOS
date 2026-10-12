@@ -1,5 +1,5 @@
 /**
- * Orchestration d'une capture (SPACES §2.3, 10 étapes) : (1) verrou `inFlight` ; (2) permission
+ * Orchestration d'une capture (10 étapes) : (1) verrou `inFlight` ; (2) permission
  * (prompt une fois, sinon `permission-required` sans lancer `screencapture`) ; (3) masquer la
  * fenêtre si elle existe ; (4) `screencapture` ; (5) PNG valide, sinon branche ⌃ presse-papiers
  * (image différente de celle d'avant), sinon annulation ; (6) ingestion `source:'capture'` (doublon

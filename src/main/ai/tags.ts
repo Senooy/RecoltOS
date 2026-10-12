@@ -1,7 +1,7 @@
 /**
- * Tags IA (AI §7) : normalisation, mots vides, vocabulaire contrôlé, correspondance EN → FR.
- * Les tags de source (`x`, `instagram`, `cosmos`, `bookmark`) sont des chips virtuelles
- * (PLAN §1.4) : ils restent dans `STOP` pour que l'IA ne les produise pas.
+ * Tags IA : normalisation, mots vides, vocabulaire contrôlé, correspondance EN → FR.
+ * Les tags de source (`x`, `instagram`, `cosmos`, `bookmark`) sont des chips virtuelles :
+ * ils restent dans `STOP` pour que l'IA ne les produise pas.
  */
 import type Database from 'better-sqlite3'
 import { isReservedTagName } from '../db/repos/tags'
@@ -80,7 +80,7 @@ export const SEED_TAGS: readonly string[] = [
   'art-numerique',
 ]
 
-/** Tags importés anglais → français (AI §7) ; ne s'applique qu'aux tags importés. */
+/** Tags importés anglais → français ; ne s'applique qu'aux tags importés. */
 export const TAG_MAP_EN_FR: Readonly<Record<string, string>> = {
   typography: 'typographie',
   branding: 'branding',

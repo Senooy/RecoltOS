@@ -1,6 +1,6 @@
 /**
  * Actions sur les éléments (menu contextuel, barre de sélection, glisser) avec toast et annulation
- * ⌘Z (ERRATA §C : corbeille, masquer, ajout / retrait de collection, couverture).
+ * ⌘Z (corbeille, masquer, ajout / retrait de collection, couverture).
  */
 import type { ItemCard } from '../../../../shared/dto/items'
 import { toast } from '../../components/ui'

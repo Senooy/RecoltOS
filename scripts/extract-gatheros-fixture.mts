@@ -1,5 +1,5 @@
 /**
- * Fixture GatherOS anonymisée (QA §5.2) : `tsx scripts/extract-gatheros-fixture.mts --db <copie>`.
+ * Fixture GatherOS anonymisée : `tsx scripts/extract-gatheros-fixture.mts --db <copie>`.
  * Lit une COPIE de `moodmark.db` en lecture seule, sélectionne 10 saves par prédicats, remplace TOUT
  * texte par des valeurs synthétiques déterministes (structure conservée : clés, longueurs de tableaux,
  * nature des URL `moodmark-file://` / http), puis écrit `tests/fixtures/gatheros/seed.json` et
@@ -202,7 +202,7 @@ const seedSaves = picked.map((s, i) => {
 
 // Palettes : couleurs (non identifiantes) conservées telles quelles.
 const seed = {
-  doc: 'Fixture GatherOS anonymisée (QA §5.2), générée par scripts/extract-gatheros-fixture.mts. Aucune donnée réelle.',
+  doc: 'Fixture GatherOS anonymisée, générée par scripts/extract-gatheros-fixture.mts. Aucune donnée réelle.',
   userVersion: Number(db.pragma('user_version', { simple: true })),
   saves: seedSaves,
 }

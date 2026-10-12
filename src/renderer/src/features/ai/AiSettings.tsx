@@ -1,8 +1,7 @@
 /**
- * Réglages › IA (WP-44, AI §12.1, DESIGN §3.10) : partie haute fidèle à `o8zko5` — titre, intro,
+ * Réglages › IA : en haut, titre, intro,
  * encart gris « Moteur : … » + pilule noire « Changer », filet, DEUX lignes à interrupteur
- * (« Nommer automatiquement… », « Décrire et taguer… » : la ligne « Recherche visuelle » n'est pas
- * reproduite, ERRATA §G). Dessous, repliés : « Avancé » (modèle, effort, secours, titres, débit,
+ * (« Nommer automatiquement… », « Décrire et taguer… » : pas de « Recherche visuelle »). Dessous, repliés : « Avancé » (modèle, effort, secours, titres, débit,
  * file, lots) et « Confidentialité » (ce qui est envoyé, aperçu, journal).
  */
 import { ChevronRight } from 'lucide-react'

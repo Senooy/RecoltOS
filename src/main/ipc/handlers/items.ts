@@ -1,5 +1,5 @@
 /**
- * Handlers `items.*` (WP-12, ARCHI §7) : listes keyset, compteurs en cache, détail, édition,
+ * Handlers `items.*` : listes keyset, compteurs en cache, détail, édition,
  * corbeille, purge (lots de 500, job `purge.files` dans la transaction), masquage, vues débouncées.
  */
 import { AppError } from '../../../shared/errors'
@@ -34,7 +34,7 @@ function purge(lib: LibraryContext, itemIds: number[]): number {
   return n
 }
 
-/** `items.markViewed` débouncé à 1 s par élément (ARCHI §7). */
+/** `items.markViewed` débouncé à 1 s par élément. */
 const viewTimers = new Map<string, NodeJS.Timeout>()
 export const MARK_VIEWED_DEBOUNCE_MS = 1_000
 

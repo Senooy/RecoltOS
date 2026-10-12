@@ -1,6 +1,6 @@
 /**
  * Preload sandboxé (CJS autonome, `contextIsolation: true`) : n'importe que `electron`
- * et des constantes sans dépendance. Expose `window.recolt` (PLAN §4.4).
+ * et des constantes sans dépendance. Expose `window.recolt`.
  */
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { RpcResult } from '../shared/errors'

@@ -1,6 +1,6 @@
 /**
- * Médias synthétiques minuscules (QA §5.2) : images par `sharp`, vidéo par le ffmpeg SYSTÈME
- * (PLAN §1.16 : ni ffmpeg-static, ni binaire embarqué). Sans ffmpeg, `makeVideo` renvoie `false`.
+ * Médias synthétiques minuscules : images par `sharp`, vidéo par le ffmpeg SYSTÈME
+ * (ni ffmpeg-static, ni binaire embarqué). Sans ffmpeg, `makeVideo` renvoie `false`.
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -58,7 +58,7 @@ export async function writeImage(file: string, opts: SyntheticImageOptions = {})
   return buf.length
 }
 
-/** Cherche un exécutable (Homebrew puis PATH), comme `platform/binaries.ts` (PLAN §1.16). */
+/** Cherche un exécutable (Homebrew puis PATH), comme `platform/binaries.ts`. */
 export function findBinary(name: string): string | null {
   const dirs = [
     '/opt/homebrew/bin',

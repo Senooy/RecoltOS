@@ -1,5 +1,5 @@
 /**
- * WP-61 / WP-63 : géométrie de la toile (caméra, magnétisme, redimensionnement avec rotation,
+ * géométrie de la toile (caméra, magnétisme, redimensionnement avec rotation,
  * rotation, alignement, répartition, ordre), historique, keymap AZERTY / QWERTY simulés.
  */
 import { describe, expect, it } from 'vitest'

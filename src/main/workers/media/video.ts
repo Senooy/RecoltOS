@@ -1,6 +1,6 @@
 /**
- * Dérivés vidéo par ffmpeg système (PLAN §1.6, §1.16) :
- * - `posters/` jpg, largeur ≤ 1280 (ARCHI §5.2 étape 9) ;
+ * Dérivés vidéo par ffmpeg système :
+ * - `posters/` jpg, largeur ≤ 1280 ;
  * - `previews/` mp4 540p, ≤ 8 s, muet, `h264_videotoolbox` avec repli libx264, `+faststart`.
  */
 import { stat } from 'node:fs/promises'

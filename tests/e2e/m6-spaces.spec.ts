@@ -1,5 +1,5 @@
 /**
- * M6 (WP-61, WP-62, WP-63) : état vide → créer un space ; note (outil N), annuler / rétablir,
+ * M6 : état vide → créer un space ; note (outil N), annuler / rétablir,
  * glisser une vignette du tiroir, rechargement → persistance ; 3 fichiers déposés → 3 nœuds image ;
  * éditer une note puis fermer la fenêtre AUSSITÔT → texte en base et après réouverture ; 3 000
  * nœuds déplacés puis rechargés, 1 nœud invalide isolé avec toast ; coller une note contenant une

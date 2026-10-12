@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `library` (WP-15) : page Bibliothèque, onglets, tri, rangée de collections.
+ * Textes du domaine `library` : page Bibliothèque, onglets, tri, rangée de collections.
  */
 import { plural } from '../plural'
 

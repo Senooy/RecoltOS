@@ -1,5 +1,5 @@
 /**
- * Export PNG (SPACES §1.3.2, §1.9 ; WP-63) : dialogue Portée (Tout / Sélection), Échelle (1× 2×
+ * Export PNG : dialogue Portée (Tout / Sélection), Échelle (1× 2×
  * 3×), Fond (Clair / Sombre / Thème) → vidage → `spaces.exportPng` (fenêtre stage côté main,
  * enregistrement choisi par l'utilisateur) → pilule de progression avec « Annuler » → toast
  * « Export terminé · Afficher dans le Finder ».

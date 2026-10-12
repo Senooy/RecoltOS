@@ -1,5 +1,5 @@
 /**
- * M3 (WP-33, WP-34) : capture avec le faux `screencapture` (élément, dossier de dépôt, Échap,
+ * M3 : capture avec le faux `screencapture` (élément, dossier de dépôt, Échap,
  * doublon, permission refusée → guide), Réglages › Capture (raccourci appliqué, conflit, réservé),
  * import (50 fichiers + 1 dossier, ⌘V image et URL), « Ouvrir avec » fenêtre fermée.
  */

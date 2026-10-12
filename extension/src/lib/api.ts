@@ -1,6 +1,6 @@
 /**
  * Accès aux API d'extension pour Chromium (`chrome.*`) et Firefox (`browser.*`), formes à promesses
- * uniquement (ERRATA §G.2 : pas de polyfill). Firefox expose aussi `chrome.*` mais seul `browser.*`
+ * uniquement (pas de polyfill). Firefox expose aussi `chrome.*` mais seul `browser.*`
  * renvoie des promesses partout.
  */
 declare const browser: typeof chrome | undefined

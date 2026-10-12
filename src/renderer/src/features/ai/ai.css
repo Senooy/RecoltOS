@@ -1,4 +1,4 @@
-/* Réglages › IA (WP-44), recalés sur `o8zko5` (k = 1, modale 749 × 571). */
+/* Réglages › IA (modale 749 × 571). */
 .ai-card {
   display: flex;
   min-height: 68px;
@@ -49,7 +49,7 @@
   border-bottom: 1px solid var(--set-rule);
   padding: 15px 0 17px;
 }
-/* o8zko5 : la 1re ligne est décalée de 30 pt sous le filet de l'encart. */
+/* La 1re ligne est décalée de 30 pt sous le filet de l'encart. */
 .ai-row:first-child {
   padding-top: 30px;
   padding-bottom: 15px;

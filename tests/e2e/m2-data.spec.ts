@@ -1,5 +1,5 @@
 /**
- * M2 (WP-24) : Réglages › Données (export zip, instantané, restauration), Tags, Stockage,
+ * M2 : Réglages › Données (export zip, instantané, restauration), Tags, Stockage,
  * Apparence (thème immédiat + nativeTheme, colonnes par défaut appliquées à la grille).
  */
 import Database from 'better-sqlite3'

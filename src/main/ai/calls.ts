@@ -1,5 +1,5 @@
 /**
- * Journal des envois `ai_calls` (AI §6.1, §11) : base du budget et de « Journal des envois ».
+ * Journal des envois `ai_calls` : base du budget et de « Journal des envois ».
  * Rétention 90 jours. Aucun contenu n'y est écrit : fichiers (nom, octets, dimensions), nombre de
  * caractères, empreinte du prompt, résultat.
  */

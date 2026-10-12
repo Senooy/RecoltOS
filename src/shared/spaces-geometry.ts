@@ -1,5 +1,5 @@
 /**
- * Géométrie Spaces partagée main ↔ renderer (SPACES §1.2.3, §1.6) : enveloppes AABB de boîtes
+ * Géométrie Spaces partagée main ↔ renderer : enveloppes AABB de boîtes
  * orientées, tailles par défaut des nœuds, placement en grille. Pur, sans dépendance.
  */
 import { MIN_NODE_SIZE } from './spaces-schema'
@@ -79,7 +79,7 @@ export function fitLongSide(w: number | null, h: number | null, long: number) {
   return { width: clampSize(w * k), height: clampSize(h * k) }
 }
 
-/** Taille initiale d'un nœud `item` (SPACES §1.2.3). */
+/** Taille initiale d'un nœud `item`. */
 export function defaultItemSize(i: ItemSizeInput): { width: number; height: number } {
   if (i.kind === 'tweet') return { width: POST_NODE_WIDTH, height: POST_NODE_HEIGHT }
   if (i.kind === 'url')

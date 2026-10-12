@@ -1,5 +1,5 @@
 /**
- * Réglages › Stockage (DESIGN §3.10, ERRATA §B) : barre empilée de 8 px (Images, Vidéos, Aperçus,
+ * Réglages › Stockage : barre empilée de 8 px (Images, Vidéos, Aperçus,
  * Instantanés, en 4 gris) avec légende, « Télécharger les médias distants », « Vider la corbeille
  * automatiquement », « Régénérer les aperçus », « Vider la corbeille maintenant ».
  * « Conserver les originaux » n'est pas proposé : RecoltOS garde toujours les originaux.

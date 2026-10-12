@@ -1,5 +1,5 @@
 /**
- * Réglages › Données (DESIGN §3.10, ARCHI §7) : export zip (progression), instantanés (création,
+ * Réglages › Données : export zip (progression), instantanés (création,
  * liste, « Restaurer… » avec confirmation), import GatherOS, dossier des données, vérification.
  */
 import { useCallback, useEffect, useState } from 'react'

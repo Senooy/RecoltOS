@@ -1,5 +1,5 @@
 /**
- * DTO Spaces (PLAN §4.3, §1.11, §1.23) : `SpaceDoc {space, nodes, items}` ;
+ * DTO Spaces : `SpaceDoc {space, nodes, items}` ;
  * vignette de liste = rendu DOM réduit des 20 premiers nœuds (aucune image générée).
  */
 import { z } from 'zod'

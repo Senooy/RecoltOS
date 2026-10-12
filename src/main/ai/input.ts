@@ -1,5 +1,5 @@
 /**
- * Construction de l'`AiInput` d'un élément (AI §4, §11) : médias préparés dans le dossier du job,
+ * Construction de l'`AiInput` d'un élément : médias préparés dans le dossier du job,
  * contexte minimal (hôte seul, jamais l'URL complète ; légende et auteur du post ; durée ; carrousel),
  * vocabulaire. Ne lit que la base et les fichiers de la bibliothèque.
  */

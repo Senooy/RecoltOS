@@ -1,5 +1,5 @@
 /**
- * Règles `declarativeNetRequest` de SESSION (ERRATA §G.2) : pour les requêtes émises par le script
+ * Règles `declarativeNetRequest` de SESSION : pour les requêtes émises par le script
  * d'arrière-plan (`tabIds: [-1]`) vers les domaines des plateformes, `Origin` et `Referer` sont
  * réécrits vers le site lui-même (une origine `chrome-extension://` / `moz-extension://` serait
  * refusée ou signalée). Les requêtes des onglets ne sont jamais modifiées.

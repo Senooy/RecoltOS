@@ -1,7 +1,7 @@
 /**
- * Fumée Firefox (ERRATA §G.2, hors `verify` : lance Firefox 157 réel sur un profil JETABLE) :
+ * Fumée Firefox (hors `verify` : lance Firefox 157 réel sur un profil JETABLE) :
  * build Firefox de test `--selftest` pointé sur un faux serveur local, `web-ext run` (Firefox lancé
- * par LaunchServices : un lancement direct échoue, spike S4), chargement temporaire, puis l'auto-test
+ * par LaunchServices : un lancement direct échoue), chargement temporaire, puis l'auto-test
  * de l'arrière-plan pose des cookies factices pour le faux serveur, fait une requête X SANS onglet et
  * rapporte. Bloquant : extension chargée dans Firefox release. Informatif : cookies, `x-csrf-token`
  * et `Origin` réécrit (la boucle locale est refusée par Firefox lancé ainsi, voir plus bas).
@@ -85,7 +85,7 @@ try {
   }
   // Critère bloquant : chargement dans Firefox release. La requête d'arrière-plan vers le faux serveur
   // local est informative : dans ce lanceur (LaunchServices), Firefox refuse les requêtes vers la
-  // boucle locale (« NetworkError ») ; la vérification réelle est dans docs/checklist-manuelle.md §2.
+  // boucle locale (« NetworkError ») ; la vérification réelle est dans docs/checklist-manuelle.md
   const network =
     !!bm &&
     bm.csrf === 'csrf-selftest' &&

@@ -1,5 +1,5 @@
 /**
- * Articulation avec l'import GatherOS (SYNC §6.5) : l'importeur (WP-11) a déjà pré-rempli
+ * Articulation avec l'import GatherOS : l'importeur a déjà pré-rempli
  * `sync_items` et `sync_dismissed` et normalisé les médias. Ici, à la fin de l'import :
  * - backfill programmé pour chaque plateforme (`backfill_done = 0`, curseur et ancre remis à zéro) ;
  * - les drapeaux `syncX/Instagram/CosmosEnabled` de GatherOS sont NOTÉS (`settings`) pour que

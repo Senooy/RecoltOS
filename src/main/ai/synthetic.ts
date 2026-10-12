@@ -1,5 +1,5 @@
 /**
- * Image synthétique 256×256 du test de connexion niveau 2 (AI §3.5) : PNG encodé à la main (zlib),
+ * Image synthétique 256×256 du test de connexion niveau 2 : PNG encodé à la main (zlib),
  * dégradé et damier, sans aucune donnée de l'utilisateur. Le media-worker en fait le JPEG envoyé.
  */
 import { mkdir, writeFile } from 'node:fs/promises'

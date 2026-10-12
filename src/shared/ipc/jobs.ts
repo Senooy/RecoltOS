@@ -1,4 +1,4 @@
-/** Contrat `jobs.*` (ARCHI §2.3, §5.3). */
+/** Contrat `jobs.*`. */
 import { z } from 'zod'
 import { JobType, JobsStatus } from '../jobs'
 import { Count, Empty, Void, type ContractShape, type EventShape } from './define'

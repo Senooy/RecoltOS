@@ -1,5 +1,5 @@
 /**
- * API exposée au renderer sous `window.recolt` (PLAN §4.4). Le renderer n'appelle que
+ * API exposée au renderer sous `window.recolt`. Le renderer n'appelle que
  * `rpc<C>()` typé (`src/renderer/src/lib/rpc.ts`), jamais `invoke` directement.
  */
 import type { RpcResult } from '../shared/errors'
@@ -16,7 +16,7 @@ export interface RecoltApi {
   invoke(channel: string, input?: unknown): Promise<RpcResult<unknown>>
   /** Abonnement à `evt:<event>` ; renvoie la fonction de désabonnement. */
   on(event: string, cb: (payload: unknown) => void): () => void
-  /** Glisser natif : à appeler pendant `dragstart` (PNG 128 px en dataURL, PLAN §1.12). */
+  /** Glisser natif : à appeler pendant `dragstart` (PNG 128 px en dataURL). */
   startDrag(uuids: string[], iconDataUrl?: string): void
   /** `webUtils.getPathForFile` (File.path n'existe plus depuis Electron 32). */
   pathForFile(file: File): string

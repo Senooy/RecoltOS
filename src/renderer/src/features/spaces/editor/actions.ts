@@ -1,5 +1,5 @@
 /**
- * Opérations de l'éditeur (SPACES §1.5, §1.6) : création de nœuds, suppression, duplication,
+ * Opérations de l'éditeur : création de nœuds, suppression, duplication,
  * déplacement au clavier, ordre, alignement, verrou, style, presse-papiers, ajout d'éléments de la
  * bibliothèque et de fichiers, zoom. Chaque opération = un seul `commit` (une entrée d'historique).
  */
@@ -496,7 +496,7 @@ export async function copySelection(cut = false): Promise<void> {
   }
 }
 
-/** ⌘V (SPACES §1.5.7) : nœuds internes, fichiers, image, texte (ordre de priorité du main). */
+/** ⌘V : nœuds internes, fichiers, image, texte (ordre de priorité du main). */
 export async function pasteClipboard(at?: Vec): Promise<void> {
   let c: Awaited<ReturnType<typeof rpc<'spaces.readClipboard'>>>
   try {

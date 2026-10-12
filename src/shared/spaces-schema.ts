@@ -1,5 +1,5 @@
 /**
- * Spaces : types et schémas partagés (SPACES §1.2.2, adaptés par PLAN §1.1, §1.11, §4.2).
+ * Spaces : types et schémas partagés (adaptés).
  * Renommages : `id` → `uuid`, `saveId` → `itemUuid`, `assetPath` → `assetRel`, `zIndex` → `z`.
  * Les mêmes schémas servent à la frontière IPC (main) et au `sanitizeNode` du renderer.
  */
@@ -18,7 +18,7 @@ export const MAX_BATCH_DELETE = 5_000
 export const MAX_NODES_PER_SPACE = 20_000
 /** `spaces:applyBatchSync` (beforeunload) : un seul sous-lot. */
 export const MAX_SYNC_BATCH = 2_000
-/** Taille de sous-lot côté client (SPACES §1.7.1). */
+/** Taille de sous-lot côté client. */
 export const FLUSH_CHUNK = 2_000
 
 export const NODE_TYPES = ['item', 'image', 'note', 'shape', 'text'] as const
@@ -39,7 +39,7 @@ export const ColorToken = z.enum([
 ])
 export type ColorToken = z.output<typeof ColorToken>
 
-/** 6 couleurs de notes (PLAN §1.11, DESIGN §3.11) ; valeurs dans `tokens.css` (`--note-*`). */
+/** 6 couleurs de notes ; valeurs dans `tokens.css` (`--note-*`). */
 export const NOTE_COLORS = ['yellow', 'pink', 'green', 'blue', 'purple', 'gray'] as const
 export const NoteColor = z.enum(NOTE_COLORS)
 export type NoteColor = z.output<typeof NoteColor>
@@ -102,7 +102,7 @@ export const TextStyle = z.strictObject({
   opacity,
 })
 export const ShapeStyle = z.strictObject({
-  /** `triangle` et `diamond` : extension WP-63 (incluse en V1, ERRATA §G). */
+  /** `triangle` et `diamond` : extension (incluse en V1). */
   kind: z.enum(['rect', 'ellipse', 'triangle', 'diamond']),
   fill: ColorToken.nullable(),
   fillAlpha: z.number().min(0).max(1),
@@ -121,7 +121,7 @@ const Base = {
   y: coord,
   width: size,
   height: size,
-  /** Degrés autour du centre (WP-63). */
+  /** Degrés autour du centre. */
   rotation: finite.min(-180).max(180).default(0),
   z: z.number().int(),
   locked: z.boolean().default(false),

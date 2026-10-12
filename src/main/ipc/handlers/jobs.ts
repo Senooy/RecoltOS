@@ -1,5 +1,5 @@
 /**
- * Handlers `jobs.*` (WP-10, ARCHI §5.3) : état par type, « Réessayer » les échecs, pause/reprise
+ * Handlers `jobs.*` : état par type, « Réessayer » les échecs, pause/reprise
  * (par type ou globale, persistée dans `settings['jobs.paused']`).
  */
 import { AppError } from '../../../shared/errors'

@@ -1,5 +1,5 @@
 /**
- * WP-24 : export > 4 Go (ZIP64) valide par `unzip -t`. Lent et gourmand en disque (≈ 4,3 Go écrits) :
+ * export > 4 Go (ZIP64) valide par `unzip -t`. Lent et gourmand en disque (≈ 4,3 Go écrits) :
  * opt-in avec `RECOLT_TEST_ZIP_LARGE=1` (ex. `RECOLT_TEST_ZIP_LARGE=1 pnpm exec vitest run
  * tests/unit/data/zip-large.test.ts`). Les originaux sont des fichiers creux (APFS).
  */

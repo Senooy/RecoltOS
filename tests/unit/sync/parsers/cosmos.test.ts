@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- fixtures JSON mutées en place (copie `structuredClone` typée `any`) */
 /**
- * Parseur Cosmos (WP-55, SYNC §5.2 point 4) sur les fixtures synthétiques de WP-50.
+ * Parseur Cosmos sur les fixtures synthétiques.
  */
 import { describe, expect, it } from 'vitest'
 import {

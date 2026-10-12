@@ -1,5 +1,5 @@
 /**
- * Géométrie de la vue détail (DESIGN §3.7, recalée sur `cfj0gf` ×1,072) : barre du haut de 45 pt,
+ * Géométrie de la vue détail : barre du haut de 45 pt,
  * panneau Détails de 300 pt à `right: 18 ; top: 62 ; bottom: 18`, scène de `x = 0` à `W − 288`
  * (média centré à x ≈ 496 pour W = 1280), média en `contain` avec une marge de 54 × 40 et, pour une
  * vidéo, 48 pt réservés au lecteur placé 4 pt sous le média (le média seul reste centré).
@@ -18,7 +18,7 @@ export const PLAYER_H = 44
 export const PLAYER_GAP = 4
 /** Retrait du lecteur de chaque côté du média. */
 export const PLAYER_INSET = 12
-/** Largeur d'un post sans média dans la scène (ERRATA §C). */
+/** Largeur d'un post sans média dans la scène. */
 export const TWEET_DETAIL_W = 560
 
 export interface Rect {

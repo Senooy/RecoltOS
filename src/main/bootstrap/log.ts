@@ -1,6 +1,6 @@
 /**
  * Journal du process main (electron-log, fichier sous `userData/logs/`).
- * Ne jamais journaliser de secret (cookies, `ct0`, `sessionid`, `Bearer`, jeton de l'extension la référence).
+ * Ne jamais journaliser de secret (cookies, `ct0`, `sessionid`, `Bearer`, jetons d'extension).
  */
 import log from 'electron-log/main'
 

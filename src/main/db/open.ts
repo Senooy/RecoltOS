@@ -1,5 +1,5 @@
 /**
- * Ouverture d'une base de bibliothèque (ARCHI §4.1) : pragmas, migrations (snapshot `-pre-vN`),
+ * Ouverture d'une base de bibliothèque : pragmas, migrations (snapshot `-pre-vN`),
  * cache de requêtes préparées avec journal des requêtes lentes (> 16 ms, dev).
  * Pas d'import `electron` : le journal est injecté par l'appelant (`library/`).
  */
@@ -24,7 +24,7 @@ export interface OpenOptions {
   slowQueryMs?: number
 }
 
-/** Applique les pragmas d'ARCHI §4.1 sur une connexion ouverte. */
+/** Applique les pragmas (WAL, clés étrangères, délai d'attente) sur une connexion ouverte. */
 export function applyPragmas(db: Database.Database, busyTimeout = DEFAULT_BUSY_TIMEOUT_MS): void {
   if (!db.readonly) {
     db.pragma('journal_mode = WAL')
@@ -38,7 +38,7 @@ export function applyPragmas(db: Database.Database, busyTimeout = DEFAULT_BUSY_T
 }
 
 /**
- * Accès aux requêtes préparées UNE fois par connexion (ARCHI §4.1). En dev, `run/get/all`
+ * Accès aux requêtes préparées UNE fois par connexion. En dev, `run/get/all`
  * sont chronométrés et toute exécution au-delà du seuil est journalisée.
  */
 export interface Prepared {

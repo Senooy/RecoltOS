@@ -1,6 +1,6 @@
 /**
- * Coque statique (WP-00) sur les tokens : en-tête 96 px, sous-barre 60 px, rangée de
- * collections et grille squelette (DESIGN §2.2, §3.1, §3.12). Remplacée par `AppShell` (WP-13).
+ * Coque statique sur les tokens : en-tête 96 px, sous-barre 60 px, rangée de
+ * collections et grille squelette. Remplacée par `AppShell`.
  */
 import {
   ChevronDown,
@@ -24,7 +24,7 @@ import {
 import { fr } from '../i18n/fr'
 
 const COLUMNS = 4
-/** Hauteurs relatives des cartes squelette (DESIGN §3.12 : 1,2 / 0,8 / 1,5…). */
+/** Hauteurs relatives des cartes squelette (1,2 / 0,8 / 1,5…). */
 const SKELETON_RATIOS = [1.2, 0.8, 1.5, 1, 0.75, 1.3, 0.9, 1.25, 1.4, 0.7, 1.1, 0.85]
 
 function Logo() {

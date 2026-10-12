@@ -1,5 +1,5 @@
 /**
- * Handlers `ai.*` (WP-43, PLAN §4.4, AI §12.3). Toute action qui déclenche un appel (enqueue,
+ * Handlers `ai.*`. Toute action qui déclenche un appel (enqueue,
  * batch.start, test live) exige `consentVersion` et `provider ≠ 'off'` (vérifié par le service).
  */
 import { AI_CONSENT_VERSION } from '../../../shared/ai-types'

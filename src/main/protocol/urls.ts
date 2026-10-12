@@ -1,9 +1,9 @@
 /**
- * URL média des DTO (PLAN §1.7, ARCHI §2.5) : main construit `recolt://<libraryId>/<rel>?v=<n>`,
+ * URL média des DTO : main construit `recolt://<libraryId>/<rel>?v=<n>`,
  * le renderer ne manipule jamais de chemin. Chaîne de repli résolue ICI, pas dans le renderer :
  *   image : thumbUrl = thumb ?? legacyThumb ?? display ?? original
- *   vidéo : thumbUrl = thumb ?? poster ?? legacyThumb ?? null (arbitrage M1, CHANGELOG WP-12)
- * Pas d'import `electron` : utilisé par les DTO (WP-12…) et testé sous Node.
+ *   vidéo : thumbUrl = thumb ?? poster ?? legacyThumb ?? null
+ * Pas d'import `electron` : utilisé par les DTO (…) et testé sous Node.
  */
 import type { MediaRow } from '../db/repos/media'
 import { LibraryId, MEDIA_ROOTS, MediaUrl } from '../../shared/enums'
@@ -122,7 +122,7 @@ export function resolveMediaUrls(libId: string, m: MediaUrlSource | null | undef
   }
 }
 
-/** Avatar d'auteur : `?v=authors.updated_at` ; `null` → monogramme (ARCHI §2.4). */
+/** Avatar d'auteur : `?v=authors.updated_at` ; `null` → monogramme. */
 export function avatarUrl(
   libId: string,
   avatarRel: string | null | undefined,

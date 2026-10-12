@@ -1,8 +1,6 @@
 /**
- * Références visuelles M3 (WP-3F) sur la bibliothèque de démo déterministe : vue détail (image),
- * Redécouvrir (graine fixe 42 sous e2e), Réglages › Capture, menu contextuel. La boucle de fidélité
- * contre `cfj0gf`, `q8y7fj`, `kgogfx`, `4d1v4s` se fait sur la vraie bibliothèque ; ces baselines
- * gardent le rendu stable ensuite.
+ * Régression visuelle sur la bibliothèque de démo déterministe : vue détail (image),
+ * Redécouvrir (graine fixe 42 sous e2e), Réglages › Capture, menu contextuel.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

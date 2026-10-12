@@ -1,5 +1,5 @@
 /**
- * Ingestion d'une page de sync (SYNC §3.5, §3.6, §6.3) : UNE transaction par page. Chaque publication
+ * Ingestion d'une page de sync : UNE transaction par page. Chaque publication
  * est classée (connue avec élément / connue sans élément / écartée / nouvelle), placée dans l'ordre
  * (`order.ts`), puis les nouvelles sont insérées : `items` (`post_meta` v1, `origin='sync'`,
  * `origin_id = source_key`), `item_media` en `remote` (téléchargés ensuite par l'app,

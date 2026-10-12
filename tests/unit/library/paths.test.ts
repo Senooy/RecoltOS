@@ -18,7 +18,7 @@ import {
 
 const U = 'ab12cd34-0000-4000-8000-000000000001'
 
-describe('paths (ARCHI §3.1 + PLAN §4.6)', () => {
+describe('paths', () => {
   it('chemins relatifs canoniques', () => {
     expect(rel.original(U, '.JPG')).toBe(`items/ab/${U}.jpg`)
     expect(rel.thumb(U)).toBe(`thumbs/ab/${U}.webp`)

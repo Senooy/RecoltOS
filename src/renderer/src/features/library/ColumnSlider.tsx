@@ -1,5 +1,5 @@
 /**
- * Curseur de colonnes (DESIGN §3.1) : 0..6 avec colonnes = 8 − valeur (vers la droite, les cartes
+ * Curseur de colonnes : 0..6 avec colonnes = 8 − valeur (vers la droite, les cartes
  * grandissent) ; 4 colonnes par défaut place le pouce aux deux tiers.
  */
 import { Grid2x2, Square } from 'lucide-react'

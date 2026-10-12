@@ -1,5 +1,5 @@
 /**
- * Palette ⌘K (DESIGN §3.6, WP-23) : cmdk dans un Radix Dialog, voile sans flou, panneau 520 px à
+ * Palette ⌘K : cmdk dans un Radix Dialog, voile sans flou, panneau 520 px à
  * `top:146`. Vide : « Récemment consultés » (7 vignettes 63×63, ←/→ dans la rangée, ↵ ouvre) +
  * « Commandes ». Avec texte : « Éléments » (recherche), « Collections », « Tags », « Commandes ».
  * `>` : commandes seules ; `#` : tags seuls. Ouverte par `menu.command` `palette` (accélérateur ⌘K

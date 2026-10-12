@@ -1,5 +1,5 @@
 /**
- * Panneau Détails (DESIGN §3.7) : 300 pt à `right: 18 ; top: 62 ; bottom: 18`, fond
+ * Panneau Détails : 300 pt à `right: 18 ; top: 62 ; bottom: 18`, fond
  * `--viewer-panel`, rayon 12, défilement interne, sections séparées par `--viewer-sep`, dans
  * l'ordre : en-tête, aperçu `large` + `FormatBadge`, Nom, URL, post source, note, Collections,
  * Tags, Couleurs, Description IA, Texte détecté, Infos. Texte sélectionnable (`.select-text`).

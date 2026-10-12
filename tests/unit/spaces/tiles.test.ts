@@ -1,5 +1,5 @@
 /**
- * WP-63 : tuilage de l'export PNG sans Electron (échelle bornée, caméras à multiples entiers de la
+ * tuilage de l'export PNG sans Electron (échelle bornée, caméras à multiples entiers de la
  * tuile, assemblage sans couture ni débordement).
  */
 import { describe, expect, it } from 'vitest'

@@ -1,6 +1,6 @@
 /**
  * `globalSetup` du projet `unit` : construit l'hôte natif de test dans `.tmp/host-test/host.js`
- * (quelques ms) quand `src/host/index.ts` existe (WP-52). Sans hôte : no-op.
+ * (quelques ms) quand `src/host/index.ts` existe. Sans hôte : no-op.
  */
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'

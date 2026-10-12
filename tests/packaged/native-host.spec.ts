@@ -2,7 +2,7 @@
  * App PACKAGÉE (`pnpm run pack`) : hôte natif SEA embarqué, manifests Firefox + Chromium écrits dans un
  * HOME de test (`RECOLTOS_HOME`, jamais `~/Library`), aller-retour `ping` → `pong` puis `hello` →
  * `hello.ack` à travers l'exécutable `Contents/Resources/native-host/recolt-host` jusqu'à l'app,
- * désinstallation qui laisse `co.gatheros.host.json` intact (WP-5F, SYNC §8 critère 10).
+ * désinstallation qui laisse `co.gatheros.host.json` intact.
  */
 import { expect, test } from '@playwright/test'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
@@ -106,7 +106,7 @@ test('hôte natif packagé : ping → pong, hello → hello.ack ; manifests de t
   })
   await until(() => got.some((m) => m.type === 'hello.ack' && m.re === helloId), 10_000)
   const ack = got.find((m) => m.type === 'hello.ack')!
-  // Extension à jour : pas de rechargement demandé (une 1.0.0 en recevrait un, ERRATA §G.3).
+  // Extension à jour : pas de rechargement demandé (une 1.0.0 en recevrait un).
   expect(ack.payload).toMatchObject({
     protocol: 1,
     needsReload: false,

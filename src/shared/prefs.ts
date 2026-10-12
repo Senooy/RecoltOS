@@ -1,16 +1,16 @@
 /**
- * `prefs.json` = `PrefsSchema` (ARCHI §3.3 + delta PLAN §4.5, ERRATA §B, §G).
+ * `prefs.json` = `PrefsSchema`.
  *
  * Zod 4 : `.default()` court-circuite le parseur ; les sous-objets utilisent `.prefault({})`
  * pour que leurs défauts internes s'appliquent. `PrefsSchema.parse({})` = tous les défauts.
- * Pas de secret partagé avec l'hôte (PLAN §1.18), aucun réglage d'embeddings (ERRATA §G).
+ * Pas de secret partagé avec l'hôte, aucun réglage d'embeddings.
  */
 import { z } from 'zod'
 import { Accelerator } from './accelerator'
 import { SortMode, Theme } from './enums'
 import { AbsPath } from './ipc/define'
 
-/** Identifiant de modèle passé en argv d'une CLI : pas de tiret initial ni d'espace (AI §3). */
+/** Identifiant de modèle passé en argv d'une CLI : pas de tiret initial ni d'espace. */
 const ModelId = z.string().regex(/^[a-z0-9][a-z0-9._-]{0,63}$/i, 'identifiant de modèle invalide')
 
 export const CaptureMode = z.enum(['region', 'window', 'screen'])
@@ -20,18 +20,18 @@ export const AiProviderPref = z.enum(['off', 'claude', 'codex'])
 export const AiFallbackPref = z.enum(['none', 'claude', 'codex'])
 
 export const CapturePrefs = z.object({
-  /** Accélérateur Electron positionnel, construit depuis `e.code` (SPACES §2.2). */
+  /** Accélérateur Electron positionnel, construit depuis `e.code`. */
   shortcut: Accelerator.default('CommandOrControl+Shift+S'),
   /** Libellé de la touche sur la disposition active (`getLayoutMap()`). */
   shortcutLabel: z.string().default('S'),
   mode: CaptureMode.default('region'),
-  /** `null` = bibliothèque seule ; le Bureau est proposé au premier lancement (WP-33). */
+  /** `null` = bibliothèque seule ; le Bureau est proposé au premier lancement. */
   dropFolder: AbsPath.nullable().default(null),
   notify: z.boolean().default(true),
   hideApp: z.boolean().default(true),
   copyToClipboard: z.boolean().default(false),
   promptShown: z.boolean().default(false),
-  /** Le Bureau a été proposé comme dossier de dépôt au premier lancement (WP-33). */
+  /** Le Bureau a été proposé comme dossier de dépôt au premier lancement. */
   dropFolderInit: z.boolean().default(false),
 })
 
@@ -91,7 +91,7 @@ export const ToolsPrefs = z.object({
 })
 
 export const StoragePrefs = z.object({
-  /** Gouverne `avatar.fetch`, `remote.fetch`, `media.download` (ERRATA §B). */
+  /** Gouverne `avatar.fetch`, `remote.fetch`, `media.download`. */
   downloadRemoteMedia: z.boolean().default(true),
 })
 
@@ -99,7 +99,7 @@ export const PrefsSchema = z.object({
   version: z.literal(1).default(1),
   theme: Theme.default('system'),
   defaultSort: SortMode.default('recent'),
-  /** 2 à 8 colonnes (PLAN §1.22). */
+  /** 2 à 8 colonnes. */
   defaultColumns: z.number().int().min(2).max(8).default(4),
   defaultMode: z.enum(['library', 'collections', 'spaces', 'search']).default('library'),
   hoverPlay: z.boolean().default(true),

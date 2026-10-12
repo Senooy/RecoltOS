@@ -1,5 +1,5 @@
 /**
- * Carte du post source du panneau Détails (DESIGN §3.7, point 5) : nom, handle, texte complet
+ * Carte du post source du panneau Détails : nom, handle, texte complet
  * sélectionnable, post cité imbriqué (vignettes de 64 px), fil séparé par des filets, pied
  * « x.com · 24 sept. 2026 » (date = `created_at`) et « Ouvrir ».
  */

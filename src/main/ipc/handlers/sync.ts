@@ -1,5 +1,5 @@
 /**
- * Handlers `sync.*` (WP-57) : état, interrupteurs, « Synchroniser maintenant », « Tout
+ * Handlers `sync.*` : état, interrupteurs, « Synchroniser maintenant », « Tout
  * resynchroniser », journal, éléments récupérés par le backfill. Sans coordinateur (pont arrêté,
  * e2e sans `RECOLTOS_BRIDGE`), l'état reste lisible depuis la base et les actions n'ont pas d'effet.
  */

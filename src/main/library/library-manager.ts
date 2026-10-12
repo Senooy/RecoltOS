@@ -1,5 +1,5 @@
 /**
- * Gestionnaire de bibliothèques (ARCHI §3.1-3.2, ERRATA §B) : registre `libraries.json`, ouverture
+ * Gestionnaire de bibliothèques : registre `libraries.json`, ouverture
  * de la bibliothèque active, création, bascule (`closeLibrary` puis ouverture, `library.switched`),
  * ajout d'un dossier existant, renommage, retrait (les fichiers ne sont jamais supprimés).
  * Les dossiers synchronisés (iCloud Drive, Dropbox, CloudStorage) sont refusés : une base SQLite en
@@ -149,7 +149,7 @@ function assertNotSynced(target: string, home: string): void {
 
 /**
  * Convertit une erreur système (`EACCES`…) ou SQLite (`SQLITE_NOTADB`…) en `AppError` au message
- * français (règle §2.6) : le routeur IPC transmet tel quel tout objet portant `code` et `message`
+ * français : le routeur IPC transmet tel quel tout objet portant `code` et `message`
  * chaînes. Les `AppError` et les erreurs sans `code` textuel (qui deviennent `internal` côté
  * routeur) sont renvoyées inchangées. L'erreur d'origine est gardée, décrite en objet simple
  * (clonable par l'IPC), dans `details`.
@@ -316,7 +316,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
   /**
    * Refuse un dossier choisi situé dans `userData/libraries` ou dans la racine d'une bibliothèque
    * déjà enregistrée : `tmp/` et `items/` y sont gérés (staging, restaurations), un nettoyage par
-   * un autre lot détruirait la bibliothèque imbriquée. Comparaison insensible à la casse.
+   * une autre bibliothèque détruirait la bibliothèque imbriquée. Comparaison insensible à la casse.
    */
   const assertNotManaged = (target: string): void => {
     const candidates = [...new Set([path.resolve(target), realpathOfNearest(target)])]
@@ -564,7 +564,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       return serial(() => closeActive(true))
     },
 
-    /** Rouvre la bibliothèque active après un remplacement (restauration WP-24). */
+    /** Rouvre la bibliothèque active après un remplacement (restauration). */
     reopen(): Promise<LibraryContext> {
       return serial(async () => {
         const r = load()

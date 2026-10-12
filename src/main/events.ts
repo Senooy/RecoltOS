@@ -30,7 +30,7 @@ export function emitItemsChanged(uuids: readonly string[], reason: ItemsChangedR
 
 const collectionsListeners = new Set<(uuids: readonly string[]) => void>()
 
-/** Abonnement interne au main (menus de l'extension, WP-53) ; rend la fonction de retrait. */
+/** Abonnement interne au main (menus de l'extension) ; rend la fonction de retrait. */
 export function onCollectionsChanged(fn: (uuids: readonly string[]) => void): () => void {
   collectionsListeners.add(fn)
   return () => collectionsListeners.delete(fn)

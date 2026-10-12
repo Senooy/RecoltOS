@@ -1,5 +1,5 @@
 /**
- * Navigateurs pris en charge (SYNC §1.5 + Firefox, ERRATA §G.2) : dossier de données, dossier des
+ * Navigateurs pris en charge (Firefox) : dossier de données, dossier des
  * manifests natifs, format du manifest, détection de l'application (`mdfind` par bundle ID, puis
  * `/Applications` et `~/Applications`). Sans import `electron`.
  */

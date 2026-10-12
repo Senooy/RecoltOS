@@ -1,5 +1,5 @@
 /**
- * Préparation des médias pour l'IA (AI §4). Les opérations lourdes passent par le media-worker
+ * Préparation des médias pour l'IA. Les opérations lourdes passent par le media-worker
  * (`aiImage`, `extractFrame`, `probeVideo`) ; ce module décide QUOI envoyer :
  * - image / url : 1 JPEG ≤ 1568 px sans EXIF ;
  * - carrousel : couverture + médiane + dernière (diapositives vidéo ignorées) ;
@@ -32,7 +32,7 @@ export function pickSlides(slides: readonly Slide[], n = 3): Slide[] {
   return [...new Set(picks)].map((i) => images[i]!)
 }
 
-/** Instants des images clés (AI §4) : 10/50/90 % ; < 1,5 s : [0, d/2] ; plafonné à d − 0,3 s. */
+/** Instants des images clés : 10/50/90 % ; < 1,5 s : [0, d/2] ; plafonné à d − 0,3 s. */
 export function keyframeTimes(durationSec: number): number[] {
   const d = Math.max(0, durationSec)
   const raw = d < 1.5 ? [0, d / 2] : [0.1 * d, 0.5 * d, 0.9 * d]
@@ -146,7 +146,7 @@ export async function getVideoKeyframes(deps: {
   return { frames, durationSec: d, fallback: false }
 }
 
-/** Purge des dossiers de job de plus d'une heure (AI §4, démarrage). */
+/** Purge des dossiers de job de plus d'une heure (démarrage). */
 export async function purgeOldJobDirs(jobsDir: string, now: number, maxAgeMs = 3_600_000) {
   if (!existsSync(jobsDir)) return 0
   let n = 0

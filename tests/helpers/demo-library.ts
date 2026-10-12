@@ -1,5 +1,5 @@
 /**
- * Bibliothèque de démonstration : fabrication, cache et clonage (QA §6.1). Importable depuis vitest,
+ * Bibliothèque de démonstration : fabrication, cache et clonage. Importable depuis vitest,
  * depuis Playwright (CJS : pas d'`import.meta`, la racine vient de `paths.ts`) et depuis les scripts
  * (`scripts/make-fixtures.mts` n'est plus qu'un CLI au-dessus de ce module).
  *
@@ -8,12 +8,12 @@
  * + médias synthétiques minuscules (originaux, vignettes 800w, posters, avatars en cache local).
  * Données 100 % synthétiques (`synthetic-items.ts`), aucune donnée réelle.
  *
- * Écart assumé avec « via le code de production » (QA §2.9) : l'ingestion (WP-10) et les repos (WP-02)
- * n'existent pas encore au moment de WP-01 ; les lignes sont insérées par SQL direct
- * (`db.ts#seedSyntheticLibrary`) avec `shard()` de `src/shared/ids.ts`. WP-1F remplacera
+ * Écart assumé avec « via le code de production » : l'ingestion et les repos
+ * n'existent pas encore au moment ; les lignes sont insérées par SQL direct
+ * (`db.ts#seedSyntheticLibrary`) avec `shard()` de `src/shared/ids.ts`. remplacera
  * l'insertion par l'ingestion réelle.
  *
- * Cache (QA §6.1) : `node_modules/.cache/recoltos-demo/<clé>/`, clé = hash de ce module, des helpers
+ * Cache : `node_modules/.cache/recoltos-demo/<clé>/`, clé = hash de ce module, des helpers
  * de synthèse (`synthetic-items.ts` importe `src/shared/color.ts`, `synthetic-media.ts`, `db.ts`), de
  * `src/shared/ids.ts` (fabrication des identifiants `shard()`), des migrations, des versions de sharp et
  * de ffmpeg, et des paramètres. La sortie est un clone APFS (`cp -c`) de l'entrée de cache.
@@ -115,7 +115,7 @@ function removeStaleBuilds(cache: string): void {
   }
 }
 
-/** Clé d'avatar : sha1(lower(handle)) sur 16 hex (ARCHI §3.1). */
+/** Clé d'avatar : sha1(lower(handle)) sur 16 hex. */
 export const avatarKey = (handle: string): string => sha1(handle.toLowerCase()).slice(0, 16)
 
 function ffmpegVersion(): string {
@@ -205,7 +205,7 @@ async function writeMedia(libraryDir: string, lib: SyntheticLibrary, db: TestDb)
         let sample = videoSamples.get(orientation)
         if (sample === undefined) {
           const file = join(sampleDir, `sample-${orientation}.mp4`)
-          // Sans ffmpeg : fichier vide, poster seul (mode dégradé, PLAN §1.16).
+          // Sans ffmpeg : fichier vide, poster seul (mode dégradé).
           sample = makeVideo(file, { width: dims[0], height: dims[1] }) ? file : ''
           videoSamples.set(orientation, sample)
         }
@@ -248,7 +248,7 @@ async function writeAvatars(libraryDir: string, db: TestDb): Promise<void> {
   }[]
   const upd = db.prepare('UPDATE authors SET avatar_rel = ?, avatar_status = ? WHERE id = ?')
   for (const a of authors) {
-    // Les avatars Instagram sont tous expirés dans la bibliothèque réelle : monogramme (PLAN §9.4).
+    // Les avatars Instagram sont tous expirés dans la bibliothèque réelle : monogramme.
     if (a.platform === 'instagram') {
       upd.run(null, 'expired', a.id)
       continue

@@ -1,5 +1,5 @@
 /**
- * Écriture atomique (ARCHI §3.3) : `<fichier>.tmp`, `fsync`, `rename`, puis `fsync` du dossier.
+ * Écriture atomique : `<fichier>.tmp`, `fsync`, `rename`, puis `fsync` du dossier.
  * Un crash laisse soit l'ancien fichier, soit le nouveau, jamais un fichier tronqué.
  */
 import fs from 'node:fs'

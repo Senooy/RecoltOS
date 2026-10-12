@@ -1,5 +1,5 @@
 /**
- * M3 sur la vraie bibliothèque déjà importée (copie de dev, jamais la référence) :
+ * Couleurs, Redécouvrir et recherche sur une COPIE d'un `userData` RecoltOS réel :
  * `RECOLT_TEST_IMPORTED_USERDATA=<repo>/.tmp/m3-real pnpm exec vitest run --project real`.
  * Copie APFS dans un dossier temporaire (la migration 0002 s'y applique, la source reste intacte).
  */
@@ -23,7 +23,7 @@ describe.skipIf(!SRC)('M3 sur la bibliothèque importée', () => {
   let base: string
   let m: LibraryManager
   beforeAll(async () => {
-    if (/legacy/i.test(SRC)) throw new Error('source la référence refusée (lecture seule)')
+    if (/application support/i.test(SRC)) throw new Error('dossier vivant refusé : passe une copie')
     base = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-m3real-'))
     const ud = path.join(base, 'userData')
     fs.mkdirSync(ud)

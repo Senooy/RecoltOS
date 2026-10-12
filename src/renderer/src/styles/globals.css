@@ -1,6 +1,6 @@
 /*
- * Styles globaux : constantes de mouvement (§1.9) et de mise en page (§1.7) ; les ombres et couleurs
- * des deux thèmes sont dans `tokens.css`. Surfaces de verre, focus clavier, squelettes, mouvement réduit et mode e2e (QA §2.2).
+ * Styles globaux : constantes de mouvement et de mise en page ; les ombres et couleurs
+ * des deux thèmes sont dans `tokens.css`. Surfaces de verre, focus clavier, squelettes, mouvement réduit et mode e2e.
  */
 :root {
   --dur-instant: 80ms;
@@ -90,7 +90,7 @@ body {
   transition: none !important;
 }
 
-/* RECOLTOS_E2E=1 : animations coupées (QA §2.2). */
+/* RECOLTOS_E2E=1 : animations coupées. */
 [data-e2e] *,
 [data-e2e] *::before,
 [data-e2e] *::after {

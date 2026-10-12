@@ -1,5 +1,5 @@
 /**
- * État IA côté renderer (WP-44) : instantané de la file (`evt:ai.queue`), état des fournisseurs
+ * État IA côté renderer : instantané de la file (`evt:ai.queue`), état des fournisseurs
  * (`ai.detect`, à la demande), dialogues IA (feuille « Changer », « Enrichir », aperçu).
  */
 import { create } from 'zustand'

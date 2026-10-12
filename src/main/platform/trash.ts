@@ -1,5 +1,5 @@
 /**
- * Envoi de fichiers dans la Corbeille macOS (`shell.trashItem`, ARCHI §7) : purge automatique,
+ * Envoi de fichiers dans la Corbeille macOS (`shell.trashItem`) : purge automatique,
  * récupérable. Seul « Vider la corbeille » explicite fait un `fs.rm` (ailleurs).
  * `trashItem` est injectable ; par défaut, celui d'Electron (chargé à l'appel).
  */

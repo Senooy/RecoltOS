@@ -1,5 +1,5 @@
 /**
- * DTO de grille `ItemCard` (PLAN §4.3, ARCHI §8) : URL `recolt://` résolues ici (repli compris),
+ * DTO de grille `ItemCard` : URL `recolt://` résolues ici (repli compris),
  * vue de post `PostView` (texte tronqué à 600, auteur avec avatar local ou `null` → monogramme,
  * images citées seulement si déjà téléchargées). Aucune URL http(s) ne sort.
  */

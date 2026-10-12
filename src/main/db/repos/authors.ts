@@ -1,5 +1,5 @@
 /**
- * Repo `authors` : cache d'avatars partagé (ARCHI §4.3). Une sync ou l'extension qui rapporte une
+ * Repo `authors` : cache d'avatars partagé. Une sync ou l'extension qui rapporte une
  * nouvelle `avatar_url` met à jour UNE ligne ; toutes les cartes de l'auteur en profitent.
  * `handle` sans `@`, unique par plateforme (insensible à la casse).
  */

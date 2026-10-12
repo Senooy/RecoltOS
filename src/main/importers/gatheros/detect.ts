@@ -1,7 +1,7 @@
 /**
- * Détection de GatherOS (ARCHI §6.1) : bibliothèques de `libraries.json`, verrou `SingletonLock`
+ * Détection de GatherOS : bibliothèques de `libraries.json`, verrou `SingletonLock`
  * (`<hôte>-<pid>`, pid après le DERNIER tiret, contrôle `kill(pid, 0)` + `ps -p <pid> -o comm=`,
- * puis `pgrep -x GatherOS`), copie cohérente de la base (ARCHI §6.2) et aperçu des comptes.
+ * puis `pgrep -x GatherOS`), copie cohérente de la base et aperçu des comptes.
  * Lecture seule : rien n'est jamais écrit dans le dossier GatherOS ; `prefs.json` n'est lu que par
  * liste blanche (jamais le jeton de l'extension GatherOS).
  */
@@ -83,7 +83,7 @@ export function pickLibrary(root: string, id?: string): GatherosLibrary {
   return lib
 }
 
-/** `macbook-test.home-26365` → hôte et pid (après le DERNIER tiret). */
+/** `macbook-pro-de-test.home-26365` → hôte et pid (après le DERNIER tiret). */
 export function parseSingletonLock(target: string): { host: string; pid: number } | null {
   const i = target.lastIndexOf('-')
   if (i <= 0) return null
@@ -141,7 +141,7 @@ export async function detectRunning(root: string, deps: LockDeps = {}): Promise<
 }
 
 /**
- * Copie cohérente (ARCHI §6.2) : `moodmark.db` et `-wal` copiés ensemble dans `workDir`, la COPIE
+ * Copie cohérente : `moodmark.db` et `-wal` copiés ensemble dans `workDir`, la COPIE
  * est ouverte en écriture (SQLite rejoue le WAL), `wal_checkpoint(TRUNCATE)`, `quick_check`.
  * Aucune connexion n'est ouverte sur la source : ses octets (db, wal, shm) restent identiques.
  */
@@ -215,7 +215,7 @@ export function previewGatheros(
   }
 }
 
-/** Liste blanche des réglages GatherOS (ARCHI §6.1 n°4) : le jeton de l'extension n'est jamais lu. */
+/** Liste blanche des réglages GatherOS : le jeton de l'extension n'est jamais lu. */
 export const PREFS_WHITELIST = [
   'theme',
   'defaultSort',

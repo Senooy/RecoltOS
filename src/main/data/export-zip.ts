@@ -1,5 +1,5 @@
 /**
- * Export zip (ARCHI §7) : `manifest.json`, `recolt.db` (`VACUUM INTO`, bibliothèque entière
+ * Export zip : `manifest.json`, `recolt.db` (`VACUUM INTO`, bibliothèque entière
  * seulement), `items/**` (originaux), `metadata/items.jsonl` (une ligne par élément, lisible hors
  * de RecoltOS), `metadata/collections.json` ; dérivés seulement si `includeDerived`. L'archive est
  * écrite en streaming par le media-worker (yazl, ZIP64 automatique) ; progression en octets.

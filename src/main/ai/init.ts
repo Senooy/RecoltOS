@@ -1,5 +1,5 @@
 /**
- * Domaine `ai` (WP-43) : service IA (fournisseurs CLI, porte par fournisseur, budget, journal),
+ * Domaine `ai` : service IA (fournisseurs CLI, porte par fournisseur, budget, journal),
  * branché sur la file unique `jobs` (handlers `ai.enrich` / `ai.prompt`) et sur le cycle de vie des
  * bibliothèques. Aucune détection au démarrage tant que le fournisseur est `off`.
  */

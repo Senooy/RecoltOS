@@ -1,5 +1,5 @@
 /**
- * `scripts/sanitize-fixture.mjs` : anonymisation par liste blanche (PLAN §2.1, QA §5.2) et garde de fin
+ * `scripts/sanitize-fixture.mjs` : anonymisation par liste blanche et garde de fin
  * anti-fuite. Les valeurs ci-dessous sont des FAUSSES données réalistes (pas de donnée réelle).
  */
 import { spawnSync } from 'node:child_process'
@@ -108,7 +108,7 @@ describe('sanitize-fixture : liste blanche', () => {
   })
 })
 
-describe('sanitize-fixture : garde de fin (QA §5.2.4a)', () => {
+describe('sanitize-fixture : garde de fin', () => {
   it('détecte une chaîne de 8 caractères ou plus qui survit', () => {
     const source = { note: 'Texte confidentiel de 30 caractères', court: 'abc' }
     const fuite = { champ: 'préfixe Texte confidentiel de 30 caractères suffixe', court: 'abc' }

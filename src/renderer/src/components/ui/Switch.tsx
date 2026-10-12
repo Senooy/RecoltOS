@@ -1,5 +1,5 @@
 /**
- * `Switch` (DESIGN §3.10) : 34×20, piste `--switch-on` / `--switch-off`, pastille Ø 16, 160 ms.
+ * `Switch` : 34×20, piste `--switch-on` / `--switch-off`, pastille Ø 16, 160 ms.
  */
 import { Switch as SwitchPrimitive } from 'radix-ui'
 import type { ComponentProps } from 'react'

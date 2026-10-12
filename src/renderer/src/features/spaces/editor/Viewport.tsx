@@ -1,5 +1,5 @@
 /**
- * Viewport de la toile (SPACES §1.4, §1.5) : caméra appliquée IMPÉRATIVEMENT sur `.space-world`
+ * Viewport de la toile : caméra appliquée IMPÉRATIVEMENT sur `.space-world`
  * (aucun état React par image), fond à points recalé par variables CSS, culling AABB avec
  * hystérésis (vue + 50 %, recalcul seulement quand la caméra sort du dernier rectangle ; un nœud
  * hors du rectangle est démonté, ce qui libère son image), ≤ 2 vidéos actives, gestes au pointeur (pan, déplacement avec magnétisme, redimensionnement, rotation,
@@ -37,7 +37,7 @@ import {
 
 const MOVE_THRESHOLD = 3
 const SETTLE_MS = 150
-/** Lecteurs vidéo actifs au plus (WP-71 : 1–2) ; les autres vidéos montrent leur affiche. */
+/** Lecteurs vidéo actifs au plus ; les autres vidéos montrent leur affiche. */
 const MAX_VIDEOS = 2
 /** Côté à l'écran (px CSS) à partir duquel une vidéo non survolée est jugée « zoomée ». */
 const VIDEO_ZOOMED_PX = 480
@@ -67,7 +67,7 @@ export interface ViewportHandle {
   clientToWorld(x: number, y: number): Vec
 }
 
-/** Minimum UI par type (SPACES §1.2.3). */
+/** Minimum UI par type. */
 function minFor(n: SpaceNode): number {
   if (n.type === 'note') return 80
   if (n.type === 'item' && n.style.contentHeight === undefined && n.width > n.height * 2) return 24

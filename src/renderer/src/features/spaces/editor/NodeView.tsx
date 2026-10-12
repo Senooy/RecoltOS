@@ -1,5 +1,5 @@
 /**
- * `NodeView` (SPACES §1.4.1) : boîte absolue `translate(x,y) rotate(r)` de taille `w × h` ; le
+ * `NodeView` : boîte absolue `translate(x,y) rotate(r)` de taille `w × h` ; le
  * contenu est inerte (`.node-content { pointer-events: none }`), le hit-test se fait sur
  * `.space-node`. Mémoïsé : ne se re-rend que si SON nœud, SA prévisualisation, son état d'édition,
  * sa vidéo ou le palier de niveau de détail changent (jamais à chaque image de pan/zoom).
@@ -9,7 +9,7 @@ import { create } from 'zustand'
 import { NodeContent } from './nodes/NodeContent'
 import { useCamera, useSpace } from './store/spaceStore'
 
-/** Vidéos actives (≤ 2, WP-71 ; SPACES §1.4.4 en prévoyait 3), calculées par le viewport en fin de geste. */
+/** Vidéos actives (≤ 2), calculées par le viewport en fin de geste. */
 export const useVideos = create<{ ids: readonly string[] }>()(() => ({ ids: [] }))
 
 /** Paliers du niveau de détail (zoom × densité) : re-rendu seulement au franchissement. */

@@ -1,6 +1,6 @@
 /**
- * Caméra de la toile (SPACES §1.4.3) : `screen = world × zoom + (x, y)`. Zoom borné par le contrat
- * (`Camera.zoom` ∈ [0,1 ; 4], DESIGN §3.11 : 10–400 %). `zoomAt` garde fixe le point monde sous
+ * Caméra de la toile : `screen = world × zoom + (x, y)`. Zoom borné par le contrat
+ * (`Camera.zoom` ∈ [0,1 ; 4], soit 10–400 %). `zoomAt` garde fixe le point monde sous
  * l'ancre (invariant testé à 1e-9).
  */
 import type { Rect, Vec } from '../../../../../../shared/spaces-geometry'
@@ -54,7 +54,7 @@ export function viewRect(c: Camera, view: { w: number; h: number }): Rect {
   return { x: -c.x / c.zoom, y: -c.y / c.zoom, width: view.w / c.zoom, height: view.h / c.zoom }
 }
 
-/** Agrandit un rectangle d'une fraction de sa taille de chaque côté (culling, SPACES §1.4.4). */
+/** Agrandit un rectangle d'une fraction de sa taille de chaque côté (culling). */
 export function inflate(r: Rect, frac: number): Rect {
   const dx = r.width * frac
   const dy = r.height * frac
@@ -71,7 +71,7 @@ export function contains(outer: Rect, inner: Rect): boolean {
   )
 }
 
-/** Molette (SPACES §1.4.3) : ⌃ = pincement, ⌘ ou réglage « zoomer » = zoom, sinon défilement. */
+/** Molette : ⌃ = pincement, ⌘ ou réglage « zoomer » = zoom, sinon défilement. */
 export function wheelAction(
   e: { deltaX: number; deltaY: number; deltaMode: number; ctrlKey: boolean; metaKey: boolean },
   wheelMode: 'scroll' | 'zoom',

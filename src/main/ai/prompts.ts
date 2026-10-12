@@ -1,5 +1,5 @@
 /**
- * Prompts exacts (AI §5.1–5.3), figés par snapshots (`tests/unit/ai/prompts.test.ts`).
+ * Prompts exacts, figés par snapshots (`tests/unit/ai/prompts.test.ts`).
  * Claude reçoit les chemins absolus des JPEG (outil Read) ; Codex reçoit les images par `-i` et
  * la formule « jointe(s) ». Légendes ≤ 600 caractères (≤ 1200 pour un post texte), post cité ≤ 600.
  */
@@ -48,7 +48,7 @@ function nums(ns: number[]): string {
   return `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}`
 }
 
-/** Bloc INTRO (AI §5.2). */
+/** Bloc INTRO. */
 export function introBlock(input: AiInput, provider: AiCliId): string {
   const paths = input.media.map((m) => m.path)
   const n = paths.length
@@ -141,7 +141,7 @@ const CONSIGNES: Record<AiField, (vocabulary: string[]) => string> = {
 
 export interface PromptOptions {
   fields?: readonly AiField[]
-  /** 2ᵉ essai après une sortie invalide (AI §5.4). */
+  /** 2ᵉ essai après une sortie invalide. */
   retry?: boolean
 }
 
@@ -161,7 +161,7 @@ export function buildAnalyzePrompt(
   return blocks.filter((b) => b !== '').join('\n\n')
 }
 
-/** Prompt « prompt d'image » (AI §5.3), à la demande uniquement, sur la première image. */
+/** Prompt « prompt d'image », à la demande uniquement, sur la première image. */
 export function buildImagePromptPrompt(
   input: AiInput,
   provider: AiCliId,

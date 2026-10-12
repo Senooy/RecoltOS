@@ -117,7 +117,7 @@ export function prefsPatchFromGatheros(g: Record<string, unknown>): PrefsPatch {
 type ImportDoneHook = (lib: LibraryContext, gatherosPrefs: Record<string, unknown>) => void
 const importDoneHooks = new Set<ImportDoneHook>()
 
-/** Fin d'import réussie (WP-56 : backfill programmé, réglages de sync notés). */
+/** Fin d'import réussie (backfill programmé, réglages de sync notés). */
 export function onGatherosImportDone(fn: ImportDoneHook): () => void {
   importDoneHooks.add(fn)
   return () => importDoneHooks.delete(fn)
@@ -140,7 +140,7 @@ export async function startGatherosImport(input: {
   if (input.target === 'new') await d.createLibrary('Importée de GatherOS')
   const lib = requireLibrary()
   const abort = new AbortController()
-  // Un run interrompu (crash) est repris : chaque phase est idempotente (ARCHI §6.3).
+  // Un run interrompu (crash) est repris : chaque phase est idempotente.
   const runId =
     input.resumeRunId ??
     pendingImport(lib)?.runId ??

@@ -1,5 +1,5 @@
 /**
- * File de jobs unique (PLAN §1.3, §4.2) : table `jobs`, convention `priority DESC`.
+ * File de jobs unique : table `jobs`, convention `priority DESC`.
  */
 import { z } from 'zod'
 

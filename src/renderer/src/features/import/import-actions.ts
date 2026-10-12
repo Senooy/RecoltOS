@@ -1,5 +1,5 @@
 /**
- * Import côté renderer (SPACES partie C, WP-34) : rapport « N ajoutés · M doublons · 0 échec »,
+ * Import côté renderer : rapport « N ajoutés · M doublons · 0 échec »,
  * progression `ingest.progress` dans la pilule, sélecteurs (fichiers / dossier), ⌘V (le main lit le
  * presse-papiers), URL.
  */

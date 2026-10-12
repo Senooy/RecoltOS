@@ -58,7 +58,7 @@ export const usePrefs = create<PrefsState>()((set, get) => ({
       set({ prefs, loaded: true })
       applyPrefsToDocument(prefs)
     } catch (err) {
-      // Avant WP-02, `prefs.get` n'est pas implémenté : on garde les défauts.
+      // Avant, `prefs.get` n'est pas implémenté : on garde les défauts.
       if (!isNotImplemented(err)) console.error('[prefs] lecture impossible', err)
       set({ loaded: true })
     }

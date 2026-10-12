@@ -1,5 +1,5 @@
 /**
- * Banc de performance (ARCHI §8, PLAN §8) : 10 000 éléments synthétiques par défaut.
+ * Banc de performance : 10 000 éléments synthétiques par défaut.
  *
  *   tsx --tsconfig tsconfig.node.json scripts/seed-bench.mts --out <userData> [--count 10000] [--no-files]
  *       [--force]
@@ -9,9 +9,7 @@
  *
  * Même `userData` que `make-fixtures.mts` (libraries.json + libraries/default/recolt.db), mais les
  * fichiers sont des CLONES APFS (`COPYFILE_FICLONE`) de 50 échantillons : presque aucun octet écrit.
- * Distribution = celle de la bibliothèque réelle (408 éléments, `tests/helpers/synthetic-items.ts`),
- * mise à l'échelle. WP-71 l'étend (mesures et scénarios de perf).
- * Note : WP-71 cite `scripts/seed-bench.ts` ; le fichier livré est `seed-bench.mts` (tsx, tsconfig.node).
+ * Distribution = celle de `tests/helpers/synthetic-items.ts` (408 éléments), mise à l'échelle.
  */
 import { copyFileSync, constants, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'

@@ -1,4 +1,4 @@
-/* Grille masonry et cartes (DESIGN §3.2, §4.4). */
+/* Grille masonry et cartes. */
 .masonry-card {
   position: absolute;
   left: 0;
@@ -31,7 +31,7 @@
     opacity: 0;
   }
 }
-/* Texte des posts : mesuré sur c7j4tx (k = 1) et uqre2k (k = 1,072), Geist ≈ 14,3 px, pas de 20,5 pt. */
+/* Texte des posts : Geist ≈ 14,3 px, pas de 20,5 pt. */
 .tweet-text {
   font-size: 14.3px;
   line-height: 20.5px;

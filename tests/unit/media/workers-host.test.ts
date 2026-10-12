@@ -1,5 +1,5 @@
 /**
- * WP-03 — critère 5 : crash volontaire du worker → redémarrage avec backoff, job repassé en
+ * critère 5 : crash volontaire du worker → redémarrage avec backoff, job repassé en
  * `queued`. Plus : RPC de bout en bout avec le vrai `media.worker.ts`, erreurs sérialisées,
  * annulation, `stopAll()`.
  */
@@ -29,7 +29,7 @@ afterEach(async () => {
 })
 afterAll(() => tmp.cleanup())
 
-/** File de jobs minimale en mémoire, branchée comme le fera WP-10 sur `onCrash`. */
+/** File de jobs minimale en mémoire, branchée comme le fera sur `onCrash`. */
 function memoryQueue() {
   const jobs = new Map<
     number,

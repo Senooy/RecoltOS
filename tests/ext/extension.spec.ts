@@ -1,7 +1,7 @@
 /**
- * Fumée de l'extension (WP-53, opt-in `pnpm run test:ext`) : Chromium de test Playwright avec un
+ * Fumée de l'extension (opt-in `pnpm run test:ext`) : Chromium de test Playwright avec un
  * profil JETABLE (`.tmp/`), extension de test chargée, manifest natif écrit DANS ce profil (Chromium lit
- * `<user-data-dir>/NativeMessagingHosts`, spike S4) qui vise l'exécutable SEA de l'hôte, app Electron
+ * `<user-data-dir>/NativeMessagingHosts`) qui vise l'exécutable SEA de l'hôte, app Electron
  * de test (`RECOLTOS_BRIDGE=1`).
  * Aucun navigateur ni profil de l'utilisateur n'est touché, aucun appel réel aux plateformes.
  */
@@ -152,7 +152,7 @@ test('sync en arrière-plan sans onglet : cookies de session, CSRF et Origin ré
   expect(ctx.pages().length).toBe(pagesBefore)
 })
 
-test('aucun cookie ni jeton dans les journaux ni la base de l’app (SYNC §8 critère 11)', async () => {
+test('aucun cookie ni jeton dans les journaux ni la base de l’app', async () => {
   const { lstatSync, readdirSync, readFileSync } = await import('node:fs')
   const walk = (d: string): string[] =>
     readdirSync(d).flatMap((n) => {

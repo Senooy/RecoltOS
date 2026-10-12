@@ -1,5 +1,5 @@
 /**
- * ⌘V dans la bibliothèque (SPACES §3.2) : écouteur `paste` racine, ignoré dans un champ éditable
+ * ⌘V dans la bibliothèque : écouteur `paste` racine, ignoré dans un champ éditable
  * ou sous un calque ; le MAIN lit le presse-papiers (fichiers du Finder, image, URL).
  */
 import { useEffect } from 'react'

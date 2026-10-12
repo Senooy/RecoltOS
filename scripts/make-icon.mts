@@ -6,7 +6,7 @@
  * marge, lisible en petit). Lancement : `pnpm run icon` (puis `scripts/make-icns.sh`).
  *
  * Tout est calculé ici (aucun aléa) : le SVG produit est déterministe, donc les PNG aussi.
- * Source du dessin : `design/logos/simple/3.svg` (coordonnées 0..100).
+ * Dessin en coordonnées 0..100.
  */
 import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'

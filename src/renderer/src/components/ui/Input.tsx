@@ -1,5 +1,5 @@
 /**
- * `Input` (DESIGN §3.10, §3.7) : champ de 34 px, rayon 10 (Réglages) ou 8 + fond sombre
+ * `Input` : champ de 34 px, rayon 10 (Réglages) ou 8 + fond sombre
  * (variante `viewer`, panneau Détails). Survol : bordure `--border-strong`. Le focus clavier
  * vient de `:focus-visible` (globals.css), jamais d'un variant Tailwind « focus ».
  */

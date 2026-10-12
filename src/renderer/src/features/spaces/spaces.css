@@ -1,5 +1,5 @@
 /*
- * Spaces (DESIGN §3.11, SPACES §1.4.1) : toile maison DOM + transform CSS. Sobre : fond `--bg`,
+ * Spaces : toile maison DOM + transform CSS. Sobre : fond `--bg`,
  * points `--canvas-dot`, sélection bleue `--accent-blue`, guides roses.
  */
 /* Couleurs --sp-* (deux thèmes) : `styles/tokens.css`. */
@@ -87,7 +87,7 @@
   cursor: default;
 }
 
-/* Note (DESIGN §3.11 : rayon 4, 15/21, texte sombre sur les 6 teintes). */
+/* Note (rayon 4, 15/21, texte sombre sur les 6 teintes). */
 .sp-note {
   border-radius: 4px;
   box-shadow: var(--sp-note-shadow);

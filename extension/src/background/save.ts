@@ -1,5 +1,5 @@
 /**
- * Enregistrement depuis l'extension (SYNC §2.2) : menu contextuel, raccourci, popup → `save.create`.
+ * Enregistrement depuis l'extension : menu contextuel, raccourci, popup → `save.create`.
  * Images `blob:` / `data:` lues dans la page : ≤ 8 Mio inline, jusqu'à 200 Mo en `media.chunk` de
  * 8 Mio (app ouverte), au-delà refus. Toast dans la page, badge ✓ et notification en secours.
  */

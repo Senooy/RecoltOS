@@ -1,5 +1,5 @@
 /**
- * M1 (WP-13 → WP-16) : coque, menu natif, grille, rangée de collections, Réglages et import GatherOS
+ * M1 : coque, menu natif, grille, rangée de collections, Réglages et import GatherOS
  * depuis l'UI (bibliothèque GatherOS factice sous `RECOLTOS_HOME`).
  */
 import { join } from 'node:path'
@@ -119,7 +119,7 @@ test.describe('coque et grille (bibliothèque de démo)', () => {
     const menu = page.locator('[data-testid="ctx-menu"]')
     await expect(menu).toBeVisible()
     const items = menu.locator('[role="menuitem"]')
-    // 7 entrées de GatherOS + « Ajouter à un space › » (extension RecoltOS, WP-62).
+    // 7 entrées de base + « Ajouter à un space › ».
     expect(await items.count()).toBe(8)
     await expect(items.last()).toHaveText('Supprimer')
   })

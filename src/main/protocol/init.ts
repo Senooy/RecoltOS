@@ -1,11 +1,11 @@
 /**
- * Initialisation du domaine `protocol` (WP-05, registre `bootstrap/services.ts`) :
+ * Initialisation du domaine `protocol` (registre `bootstrap/services.ts`) :
  *  - `protocol.handle('recolt')` sur la session par défaut ET sur chaque session hors écran
  *    (`registerOffscreenSessionSetup`, lecture seule, mêmes racines, réservé à la page interne
  *    `offscreen.html` : une page http(s) capturée reçoit 403, cf. `offscreen-guard.ts`) ; le schéma privilégié est
  *    déclaré avant `ready` par `bootstrap/pre-ready.ts` ;
  *  - canal brut `drag` (glisser vers le Finder) ;
- *  - media-worker local pour `system.copyImage` tant que WP-10 n'en fournit pas.
+ *  - media-worker local pour `system.copyImage` tant que n'en fournit pas.
  * Hors Electron (tests Node du registre), rien n'est branché.
  */
 import { app, ipcMain, nativeImage, protocol, webContents } from 'electron'

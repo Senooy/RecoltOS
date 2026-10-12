@@ -1,5 +1,5 @@
 /**
- * Contenu d'un dépôt (SPACES §3.1) : chemins des fichiers ET dossiers (`webUtils.getPathForFile`,
+ * Contenu d'un dépôt : chemins des fichiers ET dossiers (`webUtils.getPathForFile`,
  * le main parcourt les dossiers : ≤ 12 niveaux, ≤ 20 000 fichiers, confirmation au-delà de 200),
  * sinon une URL http(s) (`text/uri-list` / `text/plain`, glisser depuis un navigateur).
  */

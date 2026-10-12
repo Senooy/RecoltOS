@@ -1,5 +1,5 @@
 /**
- * Hôte natif lancé comme un navigateur le ferait (WP-52) : bundle `host.js` copié SEUL dans un dossier
+ * Hôte natif lancé comme un navigateur le ferait : bundle `host.js` copié SEUL dans un dossier
  * sans `node_modules`, trames sur stdin/stdout, socket de l'app factice, spool.
  */
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'

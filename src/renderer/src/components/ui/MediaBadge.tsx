@@ -1,5 +1,5 @@
 /**
- * `MediaBadge` (DESIGN §3.2) : badges en coin des cartes. `video` : 24×20, icône caméra 13 px ;
+ * `MediaBadge` : badges en coin des cartes. `video` : 24×20, icône caméra 13 px ;
  * `carousel` : « 1/N », 22 px de haut ; `gif` : « GIF ». Fond `--badge-bg` + flou 8 px, texte blanc.
  */
 import { Video } from 'lucide-react'

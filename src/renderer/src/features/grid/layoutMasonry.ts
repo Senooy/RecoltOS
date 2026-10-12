@@ -1,5 +1,5 @@
 /**
- * Masonry maison déterministe (DESIGN §4.4) : colonne la plus courte (à égalité, la plus à gauche),
+ * Masonry maison déterministe : colonne la plus courte (à égalité, la plus à gauche),
  * hauteurs par ratio bornées à [0,25 ; 2,2], hauteurs mesurées pour les posts texte, garde-fou
  * `minColW` (140) qui réduit le nombre de colonnes effectives. Fonction pure.
  */
@@ -13,8 +13,7 @@ export interface MasonryItem {
   measured?: number
   /**
    * Hauteur ESTIMÉE servant seulement au choix de la colonne (posts texte : `colW × 0,5`), la
-   * position verticale suivant la hauteur réelle. Reproduit le placement observé sur `uqre2k`,
-   * où les posts sont rangés avant leur mesure (écart à DESIGN §4.4 consigné au CHANGELOG).
+   * position verticale suivant la hauteur réelle : les posts sont rangés avant leur mesure.
    */
   placementRatio?: number
 }
@@ -86,7 +85,7 @@ export function layoutMasonry(items: readonly MasonryItem[], o: MasonryOptions):
   return { placed, height: placed.length > 0 ? height : 0, colW, columns }
 }
 
-/** Index des éléments visibles dans `[top, bottom]` (recherche binaire par colonne, DESIGN §4.4). */
+/** Index des éléments visibles dans `[top, bottom]` (recherche binaire par colonne). */
 export function visibleIndices(layout: MasonryLayout, top: number, bottom: number): number[] {
   const byCol: number[][] = Array.from({ length: layout.columns }, () => [])
   layout.placed.forEach((p, i) => byCol[p.col]!.push(i))

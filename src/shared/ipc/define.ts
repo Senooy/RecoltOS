@@ -1,4 +1,4 @@
-/** Briques communes aux contrats IPC par domaine (PLAN §1.8). */
+/** Briques communes aux contrats IPC par domaine. */
 import { z } from 'zod'
 import '../zod-locale'
 

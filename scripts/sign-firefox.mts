@@ -1,5 +1,5 @@
 /**
- * Signature de l'extension Firefox (ERRATA §G.2 n°1) : `web-ext sign --channel unlisted` sur
+ * Signature de l'extension Firefox : `web-ext sign --channel unlisted` sur
  * `dist-extension/firefox/`, résultat dans `dist-extension/signed/*.xpi`. Les clés d'API AMO sont lues
  * dans `WEB_EXT_API_KEY` / `WEB_EXT_API_SECRET`, fournies par l'utilisateur lui-même : ce script ne
  * les affiche, ne les demande ni ne les enregistre jamais. Chaque envoi à AMO exige une version

@@ -1,5 +1,5 @@
 /**
- * `Chip` (DESIGN §4.3) : pastille pleine (`rounded-full`). Variantes `tag` (# nom), `recent`
+ * `Chip` : pastille pleine (`rounded-full`). Variantes `tag` (# nom), `recent`
  * (recherche récente), `filter` (bascule), `collection`, `viewer` (26 px, sur fond sombre).
  * Cliquable si `onClick`/`selected` est fourni (rend alors un `<button>`) ; `onRemove` ajoute
  * une croix distincte avec son propre nom accessible.

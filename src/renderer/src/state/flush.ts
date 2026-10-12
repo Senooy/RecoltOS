@@ -1,5 +1,5 @@
 /**
- * Vidage avant fermeture (SPACES §1.7.1) : main envoie `app:flush-request(token)` ; chaque
+ * Vidage avant fermeture : main envoie `app:flush-request(token)` ; chaque
  * domaine enregistre un vidage (Spaces : `commitEditing()` puis `persistence.flush()`) ; le
  * renderer répond `flushDone(token)` quand tout est terminé (main attend 2 s au plus).
  */

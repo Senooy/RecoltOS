@@ -1,5 +1,5 @@
 /**
- * `QuotedTweet` (DESIGN §3.2) : post cité en bloc bordé (rayon 12), nom + handle en ligne, texte
+ * `QuotedTweet` : post cité en bloc bordé (rayon 12), nom + handle en ligne, texte
  * limité à 4 lignes, première image (si téléchargée) pleine largeur, max 180 px.
  */
 import { useState } from 'react'

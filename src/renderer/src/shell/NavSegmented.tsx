@@ -1,5 +1,5 @@
 /**
- * `NavSegmented` (DESIGN §2.4) : 480×52 centré (centre y=55), loupe Ø42 puis Bibliothèque /
+ * `NavSegmented` : 480×52 centré (centre y=55), loupe Ø42 puis Bibliothèque /
  * Collections / Spaces (140×42), pilule active animée (`layoutId`), icône 18 px sur le segment actif
  * seulement. Variante `dark` (étagère).
  */

@@ -1,13 +1,12 @@
 /*
- * Étagère 3D des collections (DESIGN §3.4, WP-21) : tranches verticales en perspective, côté droit
+ * Étagère 3D des collections : tranches verticales en perspective, côté droit
  * le plus proche ; la face s'assombrit vers ce côté, juste avant un liseré clair de 6 px.
  *
- * Géométrie recalée sur `zzrib6` (×0,858) plutôt que sur les valeurs de départ de DESIGN §3.4
- * (perspective 1400 / -62°, qui donnaient des tranches deux fois trop étroites) : arête proche de
+ * Géométrie (perspective 1400 / -62° donnait des tranches deux fois trop étroites) : arête proche de
  * la couverture i à x = 274 + 122·i pt, haut à 172 pt ; arête éloignée de « Gaming » à ≈ 99 pt et
  * 227 pt de haut ; d'où perspective 800 px centrée, face 410×700, rotateY(-35deg).
  *
- * Entrée (mesurée sur l'original) : le fond passe de `--bg` au noir pendant que les tranches TOMBENT
+ * Entrée : le fond passe de `--bg` au noir pendant que les tranches TOMBENT
  * du haut de la fenêtre, une à une de gauche à droite (`--i` × 45 ms, plafonné), avec un léger
  * rebond (≈ 10 px) à l'arrivée ; libellés et contour « Nouvelle collection » suivent leur tranche.
  * L'animation porte sur les feuilles (face, libellé) : une opacité < 1 sur un parent `preserve-3d`

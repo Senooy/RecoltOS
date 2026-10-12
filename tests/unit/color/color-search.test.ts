@@ -68,7 +68,7 @@ describe('ΔE2000 numérique de la boucle chaude', () => {
 })
 
 describe('Lab D65 maison', () => {
-  it('#1850f0 ≈ [41.5641, 44.0679, -84.0211] (palette_lab la référence)', () => {
+  it('#1850f0 ≈ [41.5641, 44.0679, -84.0211] (valeur de référence)', () => {
     const [l, a, b] = hexToLab('#1850f0')
     expect(l).toBeCloseTo(41.5641, 3)
     expect(a).toBeCloseTo(44.0679, 3)

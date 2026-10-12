@@ -1,5 +1,5 @@
 /**
- * `Dialog` (DESIGN §3.6, §3.10, §1.9) : modale Radix. Voile `modal` (--scrim-modal + flou 3 px,
+ * `Dialog` : modale Radix. Voile `modal` (--scrim-modal + flou 3 px,
  * Réglages) ou `palette` (--scrim-palette, sans flou), tous deux en no-drag. Panneau : opacity,
  * scale .98→1 et y −6→0 (240 ms) ; fondu seul en mouvement réduit. Le titre est obligatoire
  * (`title`), masquable visuellement (`hideTitle`) mais toujours annoncé.

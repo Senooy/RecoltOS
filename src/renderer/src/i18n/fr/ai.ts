@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `ai` (WP-44) : Réglages › IA, feuille « Changer » (fournisseur et
+ * Textes du domaine `ai` : Réglages › IA, feuille « Changer » (fournisseur et
  * consentement), boîte « Enrichir la bibliothèque », aperçu de l'envoi, journal, panneau Détails,
  * pastille de la barre du haut. Les namespaces de base `ai` et `settings.ai` restent dans `base.ts`.
  * Tutoiement, typographie FR (espaces insécables via `lib/format.ts` quand c'est calculé).

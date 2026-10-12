@@ -1,5 +1,5 @@
 /**
- * Pastille IA de la barre du haut (AI §6.6) : visible seulement quand la file IA travaille, attend
+ * Pastille IA de la barre du haut : visible seulement quand la file IA travaille, attend
  * ou est en pause. Ouvre Réglages › IA.
  */
 import { Sparkles } from 'lucide-react'

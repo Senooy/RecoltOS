@@ -1,4 +1,4 @@
-/** Contrat `libraries.*` (ERRATA §B, handler WP-02). Dossiers iCloud Drive / Dropbox refusés. */
+/** Contrat `libraries.*` (handler). Dossiers iCloud Drive / Dropbox refusés. */
 import { z } from 'zod'
 import { LibraryId } from '../enums'
 import { AbsPath, Empty, Void, type ContractShape } from './define'

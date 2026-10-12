@@ -1,5 +1,5 @@
 /**
- * Lecture du presse-papiers par main (SPACES §3.2, API asynchrone d'Electron 44 :
+ * Lecture du presse-papiers par main (API asynchrone d'Electron 44 :
  * `clipboard.read()` → `ClipboardItem`). Priorité pour ⌘V : fichiers du Finder, puis image, puis
  * URL http(s). Aucun accès depuis le renderer.
  */

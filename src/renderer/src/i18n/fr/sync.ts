@@ -1,7 +1,7 @@
 /**
- * Textes du domaine `sync` (WP-57, SYNC §7.2 en tutoiement, ERRATA §G.2 : sync en arrière-plan sans
- * onglet, Firefox prioritaire). Les libellés repris de `fte10a` vivent dans `base.ts`
- * (`settings.sync.*`) ; ici, tout ce qui est propre à RecoltOS.
+ * Textes du domaine `sync` (en tutoiement, sync en arrière-plan sans
+ * onglet, Firefox prioritaire). Les libellés de base vivent dans `base.ts`
+ * (`settings.sync.*`) ; ici, le reste.
  */
 const NB = '\u00a0'
 

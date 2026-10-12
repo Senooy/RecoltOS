@@ -1,5 +1,5 @@
 /**
- * Trames native messaging (SYNC §1.4) : `[uint32 longueur, ordre natif = LE sur arm64/x64][JSON UTF-8]`.
+ * Trames native messaging : `[uint32 longueur, ordre natif = LE sur arm64/x64][JSON UTF-8]`.
  * Sans dépendance (bundle de l'hôte et tests).
  */
 import { MAX_FROM_EXT_BYTES, MAX_TO_EXT_BYTES } from '../shared/bridge/constants'

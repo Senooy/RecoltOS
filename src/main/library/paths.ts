@@ -1,5 +1,5 @@
 /**
- * Disposition sur disque (ARCHI §3.1 + delta PLAN §4.6). Tous les chemins stockés en base sont
+ * Disposition sur disque. Tous les chemins stockés en base sont
  * RELATIFS à la racine de la bibliothèque (déplaçable sans migration).
  * Pas d'import `electron` : pur, testable sous Node.
  */
@@ -9,7 +9,7 @@ import { AppError } from '../../shared/errors'
 import { shard } from '../../shared/ids'
 import { DB_FILE } from '../db/open'
 
-/** Racines servies par `recolt://<libraryId>/<root>/<rel>` (PLAN §1.7). */
+/** Racines servies par `recolt://<libraryId>/<root>/<rel>`. */
 export const LIBRARY_DIRS = [
   'items',
   'thumbs',
@@ -51,7 +51,7 @@ export function libraryPaths(root: string): LibraryPaths {
 
 /**
  * Résout `rel` sous `root` ; refuse les chemins absolus, `..`, l'octet NUL et toute sortie de la
- * racine (défense en profondeur, la vraie barrière du protocole reste realpath côté WP-05).
+ * racine (défense en profondeur, la vraie barrière du protocole reste realpath).
  */
 export function resolveInside(root: string, rel: string): string {
   if (!rel || rel.includes('\0') || path.isAbsolute(rel) || rel.includes('\\')) {
@@ -95,7 +95,7 @@ export const rel = {
   tmp: (name: string) => `tmp/${name}`,
 } as const
 
-/** Dossiers de `userData` (ARCHI §3.1 + PLAN §4.6). */
+/** Dossiers de `userData`. */
 export function userDataPaths(userData: string) {
   const u = path.resolve(userData)
   return {

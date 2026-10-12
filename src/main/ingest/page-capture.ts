@@ -1,5 +1,5 @@
 /**
- * Capture d'une page HTML (ARCHI §5.2 étape 4) : fenêtre hors écran 1440×900 (partition non
+ * Capture d'une page HTML : fenêtre hors écran 1440×900 (partition non
  * persistante, sandbox, sans preload, `withOffscreenWindow`), titre et `og:description`.
  */
 import { withOffscreenWindow } from '../windows/offscreen'

@@ -1,5 +1,5 @@
 /**
- * Manifest MV3 de l'extension, généré PAR CIBLE depuis une seule source (ERRATA §G.2 n°1) :
+ * Manifest MV3 de l'extension, généré PAR CIBLE depuis une seule source :
  * - `chromium` (Chrome, Brave, Edge, Vivaldi…) : `background.service_worker`, `key` (identifiant fixe),
  *   `minimum_chrome_version` 127 (`action.openPopup`) ;
  * - `firefox` : `background.scripts`, `browser_specific_settings.gecko.id = recoltos@local`, sans `key`.

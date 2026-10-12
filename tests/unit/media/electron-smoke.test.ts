@@ -1,5 +1,5 @@
 /**
- * WP-03 — critères 4 et 5 côté Electron réel : `utilityProcess` (via `makeUtilityFork`), RPC,
+ * critères 4 et 5 côté Electron réel : `utilityProcess` (via `makeUtilityFork`), RPC,
  * SIGKILL pendant `makePreview` → `worker_crashed` puis redémarrage, aperçu 540p lisible par
  * Chromium (`<video>` readyState ≥ 3, 960×540).
  *

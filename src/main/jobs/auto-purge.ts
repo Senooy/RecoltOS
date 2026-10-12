@@ -1,5 +1,5 @@
 /**
- * Purge automatique de la corbeille (ARCHI §7) : `trashAutoEmptyDays` = 0 (jamais, défaut), 7, 30
+ * Purge automatique de la corbeille : `trashAutoEmptyDays` = 0 (jamais, défaut), 7, 30
  * ou 90. Au démarrage puis toutes les 6 h ; fichiers envoyés dans la Corbeille macOS (`mode:'trash'`,
  * récupérables) ; snapshot `-pre-purge` (`VACUUM INTO`) au-delà de 50 éléments ; lots de 500 ids
  * (un lot = une transaction = un job `purge.files`).

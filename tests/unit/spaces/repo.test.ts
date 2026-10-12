@@ -1,5 +1,5 @@
 /**
- * WP-60 : dépôt Spaces sur une vraie base (cascade, SET NULL, atomicité, CHECK, plafonds,
+ * dépôt Spaces sur une vraie base (cascade, SET NULL, atomicité, CHECK, plafonds,
  * sous-lots de 3 000 nœuds, viewport sans `updated_at`, duplication, « Ajouter à un space »).
  */
 import { afterEach, describe, expect, it } from 'vitest'

@@ -1,5 +1,5 @@
 /**
- * Commandes de la palette ⌘K (DESIGN §3.6) : 15 entrées (icône, libellé, raccourci), branchées sur
+ * Commandes de la palette ⌘K : 15 entrées (icône, libellé, raccourci), branchées sur
  * `runMenuCommand` (même chemin que le menu natif) ; raccourcis lus dans `src/shared/shortcuts.ts`.
  */
 import {
@@ -27,7 +27,7 @@ export interface PaletteCommand {
   id: string
   label: string
   Icon: LucideIcon
-  /** Touches affichées (ordre DESIGN §3.6 : ⌘ puis ⇧ puis la lettre). */
+  /** Touches affichées (ordre : ⌘ puis ⇧ puis la lettre). */
   keys: string[]
   run: MenuCommand | 'syncNow'
 }

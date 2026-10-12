@@ -1,5 +1,5 @@
 /**
- * WP-05 — fichiers d'un élément (handlers `system.*`, glisser) sur une vraie base migrée :
+ * fichiers d'un élément (handlers `system.*`, glisser) sur une vraie base migrée :
  * original de la couverture, poster d'une vidéo pour la copie, médias distants ignorés.
  */
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'

@@ -1,5 +1,5 @@
 /**
- * Démarrage de l'app PACKAGÉE (QA §11.3, WP-71) : `process.uptime()` du main à la réception de la
+ * Démarrage de l'app PACKAGÉE : `process.uptime()` du main à la réception de la
  * marque `grid-painted` (première image de la grille avec des cartes), lue dans
  * `<userData>/logs/perf.jsonl`. Un lancement d'échauffement (caches OS chauds), puis N lancements
  * mesurés ; chaque lancement attend la marque, quitte l'app et attend sa sortie.

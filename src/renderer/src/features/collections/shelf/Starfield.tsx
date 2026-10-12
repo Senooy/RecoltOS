@@ -1,5 +1,5 @@
 /**
- * `Starfield` (DESIGN §3.4) : canvas 2D plein cadre, ≈ 220 étoiles pour 1280×820 (densité ∝
+ * `Starfield` : canvas 2D plein cadre, ≈ 220 étoiles pour 1280×820 (densité ∝
  * surface), rayon 0,5–1,3 px, opacité 0,15–0,9 ; 10 % scintillent (cycle 3–6 s) ; parallaxe de
  * 2 px liée au défilement horizontal (`parallax` ∈ [0, 1]). Statique (ni scintillement ni
  * parallaxe) en mouvement réduit.

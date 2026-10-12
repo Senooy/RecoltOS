@@ -1,5 +1,5 @@
 /**
- * Assets des Spaces (SPACES §1.7.3) : fichiers déposés depuis le Finder ou le presse-papiers,
+ * Assets des Spaces : fichiers déposés depuis le Finder ou le presse-papiers,
  * copiés par empreinte (SHA-256 des octets source) dans `spaces/assets/<ab>/<sha>.<ext>`, sans
  * jamais toucher l'original ni polluer la bibliothèque. Type vérifié par les octets magiques ;
  * HEIC/HEIF → JPEG et TIFF → PNG par `sips` (Chromium ne les décode pas), original gardé en
@@ -20,7 +20,7 @@ import type { LibraryContext } from '../library/library-context'
 import { assetUrl, assetUrlOrNull } from '../protocol/urls'
 import { assetThumbRel } from './repo'
 
-/** Fichiers par dépôt (SPACES §1.6.3). */
+/** Fichiers par dépôt. */
 export const MAX_ASSET_FILES = 200
 /** Taille maximale d'un asset (4 Gio). */
 export const MAX_ASSET_BYTES = 4 * 1024 ** 3

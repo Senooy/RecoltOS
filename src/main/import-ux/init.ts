@@ -1,5 +1,5 @@
 /**
- * Domaine `import-ux` (WP-34) : « Ouvrir avec RecoltOS », dépôt sur l'icône du Dock, fichiers passés
+ * Domaine `import-ux` : « Ouvrir avec RecoltOS », dépôt sur l'icône du Dock, fichiers passés
  * à une seconde instance (`onOpenFiles` de `bootstrap/open-files.ts`).
  */
 import type { ServiceContext } from '../bootstrap/context'

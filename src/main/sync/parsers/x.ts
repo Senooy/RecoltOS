@@ -1,8 +1,8 @@
 /**
- * Parseur X : page GraphQL `Bookmarks` (et `BookmarkFolderTimeline`) → `NormalizedPost[]`
- * (WP-55, SYNC §3.4). Fonction pure, jamais d'exception.
+ * Parseur X : page GraphQL `Bookmarks` (et `BookmarkFolderTimeline`) → `NormalizedPost[]`.
+ * Fonction pure, jamais d'exception.
  *
- * Deux formes acceptées (ERRATA §G.3) :
+ * Deux formes acceptées :
  *  - ancien client (`responsive-web`) : `entryId`, `sortIndex`, `content.itemContent.tweet_results`,
  *    tweet `legacy.{full_text, entities, extended_entities, created_at…}` ;
  *  - client x-web (requête Relay persistée `bookmarksQuery`, depuis l'automne 2026) : `entry_id`,
@@ -11,7 +11,7 @@
  *    `quoted_tweet_results`, `legacy.retweeted_status_results`, `reply_to_results`. Chaque entrée et
  *    chaque tweet x-web sont d'abord ramenés à la forme ancienne (`normalizeEntry`, `fromXWeb`).
  *
- * Choix (documentés dans le rapport de WP-55) :
+ * Choix (documentés dans le rapport) :
  *  - repost en favori : contenu, clé et URL de l'ORIGINAL ; le reposteur va dans `extra.retweetedBy` ;
  *  - fil : la page ne contient que le tweet mis en favori, pas son parent. Le lien de réponse est
  *    exposé (`extra.selfReply`, `inReplyToId`, `conversationId`) et `post_meta.thread` reste `[]` ;

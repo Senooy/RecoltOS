@@ -1,5 +1,5 @@
 /**
- * Fixtures médias synthétiques (WP-03), générées à la volée dans un dossier temporaire :
+ * Fixtures médias synthétiques, générées à la volée dans un dossier temporaire :
  * aucun binaire versionné, aucune donnée réelle.
  * - `exif6.jpg` 300×200 avec orientation EXIF 6 (affichée 200×300) ;
  * - `anim.webp` 3 images 120×80 (rouge, vert, bleu) ;

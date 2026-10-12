@@ -1,5 +1,5 @@
 /**
- * Chemins du dépôt, valables dans un worktree (`.worktrees/<lot>`) comme dans le checkout principal.
+ * Chemins du dépôt, valables dans un worktree (`.worktrees/<nom>`) comme dans le checkout principal.
  * Pas d'`import.meta` ici : Playwright charge les fichiers de test en CJS. La racine est la première
  * `package.json` nommée « recoltos » en remontant depuis `RECOLTOS_ROOT` ou le dossier courant.
  */
@@ -25,6 +25,6 @@ function findRoot(start: string): string {
 }
 
 export const REPO_ROOT = findRoot(process.env.RECOLTOS_ROOT ?? process.cwd())
-/** Toutes les données de test vivent ici (gitignoré), jamais dans `os.tmpdir()` ni dans la référence. */
+/** Toutes les données de test vivent ici (gitignoré), jamais dans `os.tmpdir()`. */
 export const TMP_ROOT = resolve(REPO_ROOT, '.tmp')
 export const MIGRATIONS_DIR = resolve(REPO_ROOT, 'src/main/db/migrations')

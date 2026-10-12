@@ -1,5 +1,5 @@
 /**
- * `pnpm run check:env` (nom `doctor` réservé par pnpm, PLAN §1.15) : vérifie que l'environnement
+ * `pnpm run check:env` (nom `doctor` réservé par pnpm) : vérifie que l'environnement
  * permet de construire et de tester RecoltOS. Code de sortie 1 seulement si un contrôle `fail`
  * échoue ; les avertissements (outils optionnels, pnpm 9.15.0 de Homebrew…) ne bloquent jamais.
  */

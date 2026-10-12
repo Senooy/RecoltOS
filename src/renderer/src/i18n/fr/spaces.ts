@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `spaces`, possédé par WP-62 (ERRATA §F). Le namespace `spaces` de `base.ts`
+ * Textes du domaine `spaces`. Le namespace `spaces` de `base.ts`
  * (état vide, outils, couleurs de notes) est complété ici par `spacesUi` (tutoiement, typographie FR).
  */
 import { plural } from '../plural'

@@ -1,6 +1,6 @@
 /**
- * Téléchargement des médias synchronisés PAR L'APP (SYNC §6.4, ERRATA §B, §G.2) : étend
- * `media.download` (WP-10) par `registerFetchPolicy`, sans remplacer le handler.
+ * Téléchargement des médias synchronisés PAR L'APP : étend
+ * `media.download` par `registerFetchPolicy`, sans remplacer le handler.
  * - `Referer` selon le CDN, `User-Agent` de navigateur, AUCUN cookie ;
  * - listes de lecture HLS (`.m3u8`) → mp4 par ffmpeg `-c copy` ;
  * - Instagram : 403/410 sur une URL signée périmée → `onExpired` (le coordinateur demande un

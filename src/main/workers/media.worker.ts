@@ -1,7 +1,7 @@
 /**
- * Point d'entrée du media-worker (utilityProcess `recolt-media`, ARCHI §2.2).
+ * Point d'entrée du media-worker (utilityProcess `recolt-media`).
  * sharp / ffmpeg / sips / hash / palette / zip. N'ouvre JAMAIS la base : main envoie les chemins.
- * Les chemins des binaires arrivent par `__configure` (jamais via le `PATH`, ARCHI §2.6).
+ * Les chemins des binaires arrivent par `__configure` (jamais via le `PATH`).
  */
 import sharp from 'sharp'
 import type { MediaTools } from './media/exec'

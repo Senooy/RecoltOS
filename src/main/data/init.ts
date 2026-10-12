@@ -1,6 +1,6 @@
 /**
- * Domaine `data` (WP-24) : instantané quotidien `-daily` (3 s après l'ouverture d'une
- * bibliothèque, hors e2e) puis rétention (ARCHI §7). La bibliothèque est déjà ouverte quand ce
+ * Domaine `data` : instantané quotidien `-daily` (3 s après l'ouverture d'une
+ * bibliothèque, hors e2e) puis rétention. La bibliothèque est déjà ouverte quand ce
  * domaine démarre (`library` le précède dans `bootstrap/services.ts`) : l'instantané est donc
  * aussi planifié ici pour la bibliothèque active, pas seulement dans `afterOpen` (bascules).
  */

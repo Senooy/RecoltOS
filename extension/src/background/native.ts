@@ -1,5 +1,5 @@
 /**
- * Port native messaging vers l'hôte RecoltOS (SYNC §1.8, §2.6) : connexion, classification des
+ * Port native messaging vers l'hôte RecoltOS : connexion, classification des
  * erreurs de déconnexion, reconnexion avec backoff (1 à 60 s), requêtes avec délai, distribution des
  * messages de l'app. Essaie `com.recoltos.host` puis `com.recoltos.host.dev` (app de développement).
  */

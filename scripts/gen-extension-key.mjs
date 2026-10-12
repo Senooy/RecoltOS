@@ -1,5 +1,5 @@
 // Génère la clé de l'extension (champ `key` du manifest) pour un identifiant d'extension STABLE
-// (SYNC §1, PLAN §1.18 : `allowed_origins` du manifest de l'hôte natif).
+// (`allowed_origins` du manifest de l'hôte natif).
 //
 //   node scripts/gen-extension-key.mjs [--pem-out <fichier.pem>]
 //

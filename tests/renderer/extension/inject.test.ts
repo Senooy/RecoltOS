@@ -1,5 +1,5 @@
 /**
- * Boutons « Enregistrer dans RecoltOS » injectés (WP-54) sur un DOM synthétique de x.com et
+ * Boutons « Enregistrer dans RecoltOS » injectés sur un DOM synthétique de x.com et
  * d'instagram.com : un bouton par publication, idempotent, identifiant et repli DOM corrects.
  */
 import { describe, expect, it } from 'vitest'

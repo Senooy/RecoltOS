@@ -1,4 +1,4 @@
-/** Contrat `capture.*` (PLAN §4.4, SPACES §2). */
+/** Contrat `capture.*`. */
 import { z } from 'zod'
 import { CaptureResult, CaptureStatus, ScreenAccess, ShortcutResult } from '../dto/capture'
 import { Uuid } from '../enums'

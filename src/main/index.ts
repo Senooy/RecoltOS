@@ -1,7 +1,7 @@
 /**
- * Point d'entrée du process main (PLAN §1.13, §1.26 ; QA §2). Ordre imposé :
+ * Point d'entrée du process main. Ordre imposé :
  * userData → journal → avant-ready (schéma, open-file, instance unique) → ready → services → IPC → fenêtre.
- * Les lots n'éditent pas ce fichier : ils remplissent leur `<domaine>/init.ts` et `ipc/handlers/<domaine>.ts`.
+ * Les domaines n'éditent pas ce fichier : ils remplissent leur `<domaine>/init.ts` et `ipc/handlers/<domaine>.ts`.
  */
 import { BrowserWindow, app, ipcMain, nativeTheme } from 'electron'
 import { readFlags } from './bootstrap/env'

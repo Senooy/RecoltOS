@@ -1,6 +1,6 @@
 /**
  * Ingestion d'une liste de chemins (glisser-déposer, Fichier › Importer, « Ouvrir avec ») :
- * dossiers parcourus (SPACES §3.1 : `lstat` sans suivre les liens, fichiers cachés ignorés,
+ * dossiers parcourus (`lstat` sans suivre les liens, fichiers cachés ignorés,
  * profondeur ≤ 12, ≤ 20 000 fichiers), confirmation au-delà de 200 fichiers, fichiers déjà dans la
  * bibliothèque ignorés, progression `ingest.progress`, rapport `{added, duplicates, failed}`.
  */

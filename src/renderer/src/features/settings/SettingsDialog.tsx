@@ -1,7 +1,7 @@
 /**
- * Réglages (DESIGN §3.10, WP-16) : modale 750×570 (rayon 14), barre latérale de 196 px (9 sections,
+ * Réglages : modale 750×570 (rayon 14), barre latérale de 196 px (9 sections,
  * sans Compte / Abonnement / Mises à jour), gabarit `SettingsRow`. Sections livrées en M1 :
- * Apparence, Bibliothèques (avec l'import GatherOS), À propos ; M2 (WP-24) : Tags, Stockage, Données.
+ * Apparence, Bibliothèques (avec l'import GatherOS), À propos ; M2 : Tags, Stockage, Données.
  * IA, Capture et Synchronisation affichent un message jusqu'à leurs jalons.
  */
 import {

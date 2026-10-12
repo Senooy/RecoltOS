@@ -1,6 +1,6 @@
 /**
- * Charges utiles de chaque `type` de message (SYNC §6.1, ERRATA §G.2) et validation complète
- * `enveloppe + payload`. Possédé par WP-51.
+ * Charges utiles de chaque `type` de message et validation complète
+ * `enveloppe + payload`.
  */
 import { z } from 'zod'
 import {

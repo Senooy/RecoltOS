@@ -1,5 +1,5 @@
 /**
- * Handlers `spaces.*` (WP-60, WP-63) : liste, document, `applyBatch` atomique, renommage,
+ * Handlers `spaces.*` : liste, document, `applyBatch` atomique, renommage,
  * duplication, suppression, « Ajouter à un space › », assets (Finder, presse-papiers), promotion
  * d'un asset en élément de la bibliothèque, presse-papiers interne, export PNG (fenêtre stage).
  */

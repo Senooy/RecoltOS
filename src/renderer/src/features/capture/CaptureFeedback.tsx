@@ -1,5 +1,5 @@
 /**
- * Retours de capture dans la fenêtre (SPACES §2.5) : pilule « Capture ajoutée » avec « Voir » et
+ * Retours de capture dans la fenêtre : pilule « Capture ajoutée » avec « Voir » et
  * « Annuler » (8 s, met l'élément à la corbeille ; le fichier de dépôt reste), « Déjà dans la
  * bibliothèque » sans annulation ; guide de permission sur `capture.permissionRequired`.
  */

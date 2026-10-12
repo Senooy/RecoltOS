@@ -1,5 +1,5 @@
 /**
- * `SaveContextMenu` (DESIGN §3.9) : contenu du menu contextuel des cartes, variantes
+ * `SaveContextMenu` : contenu du menu contextuel des cartes, variantes
  * bibliothèque / collection / masqués / corbeille / multi-sélection. Sous-menu « Ajouter à une
  * collection » avec filtre au-delà de 8 collections et « Nouvelle collection… ».
  */
@@ -93,7 +93,7 @@ export function SaveContextMenuContent({
   const uuids = cards.map((c) => c.uuid)
   const n = cards.length
   const one = n === 1 ? cards[0]! : null
-  // « Analyser avec l'IA » seulement quand un moteur est actif (le menu reste celui de 4d1v4s sinon).
+  // « Analyser avec l'IA » seulement quand un moteur est actif (menu de base sinon).
   const aiOn = usePrefs((st) => st.prefs.ai.provider) !== 'off'
   const newCollection = async () => {
     const name = await askName({

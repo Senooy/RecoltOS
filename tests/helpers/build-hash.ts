@@ -1,5 +1,5 @@
 /**
- * Empreinte des sources qui déterminent `out/` (QA §6.1) : `src/**`, `extension/**`,
+ * Empreinte des sources qui déterminent `out/` : `src/**`, `extension/**`,
  * `electron.vite.config.ts`, `package.json`, `pnpm-lock.yaml`. Comparée à `out/.build-hash` par
  * le projet Playwright `build` pour ne reconstruire que si nécessaire.
  */

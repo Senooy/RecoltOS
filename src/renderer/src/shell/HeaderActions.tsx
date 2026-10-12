@@ -1,5 +1,5 @@
 /**
- * `HeaderActions` (DESIGN §2.5) : « Rechercher ⌘K » 112×30 (icône seule sous 1100 px), Redécouvrir,
+ * `HeaderActions` : « Rechercher ⌘K » 112×30 (icône seule sous 1100 px), Redécouvrir,
  * bascule clair / sombre, Réglages ; centres espacés de 36 px, marge droite 28.
  */
 import { Compass, Moon, Search, Settings, Sun } from 'lucide-react'

@@ -1,4 +1,4 @@
-/** WP-71 : variante d'image de la toile choisie explicitement, et caches bornés. */
+/** variante d'image de la toile choisie explicitement, et caches bornés. */
 import { describe, expect, it } from 'vitest'
 import {
   THUMB_UPSCALE,

@@ -1,5 +1,5 @@
 /**
- * Mise en place commune des tests Node (QA §5.1) :
+ * Mise en place commune des tests Node :
  *  - fuseau UTC (déterminisme des dates) ;
  *  - aucun accès réseau externe : `fetch` n'accepte que la boucle locale et les domaines factices
  *    `*.test` / `*.example` (les serveurs de test écoutent sur 127.0.0.1) ;

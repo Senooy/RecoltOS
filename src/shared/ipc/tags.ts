@@ -1,4 +1,4 @@
-/** Contrat `tags.*` (ARCHI §2.3, §4.5). Noms réservés `x`, `instagram`, `cosmos`, `bookmark` → `tag_reserved`. */
+/** Contrat `tags.*`. Noms réservés `x`, `instagram`, `cosmos`, `bookmark` → `tag_reserved`. */
 import { z } from 'zod'
 import { SourceChip, TagInfo } from '../dto/collections'
 import { Uuid } from '../enums'

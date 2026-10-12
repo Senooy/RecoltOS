@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `settings` (WP-16) : modale Réglages, section Bibliothèques, import GatherOS.
+ * Textes du domaine `settings` : modale Réglages, section Bibliothèques, import GatherOS.
  */
 import { plural } from '../plural'
 

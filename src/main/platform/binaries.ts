@@ -1,9 +1,9 @@
 /**
- * Résolution des binaires système (ARCHI §1.4, PLAN §1.16). Pour chaque outil :
+ * Résolution des binaires système. Pour chaque outil :
  *   1) `prefs.tools.<bin>` s'il est exécutable ;
  *   2) `/opt/homebrew/bin/<bin>`, puis `/usr/local/bin/<bin>` ;
- *   3) le shell de login (`login-shell-env.ts`, ARCHI §2.6).
- * `sips` : toujours `/usr/bin/sips` (ARCHI §1.4) ; `prefs.tools.sips` est ignoré.
+ *   3) le shell de login (`login-shell-env.ts`).
+ * `sips` : toujours `/usr/bin/sips` ; `prefs.tools.sips` est ignoré.
  * Absence de ffmpeg/ffprobe = mode dégradé (jobs vidéo en `tool_missing`), jamais un crash.
  */
 import { constants } from 'node:fs'

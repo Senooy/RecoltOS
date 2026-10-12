@@ -1,7 +1,7 @@
 /**
  * Entrée autonome de la galerie (dev) : `/src/components/gallery/index.html` sur le serveur
- * Vite du renderer. Équivalent de `?gallery=1` tant que `App.tsx` n'est pas câblé (voir
- * `docs/contrats/CHANGELOG.md`). Absente du build de production (hors `rollupOptions.input`).
+ * Vite du renderer. Équivalent de `?gallery=1` sans passer par `App.tsx`.
+ * Absente du build de production (hors `rollupOptions.input`).
  */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

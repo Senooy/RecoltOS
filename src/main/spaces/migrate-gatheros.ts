@@ -1,5 +1,5 @@
 /**
- * Import des boards GatherOS (SPACES §1.10) : `boards` → `spaces` (origine `gatheros`, idempotent
+ * Import des boards GatherOS : `boards` → `spaces` (origine `gatheros`, idempotent
  * par `origin_id`), `board_items` → `space_nodes`. Colonnes nullables (`width`, `height`,
  * `rotation`) : `MAX(24, COALESCE(valeur, défaut du type))`, rotation normalisée. Un item dont
  * `data` désigne un save connu devient un nœud `item` ; notes / formes / textes gardent leur

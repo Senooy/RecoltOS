@@ -1,8 +1,8 @@
 /**
- * Spikes Spaces mesurés (WP-61 S1, WP-63 S5) — projet Playwright `perf` (hors `verify`).
+ * Mesures des Spaces — projet Playwright `perf` (hors `verify`).
  *   S1 : 500 nœuds (480 images, 20 vidéos dont ≤ 2 actives), pan / zoom synthétiques à la molette
  *        pendant 2 × 2 s, durée des images (rAF), mémoire de l'app, `will-change` retiré au repos.
- *        WP-71 : mémoire par type de processus à chaque étape (bibliothèque, vue d'ensemble, 100 %,
+ *        mémoire par type de processus à chaque étape (bibliothèque, vue d'ensemble, 100 %,
  *        exploration de 12 arrêts à 150 %, retour en vue d'ensemble) et variantes d'images montées.
  *   S5 : export PNG d'un monde ~4 000 × 3 000 à 2× (20 images, 1 post, 1 vidéo, notes) par la
  *        fenêtre stage : durée, dimensions, pixel de référence, couture entre tuiles.
@@ -136,7 +136,7 @@ test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
   test.setTimeout(240_000)
   await expect(page.locator(t('app-shell'))).toBeVisible()
   // Mémoire par type de processus (Mo) : `workingSetSize` (résident, compte le code partagé dans
-  // chaque processus ; métrique du spike M6) et empreinte physique (`top`, colonne « Mémoire » du
+  // chaque processus ; métrique de référence) et empreinte physique (`top`, colonne « Mémoire » du
   // Moniteur d'activité, plus stable), tas JS et variantes d'images montées.
   const memory = async () => {
     const metrics = await app.evaluate(({ app: a }) =>

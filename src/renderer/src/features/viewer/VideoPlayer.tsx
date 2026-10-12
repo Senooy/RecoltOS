@@ -1,5 +1,5 @@
 /**
- * `VideoPlayer` (DESIGN §3.7) : barre de 44 pt SOUS le média (4 pt d'écart, retrait de 12 pt de
+ * `VideoPlayer` : barre de 44 pt SOUS le média (4 pt d'écart, retrait de 12 pt de
  * chaque côté), rayon 10, fond `--viewer-control` ; lecture/pause, « 0:00 / 0:35 » tabulaire, piste
  * de 3 px (progression blanche, pouce Ø 12, bulle de temps au survol), son (`prefs.videoMuted`).
  * La vidéo elle-même est rendue par la scène ; ce composant ne fait que la piloter.

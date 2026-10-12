@@ -1,8 +1,6 @@
 /**
- * Références visuelles M2 (WP-2F) sur la bibliothèque de démo déterministe : étagère, vue
- * Collection, Recherche, palette ⌘K, Réglages › Données. La boucle de fidélité contre `zzrib6`,
- * `c7j4tx`, `ejjk79`, `25w3t4`, `o86neo` se fait sur la vraie bibliothèque (`pnpm run shots
- * --library real`) ; ces baselines gardent le rendu stable ensuite.
+ * Régression visuelle sur la bibliothèque de démo déterministe : étagère, vue Collection,
+ * Recherche, palette ⌘K, Réglages › Données.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

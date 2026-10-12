@@ -1,6 +1,6 @@
 /**
- * Messages main ↔ utility processes (ARCHI §2.2 ; dérivés PLAN §1.6). Aucun worker n'ouvre la base.
- * Pas d'`EmbedOps` en V1 (ERRATA §G).
+ * Messages main ↔ utility processes (dérivés). Aucun worker n'ouvre la base.
+ * Pas d'`EmbedOps` en V1.
  */
 
 export type WorkerRequest = { id: number; op: string; args: unknown }
@@ -75,13 +75,13 @@ export interface MediaOps {
   /** COPYFILE_FICLONE puis rename. */
   cloneFile(a: { src: string; dst: string }): { bytes: number }
   zipLibrary(a: { root: string; entries: ZipEntry[]; out: string }): { bytes: number }
-  /** IA (AI §4) : JPEG q85 ≤ `maxEdge` (1568), sans métadonnées, fond blanc. */
+  /** IA : JPEG q85 ≤ `maxEdge` (1568), sans métadonnées, fond blanc. */
   aiImage(a: { src: string; dst: string; maxEdge: number }): {
     width: number
     height: number
     bytes: number
   }
-  /** IA (AI §4) : une image clé à `atMs` ou `fromEndMs` de la fin, JPEG ≤ `maxEdge` (1024). */
+  /** IA : une image clé à `atMs` ou `fromEndMs` de la fin, JPEG ≤ `maxEdge` (1024). */
   extractFrame(a: {
     src: string
     dst: string

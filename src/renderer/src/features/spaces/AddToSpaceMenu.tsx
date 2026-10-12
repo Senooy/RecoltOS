@@ -1,5 +1,5 @@
 /**
- * Sous-menu « Ajouter à un space › » du menu contextuel des cartes (SPACES §1.6.2, extension
+ * Sous-menu « Ajouter à un space › » du menu contextuel des cartes (extension
  * RecoltOS) : liste des spaces + « Nouveau space… ». Les éléments sont posés en grille à droite du
  * contenu du space, sans l'ouvrir (toast « 5 éléments ajoutés à « X » · Ouvrir »).
  */

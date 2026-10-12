@@ -1,5 +1,5 @@
 /**
- * M2 (WP-22) : page Recherche — géométrie, syntaxe convertie en chips, filtres retirables,
+ * M2 : page Recherche — géométrie, syntaxe convertie en chips, filtres retirables,
  * historique persistant (8 max) et « Effacer ».
  */
 import { expect, test } from '../helpers/e2e-fixtures'

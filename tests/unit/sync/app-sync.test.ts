@@ -1,5 +1,5 @@
 /**
- * Sync côté app (WP-56) : ordre, budgets, ingestion d'une page (post_meta v1, aucune URL http(s)
+ * Sync côté app : ordre, budgets, ingestion d'une page (post_meta v1, aucune URL http(s)
  * dans `ItemCard`), règle d'arrêt, éléments écartés, publication de l'extension, téléchargeur, import.
  */
 import { readFileSync } from 'node:fs'

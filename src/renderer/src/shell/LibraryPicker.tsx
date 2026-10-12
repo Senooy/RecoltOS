@@ -1,5 +1,5 @@
 /**
- * `LibraryPicker` (DESIGN §2.3) : logo 28 px à `left: 18`, nom de la bibliothèque (ellipse à
+ * `LibraryPicker` : logo 28 px à `left: 18`, nom de la bibliothèque (ellipse à
  * 160 px), menu de 260 px : une ligne par bibliothèque (coche sur l'active), « Nouvelle
  * bibliothèque… », « Gérer les bibliothèques… ».
  */

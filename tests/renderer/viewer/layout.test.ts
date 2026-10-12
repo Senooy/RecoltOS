@@ -9,7 +9,7 @@ import {
   zoomStep,
 } from '../../../src/renderer/src/features/viewer/layout'
 
-describe('géométrie de la vue détail (cfj0gf ×1,072)', () => {
+describe('géométrie de la vue détail', () => {
   it('vidéo 3:2 dans une fenêtre 1280×820 avec panneau : média et lecteur à ±1 pt', () => {
     const stage = stageRect(1280, 820, true)
     expect(stage).toEqual({ x: 0, y: 45, w: 992, h: 775 })

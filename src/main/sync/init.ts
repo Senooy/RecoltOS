@@ -1,5 +1,5 @@
 /**
- * Domaine `sync` (WP-56/57) : `SyncCoordinator` branché sur le pont (`bridge/init.ts`, enregistré
+ * Domaine `sync` : `SyncCoordinator` branché sur le pont (`bridge/init.ts`, enregistré
  * AVANT dans `services.ts`), téléchargeur (politiques par CDN), rendu des cartes de
  * posts, pré-remplissage après import GatherOS, minuterie (60 s) et `evt:sync.status`.
  * Désactivé sous `RECOLTOS_E2E=1` sauf `RECOLTOS_BRIDGE=1`.

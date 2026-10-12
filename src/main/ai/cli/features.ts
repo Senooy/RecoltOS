@@ -1,5 +1,5 @@
 /**
- * Isolation de codex (AI §1.2, §3.2) : `--ignore-user-config` ne suffit pas, il faut désactiver
+ * Isolation de codex : `--ignore-user-config` ne suffit pas, il faut désactiver
  * chaque fonctionnalité active susceptible d'exécuter, naviguer ou charger des extensions. La liste
  * est CALCULÉE à l'exécution depuis `codex features list` : seules les lignes de
  * `DISABLE_CANDIDATES` en `stable` / `experimental` à `true` (jamais un nom `removed` ou inconnu,

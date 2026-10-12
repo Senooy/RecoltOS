@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `settings-more` (WP-24) : Réglages › Tags, Stockage, Données, compléments
+ * Textes du domaine `settings-more` : Réglages › Tags, Stockage, Données, compléments
  * d'Apparence et d'À propos, export zip, instantanés et restauration.
  */
 import { plural } from '../plural'

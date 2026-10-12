@@ -1,4 +1,4 @@
-/** Contrat `items.*` (ARCHI §2.3, ERRATA §B ; `items.rediscoverDeck` remplacé par `rediscover.*`). */
+/** Contrat `items.*` (`items.rediscoverDeck` remplacé par `rediscover.*`). */
 import { z } from 'zod'
 import { ItemCard, ItemDetail, ItemsPage, TabCounts } from '../dto/items'
 import { HexColor, ItemKind, LibraryTab, SortMode, Source, Uuid, WebUrl } from '../enums'
@@ -9,11 +9,11 @@ export const ItemFilters = z.object({
   sources: z.array(Source).optional(),
   tagUuids: z.array(Uuid).optional(),
   color: HexColor.optional(),
-  /** Plusieurs couleurs : intersection (ET), WP-31. `color` reste accepté (= une couleur). */
+  /** Plusieurs couleurs : intersection (ET),. `color` reste accepté (= une couleur). */
   colors: z.array(HexColor).max(5).optional(),
   /** Tolérance ΔE2000 du filtre couleur (défaut 18). */
   colorTolerance: z.number().min(2).max(60).optional(),
-  /** Bornes en ms epoch, incluses (ERRATA §B). */
+  /** Bornes en ms epoch, incluses. */
   period: z
     .object({ from: z.number().int().nullable(), to: z.number().int().nullable() })
     .refine((p) => p.from == null || p.to == null || p.from <= p.to, {

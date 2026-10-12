@@ -1,5 +1,5 @@
 /**
- * Registre des fournisseurs (AI §3) : un `CliRuntime` par CLI (binaire résolu en cache, cwd fixe
+ * Registre des fournisseurs : un `CliRuntime` par CLI (binaire résolu en cache, cwd fixe
  * `<userData>/ai-sandbox/<id>/` en 0700, sans `.git`, `.claude/` ni `.mcp.json`).
  */
 import { mkdirSync } from 'node:fs'

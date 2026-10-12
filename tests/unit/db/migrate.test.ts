@@ -214,7 +214,7 @@ describe('en-tête -- recolt:foreign_keys=off', () => {
     expect(needsForeignKeysOff('SELECT 1;')).toBe(false)
   })
 
-  it('procédure ARCHI §4.2 (créer, copier, supprimer, renommer) : les tables filles survivent', () => {
+  it('procédure de migration (créer, copier, supprimer, renommer) : les tables filles survivent', () => {
     const db = track(openDatabase(path.join(dir(), 'recolt.db')))
     migrate(db, { migrations: base })
     const rebuild: Migration = {

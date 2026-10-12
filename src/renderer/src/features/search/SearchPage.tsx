@@ -1,5 +1,5 @@
 /**
- * Page Recherche (DESIGN §3.5, WP-22) : colonne de 700 px, champ de 56 px à y=124, compteur
+ * Page Recherche : colonne de 700 px, champ de 56 px à y=124, compteur
  * « N éléments dans ta bibliothèque » ; sans saisie : « Tes collections » (carrousel 130×160 à
  * défilement magnétique), « Récents · Effacer » (8 chips), « Aller à un tag » (chips de source en
  * tête, puis tags par usage, 24 au plus puis « +N ») ; avec saisie (debounce 120 ms) : « N
@@ -233,7 +233,7 @@ export default function SearchPage() {
     return () => offs.forEach((o) => o())
   }, [loadIdle])
 
-  // Graine `ui.openSearch({ query, tag, color })` (ERRATA §B).
+  // Graine `ui.openSearch({ query, tag, color })`.
   useEffect(() => {
     const next = { ...EMPTY_FILTERS }
     if (seed.color) next.colors = [seed.color.toLowerCase()]

@@ -1,6 +1,6 @@
 /**
- * Textes du domaine `palette` (WP-23) : palette ⌘K. Le namespace de base `palette`
- * (DESIGN §5.2 : libellés des 15 commandes) reste dans `base.ts`.
+ * Textes du domaine `palette` : palette ⌘K. Le namespace de base `palette`
+ * (libellés des 15 commandes) reste dans `base.ts`.
  */
 export const palette = {
   paletteUi: {

@@ -1,5 +1,5 @@
 /**
- * Identifiants (SYNC §1.6 n°4, ERRATA §G.2) : cookies lus À LA DEMANDE par l'API `cookies`, jamais
+ * Identifiants : cookies lus À LA DEMANDE par l'API `cookies`, jamais
  * stockés ni envoyés à l'app (seuls des identifiants de compte non secrets le sont). Gabarits et
  * constantes publiques dans `storage.local` ; jeton d'accès Cosmos (obtenu par `/api/refresh-token`,
  * voir `sync/platforms.ts`) dans `storage.local` aussi, pour que la sync en arrière-plan survive au

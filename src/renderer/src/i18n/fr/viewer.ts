@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `viewer` (WP-30) : vue détail. Le namespace de base `viewer` (DESIGN §5.2)
+ * Textes du domaine `viewer` : vue détail. Le namespace de base `viewer`
  * reste dans `base.ts` ; ce fichier ajoute `viewerUi`.
  */
 export const viewer = {

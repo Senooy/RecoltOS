@@ -1,6 +1,5 @@
 /**
- * Références visuelles M6 (WP-6F) : état vide des Spaces (fidélité `35yuga`, disposition seulement :
- * k = 0,5, ERRATA §E), liste avec un space, éditeur (notes, formes, texte, sélection, dock, zoom).
+ * Régression visuelle : état vide des Spaces, liste avec un space, éditeur (notes, formes, texte, sélection, dock, zoom).
  */
 import type { Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -29,7 +28,7 @@ const invoke = (page: Page, channel: string, input?: unknown) =>
 test('spaces-empty-light', async ({ page }) => {
   await page.locator(t('seg-spaces')).click()
   await expect(page.locator(t('space-empty-cta'))).toBeVisible()
-  // Disposition 35yuga (640 × 410 à k = 0,5) : titre centré vers y ≈ 434, bouton vers y ≈ 524.
+  // Disposition attendue : titre centré vers y ≈ 434, bouton vers y ≈ 524.
   const title = (await page.getByText('Aucun space pour l’instant').boundingBox())!
   const cta = (await page.locator(t('space-empty-cta')).boundingBox())!
   expect(Math.abs(title.x + title.width / 2 - 640)).toBeLessThanOrEqual(13)

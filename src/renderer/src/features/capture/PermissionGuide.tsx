@@ -1,5 +1,5 @@
 /**
- * Guide « Enregistrement de l'écran » (SPACES §2.4) : modale du style Réglages, 3 étapes
+ * Guide « Enregistrement de l'écran » : modale du style Réglages, 3 étapes
  * (Réglages Système, activer RecoltOS — « Electron (ou ton terminal) » en développement —, relancer).
  * « Relancer » toujours proposé ; sondage chaque seconde : coche verte et « Réessayer la capture »
  * quand l'accès devient `granted`. Signature ad hoc signalée.

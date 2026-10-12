@@ -1,5 +1,5 @@
 /**
- * Requêtes de sync depuis l'ARRIÈRE-PLAN (ERRATA §G.2) : cookies de session envoyés par le navigateur
+ * Requêtes de sync depuis l'ARRIÈRE-PLAN : cookies de session envoyés par le navigateur
  * (`credentials: 'include'` + autorisations d'hôte), délai de 30 s, en-têtes de réponse filtrés
  * (`x-rate-limit-*`, `content-type` : jamais d'en-tête d'authentification vers l'app). Repli : la même
  * requête exécutée dans un onglet de la plateforme (`scripting.executeScript`, monde ISOLATED).

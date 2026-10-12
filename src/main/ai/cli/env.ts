@@ -1,5 +1,5 @@
 /**
- * Environnement MINIMAL des CLI IA (AI §3.3, ERRATA §G) : construit de zéro, jamais à partir de
+ * Environnement MINIMAL des CLI IA : construit de zéro, jamais à partir de
  * `process.env`. Volontairement absents : `ANTHROPIC_*` (clé API, URL de base exportée par le shell
  * de login), `CLAUDE_CODE_USE_*`, `OPENAI_API_KEY`, `CODEX_API_KEY`, `CLAUDECODE`,
  * `CLAUDE_CODE_ENTRYPOINT` : une clé dans l'env ferait facturer à l'usage au lieu de l'abonnement.

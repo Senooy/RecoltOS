@@ -12,7 +12,7 @@ import {
 describe('synthetic-items', () => {
   const lib = makeSyntheticLibrary()
 
-  it('408 éléments dont 54 posts texte, répartition de la photo de référence', () => {
+  it('408 éléments dont 54 posts texte, répartition de référence', () => {
     expect(REFERENCE_DISTRIBUTION.reduce((a, d) => a + d.n, 0)).toBe(REFERENCE_COUNT)
     expect(lib.items).toHaveLength(408)
     expect(lib.items.filter((i) => i.kind === 'tweet')).toHaveLength(54)
@@ -48,7 +48,7 @@ describe('synthetic-items', () => {
     for (const u of urls) expect(u.startsWith('https://example.test/'), u).toBe(true)
   })
 
-  it('palette : tous sauf les vidéos (ERRATA §C) ; bucket inconnu sans palette', () => {
+  it('palette : tous sauf les vidéos ; bucket inconnu sans palette', () => {
     for (const it of lib.items) {
       if (it.kind === 'video' || it.kind === 'url') {
         expect(it.palette).toBeNull()

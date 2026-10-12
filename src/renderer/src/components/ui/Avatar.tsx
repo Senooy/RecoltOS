@@ -1,5 +1,5 @@
 /**
- * `Avatar` (DESIGN §3.2) : image (`recolt://…`) ou, à défaut / en cas d'erreur, initiales sur une
+ * `Avatar` : image (`recolt://…`) ou, à défaut / en cas d'erreur, initiales sur une
  * teinte dérivée d'un hash du handle (même handle → même couleur). Les avatars Instagram sont
  * presque tous expirés : le repli par initiales est le cas courant, jamais un trou.
  */
@@ -40,7 +40,7 @@ export function initials(name: string, handle?: string): string {
 }
 
 export interface AvatarProps {
-  /** URL `recolt://…` ou null (jamais d'URL http(s), PLAN §2.4). */
+  /** URL `recolt://…` ou null (jamais d'URL http(s)). */
   src?: string | null
   name: string
   /** Handle sans ou avec « @ » : sert à la couleur de repli. */

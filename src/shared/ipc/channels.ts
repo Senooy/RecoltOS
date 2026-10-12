@@ -1,5 +1,5 @@
 /**
- * Noms des canaux Electron bruts (PLAN §1.8, §4.4). Sans zod : importé par le preload sandboxé.
+ * Noms des canaux Electron bruts. Sans zod : importé par le preload sandboxé.
  */
 export const RAW_CHANNELS = {
   /** `ipcRenderer.invoke('rpc', channel, input)` → `RpcResult`. */

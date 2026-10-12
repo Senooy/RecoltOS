@@ -4,10 +4,10 @@
  * importé à la fois par les tests (tsconfig.tests) et par les scripts (`make-fixtures.mts`,
  * `seed-bench.mts`, tsconfig.node).
  *
- * Répartition = photo de la bibliothèque la référence (QA §1) : 408 éléments vivants
+ * Répartition de référence : 408 éléments vivants
  *   vidéo/instagram 141, image/x 76, vidéo/x 68, tweet/x 54 (les « posts texte »), image/instagram 38,
  *   image/cosmos 29, url/x 2 ; 17 collections (252 appartenances, 250 éléments distincts).
- * WP-71 étend ce fichier (volumes, états). Les 10 000 éléments du banc de perf = `count: 10_000`.
+ * étend ce fichier (volumes, états). Les 10 000 éléments du banc de perf = `count: 10_000`.
  */
 import { hexToLab, labToLch, rgbToHex, hueBucket, type Lab } from '../../src/shared/color'
 
@@ -125,7 +125,7 @@ export const REFERENCE_DISTRIBUTION: readonly {
 ]
 export const REFERENCE_COUNT = 408
 
-/** Collections de la photo de référence, noms génériques (QA §1 : comptes réels, noms anonymisés). */
+/** Collections de la bibliothèque synthétique (noms génériques). */
 export const REFERENCE_COLLECTIONS: readonly { name: string; n: number }[] = [
   { name: 'Jeux vidéo', n: 36 },
   { name: 'Graphisme', n: 32 },
@@ -347,7 +347,7 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
         }))
       : []
 
-    // Palette : toutes les images et tous les posts ; les vidéos n'en ont pas avant media.derive (ERRATA §C).
+    // Palette : toutes les images et tous les posts ; les vidéos n'en ont pas avant media.derive.
     const hasPalette = slot.kind !== 'video' && slot.kind !== 'url'
     const pal = hasPalette ? makePalette(rng) : null
     const lch = pal?.labs[0] ? labToLch(pal.labs[0]) : null

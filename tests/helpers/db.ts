@@ -1,6 +1,6 @@
 /**
  * Bases SQLite de test. `openTestDb()` applique les migrations de `src/main/db/migrations/` dans
- * l'ordre et pose `PRAGMA user_version` (le contrat de `db/migrate.ts`, WP-02) ; tant que `db/open.ts`
+ * l'ordre et pose `PRAGMA user_version` (le contrat de `db/migrate.ts`) ; tant que `db/open.ts`
  * n'existe pas, ce helper est l'unique chemin des tests vers un schéma à jour.
  * Sous Node pur (vitest) : aucun import d'`electron`.
  */
@@ -13,7 +13,7 @@ import type { SyntheticLibrary } from './synthetic-items'
 export type TestDb = Database.Database
 
 /**
- * Clé de tri « Nom » (ARCHI §4.3 : `name_key` = NFD sans accents, minuscules). Même règle que la
+ * Clé de tri « Nom » (`name_key` = NFD sans accents, minuscules). Même règle que la
  * production : « Lumière » → « lumiere ». Sans titre, la colonne vaut U+FFFF (en dernier), pas cette fonction.
  */
 export function nameKeyOf(title: string): string {
@@ -84,7 +84,7 @@ export interface SeedOptions {
 const ab = (uuid: string): string => uuid.slice(0, 2)
 
 /**
- * Insère une bibliothèque synthétique par SQL direct (les repos de WP-02 et l'ingestion de WP-10
+ * Insère une bibliothèque synthétique par SQL direct (les repos et l'ingestion
  * n'existent pas encore ; ils reprendront ce rôle). Renvoie les identifiants internes par index.
  */
 export function seedSyntheticLibrary(
@@ -222,7 +222,7 @@ export const libraryDbPath = (userData: string, libraryId = 'default'): string =
   join(userData, 'libraries', libraryId, 'recolt.db')
 
 /**
- * Ouvre une base EXISTANTE en lecture seule (vérifier ce que l'app a écrit, QA §6.1). Aucune
+ * Ouvre une base EXISTANTE en lecture seule (vérifier ce que l'app a écrit). Aucune
  * migration, aucune écriture : l'app peut tourner en parallèle (WAL). À fermer par l'appelant.
  */
 export function openDbReadonly(file: string): TestDb {

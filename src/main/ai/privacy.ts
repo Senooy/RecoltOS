@@ -1,5 +1,5 @@
 /**
- * Confidentialité (AI §11) : description de ce qui part réellement (fichiers, nombre de caractères,
+ * Confidentialité : description de ce qui part réellement (fichiers, nombre de caractères,
  * empreinte du prompt) et aperçu avant envoi (JPEG exacts en data URL, prompt complet).
  * Les chemins locaux ne sont jamais exposés : seul le nom `imgN.jpg` du dossier de job l'est.
  */

@@ -1,6 +1,6 @@
 /**
  * Lecture tolérante de `prefs.json` au démarrage (thème de la première image, avant que
- * le magasin de WP-02 ne soit initialisé). Lecture seule.
+ * le magasin ne soit initialisé). Lecture seule.
  */
 import fs from 'node:fs'
 import path from 'node:path'

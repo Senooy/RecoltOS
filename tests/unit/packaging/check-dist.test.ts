@@ -1,4 +1,4 @@
-/** WP-72 : fonctions pures de `scripts/check-dist.mts` (lecture d'asar, autonomie des bundles). */
+/** fonctions pures de `scripts/check-dist.mts` (lecture d'asar, autonomie des bundles). */
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'

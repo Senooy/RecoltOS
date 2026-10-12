@@ -1,5 +1,5 @@
 /**
- * Canal brut `perf:mark` (QA §2.5) : marques du renderer journalisées dans
+ * Canal brut `perf:mark` : marques du renderer journalisées dans
  * `userData/logs/perf.jsonl` avec `process.uptime()`.
  */
 import { ipcMain } from 'electron'

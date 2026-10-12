@@ -1,5 +1,5 @@
 /**
- * `Popover` (DESIGN §1.5, §1.9) : surface flottante Radix, rayon 12, `--shadow-popover`, même
+ * `Popover` : surface flottante Radix, rayon 12, `--shadow-popover`, même
  * animation que les menus. Filtres de recherche, sélecteur de collections, infos techniques.
  */
 import { Popover as PopoverPrimitive } from 'radix-ui'

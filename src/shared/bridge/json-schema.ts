@@ -1,5 +1,5 @@
 /**
- * Export JSON Schema v1 du protocole (SYNC §6.2), généré depuis zod (`z.toJSONSchema`, draft 2020-12).
+ * Export JSON Schema v1 du protocole, généré depuis zod (`z.toJSONSchema`, draft 2020-12).
  * `pnpm run gen:bridge-schema` écrit `src/shared/bridge/schema/v1.json` ; un test vérifie qu'il est à jour.
  */
 import { z } from 'zod'
@@ -22,7 +22,7 @@ function toSchema(t: z.ZodType): Json {
 
 export function bridgeJsonSchema(): Json {
   const saveRequest = toSchema(SaveRequest)
-  // Le `refine` d'exclusivité n'est pas représentable par zod : on l'exprime comme SYNC §6.2.
+  // Le `refine` d'exclusivité n'est pas représentable par zod : on l'exprime comme
   saveRequest.not = { required: ['inlineMedia', 'upload'] }
   const payloads: Json = {}
   for (const [type, schema] of Object.entries(MESSAGE_SCHEMAS)) payloads[type] = toSchema(schema)

@@ -1,5 +1,5 @@
 /**
- * `IconButton` (DESIGN §4.3, §4.5) : bouton d'icône carré/rond. `label` est OBLIGATOIRE (FR) :
+ * `IconButton` : bouton d'icône carré/rond. `label` est OBLIGATOIRE (FR) :
  * il devient `aria-label` ET infobulle (avec le raccourci). tones : ghost / outline / glass /
  * viewer ; tailles sm 24 / md 28 / lg 32. Glyphes à trait 1,75 comme les captures.
  */

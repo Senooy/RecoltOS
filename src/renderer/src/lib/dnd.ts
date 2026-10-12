@@ -1,5 +1,5 @@
 /**
- * Glisser natif unifié (PLAN §1.12, DESIGN §4.6, ARCHI §2.5) : `dragstart` → `preventDefault`
+ * Glisser natif unifié : `dragstart` → `preventDefault`
  * → canvas 128 px → PNG dataURL → `recolt.startDrag(uuids, dataUrl)`. Le drapeau
  * `ui.internalDrag` distingue un glisser interne d'un dépôt venu du Finder.
  */

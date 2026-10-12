@@ -1,5 +1,5 @@
 /**
- * Instantanés de la base (ARCHI §7) : `VACUUM INTO snapshots/recolt-<YYYYMMDD-HHmmss>[-raison].db`
+ * Instantanés de la base : `VACUUM INTO snapshots/recolt-<YYYYMMDD-HHmmss>[-raison].db`
  * (cohérent en WAL, ne bloque pas les lecteurs). Automatiques : `-daily` au premier lancement du
  * jour, `-pre-vN` (migrations), `-pre-import`, `-pre-purge`, `-pre-restore`. Rétention : 7 derniers
  * `daily`, 20 manuels les plus récents, tous les `pre-*` des 30 derniers jours. Pas d'import electron.
@@ -100,7 +100,7 @@ export function deleteSnapshot(lib: Pick<LibraryContext, 'paths'>, name: string)
   for (const f of [file, `${file}-wal`, `${file}-shm`]) fs.rmSync(f, { force: true })
 }
 
-/** Instantanés à supprimer selon la rétention (ARCHI §7). */
+/** Instantanés à supprimer selon la rétention. */
 export function retentionVictims(list: readonly SnapshotInfo[], now: number): string[] {
   const sorted = [...list].sort((a, b) => b.createdAt - a.createdAt)
   const daily = sorted.filter((s) => s.reason === 'daily')

@@ -1,5 +1,5 @@
 /**
- * Tuilage de l'export PNG (SPACES §1.9), pur et testable sans Electron : échelle bornée
+ * Tuilage de l'export PNG, pur et testable sans Electron : échelle bornée
  * (≤ 8 192 px de côté, ≤ 40 Mpx), marge de 48 unités, tuiles de 1 280 × 800 px CSS dont les
  * caméras sont décalées de multiples entiers de la tuile, copie ligne à ligne dans le tampon final.
  */

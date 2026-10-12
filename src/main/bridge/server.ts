@@ -1,5 +1,5 @@
 /**
- * `BridgeServer` (SYNC §1.4, PLAN §1.18) : socket Unix 0600 dans `os.tmpdir()`, NDJSON, un hôte natif
+ * `BridgeServer` : socket Unix 0600 dans `os.tmpdir()`, NDJSON, un hôte natif
  * par connexion. Premier message attendu : `host.hello` (protocole 1, sinon `PROTOCOL_MISMATCH` et
  * fermeture). Les messages suivants sont validés (`parseMessage`) puis distribués par `type`.
  * Clients gardés en mémoire (aucune table). `send` refuse tout message de plus de 900 Ko.
@@ -134,7 +134,7 @@ export class BridgeServer {
     return this.conns.get(connId)?.client ?? null
   }
 
-  /** Client choisi pour une plateforme : session active, puis le plus récemment vu (SYNC §3.7). */
+  /** Client choisi pour une plateforme : session active, puis le plus récemment vu. */
   pickClient(p: BridgePlatform): BridgeClient | null {
     const ready = this.clients()
     const logged = ready.filter((c) => c.platforms?.[p]?.loggedIn)

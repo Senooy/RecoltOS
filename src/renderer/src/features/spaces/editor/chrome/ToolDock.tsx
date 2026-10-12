@@ -1,5 +1,5 @@
 /**
- * Dock d'outils flottant (DESIGN §3.11, SPACES §1.3.2) : bas-centre, pilule 44 px, fond `--bg`,
+ * Dock d'outils flottant : bas-centre, pilule 44 px, fond `--bg`,
  * hairline, ombre de pilule ; boutons 36 px, icônes 18 px ; outil actif = disque noir, icône
  * blanche (comme le segmented). Sélection V, Main H | Note N, Texte T, Formes (R, O, triangle,
  * losange) | Image I, Bibliothèque L. Annuler / Rétablir à droite.

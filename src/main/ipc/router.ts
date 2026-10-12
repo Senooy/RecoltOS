@@ -1,5 +1,5 @@
 /**
- * Routeur IPC (ARCHI §2.3, PLAN §1.8) : un seul canal `rpc`, validation zod des entrées
+ * Routeur IPC : un seul canal `rpc`, validation zod des entrées
  * (toujours) et des sorties (en dev), contrôle de l'expéditeur, erreurs `{ code, message }`.
  * Le cœur (`dispatch`) n'importe pas `electron` : testable sous Node.
  */
@@ -44,7 +44,7 @@ export type Handler<C extends Channel> = (
 export type DomainHandlers<D extends Domain> = { [C in ChannelOf<D>]: Handler<C> }
 export type AllHandlers = { [C in Channel]: Handler<C> }
 
-/** Handlers `not_implemented` pour tous les canaux d'un domaine (stubs de WP-00). */
+/** Handlers `not_implemented` pour tous les canaux d'un domaine. */
 export function notImplemented<D extends Domain>(domain: D): DomainHandlers<D> {
   const out: Record<string, Handler<Channel>> = {}
   for (const ch of CHANNELS) {

@@ -1,5 +1,5 @@
 /**
- * Hook de contenu, monde MAIN, `document_start` (SYNC §2.7) : enveloppe `fetch` et `XMLHttpRequest`
+ * Hook de contenu, monde MAIN, `document_start` : enveloppe `fetch` et `XMLHttpRequest`
  * pour les seules URL surveillées (`WATCH`) et transmet au pont de contenu (monde ISOLATED) l'URL, la
  * méthode, le corps, le statut, la réponse JSON et quelques en-têtes UTILES (gabarits, jetons) par
  * `window.postMessage` marqué. Rien d'autre n'est lu ; la page peut forger ces messages : le pont et

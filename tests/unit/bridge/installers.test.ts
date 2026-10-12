@@ -1,6 +1,6 @@
 /**
  * Wrappers, manifests natifs (Chromium + Firefox), extension en chemin fixe, coexistence GatherOS
- * (WP-52). Tout se passe dans un HOME temporaire : jamais dans `~/Library`.
+ * Tout se passe dans un HOME temporaire : jamais dans `~/Library`.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'

@@ -1,5 +1,5 @@
 /**
- * Enregistrement depuis l'extension (WP-53) : clic droit → `save.create`, app fermée → `queued`,
+ * Enregistrement depuis l'extension : clic droit → `save.create`, app fermée → `queued`,
  * blob de 20 Mo → 3 morceaux, menus (10 collections + « Autre collection… »), textes du popup,
  * manifests par cible.
  */

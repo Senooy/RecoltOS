@@ -1,7 +1,7 @@
 /**
- * Fumée du socle (WP-01, QA §6.3 n°1 réduit au squelette) : l'app se lance par `_electron` sur le
+ * Fumée du socle (réduit au squelette) : l'app se lance par `_electron` sur le
  * build automatique, ouvre une fenêtre 1280×820 visible, expose `window.recolt` (preload isolé) et
- * n'émet aucune erreur console (CSP comprise). Les scénarios des lots vivent sous `tests/e2e/`.
+ * n'émet aucune erreur console (CSP comprise). Les scénarios vivent sous `tests/e2e/`.
  */
 import { expect, test } from '../helpers/e2e-fixtures'
 
@@ -33,7 +33,7 @@ test('lancement : fenêtre, window.recolt, 0 erreur console', async ({
   expect(bridge.keys).toEqual(expect.arrayContaining(['invoke', 'on', 'perfMark', 'startDrag']))
   expect(bridge.node).toBe('undefined')
 
-  // Mode e2e : animations coupées (QA §2.2) et aucune erreur console jusque-là.
+  // Mode e2e : animations coupées et aucune erreur console jusque-là.
   await expect(page.locator('html')).toHaveAttribute('data-e2e', '1')
   // `collectErrors()` relit aussi les erreurs du chargement initial (écouteurs posés trop tard).
   expect(await collectErrors()).toEqual([])

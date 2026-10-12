@@ -10,7 +10,7 @@ afterEach(() => lib.cleanup())
 const ids = (match: string, sources?: string[]) =>
   lib.repos.search.match(match, sources ? { sources } : {}).map((h) => h.id)
 
-describe('FTS5 (ARCHI §4.5)', () => {
+describe('FTS5', () => {
   it('insertion → recherche : « cafe » trouve « café » (remove_diacritics 2)', () => {
     const { items } = lib.repos
     const a = items.insert({ kind: 'image', title: 'Un café à Lyon' }).id

@@ -1,5 +1,5 @@
 /**
- * WP-05 — e2e (projet Playwright `e2e`, motif `e2e/*.spec.ts`) : le protocole `recolt://` vu par le
+ * e2e (projet Playwright `e2e`, motif `e2e/*.spec.ts`) : le protocole `recolt://` vu par le
  * VRAI renderer de l'app (CSP de production, origine `file://`), sur la bibliothèque de démo
  * (mp4 synthétiques de 3 s, webp) :
  *  - fetch avec Range : 206 + `Content-Range`, `bytes=-500`, 416 hors plage, 403 hors racines ;

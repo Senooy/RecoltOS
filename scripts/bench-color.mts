@@ -1,5 +1,5 @@
 /**
- * `pnpm run bench:color` (WP-31) : filtre « rouge » sur 10 000 palettes synthétiques de 8 couleurs
+ * `pnpm run bench:color` : filtre « rouge » sur 10 000 palettes synthétiques de 8 couleurs
  * (pire cas : couleurs uniformes) ; échoue si la médiane dépasse 2 ms.
  */
 import Database from 'better-sqlite3'

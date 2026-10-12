@@ -1,5 +1,5 @@
 /**
- * Domaine Spaces côté main (SPACES §1.2, §1.6.2, §1.7 ; PLAN §4.2) : liste avec aperçu DOM
+ * Domaine Spaces côté main : liste avec aperçu DOM
  * (20 premiers nœuds), document complet, `applyBatch` atomique, duplication, ajout d'éléments en
  * grille à droite du contenu. Erreurs : `validation` (non réessayable), `busy`, `io`,
  * `limit_exceeded`, `not_found`. Pas d'import `electron` : testable sous Node.
@@ -350,7 +350,7 @@ export function deleteSpace(lib: Lib, uuid: string): void {
 }
 
 /**
- * « Ajouter à un space › » (SPACES §1.6.2) : grille à `x = bbox.maxX + 80`, `y = bbox.minY`
+ * « Ajouter à un space › » : grille à `x = bbox.maxX + 80`, `y = bbox.minY`
  * (ou 0,0 si l'espace est vide). Éléments inconnus ignorés.
  */
 export function addItems(

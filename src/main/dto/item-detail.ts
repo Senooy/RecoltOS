@@ -1,5 +1,5 @@
 /**
- * DTO `ItemDetail` (PLAN §4.3) : carte + notes, post complet (fil, post cité), slides, collections,
+ * DTO `ItemDetail` : carte + notes, post complet (fil, post cité), slides, collections,
  * tags, palette, champs IA. Construit par main ; aucune URL http(s) de ressource.
  */
 import type Database from 'better-sqlite3'
@@ -98,7 +98,7 @@ export function toItemDetail(lib: DtoLib, db: Database.Database, uuid: string): 
   }
 }
 
-/** Job IA actif et dernière erreur (panneau Détails, AI §12.4). */
+/** Job IA actif et dernière erreur (panneau Détails). */
 function aiJobState(
   db: Database.Database,
   itemId: number,

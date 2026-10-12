@@ -1,5 +1,5 @@
 /**
- * Garde-fous de flux (AI §3.2, constats S0 dans `docs/spikes/S0-ia.md`).
+ * Garde-fous de flux (comportements constatés des CLI).
  *
  * claude `--output-format stream-json --verbose` :
  * - `system/init` : `tools` ⊆ {Read, StructuredOutput}, `mcp_servers` vide, sinon TOOL_VIOLATION ;

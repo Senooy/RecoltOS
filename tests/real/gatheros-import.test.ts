@@ -1,7 +1,7 @@
 /**
- * Import réel (QA §5.4, ARCHI §6.10) : `RECOLTOS_REAL_LIBRARY` = dossier GatherOS (lecture seule),
- * `RECOLTOS_REAL_DB` = copie de travail de `moodmark.db` (facultatif). Les attendus sont recalculés
- * depuis la source ; les chiffres d'ARCHI §6.10 sont vérifiés si `RECOLTOS_REAL_ARCHI=1`.
+ * Import depuis GatherOS sur une vraie bibliothèque : `RECOLTOS_REAL_LIBRARY` = dossier de
+ * l'ancienne app (lecture seule), `RECOLTOS_REAL_DB` = copie de travail de `moodmark.db`
+ * (facultatif). Tous les attendus sont recalculés depuis la source.
  */
 import Database from 'better-sqlite3'
 import { createHash } from 'node:crypto'
@@ -9,11 +9,9 @@ import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { parsePostMeta } from '../../src/shared/post-meta'
 import { snapshotGatherosDb } from '../../src/main/importers/gatheros/detect'
-import { collectionTree } from '../../src/main/dto/collection-node'
 import type { LibraryContext } from '../../src/main/library/library-context'
 import { importReal, openTmpLibrary, realSource } from './real-helpers'
 
-const ARCHI = process.env.RECOLTOS_REAL_ARCHI === '1'
 let lib: LibraryContext
 let src: Database.Database
 let firstReport: Awaited<ReturnType<typeof importReal>>
@@ -59,20 +57,6 @@ describe('import réel GatherOS', () => {
       )
       expect(one(lib.db, `SELECT count(*) n FROM items WHERE kind = '${kind}'`), kind).toBe(e)
     }
-    if (ARCHI) {
-      expect(expected).toBe(412)
-      const by = (col: string) =>
-        Object.fromEntries(
-          (
-            lib.db.prepare(`SELECT ${col} k, count(*) n FROM items GROUP BY 1`).all() as {
-              k: string
-              n: number
-            }[]
-          ).map((r) => [r.k, r.n]),
-        )
-      expect(by('kind')).toEqual({ image: 144, video: 211, tweet: 54, url: 3 })
-      expect(by('source')).toEqual({ x: 199, instagram: 181, cosmos: 29, web: 2, capture: 1 })
-    }
   })
 
   it('médias : principal + slides locales + slides distantes', () => {
@@ -90,12 +74,6 @@ describe('import réel GatherOS', () => {
     )
     expect(one(lib.db, "SELECT count(*) n FROM item_media WHERE status = 'remote'")).toBe(remote)
     expect(firstReport.counts.files_missing ?? 0).toBe(0)
-    if (ARCHI) {
-      expect(one(lib.db, 'SELECT count(*) n FROM item_media')).toBe(751)
-      expect(remote).toBe(41)
-      expect(firstReport.counts.files).toBe(739)
-      expect(one(lib.db, 'SELECT count(*) n FROM item_media WHERE poster_rel IS NOT NULL')).toBe(29)
-    }
   })
 
   it('collections, appartenances, auteurs, tags, rejetés, IA', () => {
@@ -115,17 +93,6 @@ describe('import réel GatherOS', () => {
         `SELECT count(*) n FROM saves WHERE coalesce(trim(ai_description), '') <> '' AND id NOT IN ${STARTER}`,
       ),
     )
-    if (ARCHI) {
-      expect(one(lib.db, 'SELECT count(*) n FROM collections')).toBe(17)
-      expect(one(lib.db, 'SELECT count(*) n FROM collection_items')).toBe(252)
-      expect(
-        one(lib.db, 'SELECT count(DISTINCT author_id) n FROM items WHERE author_id IS NOT NULL'),
-      ).toBe(340)
-      expect(one(lib.db, 'SELECT count(*) n FROM sync_dismissed')).toBe(2)
-      expect(one(lib.db, "SELECT count(*) n FROM items WHERE ai_state = 'done'")).toBe(198)
-      expect(lib.db.prepare('SELECT name FROM tags').all()).toEqual([{ name: 'capture-ecran' }])
-      expect(one(lib.db, 'SELECT count(*) n FROM item_tags')).toBe(1)
-    }
   })
 
   it('onglets', () => {
@@ -136,7 +103,6 @@ describe('import réel GatherOS', () => {
            sum(deleted_at IS NOT NULL) AS t, sum(hidden_at IS NOT NULL AND deleted_at IS NULL) AS h FROM items`,
       )
       .get() as { a: number; s: number; t: number; h: number }
-    if (ARCHI) expect(tabs).toEqual({ a: 408, s: 250, t: 3, h: 1 })
     expect(tabs.a + tabs.t + tabs.h).toBe(one(lib.db, 'SELECT count(*) n FROM items'))
   })
 
@@ -151,28 +117,6 @@ describe('import réel GatherOS', () => {
     )
     const ok = rows.filter((r) => r.post_meta !== null && parsePostMeta(r.post_meta) !== null)
     expect(ok.length).toBe(withMeta)
-  })
-
-  it('couvertures de collection : tie-break par items.id', () => {
-    if (!ARCHI) return
-    const front = (name: string) =>
-      lib.db
-        .prepare(
-          `SELECT i.title, i.post_meta FROM collections c JOIN collection_items ci ON ci.collection_id = c.id
-           JOIN items i ON i.id = ci.item_id WHERE c.name = ? AND i.deleted_at IS NULL
-           ORDER BY ci.added_at DESC, i.id DESC LIMIT 1`,
-        )
-        .get(name) as { title: string | null; post_meta: string | null }
-    expect(JSON.stringify(front('Gaming'))).toMatch(/MINECRAFT MOD/)
-    expect(front('Photo/Vidéo').title).toBe('Creative Workspace Setup')
-    // Même résultat par le DTO (WP-12) : carte de devant = covers[0].
-    const tree = collectionTree({ id: 'lreal', root: lib.root }, lib.db)
-    const gaming = tree.find((n) => n.name === 'Gaming')!
-    expect(gaming.covers[0]!.post?.text ?? '').toMatch(/MINECRAFT MOD/)
-    expect(tree.find((n) => n.name === 'Photo/Vidéo')!.covers[0]!.title).toBe(
-      'Creative Workspace Setup',
-    )
-    expect(gaming.count).toBe(36)
   })
 
   it('ré-import immédiat : 0 création, tout déjà présent, 0 fichier copié', async () => {

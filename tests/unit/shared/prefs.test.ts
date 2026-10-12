@@ -70,7 +70,7 @@ describe('PrefsSchema', () => {
     expect(p.capture.mode).toBe('window')
   })
 
-  it('n’a ni secret partagé ni réglage de recherche visuelle (PLAN §1.18, ERRATA §G)', () => {
+  it('n’a ni secret partagé ni réglage de recherche visuelle', () => {
     const keys = JSON.stringify(PrefsSchema.parse({}))
     expect(keys).not.toMatch(/bridgeToken|semanticSearch|embeddingModel/)
   })

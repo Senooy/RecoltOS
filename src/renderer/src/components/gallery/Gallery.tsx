@@ -1,6 +1,6 @@
 /**
- * Galerie du kit UI (WP-04) : chaque composant en thème clair ET sombre, pour la relecture
- * visuelle. Servie en dev par `?gallery=1` (voir `gallery-entry.tsx` et `docs/contrats/CHANGELOG.md`).
+ * Galerie du kit UI : chaque composant en thème clair ET sombre, pour la relecture
+ * visuelle. Servie en dev par `?gallery=1` (voir `gallery-entry.tsx`).
  *
  * Aucune classe de palette Tailwind : uniquement des tokens (vérifié par
  * `tests/renderer/ui/gallery.test.tsx`).

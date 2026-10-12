@@ -1,5 +1,5 @@
 /**
- * Mouvement et `prefers-reduced-motion` (DESIGN §1.9).
+ * Mouvement et `prefers-reduced-motion`.
  *
  * Mouvement réduit (système OU préférence « Toujours », posée par `state/prefs.ts` sur
  * `<html data-reduce-motion="1">`) : durées ≤ 80 ms, ni rotation ni translation ni mise à
@@ -8,7 +8,7 @@
  */
 import { useSyncExternalStore } from 'react'
 
-/** Durées du design system, en ms (DESIGN §1.9 ; miroir des `--dur-*` de `globals.css`). */
+/** Durées du design system, en ms (miroir des `--dur-*` de `globals.css`). */
 export const DURATION = {
   instant: 80,
   fast: 120,
@@ -22,7 +22,7 @@ export const DURATION = {
 /** Plafond des durées en mouvement réduit. */
 export const REDUCED_MAX_MS = 80
 
-/** Délai d'apparition des tooltips (DESIGN §2.4). */
+/** Délai d'apparition des tooltips. */
 export const TOOLTIP_DELAY_MS = 600
 
 const QUERY = '(prefers-reduced-motion: reduce)'

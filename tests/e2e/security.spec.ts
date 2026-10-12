@@ -1,9 +1,9 @@
 /**
- * M7 (WP-73, QA §6.3 n° 1, 7, 10, 12) : PARCOURS COMPLET et SÉCURITÉ, en un seul lancement.
+ * M7 (7, 10, 12) : PARCOURS COMPLET et SÉCURITÉ, en un seul lancement.
  *
  * Bibliothèque : clone APFS (`cp -c`) de la vraie bibliothèque importée `.tmp/m7-real` (sinon
- * `.tmp/m3-real`, ou `RECOLTOS_E2E_REAL=<dossier>`), jamais le dossier GatherOS ni
- * `~/Library/Application Support/RecoltOS` ; à défaut, bibliothèque de démo (60 éléments). Le clone
+ * `.tmp/m3-real`, ou `RECOLTOS_E2E_REAL=<dossier>`), jamais un dossier de données vivant
+ * (`~/Library/Application Support/…`) ; à défaut, bibliothèque de démo (60 éléments). Le clone
  * reçoit avant lancement : `storage.downloadRemoteMedia = false`, faux CLI `claude` / `codex`
  * (`tests/helpers/fake-bin`, aussi en tête du PATH), capture sans masquage de l'app.
  *
@@ -47,7 +47,7 @@ const FAKE_BIN = path.join(REPO_ROOT, 'tests/helpers/fake-bin')
 const fx = (p: string) =>
   JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'tests/fixtures/sync', p), 'utf8')) as unknown
 
-/** Littéraux interdits assemblés (la garde clean-room grep le dépôt suivi). */
+/** Littéral assemblé (clé du jeton de l'ancienne app, jamais recopiée par l'import). */
 const GATHEROS_TOKEN = 'extension' + 'Token'
 const SECRET_RE = new RegExp(`ct0=|sessionid=|Bearer [A-Za-z0-9]|${GATHEROS_TOKEN}`)
 
@@ -229,7 +229,7 @@ interface Card {
 }
 
 test.describe('parcours complet et sécurité', () => {
-  test('bibliothèque réelle : parcours de bout en bout, 0 requête externe, 0 secret', async () => {
+  test('parcours de bout en bout, 0 requête externe, 0 secret', async () => {
     test.setTimeout(240_000)
     const src = realSource()
     const root = makeTmpDir('parcours')
@@ -305,7 +305,7 @@ test.describe('parcours complet et sécurité', () => {
             ),
           )
           .toBe(true)
-        // Aucune URL http(s) dans le DOM des médias (DTO sans URL distante, PLAN §2.4).
+        // Aucune URL http(s) dans le DOM des médias (DTO sans URL distante).
         const remote = await page.evaluate(() =>
           Array.from(document.querySelectorAll('img, video, source'))
             .map((e) => e.getAttribute('src') ?? '')
@@ -471,7 +471,7 @@ test.describe('parcours complet et sécurité', () => {
       })
 
       await test.step('menus de l’app', async () => {
-        // Tous les ids de commande existent dans le menu natif (QA §6.3 n° 7).
+        // Tous les ids de commande existent dans le menu natif.
         const missing = await app.evaluate(
           ({ Menu }, ids) => ids.filter((id) => !Menu.getApplicationMenu()?.getMenuItemById(id)),
           [...MENU_COMMANDS].filter((id) => id !== 'pasteUrl'),

@@ -1,5 +1,5 @@
 /**
- * Base des fournisseurs CLI (AI §3.2) : prompt, empreinte, fichiers envoyés, décodage tolérant,
+ * Base des fournisseurs CLI : prompt, empreinte, fichiers envoyés, décodage tolérant,
  * validation zod bornante, wrappers champ unique. Chaque fournisseur n'implémente que `exec`
  * (lancement du CLI et lecture de sa sortie) et `status`.
  */

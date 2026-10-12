@@ -1,5 +1,5 @@
 /**
- * Adaptateur `utilityProcess.fork` (Electron) → `WorkerChild` (ARCHI §2.2). La sortie standard
+ * Adaptateur `utilityProcess.fork` (Electron) → `WorkerChild`. La sortie standard
  * du worker est relayée vers le journal de main (`stdio: 'pipe'`).
  */
 import * as electron from 'electron'
@@ -8,7 +8,7 @@ import type { ForkFn, HostLogger, WorkerChild } from '../workers-host'
 
 /**
  * Bundle du media-worker à côté de `out/main/index.js` : entrée `media.worker` de
- * `electron.vite.config.ts` (demande de contrat WP-03, `docs/contrats/CHANGELOG.md`).
+ * `electron.vite.config.ts`.
  */
 export function mediaWorkerPath(mainDir: string = __dirname): string {
   return join(mainDir, 'media.worker.js')

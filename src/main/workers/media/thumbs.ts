@@ -1,5 +1,5 @@
 /**
- * Dérivés image par sharp (PLAN §1.6) : `thumbs/` 800w webp q80, `large/` 1440w webp,
+ * Dérivés image par sharp : `thumbs/` 800w webp q80, `large/` 1440w webp,
  * `display/` webp 2048 (HEIC, HEIF, TIFF, PSD). Première image seulement pour une animation,
  * orientation EXIF appliquée, jamais d'agrandissement. L'original n'est jamais réécrit.
  */

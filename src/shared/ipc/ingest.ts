@@ -1,5 +1,5 @@
 /**
- * Contrat `ingest.*` : `files` dès M1 (WP-10) ; `pickFiles`, `pickFolder`, `url`, `clipboard` en M3 (WP-34).
+ * Contrat `ingest.*` : `files` dès M1 ; `pickFiles`, `pickFolder`, `url`, `clipboard` en M3.
  */
 import { z } from 'zod'
 import { IngestProgress, IngestReport } from '../dto/items'

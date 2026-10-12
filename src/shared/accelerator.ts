@@ -1,5 +1,5 @@
 /**
- * Accélérateur Electron saisi par l'utilisateur (raccourci global de capture, SPACES §2.2).
+ * Accélérateur Electron saisi par l'utilisateur (raccourci global de capture).
  * Forme : au moins un modificateur, puis une touche : `CommandOrControl+Shift+S`.
  * Liste noire : les raccourcis système ou d'application (⌘Q, ⌘W, ⌘H, ⌘M, ⌘Tab, ⌘Espace…)
  * ne peuvent pas être détournés. Zod seul : importable par main, preload et renderer.

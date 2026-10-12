@@ -1,5 +1,5 @@
 /**
- * `CollectionPickerPopover` (DESIGN §3.3, réutilisable : Redécouvrir, panneau Détails, déplacement
+ * `CollectionPickerPopover` (réutilisable : Redécouvrir, panneau Détails, déplacement
  * d'une collection) : champ « Filtrer… », liste à plat avec sous-collections indentées de 12 px,
  * option « racine » facultative.
  */

@@ -1,5 +1,5 @@
 /**
- * Hôte native messaging (SYNC §1.4, ERRATA §D, §G.2) : lancé par le navigateur via le wrapper `sh`
+ * Hôte native messaging : lancé par le navigateur via le wrapper `sh`
  * généré par l'app. Relaie les trames de l'extension vers le socket Unix de l'app (NDJSON) et
  * inversement. Pas de secret : contrôles = `allowed_origins` / `allowed_extensions` (navigateur),
  * origine dans `argv` (ici), version de protocole (app). App fermée : `save.create` sans `upload`
@@ -69,7 +69,7 @@ export function appUserData(env: HostIo['env'], execPath: string, home: string):
 
 /**
  * Socket et spool : variables d'environnement (tests), sinon `host.json` écrit par l'app à chaque
- * lancement. Le navigateur lance l'exécutable DIRECTEMENT (S5 : Chromium ne lance pas un script shell).
+ * lancement. Le navigateur lance l'exécutable DIRECTEMENT (Chromium ne lance pas un script shell).
  */
 export function hostConfig(
   env: HostIo['env'],

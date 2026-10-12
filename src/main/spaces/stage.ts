@@ -1,5 +1,5 @@
 /**
- * Rendu d'un space par la fenêtre « stage » (SPACES §1.9, WP-63, spike S5 : docs/spikes/spaces-s5.md).
+ * Rendu d'un space par la fenêtre « stage ».
  * Fenêtre hors écran (`withOffscreenWindow` : partition non persistante, sandbox, sans preload) qui
  * charge `offscreen.html?render=space-stage` ; le main y pousse le document puis place la caméra
  * tuile par tuile (multiples entiers de la tuile : même phase sous-pixel, pas de couture) et assemble
@@ -13,9 +13,9 @@ import { offscreenUrl, withOffscreenWindow } from '../windows/offscreen'
 import { placeTile, planExport, type ExportPlan } from './tiles'
 
 export type StageMode = 'hidden' | 'offscreen' | 'visible'
-/** Figé par le spike S5 (docs/spikes/spaces-s5.md). */
+/** Mode retenu après mesure (fenêtre hors écran). */
 export const STAGE_MODE: StageMode = 'offscreen'
-/** Mesure du spike seulement : `RECOLTOS_STAGE_MODE=hidden` sous `RECOLTOS_E2E=1`. */
+/** Mesures seulement : `RECOLTOS_STAGE_MODE=hidden` sous `RECOLTOS_E2E=1`. */
 const stageMode = (): StageMode =>
   process.env.RECOLTOS_E2E === '1' && process.env.RECOLTOS_STAGE_MODE === 'hidden'
     ? 'hidden'

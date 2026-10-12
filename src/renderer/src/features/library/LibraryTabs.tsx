@@ -1,5 +1,5 @@
 /**
- * Onglets de la Bibliothèque (DESIGN §3.1, ERRATA §C) : icône + libellé SANS nombre ; l'onglet
+ * Onglets de la Bibliothèque : icône + libellé SANS nombre ; l'onglet
  * actif porte son icône et un soulignement de 2 px animé (`layoutId`).
  */
 import { EyeOff, Folder, Images, Inbox, Trash } from 'lucide-react'

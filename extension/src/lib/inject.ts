@@ -1,5 +1,5 @@
 /**
- * Boutons « Enregistrer dans RecoltOS » injectés à côté du bouton d'enregistrement natif (SYNC §2.4)
+ * Boutons « Enregistrer dans RecoltOS » injectés à côté du bouton d'enregistrement natif
  * sur x.com et instagram.com. Traitement par lots (MutationObserver), repli DOM si la donnée brute
  * n'est pas en cache (`partial`). Jamais de clic simulé ni d'action sur le compte.
  */

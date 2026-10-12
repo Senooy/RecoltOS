@@ -1,5 +1,5 @@
 /**
- * Handler du job `ai.enrich` (WP-43) : délègue au service IA (`ai/service.ts`), qui revérifie
+ * Handler du job `ai.enrich` : délègue au service IA (`ai/service.ts`), qui revérifie
  * consentement, fournisseur et exclusions avant tout appel.
  */
 import { AppError } from '../../../shared/errors'

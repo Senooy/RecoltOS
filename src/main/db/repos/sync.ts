@@ -1,7 +1,7 @@
 /**
- * Repo de synchronisation (SYNC §6.3, PLAN §4.2) : `sync_state` (une ligne par source),
+ * Repo de synchronisation : `sync_state` (une ligne par source),
  * `sync_items` (« déjà connu » au niveau publication), `sync_dismissed` (jamais ré-importés),
- * `sync_runs` (journal). La logique de sync appartient aux lots WP-5x.
+ * `sync_runs` (journal). La logique de sync vit dans `src/main/sync/`.
  */
 import type Database from 'better-sqlite3'
 import { buildSet, repoBase, type ColumnSpec, type RepoOptions } from './util'

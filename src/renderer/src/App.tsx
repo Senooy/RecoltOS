@@ -1,5 +1,5 @@
 /**
- * Racine React : coque `AppShell` (WP-13) + ponts transverses (prefs, vidage avant fermeture,
+ * Racine React : coque `AppShell` + ponts transverses (prefs, vidage avant fermeture,
  * nettoyage du glisser interne).
  */
 import { useEffect, useState } from 'react'

@@ -1,5 +1,5 @@
 /**
- * Exécuteur de synchronisation (WP-54, ERRATA §G.2) : exécute les `sync.run` de l'app DEPUIS
+ * Exécuteur de synchronisation : exécute les `sync.run` de l'app DEPUIS
  * L'ARRIÈRE-PLAN, sans onglet. Une page à la fois : requête → `sync.page` → `sync.ack` de l'app
  * (continuer avec le curseur, ou s'arrêter : élément connu, plafond, budget) → délai → page suivante.
  * Erreurs classées (`auth_required`, `blocked`, `rate_limited`, `api_changed`, `network`,

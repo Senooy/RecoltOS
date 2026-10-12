@@ -1,5 +1,5 @@
 /**
- * Toutes les fixtures de WP-50 (erreurs comprises) → sortie figée en snapshot (acceptance WP-55).
+ * Toutes les fixtures (erreurs comprises) → sortie figée en snapshot (acceptance).
  */
 import { describe, expect, it } from 'vitest'
 import { parseInstagramMediaInfo, parseSyncPage } from '../../../../src/main/sync/parsers'

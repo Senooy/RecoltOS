@@ -1,5 +1,5 @@
 /**
- * DTO IA (PLAN §4.3 : `QueueSnapshot` AI §6.6 sans voie embed, `ProviderStatus` AI §3.1).
+ * DTO IA (`QueueSnapshot` sans voie embed, `ProviderStatus`).
  */
 import { z } from 'zod'
 import { PauseReason, ProviderStatus, ProviderTestResult } from '../ai-types'

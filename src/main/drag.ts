@@ -1,5 +1,5 @@
 /**
- * Glisser vers l'extérieur (ARCHI §2.5, PLAN §1.12), canal brut `drag` (`ipcRenderer.send`).
+ * Glisser vers l'extérieur, canal brut `drag` (`ipcRenderer.send`).
  * `webContents.startDrag` doit être appelé PENDANT l'événement IPC du `dragstart` : tout est
  * synchrone ici (base better-sqlite3, `statSync`), sans aller-retour vers un worker.
  *

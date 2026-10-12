@@ -1,5 +1,5 @@
 /**
- * `SyncCoordinator` (SYNC §3.6-3.8, §4.3, ERRATA §G.2) : l'app décide QUAND et QUOI synchroniser,
+ * `SyncCoordinator` : l'app décide QUAND et QUOI synchroniser,
  * l'extension exécute en arrière-plan (sans onglet). Planning X 15 min, Instagram 30, Cosmos 30 ;
  * modes `incremental` / `backfill` (tranches reprises par curseur) / `deep` (hebdomadaire) /
  * `passive` (captures) ; un client par plateforme (session active, plus récemment vu) ; budgets et

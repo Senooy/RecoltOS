@@ -1,5 +1,5 @@
 /**
- * `Toaster` (DESIGN §2.7) : sonner en pilule (centrée, `bottom: 24`, 40 px, fond `--surface`).
+ * `Toaster` : sonner en pilule (centrée, `bottom: 24`, 40 px, fond `--surface`).
  * `unstyled` : tout vient des tokens (clair et sombre), l'action « Annuler » est une pilule noire.
  * Mouvement réduit : fondu seul (`ui.css`). Monter UNE fois à la racine de l'app.
  *

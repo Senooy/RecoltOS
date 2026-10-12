@@ -1,5 +1,5 @@
 /**
- * Coque de l'app (DESIGN §2, WP-13) : en-tête 96 px (région de glisser seulement sans calque),
+ * Coque de l'app : en-tête 96 px (région de glisser seulement sans calque),
  * sélecteur de bibliothèque, segmented central, groupe de droite, écran courant (`routes.tsx`),
  * calques (Réglages…), FAB, calque de dépôt, barre de sélection, toasts, dialogues. Commandes du
  * menu natif (`evt:menu.command`) et replis clavier (⌘1/2/3 par `e.code`, Échap).
@@ -116,7 +116,7 @@ export function AppShell({ dark }: { dark: boolean }) {
     }
   }, [])
 
-  // Import interrompu : reprise proposée au lancement (ARCHI §6.9).
+  // Import interrompu : reprise proposée au lancement.
   useEffect(() => {
     void rpc('import.gatheros.pending')
       .then((p) => {
@@ -145,7 +145,7 @@ export function AppShell({ dark }: { dark: boolean }) {
           ?.node ?? null)
       : null
 
-  // Étagère (DESIGN §3.4) : plein cadre noir, en-tête réduit aux feux et au segmented sombre.
+  // Étagère : plein cadre noir, en-tête réduit aux feux et au segmented sombre.
   const immersive = route.name === 'shelf' && implemented
   return (
     <TooltipProvider>

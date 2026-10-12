@@ -1,5 +1,5 @@
 /**
- * Erreurs applicatives transportées par l'IPC sous la forme `{ code, message }` (ARCHI §2.3).
+ * Erreurs applicatives transportées par l'IPC sous la forme `{ code, message }`.
  * Pas de propriétés de paramètre (`erasableSyntaxOnly`).
  */
 
@@ -26,11 +26,11 @@ export const APP_ERROR_CODES = [
   'limit_exceeded',
 ] as const
 export type KnownAppErrorCode = (typeof APP_ERROR_CODES)[number]
-/** Les lots peuvent introduire des codes propres à leur domaine (préfixés), d'où `string`. */
+/** Les domaines peuvent introduire des codes propres à leur domaine (préfixés), d'où `string`. */
 export type AppErrorCode = KnownAppErrorCode | (string & {})
 
 /**
- * Message lisible d'une liste d'anomalies zod, en français (règle §2.6). Remplace
+ * Message lisible d'une liste d'anomalies zod, en français. Remplace
  * `z.prettifyError`, qui insère « at » et des libellés anglais dans les toasts.
  */
 export function formatIssues(

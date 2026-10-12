@@ -1,6 +1,6 @@
 /**
  * Garde des dossiers de sortie destructifs (`safe-out.ts`) et son branchement dans `make-fixtures` et
- * `seed-bench` (revue WP-01) : un `--out` mal choisi ne doit jamais effacer de données.
+ * `seed-bench` : un `--out` mal choisi ne doit jamais effacer de données.
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'

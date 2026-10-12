@@ -1,5 +1,5 @@
 /**
- * `FiltersPopover` (DESIGN §3.5) : Radix Popover `align="end"`, 320 px, rayon 12, padding 14.
+ * `FiltersPopover` : Radix Popover `align="end"`, 320 px, rayon 12, padding 14.
  * Type, Source, Couleur (12 pastilles + personnalisée), Période, Collection, Tags ; « Réinitialiser ».
  * Les filtres s'appliquent en direct.
  */

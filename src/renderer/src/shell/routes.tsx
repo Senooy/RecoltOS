@@ -1,7 +1,6 @@
 /**
- * Registre des routes et calques (PLAN §1.26). Possédé par WP-00 puis Fable : les lots ne
- * l'éditent pas. Chaque écran est chargé paresseusement depuis le fichier de composant qu'un
- * lot possède (DESIGN §4.2) ; tant que ce fichier n'existe pas, un stub s'affiche.
+ * Registre des routes et calques. Chaque écran est chargé paresseusement depuis son fichier de
+ * composant ; tant que ce fichier n'existe pas, un stub s'affiche.
  * Convention : le fichier exporte le composant par défaut (`export default function …`).
  */
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
@@ -9,7 +8,7 @@ import type { OverlayType, RouteName } from '../state/ui'
 
 type Loader = () => Promise<{ default: ComponentType }>
 
-/** Modules présents au build (aucun si le lot n'est pas encore livré). */
+/** Modules présents au build (aucun si l'écran n'existe pas encore). */
 const modules = import.meta.glob<{ default: ComponentType }>([
   '../features/library/LibraryPage.tsx',
   '../features/collections/CollectionPage.tsx',
@@ -23,21 +22,21 @@ const modules = import.meta.glob<{ default: ComponentType }>([
   '../features/settings/SettingsDialog.tsx',
 ])
 
-/** Écran → fichier de composant (et lot propriétaire). */
+/** Écran → fichier de composant . */
 export const ROUTE_FILES: Readonly<Record<RouteName, string>> = {
-  library: '../features/library/LibraryPage.tsx', // WP-15
-  collection: '../features/collections/CollectionPage.tsx', // WP-20
-  shelf: '../features/collections/shelf/CollectionShelf.tsx', // WP-21
-  search: '../features/search/SearchPage.tsx', // WP-22
-  spaces: '../features/spaces/SpacesHome.tsx', // WP-62
-  space: '../features/spaces/SpaceEditor.tsx', // WP-62
+  library: '../features/library/LibraryPage.tsx',
+  collection: '../features/collections/CollectionPage.tsx',
+  shelf: '../features/collections/shelf/CollectionShelf.tsx',
+  search: '../features/search/SearchPage.tsx',
+  spaces: '../features/spaces/SpacesHome.tsx',
+  space: '../features/spaces/SpaceEditor.tsx',
 }
 
 export const OVERLAY_FILES: Readonly<Record<OverlayType, string>> = {
-  viewer: '../features/viewer/Viewer.tsx', // WP-30
-  rediscover: '../features/rediscover/Rediscover.tsx', // WP-32
-  palette: '../features/palette/CommandPalette.tsx', // WP-23
-  settings: '../features/settings/SettingsDialog.tsx', // WP-16
+  viewer: '../features/viewer/Viewer.tsx',
+  rediscover: '../features/rediscover/Rediscover.tsx',
+  palette: '../features/palette/CommandPalette.tsx',
+  settings: '../features/settings/SettingsDialog.tsx',
 }
 
 function stub(name: string): Loader {
@@ -59,12 +58,12 @@ export const overlays = Object.fromEntries(
   Object.entries(OVERLAY_FILES).map(([name, file]) => [name, lazy(loaderFor(name, file))]),
 ) as Record<OverlayType, LazyExoticComponent<ComponentType>>
 
-/** Vrai si le lot propriétaire a livré l'écran. */
+/** Vrai si le fichier de l'écran existe. */
 export function isRouteImplemented(name: RouteName): boolean {
   return ROUTE_FILES[name] in modules
 }
 
-/** Vrai si le lot propriétaire a livré le calque. */
+/** Vrai si le fichier du calque existe. */
 export function isOverlayImplemented(name: OverlayType): boolean {
   return OVERLAY_FILES[name] in modules
 }

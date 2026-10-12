@@ -1,5 +1,5 @@
 /**
- * Processus `screencapture` (SPACES §2.3) : arguments par mode, `execFile` (jamais `exec`) avec un
+ * Processus `screencapture` : arguments par mode, `execFile` (jamais `exec`) avec un
  * environnement minimal, binaire remplaçable en développement (`RECOLTOS_SCREENCAPTURE_BIN`, refusé
  * dans l'app empaquetée). Succès = fichier non vide à signature PNG, jamais le seul code de sortie.
  */

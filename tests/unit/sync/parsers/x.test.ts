@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- fixtures JSON mutées en place (copie `structuredClone` typée `any`) */
 /**
- * Parseur X (WP-55, SYNC §3.4) sur les fixtures synthétiques de WP-50 et leurs variantes corrompues.
+ * Parseur X sur les fixtures synthétiques et leurs variantes corrompues.
  */
 import { describe, expect, it } from 'vitest'
 import {

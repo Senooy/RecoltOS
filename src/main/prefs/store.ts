@@ -1,5 +1,5 @@
 /**
- * Magasin `prefs.json` (ARCHI §3.3, PLAN §4.5) : lecture tolérante (`parsePrefsLenient`, réparation
+ * Magasin `prefs.json` : lecture tolérante (`parsePrefsLenient`, réparation
  * champ par champ), patch profond revalidé (`mergePrefs`), écriture atomique, notification
  * `prefs.changed`. Pas d'import `electron` (le thème natif est suivi par `prefs/init.ts`).
  */

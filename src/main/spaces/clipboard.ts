@@ -1,5 +1,5 @@
 /**
- * Presse-papiers des Spaces (SPACES §1.5.7, §1.6.4), API asynchrone d'Electron 44
+ * Presse-papiers des Spaces, API asynchrone d'Electron 44
  * (`clipboard.write([ClipboardItem])`, `clipboard.read()`). Un seul `write` avec `text/plain` et
  * `text/html` : le HTML porte les nœuds internes (`data-recolt-nodes` = base64 du JSON), le texte
  * reste lisible par les autres apps. Lecture par priorité : nœuds internes, fichiers du Finder,

@@ -1,5 +1,5 @@
 /**
- * « Ouvrir avec RecoltOS » / dépôt sur l'icône du Dock (SPACES §3.3) : les chemins reçus par
+ * « Ouvrir avec RecoltOS » / dépôt sur l'icône du Dock : les chemins reçus par
  * `open-file` (mis en file AVANT `ready` par `bootstrap/pre-ready.ts`) sont regroupés 250 ms, la
  * fenêtre est recréée si elle a été fermée, puis importés ; un seul élément → vue détail.
  */

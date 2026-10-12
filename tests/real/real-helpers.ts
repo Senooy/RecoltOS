@@ -1,5 +1,5 @@
 /**
- * Import réel sous Node (QA §5.4) : copie de `moodmark.db` (jamais la source) + fichiers GatherOS
+ * Import réel sous Node : copie de `moodmark.db` (jamais la source) + fichiers GatherOS
  * clonés en lecture seule vers une bibliothèque temporaire.
  */
 import { mkdtempSync } from 'node:fs'

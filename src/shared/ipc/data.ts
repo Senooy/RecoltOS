@@ -1,4 +1,4 @@
-/** Contrat `data.*` (ARCHI §2.3, §7) : export zip, instantanés, vérification, stockage. */
+/** Contrat `data.*` : export zip, instantanés, vérification, stockage. */
 import { z } from 'zod'
 import { Uuid } from '../enums'
 import { Count, Empty, Void, type ContractShape, type EventShape } from './define'
@@ -26,7 +26,7 @@ export const StorageBreakdown = z.object({
   snapshots: z.number().int(),
   database: z.number().int(),
   total: z.number().int(),
-  /** Originaux par type (somme de `item_media.file_size`), pour la barre empilée (DESIGN §3.10). */
+  /** Originaux par type (somme de `item_media.file_size`), pour la barre empilée. */
   images: z.number().int().default(0),
   videos: z.number().int().default(0),
 })

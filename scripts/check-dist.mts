@@ -1,5 +1,5 @@
 /**
- * Contrôles du bundle livré (QA §8.5 corrigée par PLAN §1.16 / §1.19 / §1.27, ERRATA §D ; WP-72),
+ * Contrôles du bundle livré,
  * appelés par `pnpm run dist` :
  *  - binaire principal et hôte natif arm64 seuls, `CFBundleIdentifier = com.recoltos.app` ;
  *  - `Info.plist` : association « Ouvrir avec » en `LSHandlerRank = Alternate`,
@@ -43,7 +43,7 @@ import { FrameDecoder, encodeFrame } from '../src/host/framing'
 
 const ROOT = resolve(import.meta.dirname, '..')
 
-/** Budgets de taille (Mo), mesurés au WP-72 puis figés : voir `docs/perf.md` § Paquet. */
+/** Budgets de taille (Mo), mesurés puis figés : voir `docs/perf.md` § Paquet. */
 export const SIZE_BUDGETS_MB = {
   // Mesuré le 2026-10-12 : 370,1 / 2,7 / 20,0 / 106,8 / 0,2 Mo (marge ≈ 8 %).
   app: 400,

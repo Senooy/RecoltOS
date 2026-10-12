@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- fixtures JSON mutées en place (copie `structuredClone` typée `any`) */
 /**
- * Parseur Instagram (WP-55, SYNC §4.2) sur les fixtures synthétiques de WP-50.
+ * Parseur Instagram sur les fixtures synthétiques.
  */
 import { describe, expect, it } from 'vitest'
 import {

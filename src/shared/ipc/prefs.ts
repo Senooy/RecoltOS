@@ -6,10 +6,10 @@ import { Empty, type ContractShape, type EventShape } from './define'
 /**
  * Réglages que le renderer ne peut PAS écrire par `prefs.set` :
  * - `version` ;
- * - `ai.consentVersion` / `ai.consentAt` : canal dédié `ai.consent{version}` (AI §11) ;
+ * - `ai.consentVersion` / `ai.consentAt` : canal dédié `ai.consent{version}` ;
  * - `ai.lastSeenVersions` : posé par la détection des CLI côté main ;
  * - `tools.*` : chemins d'exécutables lancés par main, posés par `system.redetectTools`.
- * `ai.claude.path` / `ai.codex.path` (surcharge manuelle, AI §3) restent écrivables mais main DOIT
+ * `ai.claude.path` / `ai.codex.path` (surcharge manuelle) restent écrivables mais main DOIT
  * vérifier que le fichier existe et est exécutable avant de les utiliser.
  */
 export const PREFS_PATCH_DENIED = {

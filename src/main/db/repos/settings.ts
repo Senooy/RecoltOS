@@ -1,6 +1,6 @@
 /**
  * Repo `settings` : réglages propres à une bibliothèque (vue courante, dernier import, pauses de
- * jobs `jobs.paused`, compteur IA du jour…), valeurs JSON (ARCHI §3.3, §5.3).
+ * jobs `jobs.paused`, compteur IA du jour…), valeurs JSON.
  */
 import type Database from 'better-sqlite3'
 import type { z } from 'zod'

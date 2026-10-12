@@ -1,10 +1,9 @@
 /**
- * Références visuelles SOMBRES (WP-70) sur la bibliothèque de démo déterministe : les 13 scènes de
- * départ (QA §7.1) plus l'éditeur Spaces et Réglages › Apparence. Le thème est basculé par le
+ * Régression visuelle du thème SOMBRE sur la bibliothèque de démo déterministe : les 13 scènes
+ * par défaut plus l'éditeur Spaces et Réglages › Apparence. Le thème est basculé par le
  * bouton de l'en-tête (chemin réel de l'utilisateur, bascule instantanée) avant chaque scène.
  * Les surfaces immersives (détail, étagère, Redécouvrir) doivent être identiques aux baselines
- * claires à la teinte du voile près. La boucle de fidélité se fait sur la vraie bibliothèque
- * (`pnpm run shots --library real --theme dark`) ; ces baselines gardent le rendu stable ensuite.
+ * claires à la teinte du voile près.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

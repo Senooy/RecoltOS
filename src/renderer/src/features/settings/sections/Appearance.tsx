@@ -1,4 +1,4 @@
-/** Réglages › Apparence (DESIGN §3.10) : thème, colonnes et tri par défaut, vidéos au survol, animations. */
+/** Réglages › Apparence : thème, colonnes et tri par défaut, vidéos au survol, animations. */
 import type { SortMode } from '../../../../../shared/enums'
 import { SegmentedSmall, Slider, Switch } from '../../../components/ui'
 import { fr } from '../../../i18n/fr'

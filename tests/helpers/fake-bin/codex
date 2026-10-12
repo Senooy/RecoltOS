@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Faux `codex` (WP-42) : imite `codex exec --json` sans réseau. Vérifie l'argv d'isolation
+ * Faux `codex` : imite `codex exec --json` sans réseau. Vérifie l'argv d'isolation
  * (--ephemeral, --ignore-user-config, --ignore-rules, --sandbox read-only, --skip-git-repo-check,
  * `--` avant le prompt, --disable shell_tool) et que stdin est FERMÉ (pas un tube).
  * Journalise l'argv dans $FAKE_CLI_LOG. $FAKE_CLI_MODE : ok | tool_violation | rate_limit |

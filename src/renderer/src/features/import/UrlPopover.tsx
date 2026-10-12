@@ -1,5 +1,5 @@
 /**
- * `UrlPopover` (SPACES §3.4) : champ URL ancré au FAB, validation `new URL()` http(s), états
+ * `UrlPopover` : champ URL ancré au FAB, validation `new URL()` http(s), états
  * chargement / erreur « Impossible de récupérer cette page ».
  */
 import { useState } from 'react'

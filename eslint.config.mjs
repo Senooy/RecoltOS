@@ -1,5 +1,5 @@
 /**
- * ESLint flat config (QA §4.2) : typescript-eslint typé, react-hooks sur le renderer,
+ * ESLint flat config : typescript-eslint typé, react-hooks sur le renderer,
  * frontières de couches (pas d'`electron` dans shared/db/import/ingest/sync/ai/host ;
  * pas de node/electron/natifs dans le renderer), prettier en dernier.
  */
@@ -11,10 +11,8 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 const electronBan = {
-  paths: [
-    { name: 'electron', message: 'Pas d’import electron ici (QA §2.4) : injecter la dépendance.' },
-  ],
-  patterns: [{ group: ['electron/*'], message: 'Pas d’import electron ici (QA §2.4).' }],
+  paths: [{ name: 'electron', message: 'Pas d’import electron ici : injecter la dépendance.' }],
+  patterns: [{ group: ['electron/*'], message: 'Pas d’import electron ici.' }],
 }
 
 export default defineConfig(
@@ -111,7 +109,7 @@ export default defineConfig(
           paths: [
             {
               name: 'ffmpeg-static',
-              message: 'ffmpeg système via platform/binaries.ts (PLAN §1.16).',
+              message: 'ffmpeg système via platform/binaries.ts.',
             },
           ],
         },

@@ -1,5 +1,5 @@
 /**
- * `window-state.json` (ERRATA §B) : bornes, écran, maximisé ; restauré au lancement
+ * `window-state.json` : bornes, écran, maximisé ; restauré au lancement
  * (sauf en e2e). Fonctions pures testables + E/S atomiques.
  */
 import fs from 'node:fs'

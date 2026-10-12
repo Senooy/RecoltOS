@@ -1,5 +1,5 @@
 /**
- * `PillBar` (DESIGN §2.7) : pilule flottante des toasts et de la barre de sélection. 40 px de
+ * `PillBar` : pilule flottante des toasts et de la barre de sélection. 40 px de
  * haut, `rounded-full`, fond `--surface`, `--shadow-toast`, padding `0 6 0 16`, texte 13 px.
  * `PillBar.Action` : pilule noire de 28 px ; `PillBar.Ghost` : action discrète (« Masquer »…).
  */

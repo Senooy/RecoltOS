@@ -1,5 +1,5 @@
 /**
- * Nœuds de texte (SPACES §1.5.5, DESIGN §3.11) : note (6 teintes, 15/21, `<textarea>` en
+ * Nœuds de texte : note (6 teintes, 15/21, `<textarea>` en
  * édition), forme (rectangle, ellipse, triangle, losange en SVG, libellé centré) et texte libre
  * (`contenteditable="plaintext-only"`, largeur automatique tant qu'aucune poignée latérale n'a été
  * tirée). L'édition reste locale jusqu'au blur / Échap : un seul commit dans l'historique ;
@@ -23,7 +23,7 @@ type NoteN = Extract<SpaceNode, { type: 'note' }>
 type ShapeN = Extract<SpaceNode, { type: 'shape' }>
 type TextN = Extract<SpaceNode, { type: 'text' }>
 
-/** Taille S/M/L/XL → police/interligne (S = 15/21 de DESIGN §3.11). */
+/** Taille S/M/L/XL → police/interligne (S = 15/21). */
 export const NOTE_FONT: Record<number, [number, number]> = {
   14: [15, 21],
   18: [18, 25],

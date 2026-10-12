@@ -1,6 +1,6 @@
 /**
- * Correspondance champ par champ `saves` → `items`, `item_media`, `authors` (ARCHI §6.4, PLAN §1.2,
- * §1.5, §1.6). Fonctions pures : aucune E/S, aucune base.
+ * Correspondance champ par champ `saves` → `items`, `item_media`, `authors`.
+ * Fonctions pures : aucune E/S, aucune base.
  */
 import { createHash } from 'node:crypto'
 import { basename, extname, join } from 'node:path'
@@ -22,7 +22,7 @@ export const ORIGIN = 'gatheros'
 export const STARTER_TAG = '__starter__'
 /** Tags GatherOS qui ne deviennent pas des tags : ils sont dans `source` (chips virtuelles). */
 export const SOURCE_TAGS: ReadonlySet<string> = new Set(['bookmark', 'instagram', 'cosmos', 'x'])
-/** PLAN §1.4 : tags importés hors démarrage renommés en français. */
+/** tags importés hors démarrage renommés en français. */
 export const TAG_MAP_EN_FR: Readonly<Record<string, string>> = { screenshot: 'capture-ecran' }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -77,7 +77,7 @@ function hostOf(url: string | null): string | null {
   }
 }
 
-/** Source RecoltOS (ARCHI §6.4) : `url` hors x.com → `web` ; sans URL : `capture` (tag screenshot) ou `local`. */
+/** Source RecoltOS : `url` hors x.com → `web` ; sans URL : `capture` (tag screenshot) ou `local`. */
 export function mapSource(
   save: Pick<SaveRow, 'source' | 'source_url' | 'kind'>,
   tags: readonly string[],
@@ -140,7 +140,7 @@ export interface ParsedPalette {
   colorBucket: number
 }
 
-/** Palette importée conservée (PLAN §1.5) ; LCh et bucket de tri dérivés de la dominante. */
+/** Palette importée conservée ; LCh et bucket de tri dérivés de la dominante. */
 export function parsePalette(
   hexJson: string | null,
   labJson: string | null,
@@ -516,7 +516,7 @@ export function mapSave(save: SaveRow, tags: readonly string[], opts: MapOptions
   }
 }
 
-/** Clé `dismissed_tweets` → `(source, external_id)` (ARCHI §6.6). */
+/** Clé `dismissed_tweets` → `(source, external_id)`. */
 export function mapDismissedKey(key: string): { source: string; externalId: string } {
   const i = key.indexOf(':')
   if (i > 0) {

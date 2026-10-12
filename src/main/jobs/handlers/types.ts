@@ -1,5 +1,5 @@
 /**
- * Contrat d'un handler de job (file unique `jobs`, PLAN §1.3). Créé par WP-00, complété par WP-10 :
+ * Contrat d'un handler de job (file unique `jobs`).
  * le contexte porte les services (bibliothèque active, media-worker, réseau, préférences,
  * émission groupée de `items.changed`) pour que les handlers restent testables sous Node.
  */
@@ -39,7 +39,7 @@ export interface JobServices {
   prefs(): Prefs
   /** `items.changed` regroupé (une émission par raison toutes les ~300 ms). */
   changed(uuids: readonly string[], reason: ChangeReason): void
-  /** Outils vidéo disponibles (sinon mode dégradé, ARCHI §1.4). */
+  /** Outils vidéo disponibles (sinon mode dégradé). */
   hasTool(name: 'ffmpeg' | 'ffprobe'): boolean
   /** Relance immédiate de la file (après un `enqueue`). */
   kick(): void

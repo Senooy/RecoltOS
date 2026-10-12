@@ -1,7 +1,7 @@
 /**
- * Manifests native messaging (SYNC §1.4-1.5, PLAN §1.18, ERRATA §G.2). Sans `electron`.
+ * Manifests native messaging. Sans `electron`.
  *
- * - Le manifest pointe DIRECTEMENT sur l'exécutable SEA (spike S5 : Chromium ne lance pas un script
+ * - Le manifest pointe DIRECTEMENT sur l'exécutable SEA (Chromium ne lance pas un script
  *   shell comme hôte). L'hôte trouve le socket et le spool dans `<userData>/host.json`, réécrit par
  *   l'app à chaque lancement ; il n'y a plus de wrapper `sh`.
  * - Les manifests ne sont écrits que si l'appelant l'autorise (app packagée, `RECOLTOS_INSTALL_DEV_HOST=1`
@@ -81,7 +81,7 @@ export function installNativeHosts(opts: InstallOptions): {
   skipped: string[]
 } {
   const browsers = opts.browsers ?? BROWSERS
-  // Anciens wrappers `sh` (avant S5) : retirés.
+  // Anciens wrappers `sh` (anciennes versions) : retirés.
   rmSync(wrapperDir(opts.userData), { recursive: true, force: true })
   const installed: string[] = []
   const skipped: string[] = []

@@ -1,5 +1,5 @@
 /**
- * Handlers `collections.*` (WP-12) : arbre avec couvertures, création, édition (cycle refusé),
+ * Handlers `collections.*` : arbre avec couvertures, création, édition (cycle refusé),
  * suppression (pierres tombales des descendants), réordonnancement, ajout / retrait d'éléments.
  */
 import { AppError } from '../../../shared/errors'

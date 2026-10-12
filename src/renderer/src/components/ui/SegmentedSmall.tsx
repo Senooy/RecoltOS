@@ -1,5 +1,5 @@
 /**
- * `SegmentedSmall` (DESIGN §4.3) : petit segmenté pour Réglages (Clair / Sombre / Système) et
+ * `SegmentedSmall` : petit segmenté pour Réglages (Clair / Sombre / Système) et
  * filtres de période. Radix ToggleGroup `single` (groupe de boutons radio) ; un clic sur le
  * segment actif ne le désélectionne jamais.
  */

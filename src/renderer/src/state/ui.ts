@@ -1,6 +1,6 @@
 /**
  * État d'interface (zustand) : route, calques, sélection, glisser interne, colonnes par vue,
- * graine de recherche (`ui.openSearch`, ERRATA §B).
+ * graine de recherche (`ui.openSearch`).
  */
 import { create } from 'zustand'
 import { SortMode, type LibraryTab } from '../../../shared/enums'

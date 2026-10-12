@@ -1,5 +1,5 @@
 /**
- * `PaletteIndex` (ARCHI §8, AI §9.2) : palettes de la bibliothèque en mémoire — `Float32Array`
+ * `PaletteIndex` : palettes de la bibliothèque en mémoire — `Float32Array`
  * n × 8 × 3 (Lab D65) + poids n × 8 (`palette_weights`, sinon pondération par le rang) + objets
  * `{mode:'lab65'}` pour culori, créés une fois. Reconstruit paresseusement après `items.changed`
  * (`invalidatePaletteIndex`, appelé par `events.ts`). Une base = un index.

@@ -1,5 +1,5 @@
 /**
- * Vitest (QA §5.1) : trois projets.
+ * Vitest : trois projets.
  *  - `unit`     : Node, processus enfants (`forks`), `tests/unit/**`, `src/**` et les auto-tests de l'outillage.
  *  - `renderer` : happy-dom, `tests/renderer/**`.
  *  - `real`     : `tests/real/**`, séquentiel, ignoré sauf si `RECOLTOS_REAL_LIBRARY` est défini

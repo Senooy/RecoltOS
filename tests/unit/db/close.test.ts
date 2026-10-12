@@ -52,7 +52,7 @@ function setup() {
   return { root, file, lib, hooks, order, reopen, warn }
 }
 
-describe('closeLibrary (ARCHI §4.6)', () => {
+describe('closeLibrary', () => {
   it('pause des jobs → arrêt des workers → checkpoint TRUNCATE → fermeture ; -wal vide', async () => {
     const { lib, file, order, reopen } = setup()
     const res = await closeLibrary(lib, { forReplace: true, jobsDrainTimeoutMs: 1234 })

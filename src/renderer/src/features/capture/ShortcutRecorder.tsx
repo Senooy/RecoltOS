@@ -1,5 +1,5 @@
 /**
- * `ShortcutRecorder` (DESIGN §3.10, SPACES §2.2) : 3 key caps 24×22 (⌘ ⇧ S) ; clic = écoute de
+ * `ShortcutRecorder` : 3 key caps 24×22 (⌘ ⇧ S) ; clic = écoute de
  * la prochaine combinaison (Échap annule) ; accélérateur positionnel (`e.code`), libellé de la
  * touche imprimée (`getLayoutMap()`) ; application immédiate (`capture.setShortcut`), erreur inline.
  */

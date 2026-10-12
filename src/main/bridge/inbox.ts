@@ -1,5 +1,5 @@
 /**
- * Spool `inbox/` (SYNC §1.4) : quand l'app est fermée, l'hôte natif y écrit les `save.create` (média
+ * Spool `inbox/` : quand l'app est fermée, l'hôte natif y écrit les `save.create` (média
  * ≤ 8 Mio) de façon atomique. Au démarrage, les fichiers sont ingérés dans l'ordre chronologique
  * (nom = `<horodatage>-<id>.json`) puis supprimés ; le dossier est ensuite surveillé.
  * Un fichier illisible ou refusé est déplacé dans `inbox/rejets/` (jamais perdu, jamais rejoué).

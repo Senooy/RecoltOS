@@ -1,5 +1,5 @@
 /**
- * Progression d'un import (`evt:ingest.progress`) dans une pilule bas-centre (SPACES §3.1),
+ * Progression d'un import (`evt:ingest.progress`) dans une pilule bas-centre,
  * affichée au-delà de 3 fichiers, masquée à la fin.
  */
 import { useEffect, useState } from 'react'

@@ -1,5 +1,5 @@
 /**
- * M4 (WP-44) avec les FAUX CLI (`tests/helpers/fake-bin/{claude,codex}`), jamais les vrais :
+ * M4 avec les FAUX CLI (`tests/helpers/fake-bin/{claude,codex}`), jamais les vrais :
  * consentement exigé avant tout appel, feuille « Changer », génération sur une image depuis le
  * panneau Détails (description, tags en chips, OCR), aperçu de l'envoi, journal.
  */

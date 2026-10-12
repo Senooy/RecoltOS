@@ -1,5 +1,5 @@
 /**
- * DTO capture (SPACES §2.3-2.4, PLAN §4.3), `saveId` → `itemUuid`.
+ * DTO capture, `saveId` → `itemUuid`.
  */
 import { z } from 'zod'
 import { Uuid } from '../enums'

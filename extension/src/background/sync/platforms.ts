@@ -1,5 +1,5 @@
 /**
- * Clients de sync par plateforme, exécutés depuis l'ARRIÈRE-PLAN (ERRATA §G.2, §G.3) :
+ * Clients de sync par plateforme, exécutés depuis l'ARRIÈRE-PLAN :
  * - X : client web « x-web » (requêtes Relay persistées) : `GET x.com/i/api/graphql/<id>/bookmarksQuery
  *   ?variables=…` (cookie `ct0` → `x-csrf-token`, jeton public du client web). Configuration résolue
  *   dans l'ordre : gabarit capturé par le hook → cache `storage.local` (revalidé par la version du

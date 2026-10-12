@@ -1,6 +1,6 @@
 /**
- * Contrat `rediscover.*` (PLAN §1.10, AI §10) : tirage pondéré + `rediscover_log` + cooldowns.
- * Collections proposées = 3 plus récemment utilisées (ERRATA §G).
+ * Contrat `rediscover.*` : tirage pondéré + `rediscover_log` + cooldowns.
+ * Collections proposées = 3 plus récemment utilisées.
  */
 import { z } from 'zod'
 import { ItemCard, NamedRef } from '../dto/items'

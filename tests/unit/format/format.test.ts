@@ -21,7 +21,7 @@ const DAY = 24 * HOUR
 const NOW = Date.UTC(2026, 9, 11, 12, 0, 0)
 
 beforeAll(() => {
-  // DESIGN §0 : tests sous TZ=Europe/Paris (les fonctions acceptent aussi un fuseau explicite).
+  // tests sous TZ=Europe/Paris (les fonctions acceptent aussi un fuseau explicite).
   process.env.TZ = 'Europe/Paris'
 })
 

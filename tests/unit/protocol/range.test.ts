@@ -1,5 +1,5 @@
 /**
- * WP-05 — analyse de l'en-tête Range (ARCHI §2.5).
+ * analyse de l'en-tête Range.
  */
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'

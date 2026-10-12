@@ -1,5 +1,5 @@
 /**
- * Lecture tolérante de la copie de `moodmark.db` (ARCHI §6.3 phase `read`) : `z.looseObject`,
+ * Lecture tolérante de la copie de `moodmark.db` (phase `read`) : `z.looseObject`,
  * colonnes absentes = `null`. Aucune écriture : la copie est ouverte en lecture seule.
  */
 import Database from 'better-sqlite3'

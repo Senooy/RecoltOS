@@ -1,5 +1,5 @@
 /**
- * Ramasse-miettes des assets Spaces (SPACES §1.7.3) : supprime les fichiers de
+ * Ramasse-miettes des assets Spaces : supprime les fichiers de
  * `spaces/assets/<ab>/` dont l'empreinte n'apparaît dans aucun `space_nodes.asset_rel`
  * (dérivés `.thumb.*` / `.orig.*` compris), et les fichiers temporaires de `tmp/spaces/`.
  * Lancé UNIQUEMENT à l'ouverture de la bibliothèque : l'annulation d'une session en cours peut

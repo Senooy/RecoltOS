@@ -1,9 +1,9 @@
 /**
- * `Menu` (DESIGN §3.9, §1.9) : menus Radix stylés, DropdownMenu et ContextMenu (jamais de menu
+ * `Menu` : menus Radix stylés, DropdownMenu et ContextMenu (jamais de menu
  * natif). Items `default` / `danger` / `checkbox` / `sub`. Gabarit : 200 px min, padding 5, rayon 10,
  * items de 28 px (rayon 6, gap 10, icône 15 px, libellé 13,5 px), sans séparateurs par défaut.
  * Animation : opacity + scale .97→1 depuis l'origine Radix (140 ms / 100 ms) ; fondu seul en
- * mouvement réduit (`ui.css`). Le contenu est explicitement `app-no-drag` (§2.1).
+ * mouvement réduit (`ui.css`). Le contenu est explicitement `app-no-drag`.
  *
  * Usage : `<Menu.Dropdown.Root> … <Menu.Dropdown.Content> <Menu.Dropdown.Item icon={…}>…`.
  */

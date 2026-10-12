@@ -1,5 +1,5 @@
 /**
- * Fixture e2e `demoLibrary` + `openDbReadonly()` (QA §6.1) et import des helpers sous Playwright (CJS) :
+ * Fixture e2e `demoLibrary` + `openDbReadonly()` et import des helpers sous Playwright (CJS) :
  * le barrel `../helpers` et `demo-library` doivent se charger sans `import.meta`.
  */
 import { existsSync } from 'node:fs'

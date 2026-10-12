@@ -1,5 +1,5 @@
 /**
- * Handlers `ingest.*` (WP-10, WP-34) : `files` (glisser-déposer, menu Importer), sélecteurs de
+ * Handlers `ingest.*` : `files` (glisser-déposer, menu Importer), sélecteurs de
  * fichiers et de dossier (confirmation au-delà de 200 fichiers), URL, presse-papiers (⌘V).
  */
 import { BrowserWindow, dialog, type OpenDialogOptions } from 'electron'
@@ -28,7 +28,7 @@ async function pick(ctx: HandlerContext, folder: boolean): Promise<string[] | nu
   return res.canceled || res.filePaths.length === 0 ? null : res.filePaths
 }
 
-/** « Importer 1 243 fichiers ? » au-delà de 200 fichiers (SPACES §3.1). */
+/** « Importer 1 243 fichiers ? » au-delà de 200 fichiers. */
 function confirmer(ctx?: HandlerContext) {
   return async (count: number): Promise<boolean> => {
     const options = {
@@ -92,7 +92,7 @@ export const ingestHandlers: DomainHandlers<'ingest'> = {
     return paths ? run(paths, input.collectionUuid, ctx) : null
   },
   'ingest.url': ({ url, collectionUuid }) => single({ type: 'url', url }, collectionUuid, url),
-  /** ⌘V (SPACES §3.2) : fichiers du Finder, puis image, puis URL ; `null` si rien d'utilisable. */
+  /** ⌘V : fichiers du Finder, puis image, puis URL ; `null` si rien d'utilisable. */
   'ingest.clipboard': async ({ collectionUuid }, ctx) => {
     const files = await readClipboardFiles()
     if (files.length > 0) return run(files, collectionUuid, ctx)

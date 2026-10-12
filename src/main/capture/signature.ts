@@ -1,5 +1,5 @@
 /**
- * Nature de la signature de l'app (SPACES §2.4) : `codesign -dv --verbose=2 <bundle>` →
+ * Nature de la signature de l'app : `codesign -dv --verbose=2 <bundle>` →
  * `adhoc` (« Signature=adhoc »), `identity` (Authority=…), `unsigned`, ou `dev` (non empaquetée).
  */
 import { execFile } from 'node:child_process'

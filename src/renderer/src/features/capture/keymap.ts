@@ -1,5 +1,5 @@
 /**
- * Raccourci de capture depuis un `KeyboardEvent` (SPACES §2.2) : accélérateur **positionnel**
+ * Raccourci de capture depuis un `KeyboardEvent` : accélérateur **positionnel**
  * (construit depuis `e.code`, jamais `e.key`), libellé de la touche imprimée via `getLayoutMap()`.
  * Exemple AZERTY : la touche imprimée « A » est `KeyQ` → accélérateur `…+Q`, key cap « A ».
  */
@@ -76,7 +76,7 @@ export function eventToAccelerator(
   return { accel: [...mods, key].join('+'), label }
 }
 
-/** Key caps affichés (⌘ ⇧ S, comme `kgogfx`). */
+/** Key caps affichés (⌘ ⇧ S). */
 export function accelToCaps(accel: string, label: string): string[] {
   const parts = accel.split('+')
   const mods = parts.slice(0, -1)

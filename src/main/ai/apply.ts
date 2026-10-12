@@ -1,5 +1,5 @@
 /**
- * Application des résultats (AI §7) en UNE transaction, conditionnée à `deleted_at IS NULL` :
+ * Application des résultats en UNE transaction, conditionnée à `deleted_at IS NULL` :
  * description, OCR (si non vide, ou si `force`), titre IA (`ai_title` toujours ; `title` selon la
  * politique), tags `source='ai'` (les tags `user` / `import` ne sont jamais touchés), `ai_lang='fr'`.
  * La FTS suit par les triggers de 0001 (`items` : title, ocr_text, ai_description, ai_tags ;

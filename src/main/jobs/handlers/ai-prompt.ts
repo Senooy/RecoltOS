@@ -1,5 +1,5 @@
 /**
- * Handler du job `ai.prompt` (WP-43) : prompt d'image à la demande, via le service IA.
+ * Handler du job `ai.prompt` : prompt d'image à la demande, via le service IA.
  */
 import { AppError } from '../../../shared/errors'
 import { getAiService } from '../../ai/service'

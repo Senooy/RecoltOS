@@ -1,4 +1,4 @@
-/** Contrat `bridge.*` (PLAN §4.4, ERRATA §G.2) : clients connectés, navigateurs, extension, GatherOS. */
+/** Contrat `bridge.*` : clients connectés, navigateurs, extension, GatherOS. */
 import { z } from 'zod'
 import { BridgeClient, BrowserInfo, ExtensionInfo, GatherOSPresence } from '../dto/sync'
 import { Empty, Void, type ContractShape } from './define'

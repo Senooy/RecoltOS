@@ -1,4 +1,4 @@
-// Fixture WP-03 : réécrit une image en HEIC avec une orientation (ImageIO), comme une photo
+// Fixture réécrit une image en HEIC avec une orientation (ImageIO), comme une photo
 // d'iPhone tenue en portrait. Usage : swift heic-orient.swift <src> <dst.heic> <orientation>
 import Foundation
 import ImageIO

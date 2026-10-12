@@ -1,5 +1,5 @@
 /**
- * Étagère 3D des collections (DESIGN §3.4, WP-21) : fond noir plein cadre + `Starfield`, libellés
+ * Étagère 3D des collections : fond noir plein cadre + `Starfield`, libellés
  * à y≈104 au pas de 122 px depuis x≈150, couvertures `.cover-face` 410×700 en `rotateY(-35deg)`
  * (média `large`, post texte en `TweetCard cover` blanche, vidéos `preview` muettes en boucle : au
  * plus 4, les plus proches du centre, plus la couverture survolée ; jamais l'original). Entrée en
@@ -34,7 +34,7 @@ import { TweetCard } from '../../grid/cards/TweetCard'
 import { Starfield } from './Starfield'
 import '../../../styles/shelf.css'
 
-/** Géométrie (DESIGN §3.4). */
+/** Géométrie. */
 export const SHELF_PAD_LEFT = 152
 export const SHELF_STEP = 122
 export const SHELF_LABEL_X = 150

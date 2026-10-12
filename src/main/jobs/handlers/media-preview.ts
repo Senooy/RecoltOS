@@ -1,5 +1,5 @@
 /**
- * Job `media.preview` (PLAN §1.6) : aperçu de survol `previews/<ab>/<uuid>.mp4`, 540p, ≤ 8 s, muet
+ * Job `media.preview` : aperçu de survol `previews/<ab>/<uuid>.mp4`, 540p, ≤ 8 s, muet
  * (`h264_videotoolbox`, repli libx264, dans le media-worker). Sans ffmpeg : `tool_missing`.
  */
 import { mkdir } from 'node:fs/promises'

@@ -1,5 +1,5 @@
 /**
- * Menu natif FR construit depuis `src/shared/shortcuts.ts` (DESIGN §3.13, WP-13). Chaque item porte
+ * Menu natif FR construit depuis `src/shared/shortcuts.ts`. Chaque item porte
  * l'`id` de son raccourci (les scènes visuelles le déclenchent par `getMenuItemById`). Annuler,
  * Rétablir, Tout sélectionner et Zoom sont des items PERSONNALISÉS (pas de `role`) qui relaient
  * `evt:menu.command` : le renderer décide (champ texte → `system.edit`, sinon pile de l'app).
@@ -16,8 +16,8 @@ const accelOf = (id: string): string | undefined => {
 
 export interface MenuOverrides {
   /**
-   * Accélérateur de « Capturer l'écran » (WP-33) : celui du réglage si la touche imprimée
-   * correspond (SPACES §2.2), `null` = aucun (le raccourci global reste actif).
+   * Accélérateur de « Capturer l'écran » : celui du réglage si la touche imprimée
+   * correspond, `null` = aucun (le raccourci global reste actif).
    */
   capture?: string | null
 }
@@ -106,7 +106,7 @@ export function buildMenuTemplate(
         cmd('toggleTheme', 'Basculer le thème'),
         { type: 'separator' },
         cmd('zoomIn', 'Zoom avant'),
-        // Item caché : `⌘=` (sans Maj) zoome aussi (DESIGN §3.13).
+        // Item caché : `⌘=` (sans Maj) zoome aussi.
         {
           id: 'zoomInAlt',
           label: 'Zoom avant',

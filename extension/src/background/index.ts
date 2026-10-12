@@ -1,6 +1,6 @@
 /**
- * Script d'arrière-plan (service worker Chromium, page d'événements Firefox) — SYNC §1.8, §2.6,
- * ERRATA §G.2. Tous les écouteurs sont posés au niveau supérieur, de façon synchrone ; l'alarme
+ * Script d'arrière-plan (service worker Chromium, page d'événements Firefox),
+ * Tous les écouteurs sont posés au niveau supérieur, de façon synchrone ; l'alarme
  * `watchdog` est vérifiée à chaque démarrage (reconnexion du port, reprise de la sync).
  */
 import type { BridgeCollection, SaveAck } from '../../../src/shared/bridge/save'

@@ -1,5 +1,5 @@
 /**
- * Choix de la cible d'exécution (remplace SYNC §2.8, ERRATA §G.2). L'ARRIÈRE-PLAN est toujours la
+ * Choix de la cible d'exécution (remplace). L'ARRIÈRE-PLAN est toujours la
  * cible principale, pour les trois plateformes et tous les déclencheurs. Replis, seulement si la
  * requête d'arrière-plan est REFUSÉE (`blocked`) : un onglet de la plateforme déjà ouvert (jamais
  * rechargé ni mis au premier plan), puis un onglet créé en arrière-plan UNIQUEMENT si l'option

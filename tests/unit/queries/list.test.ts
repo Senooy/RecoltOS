@@ -1,5 +1,5 @@
 /**
- * WP-12 : requêtes de liste (portées, 7 tris keyset), compteurs, couvertures, DTO sans http(s),
+ * requêtes de liste (portées, 7 tris keyset), compteurs, couvertures, DTO sans http(s),
  * purge automatique.
  */
 import { afterEach, describe, expect, it } from 'vitest'

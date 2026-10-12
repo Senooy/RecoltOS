@@ -1,5 +1,5 @@
 /**
- * Barre de sélection (DESIGN §2.7) : pilule flottante « 3 sélectionnés » + actions (Ajouter à…,
+ * Barre de sélection : pilule flottante « 3 sélectionnés » + actions (Ajouter à…,
  * Masquer, Télécharger, Supprimer) ; Échap ou `X` désélectionne.
  */
 import { X } from 'lucide-react'

@@ -1,6 +1,6 @@
 /**
  * File d'attente des fichiers ouverts avant que le domaine import-ux soit prêt
- * (`open-file` arrive parfois avant `ready` sur macOS). Consommé par `import-ux/init.ts` (WP-34).
+ * (`open-file` arrive parfois avant `ready` sur macOS). Consommé par `import-ux/init.ts`.
  */
 
 import path from 'node:path'
@@ -37,7 +37,7 @@ const SCRIPT_ENTRY_RE = /\.[cm]?js$/i
 /**
  * Chemins de fichiers dans un argv de `second-instance` (on ignore les options, l'exécutable en
  * `argv[0]`, l'entrée du script en `argv[1]` et tout chemin situé dans le dossier de l'app).
- * WP-34 vérifie encore l'existence et le type (fichier ou dossier) avant d'importer.
+ * vérifie encore l'existence et le type (fichier ou dossier) avant d'importer.
  */
 export function filesFromArgv(argv: readonly string[], opts: FilesFromArgvOptions = {}): string[] {
   const appPath = opts.appPath ? path.resolve(opts.appPath) : null

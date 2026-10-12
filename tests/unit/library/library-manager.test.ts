@@ -652,7 +652,7 @@ describe('isSyncedFolder : casse ignorée, anciens dossiers cloud', () => {
   })
 })
 
-describe('revue WP-02 : bibliothèque disparue, dossiers gérés', () => {
+describe('bibliothèque disparue, dossiers gérés', () => {
   it('bibliothèque hors default dont le dossier a disparu : refusée, jamais recréée vide', async () => {
     const m = make()
     await m.open()

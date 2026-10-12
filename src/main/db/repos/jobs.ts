@@ -1,6 +1,6 @@
 /**
- * Repo `jobs` (ARCHI §5.3, PLAN §1.3) : primitives SQL de la file unique (`priority DESC`).
- * L'ordonnancement (boucles par type, concurrence, pauses, handlers) appartient à WP-10
+ * Repo `jobs` : primitives SQL de la file unique (`priority DESC`).
+ * L'ordonnancement (boucles par type, concurrence, pauses, handlers) appartient
  * (`jobs/queue.ts`).
  */
 import type Database from 'better-sqlite3'
@@ -113,7 +113,7 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return row.id
     },
 
-    /** Prend le prochain job prêt d'un type (ARCHI §5.3) et le passe en `running`. */
+    /** Prend le prochain job prêt d'un type et le passe en `running`. */
     claimNext(type: JobType, at: number = now()): JobRecord | null {
       const row = q(
         `UPDATE jobs SET state = 'running', attempts = attempts + 1, updated_at = @now

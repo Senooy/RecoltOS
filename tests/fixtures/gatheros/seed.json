@@ -1,5 +1,5 @@
 {
-  "doc": "Fixture GatherOS anonymisée (QA §5.2), générée par scripts/extract-gatheros-fixture.mts. Aucune donnée réelle.",
+  "doc": "Fixture GatherOS anonymisée, générée par scripts/extract-gatheros-fixture.mts. Aucune donnée réelle.",
   "userVersion": 17,
   "saves": [
     {

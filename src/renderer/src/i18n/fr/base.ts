@@ -1,8 +1,8 @@
 /**
- * Textes de base (DESIGN §5.2, extrait normatif) en tutoiement (PLAN §1.20), complétés pour
- * `capture`, `sync`, `ai`, `spaces`. Possédé par WP-00 puis Fable. Les lots UI ajoutent leurs
+ * Textes de base (extrait normatif) en tutoiement, complétés pour
+ * `capture`, `sync`, `ai`, `spaces`. Les domaines UI ajoutent leurs
  * namespaces dans `fr/<domaine>.ts` (agrégés par `fr.ts`), sans redéfinir ceux-ci.
- * « Recherche visuelle » retirée (ERRATA §G).
+ * « Recherche visuelle » retirée.
  */
 import { plural } from '../plural'
 

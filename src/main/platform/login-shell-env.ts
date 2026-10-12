@@ -1,5 +1,5 @@
 /**
- * Environnement du shell de login (ARCHI §2.6) : une app lancée depuis le Finder hérite d'un
+ * Environnement du shell de login : une app lancée depuis le Finder hérite d'un
  * `PATH` minimal et ne voit ni `claude`, ni `codex`, ni `/opt/homebrew/bin/ffmpeg`.
  * On interroge `zsh -lic` (timeout 5 s) ; chaque outil est imprimé sur une ligne balisée pour
  * résister aux sorties parasites de `.zshrc` (invites, extensions) et aux outils absents.

@@ -1,5 +1,5 @@
 /**
- * Fenêtre « stage » (SPACES §1.9, WP-63) : `offscreen.html?render=space-stage`, sans preload, jamais
+ * Fenêtre « stage » : `offscreen.html?render=space-stage`, sans preload, jamais
  * `window.recolt`. Le main y pousse le document (`__stage.load(spec)`, données JSON) puis place la
  * caméra tuile par tuile (`__stage.show(camera)`) avant chaque `capturePage`. Rendu = les mêmes
  * composants de nœuds que l'éditeur (cartes de post, notes, formes, texte), sans chrome, sans

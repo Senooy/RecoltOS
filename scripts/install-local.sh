@@ -1,5 +1,5 @@
 #!/bin/sh
-# Installe le build local de RecoltOS dans /Applications (QA §8.6).
+# Installe le build local de RecoltOS dans /Applications.
 # Prérequis : `pnpm run dist` (ou `pnpm run pack`) a produit dist/mac-arm64/RecoltOS.app.
 # Variables : RECOLTOS_INSTALL_DIR (défaut /Applications ; relatif = depuis le dossier d'appel),
 # RECOLTOS_NO_OPEN=1 (n'ouvre pas l'app).
@@ -10,7 +10,7 @@ set -eu
 
 # Garde-fou tests : sous Vitest ou NODE_ENV=test, l'installation doit viser un dossier explicite (jamais
 # /Applications par défaut) et ne doit pas ouvrir l'app. Évite de relancer l'app empaquetée sans
-# RECOLTOS_USER_DATA, comme lors de l'incident de test décrit dans docs/spikes/s2-signature.md.
+# RECOLTOS_USER_DATA.
 if [ -n "${VITEST:-}" ] || [ "${NODE_ENV:-}" = "test" ]; then
   if [ -z "${RECOLTOS_INSTALL_DIR:-}" ]; then
     echo "install-local : refus sous test sans RECOLTOS_INSTALL_DIR (pas de /Applications depuis un test)." >&2
@@ -67,8 +67,7 @@ if ! codesign --verify --deep --strict --verbose=1 "$STAGE"; then
 fi
 # Identité explicite demandée : l'exigence désignée doit s'appuyer sur le certificat, pas sur un cdhash
 # (electron-builder peut produire un build ad hoc en silence si l'identité est introuvable).
-# Critère « certificate leaf » : correct pour un auto-signé et pour Apple Development (certificate leaf[subject.CN]),
-# mais NON encore prouvé avec le vrai certificat « RecoltOS Local » : à valider en WP-0F (docs/spikes/s2-signature.md).
+# Critère « certificate leaf » : correct pour un auto-signé et pour Apple Development (certificate leaf[subject.CN]).
 if [ -n "${RECOLTOS_SIGN_IDENTITY:-}" ] && [ "${RECOLTOS_SIGN_IDENTITY}" != "-" ]; then
   if ! codesign -dr - "$STAGE" 2>&1 | grep -q "certificate leaf"; then
     echo "install-local : RECOLTOS_SIGN_IDENTITY est défini mais le build est en signature ad hoc (cdhash)." >&2

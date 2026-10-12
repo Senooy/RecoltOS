@@ -1,5 +1,5 @@
 /**
- * Fenêtres hors écran (ERRATA §B) : capture de page, rendu de carte post, stage Spaces.
+ * Fenêtres hors écran : capture de page, rendu de carte post, stage Spaces.
  * Partition non persistante `recolt-offscreen-<n>`, sandbox, SANS preload (jamais
  * `window.recolt`), permissions refusées, navigation initiée par la page et téléchargements
  * bloqués, délai de 20 s, destruction après usage.
@@ -58,7 +58,7 @@ const partitionPool: string[] = []
 /**
  * Configuration additionnelle de chaque session hors écran. `protocol.handle` ne vaut que pour la
  * session sur laquelle il est appelé : sans ce point d'accroche, `recolt://` (avatars et médias de
- * la carte de post, vignettes du stage Spaces) échoue dans les partitions hors écran. WP-05 y
+ * la carte de post, vignettes du stage Spaces) échoue dans les partitions hors écran. y
  * enregistre `recolt:` (lecture seule, mêmes racines que la session par défaut).
  * La fonction est appelée sur chaque partition créée, et sur celles déjà créées à l'enregistrement.
  */

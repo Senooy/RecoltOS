@@ -1,5 +1,5 @@
 /**
- * `SaveRequest` (SYNC §6.2), accusé, envoi découpé et collections. Possédé par WP-51.
+ * `SaveRequest`, accusé, envoi découpé et collections.
  */
 import { z } from 'zod'
 import { MAX_INLINE_BASE64_CHARS, MAX_UPLOAD_BYTES } from './constants'

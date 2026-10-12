@@ -4,7 +4,7 @@ import { makeSyntheticLibrary } from './synthetic-items'
 import { makeTmpDir } from './tmpdir'
 import { join } from 'node:path'
 
-describe('nameKeyOf (tri « Nom », ARCHI §4.3)', () => {
+describe('nameKeyOf (tri « Nom »)', () => {
   it('NFD sans accents et minuscules, comme la production', () => {
     expect(nameKeyOf('Lumière')).toBe('lumiere')
     expect(nameKeyOf('Récolte BRUME')).toBe('recolte brume')

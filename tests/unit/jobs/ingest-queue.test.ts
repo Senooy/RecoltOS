@@ -1,5 +1,5 @@
 /**
- * WP-10 : ingestion, file de jobs, dérivés, téléchargements distants (critères du lot).
+ * ingestion, file de jobs, dérivés, téléchargements distants .
  */
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'

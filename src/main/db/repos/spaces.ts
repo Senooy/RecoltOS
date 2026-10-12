@@ -1,6 +1,6 @@
 /**
- * Repo de base `spaces` + `space_nodes` (schéma complet dès 0001, PLAN §1.11). Le domaine Spaces
- * (WP-60 : `src/main/spaces/repo.ts`, lots `applyBatch`, assets, GC) s'appuie sur ces primitives.
+ * Repo de base `spaces` + `space_nodes` (schéma complet dès 0001). Le domaine Spaces
+ * (`src/main/spaces/repo.ts`, lots `applyBatch`, assets, GC) s'appuie sur ces primitives.
  */
 import type Database from 'better-sqlite3'
 import { newUuid } from '../../../shared/ids'

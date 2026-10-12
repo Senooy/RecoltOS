@@ -1,5 +1,5 @@
 /**
- * Garde de `recolt://` sur les sessions hors écran (WP-05).
+ * Garde de `recolt://` sur les sessions hors écran.
  *
  * Les partitions hors écran (parc recyclé de `windows/offscreen.ts`) servent à la fois aux routes
  * internes (`offscreen.html?render=tweet-card|space-stage`, qui ont besoin de `recolt://`) et à la

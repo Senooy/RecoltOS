@@ -1,5 +1,5 @@
 /**
- * Banc des requêtes du main (ARCHI §8, QA §11.3 ; WP-71), directement sur une base (sans IPC) :
+ * Banc des requêtes du main, directement sur une base (sans IPC) :
  * page de liste (première, suivante, onglets, tri), compteurs (sans cache), FTS (`runSearch`),
  * `EXPLAIN QUERY PLAN` des requêtes chaudes, `PRAGMA optimize` et `wal_checkpoint` sur une copie.
  *

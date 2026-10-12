@@ -1,6 +1,6 @@
 /**
- * Types IA (AI §3.1, renommages PLAN §1.1 : `saveId` → `itemUuid`). Recherche visuelle supprimée (ERRATA §G).
- * Interdits : mode « bare » de claude ; codex toujours isolé ; aucun appel sans consentement (PLAN §2.5).
+ * Types IA (renommages : `saveId` → `itemUuid`). Recherche visuelle supprimée.
+ * Interdits : mode « bare » de claude ; codex toujours isolé ; aucun appel sans consentement.
  */
 import { z } from 'zod'
 
@@ -79,7 +79,7 @@ export interface AiCallOptions {
   jobId?: number
   /** Dossier du job (`<sandbox>/jobs/<id>`) : JPEG préparés, `schema.json`, `out.json` (codex). */
   jobDir?: string
-  /** 2ᵉ essai après une sortie invalide : prompt renforcé (AI §5.4). */
+  /** 2ᵉ essai après une sortie invalide : prompt renforcé. */
   retry?: boolean
 }
 
@@ -163,5 +163,5 @@ export const PauseReason = z.enum([
 ])
 export type PauseReason = z.output<typeof PauseReason>
 
-/** Version du texte de consentement (AI §11) : la changer redemande l'accord. */
+/** Version du texte de consentement : la changer redemande l'accord. */
 export const AI_CONSENT_VERSION = 1

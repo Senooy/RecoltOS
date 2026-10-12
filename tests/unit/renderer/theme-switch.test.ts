@@ -1,5 +1,5 @@
 /**
- * Bascule de thème instantanée (WP-70) : `data-theme-switching` coupe les transitions pendant
+ * Bascule de thème instantanée : `data-theme-switching` coupe les transitions pendant
  * l'image du changement, puis disparaît ; aucun marquage quand le thème ne change pas.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'

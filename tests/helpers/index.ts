@@ -1,5 +1,5 @@
 /**
- * Point d'entrée des helpers de test (QA §5.1). Importable depuis vitest ET depuis Playwright (qui
+ * Point d'entrée des helpers de test. Importable depuis vitest ET depuis Playwright (qui
  * charge les fichiers de test en CJS) : aucun `import.meta` ici ni dans les modules réexportés.
  */
 import { join } from 'node:path'

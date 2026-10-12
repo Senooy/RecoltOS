@@ -1,4 +1,4 @@
-/** Prettier (QA §4.3). */
+/** Prettier. */
 export default {
   semi: false,
   singleQuote: true,

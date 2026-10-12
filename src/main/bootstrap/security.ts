@@ -1,5 +1,5 @@
 /**
- * Sécurité des WebContents (ARCHI §2.4) : pas de nouvelle fenêtre, pas de navigation,
+ * Sécurité des WebContents : pas de nouvelle fenêtre, pas de navigation,
  * pas de <webview>, permissions refusées sauf plein écran vidéo et écriture presse-papiers.
  * Les liens externes passent par `system.openExternal` (http(s) seulement).
  */

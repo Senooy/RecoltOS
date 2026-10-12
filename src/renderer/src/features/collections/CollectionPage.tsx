@@ -1,5 +1,5 @@
 /**
- * Vue Collection (DESIGN §3.3, WP-20) : sous-barre (retour Ø30 à x=33, titre éditable en ligne,
+ * Vue Collection : sous-barre (retour Ø30 à x=33, titre éditable en ligne,
  * menu « … », curseur de colonnes et tri persistés par collection), label « DANS CETTE
  * COLLECTION » à y≈180, pilules de sous-collections + « Nouvelle collection » (36 px), masonry à
  * y≈257 avec le menu contextuel « collection ». Ouvrir la collection met à jour son `viewed_at`.

@@ -1,5 +1,5 @@
 /**
- * Auteurs des publications synchronisées (SYNC §4.3, §6.5 règle 5) : cache d'avatars par
+ * Auteurs des publications synchronisées : cache d'avatars par
  * `(plateforme, handle)` (une URL fraîche remet le téléchargement en file), `sample_external_id`
  * (pour `item.refresh`), liste `wantedAuthors` envoyée à l'extension (auteurs sans avatar valide).
  */

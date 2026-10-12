@@ -1,6 +1,6 @@
 /**
- * Fenêtre principale (PLAN §1.13, DESIGN §2.1, ARCHI §2.4) et poignée de fermeture
- * (SPACES §1.7.1 : vidage du renderer avant ⌘W/⌘Q, 2 s max).
+ * Fenêtre principale et poignée de fermeture
+ * (vidage du renderer avant ⌘W/⌘Q, 2 s max).
  */
 import { BrowserWindow, app, ipcMain, nativeTheme, screen } from 'electron'
 import { randomUUID } from 'node:crypto'

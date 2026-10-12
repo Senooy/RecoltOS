@@ -1,4 +1,4 @@
-/** WP-24 : l'instantané quotidien est planifié pour la bibliothèque déjà ouverte au démarrage. */
+/** l'instantané quotidien est planifié pour la bibliothèque déjà ouverte au démarrage. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { initData, DAILY_DELAY_MS } from '../../../src/main/data/init'
 import * as snapshots from '../../../src/main/data/snapshots'

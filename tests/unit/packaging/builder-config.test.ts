@@ -123,7 +123,7 @@ describe('electron-builder.config.cjs', () => {
     )
   })
 
-  it("n'embarque ni ffmpeg, ni modèle, ni onnxruntime (PLAN §1.16, ERRATA §G)", () => {
+  it("n'embarque ni ffmpeg, ni modèle, ni onnxruntime", () => {
     const c = loadConfig()
     const text = JSON.stringify(c)
     expect(text).not.toMatch(/ffmpeg|ffprobe|onnx|\.bin-cache/i)
@@ -158,7 +158,7 @@ describe('electron-builder.config.cjs', () => {
     expect(loadConfig({ RECOLTOS_DIST_PROFILE: 'test' }).directories.output).toBe('dist/test')
   })
 
-  it('exclut l’outillage de build natif et les autres plateformes (WP-72)', () => {
+  it('exclut l’outillage de build natif et les autres plateformes', () => {
     const files = loadConfig().files
     for (const p of [
       '!node_modules/node-addon-api/**',
@@ -188,7 +188,7 @@ describe('icône RecoltOS', () => {
     expect(icns.readUInt32BE(4)).toBe(icns.length)
   })
 
-  it('ne contient aucune référence à la référence dans les scripts et assets du lot', () => {
+  it('scripts de paquet : aucune référence à une autre app', () => {
     for (const rel of [
       'electron-builder.config.cjs',
       'scripts/make-icon.mts',

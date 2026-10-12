@@ -1,4 +1,4 @@
-/** Horloge injectable (QA §5.1 : « horloge injectée ») : avance à la demande, jamais d'`Date.now()` implicite. */
+/** Horloge injectable (« horloge injectée ») : avance à la demande, jamais d'`Date.now()` implicite. */
 export interface FakeClock {
   now: () => number
   advance: (ms: number) => number

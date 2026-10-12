@@ -1,5 +1,5 @@
 /**
- * Handlers `system.*` (ARCHI §2.3, PLAN §4.4), WP-05 :
+ * Handlers `system.*` :
  * revealInFinder, openExternal (http(s) seulement), copyImage (`toPng` du media-worker →
  * `clipboard.write([ClipboardItem image/png])`, poster pour une vidéo), copyText, saveAs, quickLook
  * (`previewFile`), edit (`webContents.<cmd>()`), openLogs, redetectTools, appInfo.

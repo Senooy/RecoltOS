@@ -1,6 +1,6 @@
 /**
- * Handlers `rediscover.*` (WP-32, AI §10) : deck pondéré par pages, actions journalisées,
- * annulation ≤ 10 s. Collections proposées = 3 plus récemment utilisées (ERRATA §G).
+ * Handlers `rediscover.*` : deck pondéré par pages, actions journalisées,
+ * annulation ≤ 10 s. Collections proposées = 3 plus récemment utilisées.
  */
 import { cardRowsByIds } from '../../db/queries/list'
 import { toItemCard } from '../../dto/item-card'

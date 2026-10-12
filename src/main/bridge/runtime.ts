@@ -32,7 +32,7 @@ export function getBridgeRuntime(): BridgeRuntime | null {
   return current
 }
 
-/** Réglages envoyés dans `hello.ack` (fournis par la sync, WP-57). */
+/** Réglages envoyés dans `hello.ack` (fournis par la sync). */
 export type HelloSettingsProvider = () => HelloAck['settings']
 
 const DEFAULT_SETTINGS: HelloAck['settings'] = {

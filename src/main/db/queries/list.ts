@@ -1,7 +1,7 @@
 /**
- * Lectures de liste (ARCHI §7, §8 ; PLAN §1.22) : portées `library` (onglets) et `collection`
+ * Lectures de liste : portées `library` (onglets) et `collection`
  * (membres directs, masqués compris), tris keyset sans `OFFSET` (sauf `random`, par graine),
- * filtres. Les écritures passent par les repos (WP-02).
+ * filtres. Les écritures passent par les repos.
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
@@ -76,17 +76,16 @@ interface SortSpec {
   dir: 'ASC' | 'DESC'
 }
 
-/** Tri d'une portée (ARCHI §7) ; la corbeille trie « récents » par date de suppression. */
+/** Tri d'une portée ; la corbeille trie « récents » par date de suppression. */
 export function sortSpec(
   sort: SortMode,
   _scope: 'library' | 'collection',
   tab: LibraryTab,
 ): SortSpec | null {
   switch (sort) {
-    // En collection aussi, « Plus récents » suit la date de l'élément (fidélité `c7j4tx` : Dev
-    // commence par « Colorful Usage Monitor » puis « Social Media Profile », dans l'ordre des dates
-    // d'ajout à la bibliothèque et non d'entrée dans la collection). Les couvertures, elles, restent
-    // sur `collection_items.added_at` (ERRATA §C).
+    // En collection aussi, « Plus récents » suit la date d'ajout de l'élément à la bibliothèque, et
+    // non sa date d'entrée dans la collection. Les couvertures, elles, restent sur
+    // `collection_items.added_at`.
     case 'recent':
       return { key: tab === 'trash' ? 'i.deleted_at' : 'i.created_at', dir: 'DESC' }
     case 'oldest':
@@ -199,7 +198,7 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
   const where: string[] = []
   let from = CARD_FROM
   // Total : sans les LEFT JOIN de la carte (une ligne par élément quoi qu'il arrive ; les filtres ne
-  // portent que sur `i`). Le compte à travers CARD_FROM coûtait ~2,5 ms sur 10 000 éléments (WP-71).
+  // portent que sur `i`). Le compte à travers CARD_FROM coûtait ~2,5 ms sur 10 000 éléments.
   let countFrom = 'items i'
   if (scope === 'collection') {
     const col = db.prepare('SELECT id FROM collections WHERE uuid = ?').get(inp.collectionUuid) as

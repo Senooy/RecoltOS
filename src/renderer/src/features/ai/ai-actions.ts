@@ -1,5 +1,5 @@
 /**
- * Actions IA réutilisées par le panneau Détails et le menu contextuel (WP-44). Sans moteur ou sans
+ * Actions IA réutilisées par le panneau Détails et le menu contextuel. Sans moteur ou sans
  * consentement, on ouvre la feuille « Changer » au lieu d'appeler.
  */
 import type { AiField } from '../../../../shared/ai-types'

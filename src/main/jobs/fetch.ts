@@ -1,8 +1,8 @@
 /**
- * Téléchargement en flux vers un fichier `.part` (ARCHI §5.2 étape 3) : délai de 60 s, plafond de
+ * Téléchargement en flux vers un fichier `.part` : délai de 60 s, plafond de
  * 2 Go, sha256 calculé pendant l'écriture. Les erreurs HTTP 4xx sont définitives (`http_4xx`), les
  * 5xx et erreurs réseau réessayables. Politiques par CDN (en-têtes, réaction à un refus) via
- * `registerFetchPolicy` (ERRATA §B : la sync WP-56 y enregistre les siennes).
+ * `registerFetchPolicy` (la sync y enregistre les siennes).
  */
 import { createHash } from 'node:crypto'
 import { createWriteStream } from 'node:fs'
@@ -19,7 +19,7 @@ export interface FetchPolicy {
   /** Appelé sur 401/403/410 (session expirée, URL signée périmée…). */
   onAuthError?: (status: number, url: string) => void
   /**
-   * Téléchargement spécifique (ex. liste de lecture HLS → mp4 par ffmpeg `-c copy`, WP-56) : remplace
+   * Téléchargement spécifique (ex. liste de lecture HLS → mp4 par ffmpeg `-c copy`) : remplace
    * le flux HTTP direct. Doit écrire `dst` et rendre le même résultat que `fetchToFile`.
    */
   download?: (url: string, dst: string, opts: FetchToFileOptions) => Promise<FetchedFile>

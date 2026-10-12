@@ -1,10 +1,10 @@
 /**
- * Hôte des workers (ARCHI §2.2) : lance un utilityProcess, RPC `WorkerRequest/Response`,
+ * Hôte des workers : lance un utilityProcess, RPC `WorkerRequest/Response`,
  * redémarrage avec backoff (1 s, 5 s, 30 s) après une sortie inattendue, `stopAll()`
  * (SIGTERM puis kill après 3 s). Aucun worker n'ouvre la base.
  *
  * Après un crash, les requêtes en cours sont rejetées (`worker_crashed`) et signalées à
- * `onCrash` avec leur `jobId` : la file de jobs (WP-10) remet ces jobs en `queued`
+ * `onCrash` avec leur `jobId` : la file de jobs remet ces jobs en `queued`
  * (`UPDATE jobs SET state='queued' … WHERE id IN (…)`, sans consommer de tentative).
  * Les requêtes pas encore envoyées attendent le redémarrage.
  *

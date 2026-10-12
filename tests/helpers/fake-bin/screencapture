@@ -1,5 +1,5 @@
 #!/bin/sh
-# Faux `screencapture` (WP-33) pour les tests : RECOLTOS_SCREENCAPTURE_BIN=<ce fichier>.
+# Faux `screencapture` pour les tests : RECOLTOS_SCREENCAPTURE_BIN=<ce fichier>.
 # FAKE_SCREENCAPTURE_MODE : ok (défaut, PNG 64×40 + sel FAKE_SCREENCAPTURE_SALT) | cancel (Échap :
 # aucun fichier, code 1) | fail (code 2). Journalise ses arguments dans FAKE_SCREENCAPTURE_LOG.
 out=""

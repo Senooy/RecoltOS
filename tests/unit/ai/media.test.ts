@@ -30,7 +30,7 @@ afterAll(() => {
 
 const job = (n: number) => join(a.userData, 'ai-sandbox', 'claude', 'jobs', String(n))
 
-describe('préparation des médias (AI §4)', () => {
+describe('préparation des médias', () => {
   it('JPEG ≤ 1568 px, EXIF retiré', async () => {
     const rel = await writeImage(a.lib, 'items/aa/exif.jpg', '#884422', [3000, 2000])
     const before = await sharp(a.lib.paths.abs(rel)).metadata()

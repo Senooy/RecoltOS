@@ -1,5 +1,5 @@
 /**
- * Réglages › Tags (DESIGN §3.10) : filtre, liste (`#` + nom renommable en ligne + compteur + menu
+ * Réglages › Tags : filtre, liste (`#` + nom renommable en ligne + compteur + menu
  * Renommer / Fusionner avec… / Supprimer), « Nouveau tag ».
  */
 import { Ellipsis, GitMerge, Pencil, Plus, Trash } from 'lucide-react'

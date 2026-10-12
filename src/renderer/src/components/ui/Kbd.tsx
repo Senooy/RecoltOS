@@ -1,5 +1,5 @@
 /**
- * `Kbd` (DESIGN §2.5, §3.10, §3.8) : raccourcis clavier. `xs` (11 px, en-tête), `sm`, `md`
+ * `Kbd` : raccourcis clavier. `xs` (11 px, en-tête), `sm`, `md`
  * (Réglages : une touche = une boîte de 24×22). Mono pour les touches en lettres (« esc »).
  */
 import { cva, type VariantProps } from 'class-variance-authority'

@@ -1,5 +1,5 @@
 /**
- * WP-61 : persistance différée (debounce / attente max, sous-lots de 2 000, `validation` →
+ * persistance différée (debounce / attente max, sous-lots de 2 000, `validation` →
  * quarantaine sans boucle, `busy` → nouvel essai, purge seulement des nœuds inchangés, viewport à
  * part, `flushSync`).
  */

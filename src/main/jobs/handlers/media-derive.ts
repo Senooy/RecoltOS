@@ -1,5 +1,5 @@
 /**
- * Job `media.derive` (ARCHI §5.2 étape 9, PLAN §1.6) : `thumbs/` 800w webp, `large/` 1440w webp,
+ * Job `media.derive` : `thumbs/` 800w webp, `large/` 1440w webp,
  * poster ffmpeg pour une vidéo qui n'en a pas, palette k-means Lab pour le média de couverture
  * sans palette (vidéos importées, nouveaux ajouts), suppression de la miniature GatherOS
  * (`legacy_thumb_rel`), `status='ok'`, `derive_version++`, puis `items.changed{derived}`.

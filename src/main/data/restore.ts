@@ -1,5 +1,5 @@
 /**
- * Restauration d'un instantané (ARCHI §7, §4.6) :
+ * Restauration d'un instantané :
  *  1. copie vers `tmp/restore-<ts>.db` puis `PRAGMA quick_check` sur la copie (abandon sinon) ;
  *  2. `closeForReplace()` : pause des jobs, arrêt des workers, checkpoint TRUNCATE, `-wal` vide
  *     exigé (sinon `wal_not_empty`, la bibliothèque reste ouverte et rien n'a bougé) ;

@@ -1,5 +1,5 @@
 /**
- * Hôte natif (QA §4.4, PLAN §1.17-1.18, ERRATA §D) : `src/host/index.ts` → `out/host/host.js`, bundle
+ * Hôte natif : `src/host/index.ts` → `out/host/host.js`, bundle
  * esbuild AUTONOME (CJS, builtins Node seulement, tout le reste inliné), puis exécutable Node SEA
  * séparé `out/native-host/recolt-host` (blob `--experimental-sea-config` injecté par postject dans une
  * copie du binaire `node` qui exécute ce script, puis signé : `RECOLTOS_SIGN_IDENTITY` ou ad hoc).
@@ -133,9 +133,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   buildHost({ sea: !process.argv.includes('--no-sea') })
     .then((out) => {
       console.log(
-        out
-          ? `build:host : ${out}`
-          : 'build:host : src/host/index.ts absent (WP-52), rien à construire',
+        out ? `build:host : ${out}` : 'build:host : src/host/index.ts absent, rien à construire',
       )
     })
     .catch((err: unknown) => {

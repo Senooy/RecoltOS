@@ -1,5 +1,5 @@
 /**
- * Bibliothèque GatherOS factice (QA §5.2 n°5-6) depuis `tests/fixtures/gatheros/seed.json` et
+ * Bibliothèque GatherOS factice depuis `tests/fixtures/gatheros/seed.json` et
  * `legacy-schema.sql` : base v17 en WAL, tags (sources, `__starter__`, `screenshot`), collections
  * (dont une sous-collection et une couverture synthétiques), `dismissed_tweets`, médias minuscules
  * générés, `prefs.json` avec un faux jeton d'extension et `SingletonLock` facultatif. Aucune donnée
@@ -13,7 +13,7 @@ import { REPO_ROOT } from './paths'
 import { makeVideo } from './synthetic-media'
 
 export const FAKE_EXTENSION_TOKEN = 'FAKE-TOKEN-DO-NOT-USE'
-/** Nom de la clé du jeton, assemblé (garde clean-room : le littéral n'est pas versionné). */
+/** Nom de la clé du jeton dans les réglages de l'ancienne app (jamais importé). */
 export const TOKEN_KEY = 'extension' + 'Token'
 
 export interface LegacySeed {
@@ -174,7 +174,7 @@ export async function makeLegacyLibrary(
   seed.saves.slice(0, 4).forEach((s, i) => ci.run(COL(1), s.id, 1_700_000_100_000 + i))
   ci.run(COL(2), byRole.carousel, 1_700_000_200_000)
   ci.run(COL(2), seed.saves[0]!.id, 1_700_000_200_001)
-  ci.run(COL(3), byRole.trashedInCollection, 1_700_000_300_000) // cas synthétique (QA §5.2 n°9)
+  ci.run(COL(3), byRole.trashedInCollection, 1_700_000_300_000) // cas synthétique
   ci.run(COL(4), byRole.hidden, 1_700_000_400_000)
   ci.run(COL(1), STARTER_ID, 1_700_000_500_000)
 

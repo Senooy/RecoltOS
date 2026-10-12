@@ -1,5 +1,5 @@
 /**
- * DTO synchronisation et bridge (PLAN §4.3 `SyncStatus`, SYNC §6.3 `sync_state`).
+ * DTO synchronisation et bridge (`SyncStatus`, `sync_state`).
  */
 import { z } from 'zod'
 import { SyncSource } from '../enums'
@@ -17,7 +17,7 @@ export const SyncSourceStatusState = z.enum([
 ])
 
 /**
- * Précision de l'état (ERRATA §G.2) : `blocked` (cookies présents mais requête refusée),
+ * Précision de l'état : `blocked` (cookies présents mais requête refusée),
  * `permissions` (autorisations d'hôte manquantes, Firefox), `not_logged_in` (aucun cookie de session),
  * `browser_closed` (aucune extension connectée), `network`, `budget` (quota du jour atteint).
  */
@@ -89,7 +89,7 @@ export type BridgeClient = z.output<typeof BridgeClient>
 export const SyncStatus = z.object({
   sources: z.array(SyncSourceStatus),
   clients: z.array(BridgeClient),
-  /** GatherOS (sync ou extension) actif : avertissement, bloquant pour Instagram (SYNC §1.9). */
+  /** GatherOS (sync ou extension) actif : avertissement, bloquant pour Instagram. */
   gatherosConflict: z.boolean(),
   /** Une extension est connectée : la sync ne tourne que navigateur ouvert. */
   browserConnected: z.boolean(),
@@ -136,7 +136,7 @@ export const GatherOSPresence = z.object({
       cosmos: z.boolean().nullable(),
     })
     .nullable(),
-  /** Avertissement bloquant avant d'activer Instagram (SYNC §1.9). */
+  /** Avertissement bloquant avant d'activer Instagram. */
   blocksInstagram: z.boolean(),
 })
 export type GatherOSPresence = z.output<typeof GatherOSPresence>

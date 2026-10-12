@@ -1,5 +1,5 @@
 /**
- * Panneau « Collections » du glisser (comportement observé sur la référence, fenêtre 1280×820) : dès
+ * Panneau « Collections » du glisser : dès
  * qu'une carte ou une sélection est glissée depuis une grille (Bibliothèque, vue Collection,
  * résultats de recherche), une carte flottante entre par la droite, sous l'en-tête, et liste
  * toutes les collections (arborescence légèrement indentée) : mini-pile des couvertures, nom,

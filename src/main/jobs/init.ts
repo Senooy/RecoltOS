@@ -1,8 +1,8 @@
 /**
- * Domaine `jobs` (WP-10) : media-worker partagé, file de jobs persistante, services de
+ * Domaine `jobs` : media-worker partagé, file de jobs persistante, services de
  * l'ingestion. Branché sur le cycle de vie des bibliothèques (`registerLibraryLifecycle`) :
  * au démarrage d'une bibliothèque, les jobs `running` repassent en `queued`, les `.part` orphelins
- * sont supprimés et les vieux jobs terminés nettoyés (ARCHI §5.3).
+ * sont supprimés et les vieux jobs terminés nettoyés.
  */
 import { net } from 'electron'
 import { mkdirSync } from 'node:fs'

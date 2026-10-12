@@ -1,5 +1,5 @@
 /**
- * Magnétisme (SPACES §1.5.3) : bords et centres de la boîte déplacée attirés par ceux des autres
+ * Magnétisme : bords et centres de la boîte déplacée attirés par ceux des autres
  * nœuds à moins de `threshold` (6 px écran = 6 / zoom en monde). Rend le décalage et les guides.
  */
 import type { Rect } from '../../../../../../shared/spaces-geometry'

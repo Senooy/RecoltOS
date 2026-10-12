@@ -1,5 +1,5 @@
 /**
- * Port natif de l'extension (WP-53) : hello, reconnexion après déconnexion, repli sur l'hôte de dev,
+ * Port natif de l'extension : hello, reconnexion après déconnexion, repli sur l'hôte de dev,
  * classification des erreurs, requêtes (réponse, erreur `APP_NOT_RUNNING`, délai).
  */
 import { beforeEach, describe, expect, it } from 'vitest'

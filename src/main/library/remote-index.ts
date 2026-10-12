@@ -1,5 +1,5 @@
 /**
- * Index des médias distants déjà téléchargés (`remote/<sha1(url)>.<ext>`, PLAN §1.6) : les DTO n'en
+ * Index des médias distants déjà téléchargés (`remote/<sha1(url)>.<ext>`) : les DTO n'en
  * exposent l'URL `recolt://` que si le fichier existe, et ne laissent jamais sortir l'URL http(s).
  * Lecture paresseuse du dossier (un `readdir` par bibliothèque), complétée par `remote.fetch`.
  */

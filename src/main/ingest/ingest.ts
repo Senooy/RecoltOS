@@ -1,5 +1,5 @@
 /**
- * Pipeline d'ingestion unique (ARCHI §5) : acquisition vers `tmp/<uuid>.part` (clonage APFS +
+ * Pipeline d'ingestion unique : acquisition vers `tmp/<uuid>.part` (clonage APFS +
  * sha256 dans le media-worker), typage par le contenu, dédoublonnage par hash (restauration depuis
  * la corbeille), métadonnées, commit atomique, transaction (`items`, `item_media`, couverture,
  * tags, collection), porte IA, `items.changed{created}` AVANT les dérivés, puis job `media.derive`.
@@ -367,7 +367,7 @@ export async function ingest(
   }
 }
 
-/** Source d'un enregistrement d'après l'hôte de la page (SYNC §6.3). */
+/** Source d'un enregistrement d'après l'hôte de la page. */
 export function sourceFromPageUrl(pageUrl: string): ItemSourceValue {
   let host = ''
   try {
@@ -385,7 +385,7 @@ export function sourceFromPageUrl(pageUrl: string): ItemSourceValue {
 const DATA_URL = /^data:([a-z0-9.+/-]+)?(;base64)?,/i
 
 /**
- * Enregistrement venu de l'extension (`save.create`, SYNC §2.2, §6.3) : image / vidéo (URL http(s)
+ * Enregistrement venu de l'extension (`save.create`) : image / vidéo (URL http(s)
  * téléchargée par l'app, `data:`, inline ≤ 8 Mio ou fichier assemblé par `media.chunk`), page
  * (capture d'onglet), lien (capture hors écran par l'app). Les publications (`kind: 'post'`) passent
  * par la sync (`sync/ingest.ts`).

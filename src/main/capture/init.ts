@@ -1,5 +1,5 @@
 /**
- * Domaine `capture` (WP-33, SPACES §2) : service de capture, raccourci global (inactif sous
+ * Domaine `capture` : service de capture, raccourci global (inactif sous
  * `RECOLTOS_E2E`), menu « Capturer l'écran » cohérent avec la disposition, dossier de dépôt
  * initialisé sur le Bureau au premier lancement, notifications.
  */
@@ -112,7 +112,7 @@ export function initCapture(ctx: ServiceContext): () => void {
     log: ctx.log,
   })
 
-  // Dossier de dépôt : le Bureau est proposé au premier lancement (comme la référence).
+  // Dossier de dépôt : le Bureau est proposé au premier lancement.
   const cap = prefs.get().capture
   if (!cap.dropFolderInit && !ctx.flags.e2e) {
     prefs.set({

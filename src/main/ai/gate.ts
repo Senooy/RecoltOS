@@ -1,5 +1,5 @@
 /**
- * Pause et routage PAR FOURNISSEUR (AI §3.2 « ProviderGate ») : une limite Claude ne bloque pas
+ * Pause et routage PAR FOURNISSEUR (« ProviderGate ») : une limite Claude ne bloque pas
  * Codex. Pauses persistées dans `settings['ai.providerPauses']` (lues aussi par la porte
  * d'ingestion). Règles de `route` :
  * 1. le principal s'il n'est pas en pause et n'a pas échoué deux fois (PROCESS/TIMEOUT) ;

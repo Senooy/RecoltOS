@@ -1,5 +1,5 @@
 /**
- * Repo `tags` + `item_tags` (ARCHI §2.3, §4.3, §4.5). Noms normalisés (trim, NFC, minuscules,
+ * Repo `tags` + `item_tags`. Noms normalisés (trim, NFC, minuscules,
  * espaces → `-`, `#` initial retiré) ; `x`, `instagram`, `cosmos` et `bookmark` sont réservés aux
  * chips de source virtuelles (`AppError('tag_reserved')`). Les triggers de 0001 réindexent la FTS
  * à chaque lien ajouté / retiré et au renommage.

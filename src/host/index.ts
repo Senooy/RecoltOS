@@ -1,6 +1,6 @@
 /**
  * Point d'entrée de l'hôte natif (→ `out/host/host.js`, puis exécutable Node SEA
- * `out/native-host/recolt-host`, ERRATA §D). Voir `host.ts`.
+ * `out/native-host/recolt-host`). Voir `host.ts`.
  */
 import { startHost } from './host'
 

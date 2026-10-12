@@ -1,5 +1,5 @@
 /**
- * `BridgeServer` (WP-52) : `host.hello` obligatoire, contrôle de protocole, clients en mémoire,
+ * `BridgeServer` : `host.hello` obligatoire, contrôle de protocole, clients en mémoire,
  * refus des messages app → ext de plus de 900 Ko, socket 0600 et chemin < 104 octets.
  */
 import { statSync } from 'node:fs'

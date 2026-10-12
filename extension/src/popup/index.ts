@@ -1,5 +1,5 @@
 /**
- * Popup 360×520 (SYNC §2.3, tutoiement) : état du pont, aperçu, enregistrement de la page ou de
+ * Popup 360×520 (tutoiement) : état du pont, aperçu, enregistrement de la page ou de
  * l'image principale, collection, note, état de la synchro par plateforme et « Synchroniser
  * maintenant ». Firefox : bouton « Autoriser l'accès aux sites » si les autorisations d'hôte
  * (optionnelles en MV3) manquent.

@@ -1,5 +1,5 @@
 /*
- * Kit UI : animations des primitives Radix (DESIGN §1.9) et jetons propres aux composants.
+ * Kit UI : animations des primitives Radix et jetons propres aux composants.
  * Importé par chaque composant qui en dépend ; les couleurs par thème (--ui-accent-hover,
  * --ui-menu-highlight, --ui-avatar-*) sont dans `tokens.css`.
  *

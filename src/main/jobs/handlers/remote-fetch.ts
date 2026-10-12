@@ -1,5 +1,5 @@
 /**
- * Job `remote.fetch` (PLAN §1.6) : image citée, image de fil ou slide distante sans ligne
+ * Job `remote.fetch` : image citée, image de fil ou slide distante sans ligne
  * `item_media` → `remote/<sha1(url)>.<ext>`. Le DTO n'expose l'URL `recolt://` que si le fichier
  * existe (`library/remote-index.ts`) ; une réponse 4xx laisse l'image masquée (aucune URL http(s)).
  */

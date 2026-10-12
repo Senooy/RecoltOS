@@ -1,6 +1,6 @@
 /**
- * `userData` isolé (QA §2.1) : appelé tout au début de `main/index.ts`, AVANT
- * `requestSingleInstanceLock()` et `whenReady`. Jamais le dossier la référence.
+ * `userData` isolé : appelé tout au début de `main/index.ts`, AVANT
+ * `requestSingleInstanceLock()` et `whenReady`.
  */
 import { app } from 'electron'
 import fs from 'node:fs'

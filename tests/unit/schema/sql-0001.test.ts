@@ -42,7 +42,7 @@ describe('0001_init.sql', () => {
     expect(db.pragma('foreign_key_check')).toEqual([])
   })
 
-  it('contient les tables du delta PLAN §4.2 et pas item_embeddings', () => {
+  it('contient les tables attendues et pas item_embeddings', () => {
     const tables = (
       db.prepare("SELECT name FROM sqlite_master WHERE type IN ('table','view')").all() as {
         name: string

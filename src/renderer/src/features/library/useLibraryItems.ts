@@ -1,5 +1,5 @@
 /**
- * Index complet de la vue en mémoire (DESIGN §3.1) : première page de 120 tout de suite, pages
+ * Index complet de la vue en mémoire : première page de 120 tout de suite, pages
  * suivantes en arrière-plan (keyset), rechargé (débouncé) à chaque `items.changed` ; l'ancienne liste
  * reste affichée pendant le rechargement (pas de clignotement).
  */
@@ -23,7 +23,7 @@ export function useLibraryItems(tab: LibraryTab, sort: SortMode, seed: number): 
   return useItemsList({ scope: 'library', tab, sort, seed }, tab === 'saved' || tab === 'unsorted')
 }
 
-/** Membres directs d'une collection (DESIGN §3.3), rechargés aussi sur `collections.changed`. */
+/** Membres directs d'une collection, rechargés aussi sur `collections.changed`. */
 export function useCollectionItems(
   collectionUuid: string,
   sort: SortMode,

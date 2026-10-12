@@ -1,5 +1,5 @@
 /**
- * Requête de recherche (ARCHI §4.5 `search/fts-query`, DESIGN §3.5) : texte saisi → expression FTS5 +
+ * Requête de recherche (`search/fts-query`) : texte saisi → expression FTS5 +
  * filtres. Partagé : main l’exécute, le renderer s’en sert pour convertir la syntaxe en chips.
  *  - mots nus → `"mot"*` (ET implicite, guillemets doublés) ; `"une phrase"` → `"une phrase"` ;
  *  - `#x #instagram #cosmos` (et l'alias `#bookmark` → `x`) → filtre `sources`, pas un terme FTS ;
@@ -140,7 +140,7 @@ export function toFtsQuery(raw: string): ParsedQuery {
         color = value.startsWith('#') ? value : `#${value}`
         continue
       }
-      // `couleur:rouge` : une des 12 couleurs nommées (WP-31).
+      // `couleur:rouge` : une des 12 couleurs nommées.
       const named = (key === 'couleur' || key === 'color') && namedColorHex(value)
       if (named) {
         color = named

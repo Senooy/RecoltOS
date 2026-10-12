@@ -1,8 +1,8 @@
 /**
- * `TweetCard` (DESIGN §3.2) : post X / Instagram / Cosmos rendu nativement (suit le thème).
+ * `TweetCard` : post X / Instagram / Cosmos rendu nativement (suit le thème).
  * Variantes `light` (grille), `overlay` (Redécouvrir, toujours blanc), `cover` (FanStack, étagère :
  * toujours blanche, largeur fixe 300 px réduite par `transform`), `detail` (vue détail d'un post sans
- * média, ERRATA §C : 560 px, blanche, texte complet sélectionnable, post cité et fil entiers).
+ * média, 560 px, blanche, texte complet sélectionnable, post cité et fil entiers).
  * Corps tronqué à 8 lignes puis « … » (sauf `detail`).
  * Icône de source en haut à droite : logo X / Instagram / Cosmos (jamais une croix de fermeture).
  */

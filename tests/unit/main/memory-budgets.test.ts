@@ -10,7 +10,7 @@ function sink() {
   return { calls, appendSwitch: (n: string, v?: string) => void calls.push([n, v]) }
 }
 
-describe('applyMemoryBudgets (WP-71)', () => {
+describe('applyMemoryBudgets', () => {
   it('pose les deux budgets GPU par défaut', () => {
     const s = sink()
     const out = applyMemoryBudgets(s, {})

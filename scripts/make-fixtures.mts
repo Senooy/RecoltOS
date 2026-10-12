@@ -8,8 +8,7 @@
  * (importable aussi depuis Playwright, qui charge les fichiers de test en CJS).
  *
  * SÉCURITÉ : `--out` est supprimé avant d'être régénéré. `tests/helpers/safe-out.ts` refuse un dossier
- * non vide sans marqueur `.recolt-fixture`, `$HOME`, le dépôt, `Library` / `Application Support` /
- * la référence ; hors `<dépôt>/.tmp` et `os.tmpdir()`, `--force` est exigé.
+ * non vide sans marqueur `.recolt-fixture`, `$HOME`, le dépôt, `Library` / `Application Support` ; hors `<dépôt>/.tmp` et `os.tmpdir()`, `--force` est exigé.
  */
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'

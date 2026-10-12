@@ -1,5 +1,5 @@
 /**
- * WP-03 — critère 3 : palette k-means++ Lab déterministe sur une vignette webp,
+ * critère 3 : palette k-means++ Lab déterministe sur une vignette webp,
  * 1 à 8 couleurs, `palette_lab[i] ≈ hexToLab(palette[i])` à 0,05.
  */
 import { join } from 'node:path'

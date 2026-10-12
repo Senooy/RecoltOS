@@ -1,5 +1,5 @@
 /**
- * Handlers `bridge.*` (WP-52, ERRATA §G.2) : clients connectés, navigateurs, extension embarquée,
+ * Handlers `bridge.*` : clients connectés, navigateurs, extension embarquée,
  * coexistence GatherOS, (dés)installation des manifests natifs.
  */
 import { shell } from 'electron'

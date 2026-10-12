@@ -1,5 +1,5 @@
 /**
- * Pierres tombales d'import (ARCHI §4.3, §6.8) : ce que l'utilisateur a retiré d'un import n'est
+ * Pierres tombales d'import : ce que l'utilisateur a retiré d'un import n'est
  * jamais recréé par un ré-import. Les triggers de 0001 posent celles des suppressions directes ;
  * `collections.delete` pose explicitement celles des descendants.
  */

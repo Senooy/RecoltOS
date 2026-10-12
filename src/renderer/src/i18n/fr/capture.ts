@@ -1,7 +1,7 @@
 /**
- * Textes du domaine `capture` (WP-34) : Réglages › Capture, guide de permission, retours de
+ * Textes du domaine `capture` : Réglages › Capture, guide de permission, retours de
  * capture, import (dépôt, coller, URL, menu du FAB). Les namespaces de base `capture` et
- * `settings.capture` (DESIGN §5.2) restent dans `base.ts`.
+ * `settings.capture` restent dans `base.ts`.
  */
 import { plural } from '../plural'
 

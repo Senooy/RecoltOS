@@ -1,6 +1,6 @@
 /**
- * Textes du domaine `search` (WP-22) : page Recherche, filtres, chips. Le namespace de base
- * `search` (DESIGN §5.2) reste dans `base.ts`.
+ * Textes du domaine `search` : page Recherche, filtres, chips. Le namespace de base
+ * `search` reste dans `base.ts`.
  */
 export const search = {
   searchUi: {

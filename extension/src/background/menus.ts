@@ -1,5 +1,5 @@
 /**
- * Menu contextuel (SYNC §2.2) : « Enregistrer dans RecoltOS », « Enregistrer dans la collection › »
+ * Menu contextuel : « Enregistrer dans RecoltOS », « Enregistrer dans la collection › »
  * (10 collections les plus récemment utilisées), « Autre collection… ». Pas d'entrée « sélection ».
  */
 import type { BridgeCollection } from '../../../src/shared/bridge/save'

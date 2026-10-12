@@ -1,5 +1,5 @@
 /**
- * Messages de synchronisation (SYNC §6.1-6.2, ERRATA §G.2) en zod. Possédé par WP-51.
+ * Messages de synchronisation en zod.
  */
 import { z } from 'zod'
 import { MAX_SYNC_PAGES, MAX_WANTED_AUTHORS } from './constants'
@@ -45,7 +45,7 @@ export const SyncStats = z.object({
   dismissed: z.number().int(),
 })
 
-/** Issue d'un run (SYNC §6.1 + `blocked` / `permissions`, ERRATA §G.2). */
+/** Issue d'un run (`blocked` / `permissions`). */
 export const SyncOutcome = z.enum([
   'ok',
   'auth_required',

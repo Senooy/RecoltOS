@@ -1,5 +1,5 @@
 /**
- * Initialisation du domaine `spaces` (WP-60) : ramasse-miettes des assets à l'ouverture de chaque
+ * Initialisation du domaine `spaces` : ramasse-miettes des assets à l'ouverture de chaque
  * bibliothèque (une fois par bibliothèque et par lancement, jamais pendant une session : l'annulation
  * doit pouvoir restaurer un asset), canal synchrone `spaces:applyBatchSync` réservé à
  * `beforeunload` (un seul sous-lot ≤ 2 000 nœuds, mêmes contrôles que `rpc`).

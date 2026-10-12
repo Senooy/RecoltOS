@@ -1,5 +1,5 @@
 /**
- * Store de l'éditeur (SPACES §1.4.2) : zustand + immer. `nodes` = état committé suivi par
+ * Store de l'éditeur : zustand + immer. `nodes` = état committé suivi par
  * l'historique ; `preview` = état éphémère d'un geste (hors historique) ; un seul `commit` par geste
  * (une entrée d'historique, un seul marquage `dirty`). La caméra vit dans un store à part
  * (`useCamera`) mis à jour à chaque image sans re-rendre les nœuds.

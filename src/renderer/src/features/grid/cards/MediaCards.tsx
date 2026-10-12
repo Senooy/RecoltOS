@@ -1,5 +1,5 @@
 /**
- * Cartes média (DESIGN §3.2) : `ImageCard`, `VideoCard` (affiche, aperçu muet au survol après
+ * Cartes média : `ImageCard`, `VideoCard` (affiche, aperçu muet au survol après
  * 150 ms, une seule vidéo à la fois, jamais l'original), `CarouselCard` (badge « 1/N », chevrons
  * verre au survol), `PageCard` (capture + titre + domaine). Images `thumb` 800w et `large` 1440w
  * en `srcset` : nettes en Retina.

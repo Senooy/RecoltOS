@@ -1,5 +1,5 @@
 /**
- * Outils communs aux parseurs de sync (WP-55) : accès défensifs à du JSON inconnu, URL https,
+ * Outils communs aux parseurs de sync : accès défensifs à du JSON inconnu, URL https,
  * construction et validation de `post_meta` v1, comptage des entrées écartées. Aucun effet de bord.
  */
 import {

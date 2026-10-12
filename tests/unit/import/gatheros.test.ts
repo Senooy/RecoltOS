@@ -1,5 +1,5 @@
 /**
- * WP-11 : importeur GatherOS sur la fixture synthétique anonymisée (QA §5.2).
+ * importeur GatherOS sur la fixture synthétique anonymisée.
  */
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
@@ -194,8 +194,8 @@ describe('importeur GatherOS (fixture)', () => {
 
 describe('détection et verrou', () => {
   it('pid après le DERNIER tiret ; GatherOS en cours détecté avec un hôte à tirets', async () => {
-    expect(parseSingletonLock('macbook-test.home-26365')).toEqual({
-      host: 'macbook-test.home',
+    expect(parseSingletonLock('macbook-pro-de-test.home-26365')).toEqual({
+      host: 'macbook-pro-de-test.home',
       pid: 26365,
     })
     expect(parseSingletonLock('sans-pid')).toBeNull()

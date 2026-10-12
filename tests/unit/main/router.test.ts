@@ -131,7 +131,7 @@ describe('makeSenderCheck', () => {
   })
 })
 
-describe('messages d’erreur en français (règle §2.6)', () => {
+describe('messages d’erreur en français', () => {
   it('aucun « at » anglais dans error.message, ni pour l’entrée ni pour la sortie', async () => {
     const bad = await dispatch(
       'items.list',

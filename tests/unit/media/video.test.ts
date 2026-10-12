@@ -1,5 +1,5 @@
 /**
- * WP-03 — critères 1 (vidéo) et 4 : ffprobe (rotation, durée, codec, `playable`), poster,
+ * critères 1 (vidéo) et 4 : ffprobe (rotation, durée, codec, `playable`), poster,
  * aperçu mp4 ≤ 8 s muet 540p `+faststart`, ffmpeg absent → `tool_missing` sans crash.
  */
 import { execFileSync } from 'node:child_process'

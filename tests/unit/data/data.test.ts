@@ -1,5 +1,5 @@
 /**
- * WP-24 : instantanés (noms, rétention, quotidien), export zip (contenu, items.jsonl,
+ * instantanés (noms, rétention, quotidien), export zip (contenu, items.jsonl,
  * progression), restauration (WAL non vide, pre-restore, abandon si checkpoint bloqué),
  * vérification, stockage, fusion de tags réindexée.
  */

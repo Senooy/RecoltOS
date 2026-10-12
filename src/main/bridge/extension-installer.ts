@@ -1,5 +1,5 @@
 /**
- * Copie de l'extension embarquée vers un chemin FIXE (SYNC §1.7) : `<userData>/extension/<cible>/`,
+ * Copie de l'extension embarquée vers un chemin FIXE : `<userData>/extension/<cible>/`,
  * seulement si la version embarquée diffère de `.recoltos-version`. Échange en trois renommages
  * (`rename(2)` vers un dossier non vide échoue avec `ENOTEMPTY`) ; reprise au lancement suivant si
  * `CUR` manque et `OLD` existe. Sans `electron`.

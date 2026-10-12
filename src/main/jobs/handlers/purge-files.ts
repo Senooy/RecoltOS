@@ -1,5 +1,5 @@
 /**
- * Job `purge.files` (ARCHI §5.3, §7) : inséré dans la MÊME transaction que le `DELETE FROM items`,
+ * Job `purge.files` : inséré dans la MÊME transaction que le `DELETE FROM items`,
  * il supprime ensuite les fichiers (`rm`) ou les envoie dans la Corbeille macOS (`trash`, purge
  * automatique). Idempotent : un fichier déjà absent est ignoré.
  */

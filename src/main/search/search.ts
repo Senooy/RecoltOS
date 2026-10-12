@@ -1,8 +1,8 @@
 /**
- * Exécution de `search.query` (ARCHI §4.5, DESIGN §3.5) : FTS5 pondérée bm25 (title 8, notes 3,
+ * Exécution de `search.query` : FTS5 pondérée bm25 (title 8, notes 3,
  * post_text 4, ocr 2, ai 2, tags 6, url 0,5) + filtres (types, sources, tags, période, collection),
  * masqués et corbeille exclus. Un mot nu égal à une source met les éléments de cette source en
- * tête. Couleur (WP-31) : `PaletteIndex` + ΔE2000 (`color/color-search.ts`), une ou plusieurs
+ * tête. Couleur : `PaletteIndex` + ΔE2000 (`color/color-search.ts`), une ou plusieurs
  * couleurs (ET), tolérance réglable ; les éléments sans palette sont exclus et comptés. Sans texte,
  * les résultats d'un filtre couleur sont classés par proximité.
  */

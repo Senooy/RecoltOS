@@ -1,5 +1,5 @@
 /**
- * Raccourcis côté renderer (DESIGN §3.13) : table unique `src/shared/shortcuts.ts` +
+ * Raccourcis côté renderer : table unique `src/shared/shortcuts.ts` +
  * raccourcis propres à chaque domaine UI (`lib/shortcuts/<domaine>.ts`, liste FIGÉE).
  * AZERTY : chiffres par `e.code`, lettres par la touche imprimée (`getLayoutMap()` ou `e.key`).
  */

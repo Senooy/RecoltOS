@@ -1,5 +1,5 @@
 /**
- * Contrat `system.*` (ARCHI §2.3 + PLAN §4.4 : `edit`, `openLogs`, `copyText`, `redetectTools`).
+ * Contrat `system.*` (`edit`, `openLogs`, `copyText`, `redetectTools`).
  * Événements transverses : `menu.command`, `nav.openItem`, `library.switched`.
  */
 import { z } from 'zod'
@@ -22,11 +22,11 @@ export const systemContract = {
     output: z.object({ path: z.string() }).nullable(),
   },
   'system.quickLook': { input: z.object({ itemUuid: Uuid }), output: Void },
-  /** Champ éditable focalisé : `webContents.undo()`… (DESIGN §3.13). */
+  /** Champ éditable focalisé : `webContents.undo()`…. */
   'system.edit': { input: z.object({ cmd: EditCommand }), output: Void },
   'system.openLogs': { input: Empty, output: Void },
   'system.redetectTools': { input: Empty, output: ToolsPrefs },
-  /** Élément à ouvrir demandé par main avant que la fenêtre écoute (`nav.openItem`, WP-34). */
+  /** Élément à ouvrir demandé par main avant que la fenêtre écoute (`nav.openItem`). */
   'system.takePendingNav': { input: Empty, output: z.object({ uuid: Uuid }).nullable() },
   'system.appInfo': {
     input: Empty,

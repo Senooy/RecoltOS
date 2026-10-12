@@ -1,7 +1,7 @@
 /**
- * Calque de dépôt (DESIGN §2.8) : SEUL gestionnaire `drop` de la fenêtre. Fichiers et dossiers
+ * Calque de dépôt : SEUL gestionnaire `drop` de la fenêtre. Fichiers et dossiers
  * venus de l'extérieur → `ingest.files` (chemins via `recolt.pathForFile`, dossiers parcourus par
- * main, WP-34), lien d'un navigateur → `ingest.url` ; rapport « N ajoutés · M doublons · 0 échec ».
+ * main), lien d'un navigateur → `ingest.url` ; rapport « N ajoutés · M doublons · 0 échec ».
  * Ignoré pendant un glisser interne (`ui.internalDrag`) et dans l'éditeur d'espace.
  */
 import { Upload } from 'lucide-react'

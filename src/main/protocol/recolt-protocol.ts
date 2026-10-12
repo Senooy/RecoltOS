@@ -1,5 +1,5 @@
 /**
- * Cœur du protocole `recolt://<libraryId>/<root>/<rel>?v=<n>` (ARCHI §2.5, PLAN §1.7).
+ * Cœur du protocole `recolt://<libraryId>/<root>/<rel>?v=<n>`.
  * Sans import `electron` : `protocol.handle` (session par défaut et sessions hors écran) l'appelle
  * depuis `init.ts`, les tests l'appellent directement avec des `Request` Node.
  *

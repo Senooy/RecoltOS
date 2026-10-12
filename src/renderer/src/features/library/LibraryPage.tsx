@@ -1,7 +1,7 @@
 /**
- * Page Bibliothèque (DESIGN §3.1, WP-15) : sous-barre (onglets, « Vider la corbeille », curseur de
+ * Page Bibliothèque : sous-barre (onglets, « Vider la corbeille », curseur de
  * colonnes, tri), rangée de collections (Tout et Enregistrés), grille masonry ; états vides
- * (DESIGN §3.12) et squelette de chargement.
+ * et squelette de chargement.
  */
 import { Download, FileUp } from 'lucide-react'
 import { useRef, useState } from 'react'
@@ -22,7 +22,7 @@ import { ColumnSlider } from './ColumnSlider'
 import { SortMenu } from './SortMenu'
 import { useLibraryItems } from './useLibraryItems'
 
-/** Hauteurs relatives des cartes squelette (DESIGN §3.12). */
+/** Hauteurs relatives des cartes squelette. */
 const SKELETON_RATIOS = [1.2, 0.8, 1.5, 1, 0.75, 1.3, 0.9, 1.25, 1.4, 0.7, 1.1, 0.85]
 
 function GridSkeleton({ columns }: { columns: number }) {

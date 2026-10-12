@@ -1,5 +1,5 @@
 /**
- * `SyncCoordinator` (WP-57) : planning, backfill, backoff, auth_required, page refusée par le parseur,
+ * `SyncCoordinator` : planning, backfill, backoff, auth_required, page refusée par le parseur,
  * et simulation de 24 h avec l'exécuteur réel de l'extension : aucun onglet créé sans l'option.
  */
 import { readFileSync } from 'node:fs'

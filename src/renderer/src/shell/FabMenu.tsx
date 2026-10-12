@@ -1,5 +1,5 @@
 /**
- * Menu du FAB « + » (SPACES §3.4, WP-34) : « Importer des fichiers… » ⌘O, « Importer un
+ * Menu du FAB « + » : « Importer des fichiers… » ⌘O, « Importer un
  * dossier… », « Coller une URL… » (`UrlPopover`), « Capturer l'écran » ⇧⌘S ; dans une collection,
  * titre « Ajouter à « Dev » ». Le « + » pivote de 45° à l'ouverture.
  */

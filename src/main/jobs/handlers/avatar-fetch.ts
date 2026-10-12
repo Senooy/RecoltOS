@@ -1,5 +1,5 @@
 /**
- * Job `avatar.fetch` (ARCHI §5.2 étape 10) : avatar d'auteur → `avatars/<platform>/<k>.jpg`
+ * Job `avatar.fetch` : avatar d'auteur → `avatars/<platform>/<k>.jpg`
  * (carré 128 px), `authors.updated_at` sert de `?v=`. X : `_normal` → `_400x400`. Une réponse 4xx
  * (avatars Instagram expirés) donne `avatar_status='failed'` sans nouvelle tentative : l'UI affiche
  * un monogramme.

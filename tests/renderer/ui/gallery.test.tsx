@@ -98,7 +98,7 @@ describe('galerie : tokens uniquement', () => {
   })
 })
 
-describe('Toaster : pilule §2.7', () => {
+describe('Toaster : pilule', () => {
   it('affiche un toast avec action « Annuler »', async () => {
     render(<Toaster />)
     act(() => {

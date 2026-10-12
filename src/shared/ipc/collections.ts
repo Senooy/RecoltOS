@@ -1,4 +1,4 @@
-/** Contrat `collections.*` (ARCHI §2.3). Cycle refusé (`collection_cycle`). */
+/** Contrat `collections.*`. Cycle refusé (`collection_cycle`). */
 import { z } from 'zod'
 import { CollectionNode } from '../dto/collections'
 import { HexColor, Uuid } from '../enums'
@@ -28,7 +28,7 @@ export const collectionsContract = {
     }),
     output: CollectionNode,
   },
-  /** `keepChildren: false` supprime aussi les sous-collections (confirmation UI, ERRATA §C). */
+  /** `keepChildren: false` supprime aussi les sous-collections (confirmation UI). */
   'collections.delete': {
     input: z.object({ uuid: Uuid, keepChildren: z.boolean() }),
     output: Count,

@@ -1,4 +1,4 @@
-/** WP-05 — garde `recolt://` des sessions hors écran : seule la page interne `offscreen.html` est servie. */
+/** — garde `recolt://` des sessions hors écran : seule la page interne `offscreen.html` est servie. */
 import { describe, expect, it, vi } from 'vitest'
 import {
   guardOffscreenHandler,

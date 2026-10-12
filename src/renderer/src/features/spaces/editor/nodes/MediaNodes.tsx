@@ -1,9 +1,9 @@
 /**
- * Nœuds média (SPACES §1.4.4, DESIGN §3.11) : `ItemNode` réutilise les cartes de la bibliothèque
+ * Nœuds média : `ItemNode` réutilise les cartes de la bibliothèque
  * (post via `TweetCard` rendu à 360 px puis mis à l'échelle, page via `PageCard`), image via
  * `SpaceImage` : variante choisie EXPLICITEMENT (pas de `srcset`) selon la largeur en pixels
  * physiques (`node.width × palier(zoom × DPR)`) : vignette 800w tant qu'elle suffit, `large`
- * 1440w au-delà, jamais l'original (WP-71). Un `srcset` gardait la 1440w en cache une fois
+ * 1440w au-delà, jamais l'original. Un `srcset` gardait la 1440w en cache une fois
  * chargée, même revenu en vue d'ensemble. `ImageNode` pour les assets (vignette, original
  * seulement quand la vignette ne suffit plus : les assets n'ont pas de variante 1440w).
  * Vidéos : affiche ; lecteur muet seulement pour les ≤ 2 vidéos actives (survolées,
@@ -20,7 +20,7 @@ import { PageCard } from '../../../grid/cards/MediaCards'
 import { cardKind } from '../../../grid/cards/SaveCard'
 import { TweetCard } from '../../../grid/cards/TweetCard'
 
-/** Largeur de rendu d'une carte de post avant mise à l'échelle (SPACES §1.2.3). */
+/** Largeur de rendu d'une carte de post avant mise à l'échelle. */
 export const POST_RENDER_WIDTH = 360
 /** Côté des vignettes d'assets (`makeThumb` 800 px). */
 export const THUMB_MAX_EDGE = 800

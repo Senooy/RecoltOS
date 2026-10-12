@@ -1,6 +1,6 @@
 /**
- * Publication à enregistrer depuis l'extension (`save.create {kind:'post'}`, SYNC §2.4) : donnée brute
- * en cache (`tweet_results.result` X, `media` Instagram, élément Cosmos) passée aux parseurs de WP-55
+ * Publication à enregistrer depuis l'extension (`save.create {kind:'post'}`) : donnée brute
+ * en cache (`tweet_results.result` X, `media` Instagram, élément Cosmos) passée aux parseurs
  * dans une page synthétique ; sinon repli DOM (`partial`) : texte, auteur, images.
  */
 import type { SaveRequest } from '../../shared/bridge/save'

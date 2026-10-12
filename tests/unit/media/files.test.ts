@@ -1,5 +1,5 @@
 /**
- * WP-03 — opérations fichier : hash en flux, clonage FICLONE + rename, zip (yazl), toPng.
+ * opérations fichier : hash en flux, clonage FICLONE + rename, zip (yazl), toPng.
  */
 import { execFileSync } from 'node:child_process'
 import {

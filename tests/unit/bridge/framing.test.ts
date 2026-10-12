@@ -1,5 +1,5 @@
 /**
- * Trames native messaging (WP-52) : coupures arbitraires, multi-messages, longueur 0, 0xFFFFFFFF.
+ * Trames native messaging : coupures arbitraires, multi-messages, longueur 0, 0xFFFFFFFF.
  */
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'

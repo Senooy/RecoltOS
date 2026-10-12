@@ -1,5 +1,5 @@
 /**
- * Format HTML marqué du presse-papiers interne des Spaces (SPACES §1.5.7), pur et testable :
+ * Format HTML marqué du presse-papiers interne des Spaces, pur et testable :
  * `<meta charset="utf-8"><span data-recolt-nodes="<base64(JSON)>" data-recolt-v="1"></span>` suivi
  * du texte échappé.
  */

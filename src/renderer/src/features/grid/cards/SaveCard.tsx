@@ -1,5 +1,5 @@
 /**
- * `SaveCard` (DESIGN §3.2) : base commune (rayon 8, fond `palette[0]` ou `--skeleton`, pastille de
+ * `SaveCard` : base commune (rayon 8, fond `palette[0]` ou `--skeleton`, pastille de
  * sélection au survol) et répartition par type : post → `TweetCard`, ≥ 2 slides → `CarouselCard`,
  * vidéo → `VideoCard`, image → `ImageCard`, page → `PageCard`.
  */

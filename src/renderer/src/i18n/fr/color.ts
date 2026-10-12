@@ -1,5 +1,5 @@
 /**
- * Textes du domaine `color` (WP-31) : filtre et tri par couleur.
+ * Textes du domaine `color` : filtre et tri par couleur.
  */
 export const color = {
   colorUi: {

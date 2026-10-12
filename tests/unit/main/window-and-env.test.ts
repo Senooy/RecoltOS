@@ -5,7 +5,7 @@ import { parseWindowState, pickRestoreBounds } from '../../../src/main/windows/w
 
 const display = { id: 1, workArea: { x: 0, y: 25, width: 1512, height: 957 } }
 
-describe('flags d’environnement (QA §2)', () => {
+describe('flags d’environnement', () => {
   it('RECOLTOS_E2E impose 1280×820 par défaut', () => {
     expect(readFlags({ RECOLTOS_E2E: '1' }).windowSize).toEqual(DEFAULT_WINDOW)
     expect(readFlags({}).windowSize).toBeNull()

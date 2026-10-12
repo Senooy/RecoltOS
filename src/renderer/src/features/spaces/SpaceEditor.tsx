@@ -1,5 +1,5 @@
 /**
- * Éditeur de space (route `space`, DESIGN §3.11, SPACES §1.3.2) : sous-barre 60 px (retour, nom
+ * Éditeur de space (route `space`) : sous-barre 60 px (retour, nom
  * en ligne, « … » Arrière-plan / Dupliquer / Exporter / Supprimer), toile plein cadre, dock
  * d'outils, cluster de zoom, barre de style, tiroir Bibliothèque, menus contextuels. Clavier :
  * table `SPACES_SHORTCUTS` (keymap AZERTY / QWERTY), commandes du menu natif relayées par le bus

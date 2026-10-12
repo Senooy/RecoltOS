@@ -1,5 +1,5 @@
 /**
- * Actions de niveau liste (SPACES §1.3.1, §1.6.2) : créer (titre en édition à l'ouverture),
+ * Actions de niveau liste : créer (titre en édition à l'ouverture),
  * dupliquer, supprimer avec confirmation, « Ajouter à un space › » depuis une carte.
  */
 import { toast } from '../../components/ui'

@@ -1,5 +1,5 @@
 /**
- * Protocole extension ↔ app (WP-51) : schémas zod, JSON Schema v1, constantes, identifiant fixe.
+ * Protocole extension ↔ app : schémas zod, JSON Schema v1, constantes, identifiant fixe.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -29,7 +29,7 @@ describe('JSON Schema v1', () => {
     expect(JSON.parse(readFileSync(SCHEMA_FILE, 'utf8'))).toEqual(generated)
   })
 
-  it('SaveRequest : champs et exclusivité identiques à SYNC §6.2', () => {
+  it('SaveRequest : champs et exclusivité du protocole', () => {
     const s = defs.SaveRequest as Def & { not?: unknown; additionalProperties?: unknown }
     expect(s.required).toEqual(['kind', 'pageUrl'])
     expect(Object.keys(s.properties ?? {}).sort()).toEqual(
@@ -53,7 +53,7 @@ describe('JSON Schema v1', () => {
     expect(s.additionalProperties).toBe(false)
   })
 
-  it('SyncRun, SyncPage, SyncAck : champs requis et énumérations de SYNC §6.2', () => {
+  it('SyncRun, SyncPage, SyncAck : champs requis et énumérations du protocole', () => {
     expect(defs.SyncRun?.required).toEqual(['runId', 'platform', 'mode', 'trigger', 'maxPages'])
     expect(defs.SyncRun?.properties?.mode?.enum).toEqual(['incremental', 'backfill', 'deep'])
     expect(defs.SyncRun?.properties?.trigger?.enum).toEqual([

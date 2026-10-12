@@ -1,7 +1,7 @@
 /**
- * Registre des services (PLAN §1.26) : chaque domaine expose `init<Domaine>(ctx)` dans
- * `src/main/<domaine>/init.ts` ; seul ce fichier les appelle, dans cet ordre. Aucun lot
- * n'édite `main/index.ts`. Pas de domaine `embed` (ERRATA §G).
+ * Registre des services : chaque domaine expose `init<Domaine>(ctx)` dans
+ * `src/main/<domaine>/init.ts` ; seul ce fichier les appelle, dans cet ordre. Aucun domaine
+ * n'édite `main/index.ts`. Pas de domaine `embed`.
  */
 import { initAi } from '../ai/init'
 import { initBridge } from '../bridge/init'
@@ -42,7 +42,7 @@ export const SERVICES: readonly { domain: ServiceDomain; init: InitFn }[] = [
   { domain: 'data', init: initData },
   { domain: 'spaces', init: initSpaces },
   { domain: 'ai', init: initAi },
-  // Le pont avant la sync : le coordinateur s'abonne aux messages du `BridgeServer` (WP-57).
+  // Le pont avant la sync : le coordinateur s'abonne aux messages du `BridgeServer`.
   { domain: 'bridge', init: initBridge },
   { domain: 'sync', init: initSync },
   { domain: 'capture', init: initCapture },

@@ -1,5 +1,5 @@
 /**
- * Historique maison (SPACES §1.8) : diff par nœud touché (`before` / `after`, `null` = absent),
+ * Historique maison : diff par nœud touché (`before` / `after`, `null` = absent),
  * pile de 200 entrées, coalescence par clé (flèches : même sélection, < 600 ms). Non persisté,
  * viewport hors historique.
  */

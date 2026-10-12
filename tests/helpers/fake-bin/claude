@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Faux `claude` (WP-42) : imite `claude -p … --output-format stream-json` (constats S0) sans réseau.
+ * Faux `claude` : imite `claude -p … --output-format stream-json` sans réseau.
  * Vérifie l'argv exact : refuse `--bare`, exige --safe-mode, --tools Read, --permission-mode dontAsk,
  * --no-session-persistence, --json-schema. Journalise l'argv dans $FAKE_CLI_LOG (une ligne JSON).
  * $FAKE_CLI_MODE : ok (défaut) | ok_429 | bad_json | rate_limit | rate_limit_event | not_logged |

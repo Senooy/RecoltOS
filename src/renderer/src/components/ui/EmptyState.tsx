@@ -1,5 +1,5 @@
 /**
- * `EmptyState` (DESIGN §3.12) : icône, titre, description, action. Variante `dark` pour les
+ * `EmptyState` : icône, titre, description, action. Variante `dark` pour les
  * surfaces immersives (étagère, viewer).
  */
 import { cva } from 'class-variance-authority'

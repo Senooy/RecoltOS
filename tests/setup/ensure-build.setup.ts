@@ -1,5 +1,5 @@
 /**
- * Projet Playwright `build` (QA §6.1) : construit `out/` si les sources ont changé depuis le
+ * Projet Playwright `build` : construit `out/` si les sources ont changé depuis le
  * dernier build (voir `tests/helpers/ensure-build.ts`).
  */
 import { test as setup } from '@playwright/test'

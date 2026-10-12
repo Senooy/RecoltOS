@@ -1,9 +1,9 @@
 /**
- * Fermeture propre d'une bibliothèque (ARCHI §4.6) : sortie de l'app, changement de bibliothèque,
+ * Fermeture propre d'une bibliothèque : sortie de l'app, changement de bibliothèque,
  * restauration d'un snapshot, remplacement de fichier.
  *
- * 1. pause de la file de jobs (attente ≤ 10 s des jobs en cours, hook de WP-10) ;
- * 2. arrêt des workers (hook de WP-03) ;
+ * 1. pause de la file de jobs (attente ≤ 10 s des jobs en cours) ;
+ * 2. arrêt des workers ;
  * 3. `PRAGMA optimize` puis `PRAGMA wal_checkpoint(TRUNCATE)` (on vérifie `busy = 0`) ;
  * 4. `db.close()` ;
  * 5. `forReplace` : le `-wal` doit être absent ou vide, sinon `AppError('wal_not_empty')`, la base

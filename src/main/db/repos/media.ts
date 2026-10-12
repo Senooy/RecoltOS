@@ -1,6 +1,6 @@
 /**
- * Repo `item_media` (ARCHI §4.3 + PLAN §4.2) : 1..n médias par item, position 0 = principal.
- * API d'écriture gelée (WP-10 ingestion, WP-11 import). Les chemins sont relatifs à la racine.
+ * Repo `item_media` : 1..n médias par item, position 0 = principal.
+ * API d'écriture gelée (ingestion, import). Les chemins sont relatifs à la racine.
  */
 import type Database from 'better-sqlite3'
 import { newUuid } from '../../../shared/ids'

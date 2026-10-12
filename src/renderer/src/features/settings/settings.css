@@ -1,5 +1,5 @@
 /*
- * Réglages : typographie mesurée sur fte10a, kgogfx et o8zko5 (k ≈ 1, Geist) — titre 21 px gras,
+ * Réglages : typographie (Geist) — titre 21 px gras,
  * description 12, libellés et navigation 13, aides et groupes 11, boutons et champs 11,5.
  * Hors couche Tailwind : s'impose aux tailles `text-ui` / `text-small` des primitives (Button,
  * SegmentedSmall, Select) dans la colonne de contenu, sans toucher aux composants partagés.

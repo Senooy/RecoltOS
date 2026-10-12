@@ -1,5 +1,5 @@
 /**
- * Réglages › Bibliothèques (DESIGN §3.10, ARCHI §6.9) : liste en carte (nom, chemin, nombre
+ * Réglages › Bibliothèques : liste en carte (nom, chemin, nombre
  * d'éléments, menu « … »), « Nouvelle bibliothèque », « Ouvrir un dossier… », et l'encart
  * « Importer depuis GatherOS » (détection, options, cible, progression par phase, aperçus, résumé).
  */

@@ -1,5 +1,5 @@
 /**
- * Fournisseur Codex (AI §1.2, §3.2) : TOUJOURS isolé, aucun repli sans isolation.
+ * Fournisseur Codex : TOUJOURS isolé, aucun repli sans isolation.
  * `codex exec --ephemeral --ignore-user-config --ignore-rules --skip-git-repo-check --sandbox read-only
  *  --color never -C <sandbox> [-m <modèle>] -c model_reasoning_effort="low" -c web_search="disabled"
  *  -c project_doc_max_bytes=0 <--disable F…> --output-schema <job>/schema.json -o <job>/out.json --json

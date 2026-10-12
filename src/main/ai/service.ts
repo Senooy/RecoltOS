@@ -1,8 +1,8 @@
 /**
- * Service IA (WP-43, AI §6, §11, §12.3) : exécution des jobs `ai.enrich` / `ai.prompt` de la file
+ * Service IA : exécution des jobs `ai.enrich` / `ai.prompt` de la file
  * unique `jobs`, routage par fournisseur, budget, journal, lots, estimation, aperçu, instantané.
  *
- * Règles d'or (PLAN §2.5) : AUCUN appel sans `consentVersion` ni avec `provider = 'off'` ; jamais
+ * Règles d'or : AUCUN appel sans `consentVersion` ni avec `provider = 'off'` ; jamais
  * pour un élément ou une collection `ai_excluded`. Les jobs déjà en base (ingestion, import d'une
  * ancienne bibliothèque) sont revérifiés à l'exécution.
  */
@@ -95,7 +95,7 @@ export function isExcluded(lib: LibraryContext, itemId: number): boolean {
   )
 }
 
-/** Charge utile d'un job créé à l'enregistrement (AI §6.3 « Déclenchement à l'enregistrement »). */
+/** Charge utile d'un job créé à l'enregistrement (« Déclenchement à l'enregistrement »). */
 export function autoJobPayload(ai: Prefs['ai']): AiJobPayload | null {
   if (ai.autoNameOnSave && ai.autoAnalyzeOnSave) return {}
   if (ai.autoNameOnSave) return { fields: ['title'] }
@@ -834,7 +834,7 @@ export class AiService {
     return n
   }
 
-  /** Aperçu exact de l'envoi (AI §11.2) : JPEG préparés, prompt système et prompt complet. */
+  /** Aperçu exact de l'envoi : JPEG préparés, prompt système et prompt complet. */
   async previewPayload(
     itemUuid: string | undefined,
     task: AiTask,

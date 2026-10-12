@@ -1,5 +1,5 @@
-// Anonymise une fixture JSON (réponses d'API de sync, payloads de l'extension) AVANT commit
-// (PLAN §2.1, SYNC §8, QA §5.2) : jamais de cookie, de jeton, d'identifiant de compte ni de contenu réel.
+// Anonymise une fixture JSON (réponses d'API de sync, payloads de l'extension) AVANT commit :
+// jamais de cookie, de jeton, d'identifiant de compte ni de contenu réel.
 //
 //   node scripts/sanitize-fixture.mjs --in brut.json --out propre.json [--keep-keys a,b] [--report-keys]
 //
@@ -23,7 +23,7 @@
 //      · tout autre texte, quelle que soit la clé (alt_text, message, location…) → « texte N ».
 //  - déterministe : une même valeur donne le même pseudonyme dans un fichier.
 //
-// Garde de fin (QA §5.2.4a) : `assertNoLeak(source, propre)` échoue si une chaîne de 8 caractères ou
+// Garde de fin : `assertNoLeak(source, propre)` échoue si une chaîne de 8 caractères ou
 // plus de la source survit dans la sortie (hors valeurs et clés structurelles conservées volontairement) ;
 // la CLI n'écrit rien dans ce cas. Les clés inconnues renommées sont comptées ; `--report-keys` les
 // liste (sur stderr) pour décider quoi ajouter à `--keep-keys`.
@@ -189,7 +189,7 @@ function strings(data, withKeys, out = []) {
 }
 
 /**
- * Garde anti-fuite (QA §5.2.4a) : renvoie les chaînes de ≥ 8 caractères de `source` qui subsistent
+ * Garde anti-fuite : renvoie les chaînes de ≥ 8 caractères de `source` qui subsistent
  * dans `clean` (comme chaîne entière ou comme sous-chaîne), hors `allowed` (valeurs et clés
  * structurelles conservées volontairement). Liste vide = aucune fuite.
  */

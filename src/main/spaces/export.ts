@@ -1,5 +1,5 @@
 /**
- * Export PNG d'un space (SPACES §1.9, WP-63) : enregistrement choisi d'abord (`showSaveDialog`,
+ * Export PNG d'un space : enregistrement choisi d'abord (`showSaveDialog`,
  * défaut `~/Downloads/<nom>.png`), puis rendu par la fenêtre stage avec progression
  * (`spaces.exportProgress`) et annulation (`spaces.exportCancel` → `AbortController`).
  * Un seul export à la fois. « Afficher dans le Finder » ne montre que le dernier fichier écrit.

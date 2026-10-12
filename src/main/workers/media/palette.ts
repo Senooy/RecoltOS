@@ -1,5 +1,5 @@
 /**
- * Palette (ARCHI §2.2, PLAN §1.5), sans dépendance :
+ * Palette, sans dépendance :
  * 1. sharp → 64×64 max, RGBA brut ; pixels d'alpha < 128 ignorés ; conversion Lab (D65).
  * 2. k-means++ (k = 8, graine 42, 12 itérations max).
  * 3. Tri par population décroissante, fusion des clusters à ΔE76 < 8, rejet des < 1 %.

@@ -1,6 +1,6 @@
 /**
- * electron-vite (QA §4.4, PLAN §1.14) : main et preload en CJS, preload isolé et autonome
- * (sandbox), renderer React + Tailwind avec CSP injectée (sans `https:`, PLAN §1.7).
+ * electron-vite : main et preload en CJS, preload isolé et autonome
+ * (sandbox), renderer React + Tailwind avec CSP injectée (sans `https:`).
  */
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -16,7 +16,7 @@ const alias = {
 }
 const watchIgnored = ['**/.worktrees/**', '**/.tmp/**', '**/out/**', '**/dist/**']
 
-/** CSP de production (QA §4.5 avec le schéma `recolt:` ; aucune origine http(s) distante). */
+/** CSP de production (avec le schéma `recolt:` ; aucune origine http(s) distante). */
 export const CSP_PROD = [
   "default-src 'self'",
   "script-src 'self'",
@@ -91,7 +91,7 @@ export default defineConfig({
     resolve: { alias },
     build: {
       outDir: 'out/main',
-      // Deux entrées : le main et le worker média (utilityProcess, WP-03 → out/main/media.worker.js).
+      // Deux entrées : le main et le worker média (utilityProcess, → out/main/media.worker.js).
       rollupOptions: {
         input: {
           index: resolve(root, 'src/main/index.ts'),
@@ -104,7 +104,7 @@ export default defineConfig({
     resolve: { alias },
     build: {
       outDir: 'out/preload',
-      // Entrée unique : bundle autonome sans chunk partagé. `isolatedEntries: true` (QA §4.4) est
+      // Entrée unique : bundle autonome sans chunk partagé. `isolatedEntries: true` est
       // inutile ici et casse le build hors TTY (electron-vite 5.0.0 appelle
       // `process.stdout.moveCursor` sans vérifier `isTTY`). À réactiver si une 2e entrée apparaît.
       isolatedEntries: false,
@@ -119,7 +119,7 @@ export default defineConfig({
     server: { watch: { ignored: watchIgnored } },
     build: {
       outDir: resolve(root, 'out/renderer'),
-      // WP-71 : code minifié (electron-vite ne minifie pas par défaut) : moins à analyser au
+      // code minifié (electron-vite ne minifie pas par défaut) : moins à analyser au
       // démarrage et moins de mémoire V8 (source et bytecode) dans le renderer.
       minify: true,
       rollupOptions: {

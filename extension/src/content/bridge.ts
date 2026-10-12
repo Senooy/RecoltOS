@@ -1,5 +1,5 @@
 /**
- * Pont de contenu, monde ISOLATED (SYNC §2.7, §2.4) : reçoit les événements du hook (vérifie la
+ * Pont de contenu, monde ISOLATED : reçoit les événements du hook (vérifie la
  * source, l'origine et le marqueur), les classe (`classify.ts`) et les relaie à l'arrière-plan ;
  * garde un petit cache des posts X vus (bouton « Enregistrer dans RecoltOS » des publications).
  */

@@ -1,5 +1,5 @@
 /**
- * WP-05 — handlers `system.*` via `dispatch` (validation zod des entrées et sorties), Electron
+ * handlers `system.*` via `dispatch` (validation zod des entrées et sorties), Electron
  * simulé. `copyImage` d'un webp passe par le vrai `toPng` (sharp, en processus) : le PNG écrit dans
  * le presse-papiers est décodable et non vide. Le collage réel est couvert par l'e2e
  * `tests/unit/protocol/e2e/recolt-protocol.spec.ts`.

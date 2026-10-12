@@ -1,11 +1,11 @@
 /**
- * Vue détail (DESIGN §3.7, ERRATA §C, WP-30) : calque plein écran sur fond en dégradés, barre de
+ * Vue détail : calque plein écran sur fond en dégradés, barre de
  * 45 pt (retour, « 3 / 408 », zoom 25–300 %, Télécharger, Supprimer, Fermer), scène (média
  * `contain`, pincement / ⌘-molette, déplacement au-delà de 100 %, flèches au survol des bords),
  * lecteur vidéo sous le média, carrousel (⌥←/⌥→, points « 2 / 6 »), post sans média en
  * `TweetCard detail` de 560 pt, panneau Détails (⌘I).
  *
- * Transitions (mesurées sur la référence, rafales `0qtb20…6i4y14` et `g9x9ua…cx19x3`) : FLIP manuel WAAPI
+ * Transitions : FLIP manuel WAAPI
  * depuis la carte de la grille (340 ms `--ease-sheet`) pendant que le voile flouté et le chrome
  * apparaissent en fondu ; à la fermeture, la grille fait défiler la carte courante en vue, le média
  * y revient, le voile se dissipe et les cartes réapparaissent en cascade. Carte non montée : fondu.
@@ -65,7 +65,7 @@ export const FADE_MS = 200
 const PANEL_KEY = 'recolt.viewer.panel.v1'
 const DOTS_H = 28
 
-/** Mouvement réduit, ou e2e (animations coupées, QA §2.2) : fondus courts, aucun FLIP. */
+/** Mouvement réduit, ou e2e (animations coupées) : fondus courts, aucun FLIP. */
 export function motionOff(): boolean {
   return isReducedMotion() || document.documentElement.dataset.e2e === '1'
 }

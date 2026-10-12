@@ -1,5 +1,5 @@
 /**
- * Pile d'annulation de l'app (DESIGN §3.13, ERRATA §C) : corbeille, masquer, collections,
+ * Pile d'annulation de l'app : corbeille, masquer, collections,
  * renommage, Rediscover. Les champs texte gardent l'annulation native (`system.edit`).
  */
 import { create } from 'zustand'

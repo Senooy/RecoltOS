@@ -1,5 +1,5 @@
 /**
- * `Button` (DESIGN §4.3) : variantes primary (noir) / secondary (outline) / ghost / danger,
+ * `Button` : variantes primary (noir) / secondary (outline) / ghost / danger,
  * tailles sm 28 / md 34 / lg 36, formes pill / rounded. Focus clavier = `:focus-visible` global.
  */
 import { cva, type VariantProps } from 'class-variance-authority'

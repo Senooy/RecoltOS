@@ -1,5 +1,5 @@
 /**
- * M3 (WP-30) : vue détail — ouverture depuis la grille, compteur = position dans la liste
+ * M3 : vue détail — ouverture depuis la grille, compteur = position dans la liste
  * d'origine, ←/→, Échap rend le focus à la carte, note enregistrée (800 ms), tag ajouté en base,
  * panneau Détails (⌘I), menu natif.
  */
@@ -154,7 +154,7 @@ test.describe('vue détail', () => {
       .not.toEqual({ view_count: 0 })
   })
 
-  test('pastille du panneau → Recherche filtrée par cette couleur (WP-31)', async ({ page }) => {
+  test('pastille du panneau → Recherche filtrée par cette couleur', async ({ page }) => {
     const card = page.locator(`${t('grid')} ${t('card')}[data-kind="image"]`).first()
     await expect(card).toBeVisible()
     await card.click()

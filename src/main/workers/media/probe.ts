@@ -1,5 +1,5 @@
 /**
- * Métadonnées d'image (sharp, ou sips pour HEIC/PSD) et de vidéo (ffprobe) — ARCHI §5.2 étape 6.
+ * Métadonnées d'image (sharp, ou sips pour HEIC/PSD) et de vidéo (ffprobe).
  */
 import sharp, { type Metadata } from 'sharp'
 import { AppError } from '../../../shared/errors'

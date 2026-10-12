@@ -1,4 +1,4 @@
-/* Réglages › Synchronisation (WP-57), recalés sur `fte10a` (k = 1, modale 749 × 571). */
+/* Réglages › Synchronisation (modale 749 × 571). */
 .sync-group {
   margin-top: 9px;
   font-size: 11px;
@@ -36,7 +36,7 @@
 .sync-tone-err {
   color: var(--tone-err);
 }
-/* Ajout RecoltOS : invisible tant que la ligne n'est pas survolée (garde la mise en page `fte10a`). */
+/* Invisible tant que la ligne n'est pas survolée (la mise en page ne bouge pas). */
 .sync-more {
   display: inline-flex;
   height: 26px;

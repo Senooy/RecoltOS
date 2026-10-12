@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 /**
- * Migrations SQLite (ARCHI §4.2). Les fichiers `migrations/NNNN_nom.sql` sont embarqués au build par
+ * Migrations SQLite. Les fichiers `migrations/NNNN_nom.sql` sont embarqués au build par
  * `import.meta.glob(…, { query: '?raw' })` et appliqués dans l'ordre. `PRAGMA user_version` = numéro de
  * la dernière migration appliquée (posé ici, jamais dans le fichier SQL).
  *
@@ -54,7 +54,7 @@ export function bundledMigrations(): Migration[] {
   return bundled
 }
 
-/** `YYYYMMDD-HHmmss` en heure locale (noms de snapshots, ARCHI §7). */
+/** `YYYYMMDD-HHmmss` en heure locale (noms de snapshots). */
 export function snapshotStamp(at: number): string {
   const d = new Date(at)
   const p = (n: number) => String(n).padStart(2, '0')
@@ -135,7 +135,7 @@ export function migrate(db: Database.Database, opts: MigrateOptions = {}): Migra
 
 /**
  * En-tête optionnel d'une migration : `-- recolt:foreign_keys=off` (ligne seule). Il permet la
- * procédure ARCHI §4.2 (créer, copier, supprimer, renommer) sans cascade sur les tables filles.
+ * procédure (créer, copier, supprimer, renommer) sans cascade sur les tables filles.
  */
 const FK_OFF_HEADER = /^--\s*recolt:foreign_keys\s*=\s*off\s*$/im
 

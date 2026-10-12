@@ -1,5 +1,5 @@
 /**
- * Repo `collections` + `collection_items` (ARCHI §4.3, §7) : API d'écriture gelée.
+ * Repo `collections` + `collection_items` : API d'écriture gelée.
  * - cycles refusés par CTE récursive avant tout changement de parent (`collection_cycle`) ;
  * - suppression : pierres tombales explicites des descendants d'origine `gatheros` (la cascade
  *   sur une table auto-référencée ne déclenche pas forcément `trg_tomb_collection`) ;

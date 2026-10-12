@@ -1,8 +1,5 @@
 /**
- * Conversions de couleur CIELAB D65 (ARCHI §2.1, §2.2). Sans dépendance.
- *
- * Propriété : créé par WP-00 (implémentation de base utilisable par WP-03 pour la palette),
- * possédé ensuite par WP-31 (ΔE2000 via culori, index de palette, filtre).
+ * Conversions de couleur CIELAB D65. Sans dépendance.
  */
 
 export type Rgb = readonly [number, number, number]
@@ -11,7 +8,7 @@ export type Lch = readonly [number, number, number]
 
 /** Seuil de chroma sous lequel une couleur est « neutre » (bucket 12). */
 export const NEUTRAL_CHROMA = 12
-/** Bucket « inconnu » (aucune palette), trié en fin (ERRATA §C). */
+/** Bucket « inconnu » (aucune palette), trié en fin. */
 export const UNKNOWN_BUCKET = 13
 export const NEUTRAL_BUCKET = 12
 
@@ -84,12 +81,12 @@ export function labToLch([l, a, b]: Lab): Lch {
   return [l, c, h]
 }
 
-/** ΔE76 (distance euclidienne Lab) : fusion k-means (PLAN §1.5). Le filtre utilise ΔE2000 (WP-31). */
+/** ΔE76 (distance euclidienne Lab) : fusion k-means. Le filtre utilise ΔE2000. */
 export function deltaE76(p: Lab, q: Lab): number {
   return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
 }
 
-/** Décalage des secteurs de teinte (AI §9.3) : les rouges (≈ 350–20°) ne sont plus coupés en deux. */
+/** Décalage des secteurs de teinte : les rouges (≈ 350–20°) ne sont plus coupés en deux. */
 export const HUE_OFFSET = 15
 
 /**
@@ -120,7 +117,7 @@ const named = (id: string, label: string, hex: string): NamedColor => ({
   lab: hexToLab(hex),
 })
 
-/** 12 couleurs nommées du filtre (AI §9.2), du rouge au rose puis neutres. */
+/** 12 couleurs nommées du filtre, du rouge au rose puis neutres. */
 export const NAMED_COLORS: readonly NamedColor[] = [
   named('rouge', 'Rouge', '#e0312b'),
   named('orange', 'Orange', '#f2862a'),
@@ -136,5 +133,5 @@ export const NAMED_COLORS: readonly NamedColor[] = [
   named('blanc', 'Blanc', '#f4f4f4'),
 ]
 
-/** Tolérance par défaut du filtre couleur (ΔE2000, AI §9.2). */
+/** Tolérance par défaut du filtre couleur (ΔE2000). */
 export const DEFAULT_COLOR_TOLERANCE = 18

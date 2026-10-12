@@ -1,5 +1,5 @@
 /**
- * DTO des collections et tags (PLAN §4.3, ERRATA §C).
+ * DTO des collections et tags.
  */
 import { z } from 'zod'
 import { HexColor, Source, Uuid } from '../enums'
@@ -33,6 +33,6 @@ export const TagInfo = z.object({
 })
 export type TagInfo = z.output<typeof TagInfo>
 
-/** Chips virtuelles `#x #instagram #cosmos` dérivées de `items.source` (PLAN §1.4). */
+/** Chips virtuelles `#x #instagram #cosmos` dérivées de `items.source`. */
 export const SourceChip = z.object({ source: Source, count: z.number().int().min(0) })
 export type SourceChip = z.output<typeof SourceChip>

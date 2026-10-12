@@ -1,5 +1,5 @@
 /**
- * Contrat `import.gatheros.*` (ARCHI §6). GatherOS en lecture seule, copie de la base (PLAN §2.2).
+ * Contrat `import.gatheros.*`. GatherOS en lecture seule, copie de la base.
  */
 import { z } from 'zod'
 import { Empty, Void, type ContractShape, type EventShape } from './define'
@@ -24,9 +24,9 @@ export const ImportOptions = z.object({
   includeTrash: z.boolean().default(true),
   includeHidden: z.boolean().default(true),
   importSpaces: z.boolean().default(true),
-  /** Exemples livrés par GatherOS (tag `__starter__`), exclus par défaut (ARCHI §6.6). */
+  /** Exemples livrés par GatherOS (tag `__starter__`), exclus par défaut. */
   skipStarterContent: z.boolean().default(true),
-  /** Titres, descriptions, OCR et prompts (ARCHI §6.3). */
+  /** Titres, descriptions, OCR et prompts. */
   importAiFields: z.boolean().default(true),
   /** Réglages GatherOS par liste blanche ; ne peut jamais activer un fournisseur IA. */
   importPrefs: z.boolean().default(false),
@@ -35,7 +35,7 @@ export const ImportOptions = z.object({
 })
 export type ImportOptions = z.output<typeof ImportOptions>
 
-/** Comptes de la carte de détection (ARCHI §6.9), après exclusion des exemples de démarrage. */
+/** Comptes de la carte de détection, après exclusion des exemples de démarrage. */
 export const ImportPreview = z.object({
   items: z.number().int(),
   images: z.number().int(),
@@ -69,7 +69,7 @@ export const ImportReport = z.object({
   counts: z.record(z.string(), z.number().int()),
   warnings: z.array(z.string()),
   error: z.string().nullable(),
-  /** Liens du résumé : éléments sans fichier, doublons d'URL (ARCHI §6.9). */
+  /** Liens du résumé : éléments sans fichier, doublons d'URL. */
   missingFiles: z.array(z.object({ itemUuid: z.string(), file: z.string() })).default([]),
   urlDuplicates: z.array(z.object({ url: z.string(), itemUuids: z.array(z.string()) })).default([]),
   /** Éléments importés sans description (bouton « Enrichir N éléments avec l'IA… »). */

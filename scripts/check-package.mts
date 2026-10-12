@@ -1,15 +1,15 @@
 /**
- * `check:pkg` (QA §3.5, PLAN §1.15, §2.11) : garde-fous du `package.json`.
+ * `check:pkg` : garde-fous du `package.json`.
  * Échoue si : un script porte le nom d'une commande intégrée de pnpm ; une version n'est pas exacte
  * (`^`, `~`, `*`, plages, `latest`) ; `dependencies` sort de la liste blanche ; `packageManager` n'est
- * pas `pnpm@12.6.0+sha512.…` ; `"type": "module"` est posé (main et preload sont en CJS, PLAN §1.14).
+ * pas `pnpm@12.6.0+sha512.…` ; `"type": "module"` est posé (main et preload sont en CJS).
  * `checkPackage` est pure (testée sans disque) ; le CLI accepte `--file <package.json>`.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-/** Commandes intégrées de pnpm : `pnpm <nom>` les exécute avant un script du même nom (QA §3.5). */
+/** Commandes intégrées de pnpm : `pnpm <nom>` les exécute avant un script du même nom. */
 export const PNPM_BUILTINS: readonly string[] = [
   'doctor',
   'rebuild',
@@ -45,12 +45,12 @@ export const PNPM_BUILTINS: readonly string[] = [
 ]
 
 /**
- * Exceptions assumées : `pack` (electron-builder `--dir`) est imposé par le contrat de WP-00 et QA §3.5
- * lui-même. Sans risque tant que tout est appelé par `pnpm run <script>` (PLAN §1.15).
+ * Exceptions assumées : `pack` (electron-builder `--dir`) est imposé par le contrat
+ * lui-même. Sans risque tant que tout est appelé par `pnpm run <script>`.
  */
 export const ALLOWED_BUILTIN_SCRIPTS: readonly string[] = ['pack']
 
-/** Seules dépendances d'exécution externes à l'asar (PLAN §3 : `dependencies` = natifs uniquement). */
+/** Seules dépendances d'exécution externes à l'asar (`dependencies` = natifs uniquement). */
 export const DEPENDENCIES_ALLOWLIST: readonly string[] = ['better-sqlite3', 'sharp']
 
 export const PACKAGE_MANAGER_PREFIX = 'pnpm@12.6.0+sha512.'
@@ -78,7 +78,7 @@ function isExactSpec(spec: string): boolean {
 const unquote = (v: string): string => v.replace(/^(["'])(.*)\1$/, '$2')
 
 /**
- * Contrôle de `pnpm-workspace.yaml` (PLAN §2.11) : `overrides`, `catalog` et `catalogs.<nom>` portent
+ * Contrôle de `pnpm-workspace.yaml` : `overrides`, `catalog` et `catalogs.<nom>` portent
  * des versions que pnpm 12 applique comme `package.json`. Lecteur volontairement restreint (pas de
  * dépendance YAML) : mappings `clé: valeur` indentés, sans listes ni ancres. Il ÉCHOUE FERMÉ : une ligne
  * de ces sections qu'il ne sait pas lire est une erreur, jamais un passage silencieux.
@@ -152,7 +152,7 @@ export function checkWorkspace(yamlText: string): string[] {
     if (spec === '') {
       fail(`« ${label} » sans version (bloc non analysable)`)
     } else if (!isExactSpec(spec)) {
-      errors.push(`${label} : version « ${spec} » non exacte (ni ^, ni ~, ni plage ; PLAN §2.11)`)
+      errors.push(`${label} : version « ${spec} » non exacte (ni ^, ni ~, ni plage)`)
     }
   }
   return errors
@@ -183,7 +183,7 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
       // Un forçage imbriqué (objet) ou non textuel n'est pas contrôlable ici : refusé.
       if (typeof spec !== 'string' || !isExactSpec(spec)) {
         errors.push(
-          `${label}.${name} : version « ${typeof spec === 'string' ? spec : JSON.stringify(spec)} » non exacte (ni ^, ni ~, ni plage ; PLAN §2.11)`,
+          `${label}.${name} : version « ${typeof spec === 'string' ? spec : JSON.stringify(spec)} » non exacte (ni ^, ni ~, ni plage)`,
         )
       }
     }
@@ -199,12 +199,12 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
 
   if (!pkg.packageManager?.startsWith(PACKAGE_MANAGER_PREFIX)) {
     errors.push(
-      `packageManager : « ${pkg.packageManager ?? '(absent)'} » ; attendu « ${PACKAGE_MANAGER_PREFIX}… » (PLAN §1.15)`,
+      `packageManager : « ${pkg.packageManager ?? '(absent)'} » ; attendu « ${PACKAGE_MANAGER_PREFIX}… »`,
     )
   }
 
   if (pkg.type === 'module') {
-    errors.push('"type": "module" interdit : main et preload sont en CJS (PLAN §1.14)')
+    errors.push('"type": "module" interdit : main et preload sont en CJS')
   }
 
   return errors

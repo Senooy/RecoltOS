@@ -1,5 +1,5 @@
 /**
- * Handlers `libraries.*` (ERRATA §B, WP-02) : liste, création (dossiers iCloud / Dropbox refusés),
+ * Handlers `libraries.*` : liste, création (dossiers iCloud / Dropbox refusés),
  * bascule, ouverture d'un dossier existant, renommage, retrait (fichiers conservés), affichage
  * dans le Finder.
  */

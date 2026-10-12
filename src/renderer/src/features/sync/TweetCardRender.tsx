@@ -1,5 +1,5 @@
 /**
- * Route hors écran `tweet-card` (WP-56) : la carte `TweetCard light` de la grille, 480 px CSS rendus
+ * Route hors écran `tweet-card` : la carte `TweetCard light` de la grille, 480 px CSS rendus
  * à ×2 (960 px), pour le fichier principal des posts sans média. Données : `?data=<ItemCard base64url>`.
  * Signale `body[data-ready=1]` quand les polices et les images sont chargées.
  */
