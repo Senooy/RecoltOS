@@ -20,7 +20,7 @@ describe('checkPackage', () => {
   })
 
   it.each(['^1.2.3', '~1.2.3', '*', 'latest', '1.x', '>=1.0.0', '1.2', 'workspace:*'])(
-    'refuse la version « %s »',
+    'rejects version "%s"',
     (spec) => {
       const pkg = clone()
       pkg.devDependencies = { ...pkg.devDependencies, zod: spec }
@@ -39,7 +39,7 @@ describe('checkPackage', () => {
   it('rejects a runtime dependency not on the allowlist', () => {
     const pkg = clone()
     pkg.dependencies = { ...pkg.dependencies, zod: '4.6.5' }
-    expect(checkPackage(pkg).join('\n')).toContain('dependencies.zod : hors liste blanche')
+    expect(checkPackage(pkg).join('\n')).toContain('dependencies.zod: not in the allowlist')
   })
 
   it('rejects a clash with a built-in pnpm command, except « pack »', () => {
@@ -86,7 +86,7 @@ describe('check:pkg: overrides and CLI entry', () => {
     ['overrides', { overrides: { zod: '4.6.5 || 4.6.4' } }],
     ['pnpm.overrides', { pnpm: { overrides: { zod: '~4.6.5' } } }],
     ['overrides', { overrides: { zod: { '.': '4.6.5' } } }],
-  ])('refuse une version non exacte dans %s', (label, extra) => {
+  ])('rejects a non-exact version in %s', (label, extra) => {
     const errors = checkPackage({ ...clone(), ...extra })
     expect(errors).toHaveLength(1)
     expect(errors[0]).toContain(`${label}.zod`)
@@ -111,7 +111,7 @@ describe('check:pkg: overrides and CLI entry', () => {
 
   it('missing file or invalid JSON: exit 1 with a message, no stack trace', () => {
     const dir = makeTmpDir('pkg-missing')
-    const absent = cli(['--file', join(dir, 'introuvable.json')])
+    const absent = cli(['--file', join(dir, 'missing.json')])
     expect(absent.status).toBe(1)
     expect(absent.stderr).toContain('cannot read')
     expect(absent.stderr).not.toContain('    at ')
@@ -164,7 +164,7 @@ describe('check:pkg: pnpm-workspace.yaml (overrides, catalog, catalogs)', () => 
   it('fails closed on an unparseable shape in a controlled section', () => {
     const errors = checkWorkspace('overrides:\n  - zod\n')
     expect(errors.length).toBeGreaterThan(0)
-    expect(errors[0]).toContain('pnpm-workspace.yaml ligne')
+    expect(errors[0]).toContain('pnpm-workspace.yaml line')
   })
 
   it('ignores other settings (lists, allowBuilds) outside the controlled section', () => {

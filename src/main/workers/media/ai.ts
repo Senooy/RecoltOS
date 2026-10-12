@@ -28,7 +28,7 @@ export const AI_FRAME_MAX_EDGE = 1024
 
 function edge(v: unknown, max: number): number {
   if (typeof v !== 'number' || !Number.isInteger(v) || v < 64 || v > max)
-    throw new AppError('validation', `maxEdge invalide (64..${max})`)
+    throw new AppError('validation', `invalid maxEdge (64..${max})`)
   return v
 }
 
@@ -62,7 +62,7 @@ export function aiImage(
         )
       } catch (err) {
         if (err instanceof AppError) throw err
-        throw new AppError('decode_failed', 'image illisible', rawError(err))
+        throw new AppError('decode_failed', 'unreadable image', rawError(err))
       }
     }),
   )
@@ -106,9 +106,10 @@ export async function extractFrame(
   const dst = assertAbs(a.dst, 'dst')
   const max = edge(a.maxEdge, AI_FRAME_MAX_EDGE)
   if (a.atMs === undefined && a.fromEndMs === undefined)
-    throw new AppError('validation', 'atMs ou fromEndMs requis')
+    throw new AppError('validation', 'atMs or fromEndMs required')
   for (const v of [a.atMs, a.fromEndMs])
-    if (v !== undefined && !Number.isFinite(v)) throw new AppError('validation', 'instant invalide')
+    if (v !== undefined && !Number.isFinite(v))
+      throw new AppError('validation', 'invalid timestamp')
   await assertDistinct(src, dst)
   const ffmpeg = requireTool(tools, 'ffmpeg')
   await assertFile(src)
@@ -129,7 +130,7 @@ export async function extractFrame(
         (s) => s.size,
         () => 0,
       )
-      if (size <= 0) throw new AppError('decode_failed', 'aucune image extraite')
+      if (size <= 0) throw new AppError('decode_failed', 'no frame extracted')
       const meta = await sharp(tmp).metadata()
       return { width: meta.width, height: meta.height, bytes: size }
     },

@@ -132,7 +132,7 @@ function parseCount(flag: string, raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined
   const n = raw.trim() === '' ? Number.NaN : Number(raw)
   if (!Number.isInteger(n) || n < 0)
-    throw new Error(`--${flag} doit être un entier ≥ 0 (reçu « ${raw} »)`)
+    throw new Error(`--${flag} must be an integer >= 0 (got "${raw}")`)
   return n
 }
 

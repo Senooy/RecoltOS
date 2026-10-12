@@ -89,14 +89,14 @@ function Showcase() {
 
   return (
     <div className="flex flex-col gap-8">
-      <Section title="Boutons">
+      <Section title="Buttons">
         <Row>
-          <Button variant="primary">Importer…</Button>
-          <Button variant="secondary">Nouvelle bibliothèque</Button>
-          <Button variant="ghost">Annuler</Button>
-          <Button variant="danger">Vider la corbeille maintenant</Button>
+          <Button variant="primary">Import…</Button>
+          <Button variant="secondary">New Library</Button>
+          <Button variant="ghost">Cancel</Button>
+          <Button variant="danger">Empty Trash Now</Button>
           <Button variant="primary" disabled>
-            Désactivé
+            Disabled
           </Button>
         </Row>
         <Row>
@@ -110,7 +110,7 @@ function Showcase() {
             lg 36
           </Button>
           <Button shape="rounded" variant="secondary">
-            Arrondi
+            Rounded
           </Button>
           <Button
             variant="primary"
@@ -120,27 +120,27 @@ function Showcase() {
               window.setTimeout(() => setLoading(false), 1500)
             }}
           >
-            Charger
+            Load
           </Button>
         </Row>
       </Section>
 
-      <Section title="Boutons d'icône">
+      <Section title="Icon Buttons">
         <Row>
-          <IconButton icon={<Compass />} label="Redécouvrir" shortcut={['⌘', '⇧', 'R']} />
-          <IconButton icon={<Settings />} label="Réglages" shortcut={['⌘', ',']} />
-          <IconButton icon={<Search />} label="Rechercher" tone="outline" />
-          <IconButton icon={<Plus />} label="Ajouter" tone="glass" size="lg" />
-          <IconButton icon={<Info />} label="Informations" size="sm" />
-          <IconButton icon={<Trash />} label="Supprimer" disabled />
+          <IconButton icon={<Compass />} label="Rediscover" shortcut={['⌘', '⇧', 'R']} />
+          <IconButton icon={<Settings />} label="Settings" shortcut={['⌘', ',']} />
+          <IconButton icon={<Search />} label="Search" tone="outline" />
+          <IconButton icon={<Plus />} label="Add" tone="glass" size="lg" />
+          <IconButton icon={<Info />} label="Info" size="sm" />
+          <IconButton icon={<Trash />} label="Delete" disabled />
         </Row>
         <Immersive>
-          <IconButton icon={<X />} label="Fermer" tone="viewer" size="lg" />
-          <IconButton icon={<Download />} label="Télécharger" tone="viewer" />
+          <IconButton icon={<X />} label="Close" tone="viewer" size="lg" />
+          <IconButton icon={<Download />} label="Download" tone="viewer" />
         </Immersive>
       </Section>
 
-      <Section title="Raccourcis">
+      <Section title="Shortcuts">
         <Row>
           <Kbd keys={['⌘', 'K']} />
           <Kbd keys={['esc']} size="sm" />
@@ -152,18 +152,18 @@ function Showcase() {
         </Immersive>
       </Section>
 
-      <Section title="Interrupteur · Curseur · Sélecteur compact">
+      <Section title="Switch · Slider · Compact Picker">
         <Row>
-          <Switch checked={sw} onCheckedChange={setSw} aria-label="Lire les vidéos au survol" />
-          <Switch checked={!sw} onCheckedChange={(v) => setSw(!v)} aria-label="Exemple désactivé" />
-          <Switch disabled aria-label="Indisponible" />
+          <Switch checked={sw} onCheckedChange={setSw} aria-label="Play videos on hover" />
+          <Switch checked={!sw} onCheckedChange={(v) => setSw(!v)} aria-label="Disabled example" />
+          <Switch disabled aria-label="Unavailable" />
           <Slider
             variant="columns"
             min={2}
             max={8}
             value={cols}
             onValueChange={setCols}
-            label="Taille des colonnes"
+            label="Column size"
             valueText={`${cols} colonnes`}
             inverted
           />
@@ -174,7 +174,7 @@ function Showcase() {
             max={8}
             value={pref}
             onValueChange={setPref}
-            label="Colonnes par défaut"
+            label="Default columns"
           />
           <span className="tnum text-caption text-fg-muted">{pref}</span>
         </Row>
@@ -193,23 +193,23 @@ function Showcase() {
         </Immersive>
         <Row>
           <SegmentedSmall
-            label="Thème"
+            label="Theme"
             value={seg}
             onChange={setSeg}
             options={[
               { value: 'light', label: 'Clair', icon: <Sun /> },
               { value: 'dark', label: 'Sombre', icon: <Moon /> },
-              { value: 'system', label: 'Système' },
+              { value: 'system', label: 'System' },
             ]}
           />
         </Row>
       </Section>
 
-      <Section title="Infobulle (600 ms) · Menu · Popover · Dialogue">
+      <Section title="Tooltip (600 ms) · Menu · Popover · Dialog">
         <Row>
-          <Tooltip content="Réglages" shortcut={['⌘', ',']} defaultOpen side="right">
+          <Tooltip content="Settings" shortcut={['⌘', ',']} defaultOpen side="right">
             <Button variant="secondary" size="sm">
-              Infobulle ouverte
+              Tooltip open
             </Button>
           </Tooltip>
           <Popover.Root>
@@ -219,25 +219,22 @@ function Showcase() {
               </Button>
             </Popover.Trigger>
             <Popover.Content className="w-60 text-small">
-              Filtres de recherche, sélecteur de collections…
+              Search filters, collection picker…
             </Popover.Content>
           </Popover.Root>
           <Dialog.Root>
             <Dialog.Trigger asChild>
               <Button variant="secondary" size="sm">
-                Dialogue
+                Dialog
               </Button>
             </Dialog.Trigger>
-            <Dialog.Content
-              title="Supprimer « Dev » ?"
-              description="Les éléments restent dans ta bibliothèque."
-            >
+            <Dialog.Content title="Delete “Dev”?" description="Items stay in your library.">
               <div className="flex justify-end gap-2 p-5 pt-6">
                 <Dialog.Close asChild>
-                  <Button variant="secondary">Annuler</Button>
+                  <Button variant="secondary">Cancel</Button>
                 </Dialog.Close>
                 <Dialog.Close asChild>
-                  <Button variant="primary">Supprimer</Button>
+                  <Button variant="primary">Delete</Button>
                 </Dialog.Close>
               </div>
             </Dialog.Content>
@@ -249,9 +246,9 @@ function Showcase() {
               </div>
             </Menu.Context.Trigger>
             <Menu.Context.Content>
-              <Menu.Context.Item icon={<Copy />}>Copier l’image</Menu.Context.Item>
+              <Menu.Context.Item icon={<Copy />}>Copy Image</Menu.Context.Item>
               <Menu.Context.Item icon={<Trash />} tone="danger">
-                Supprimer
+                Delete
               </Menu.Context.Item>
             </Menu.Context.Content>
           </Menu.Context.Root>
@@ -260,13 +257,13 @@ function Showcase() {
           <Menu.Dropdown.Root open modal={false}>
             <Menu.Dropdown.Trigger asChild>
               <Button variant="secondary" size="sm">
-                Menu ouvert
+                Menu open
               </Button>
             </Menu.Dropdown.Trigger>
             <Menu.Dropdown.Content align="start" onInteractOutside={(e) => e.preventDefault()}>
               <Menu.Dropdown.Sub>
                 <Menu.Dropdown.SubTrigger icon={<FolderPlus />}>
-                  Ajouter à une collection
+                  Add to Collection
                 </Menu.Dropdown.SubTrigger>
                 <Menu.Dropdown.SubContent>
                   <Menu.Dropdown.CheckboxItem
@@ -279,28 +276,28 @@ function Showcase() {
                   <Menu.Dropdown.Item icon={<Folder />}>Dev</Menu.Dropdown.Item>
                 </Menu.Dropdown.SubContent>
               </Menu.Dropdown.Sub>
-              <Menu.Dropdown.Item icon={<EyeOff />}>Masquer de la bibliothèque</Menu.Dropdown.Item>
+              <Menu.Dropdown.Item icon={<EyeOff />}>Hide from Library</Menu.Dropdown.Item>
               <Menu.Dropdown.Item icon={<Eye />} shortcut={['⌘', 'H']}>
-                Ne plus masquer
+                Unhide
               </Menu.Dropdown.Item>
-              <Menu.Dropdown.Item icon={<FolderOpen />}>Afficher dans le Finder</Menu.Dropdown.Item>
-              <Menu.Dropdown.Item icon={<Download />}>Télécharger</Menu.Dropdown.Item>
+              <Menu.Dropdown.Item icon={<FolderOpen />}>Show in Finder</Menu.Dropdown.Item>
+              <Menu.Dropdown.Item icon={<Download />}>Download</Menu.Dropdown.Item>
               <Menu.Dropdown.Item icon={<Trash />} tone="danger">
-                Supprimer
+                Delete
               </Menu.Dropdown.Item>
             </Menu.Dropdown.Content>
           </Menu.Dropdown.Root>
         </div>
       </Section>
 
-      <Section title="Champ · Puce">
+      <Section title="Field · Chip">
         <Row>
           <div className="w-60">
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Sans titre"
-              aria-label="Nom"
+              placeholder="Untitled"
+              aria-label="Name"
             />
           </div>
           <div className="w-60">
@@ -311,7 +308,7 @@ function Showcase() {
               trailing={
                 <IconButton
                   icon={<Info />}
-                  label="Ouvrir le lien"
+                  label="Open Link"
                   size="sm"
                   tooltip={false}
                   tabIndex={-1}
@@ -320,7 +317,7 @@ function Showcase() {
             />
           </div>
           <div className="w-60">
-            <Input invalid defaultValue="Champ en erreur" aria-label="Erreur" />
+            <Input invalid defaultValue="Field with an error" aria-label="Error" />
           </div>
         </Row>
         <Row>
@@ -337,20 +334,20 @@ function Showcase() {
         </Row>
         <Immersive>
           <Chip variant="viewer" label="Dev" onRemove={() => undefined} />
-          <Chip variant="viewer" label="+ Ajouter" onClick={() => undefined} />
+          <Chip variant="viewer" label="+ Add" onClick={() => undefined} />
         </Immersive>
       </Section>
 
-      <Section title="État vide · Chargement · Pilule · Notification">
+      <Section title="Empty State · Loading · Pill · Notification">
         <div className="rounded-xl border border-border-subtle">
           <EmptyState
             icon={<Images />}
-            title="Ta bibliothèque est vide"
-            description="Glisse des images ici, colle une URL ou importe ta bibliothèque GatherOS."
+            title="Your library is empty"
+            description="Drop images here, paste a URL or import your GatherOS library."
             action={
               <>
-                <Button variant="primary">Importer depuis GatherOS</Button>
-                <Button variant="secondary">Importer des fichiers</Button>
+                <Button variant="primary">Import from GatherOS</Button>
+                <Button variant="secondary">Import Files</Button>
               </>
             }
           />
@@ -359,40 +356,40 @@ function Showcase() {
           <EmptyState
             variant="dark"
             icon={<Folder />}
-            title="Cette collection est vide"
-            description="Glisse des éléments ici depuis ta bibliothèque."
+            title="This collection is empty"
+            description="Drop items here from your library."
           />
         </div>
         <Row>
           <Spinner />
           <Spinner size={24} />
           <PillBar aria-label="Notification">
-            Ajouté à Gaming
-            <PillBar.Action>Annuler</PillBar.Action>
+            Added to Gaming
+            <PillBar.Action>Undo</PillBar.Action>
           </PillBar>
-          <PillBar aria-label="Sélection">
-            3 sélectionnés
-            <PillBar.Action tone="ghost">Masquer</PillBar.Action>
-            <PillBar.Action tone="danger">Supprimer</PillBar.Action>
+          <PillBar aria-label="Selection">
+            3 selected
+            <PillBar.Action tone="ghost">Hide</PillBar.Action>
+            <PillBar.Action tone="danger">Delete</PillBar.Action>
           </PillBar>
           <Button
             variant="secondary"
             size="sm"
             onClick={() =>
-              toast('Ajouté à Gaming', { action: { label: 'Annuler', onClick: () => undefined } })
+              toast('Added to Gaming', { action: { label: 'Undo', onClick: () => undefined } })
             }
           >
-            Lancer un toast
+            Show a toast
           </Button>
         </Row>
       </Section>
 
-      <Section title="Avatar · Badge média · Badge format · Glyphes">
+      <Section title="Avatar · Media Badge · Format Badge · Glyphs">
         <Row>
           <Avatar name="Claude Devs" handle="ClaudeDevs" />
           <Avatar name="GamesLover with a Preference" handle="tofi_lover0930" />
           <Avatar name="Martin G" handle="TurtlesFatherG" size={28} />
-          <Avatar name="Photo cassée" handle="broken" src="recolt://mock/avatars/missing.jpg" />
+          <Avatar name="Broken photo" handle="broken" src="recolt://mock/avatars/missing.jpg" />
           <div className="relative h-24 w-44 rounded-md bg-[var(--skeleton)]">
             <MediaBadge kind="video" className="absolute right-2 top-2" />
             <MediaBadge kind="carousel" label="1/6" className="absolute left-2 top-2" />
@@ -448,8 +445,8 @@ export default function Gallery() {
     <div data-testid="ui-gallery" className="h-full overflow-auto bg-bg text-fg">
       <div className="flex items-center gap-3 border-b border-border-subtle px-6 py-3">
         <RecoltLogo />
-        <span className="text-nav font-semibold">Galerie du kit UI</span>
-        <span className="text-small text-fg-muted">clair et sombre, côte à côte</span>
+        <span className="text-nav font-semibold">UI kit gallery</span>
+        <span className="text-small text-fg-muted">light and dark, side by side</span>
       </div>
       <div className="flex flex-col lg:flex-row">
         <ThemeBlock theme="light" />

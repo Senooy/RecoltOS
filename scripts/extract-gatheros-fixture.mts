@@ -54,7 +54,7 @@ for (const [label, where] of PREDICATES) {
       `SELECT * FROM saves WHERE ${where} AND id NOT IN (${picked.map(() => '?').join(',') || "''"}) ORDER BY created_at LIMIT 1`,
     )
     .get(...picked.map((p) => p.id)) as Row | undefined
-  if (!r) throw new Error(`aucun save pour « ${label} »`)
+  if (!r) throw new Error(`no save for "${label}"`)
   picked.push(r)
 }
 

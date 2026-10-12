@@ -97,7 +97,7 @@ describe('guard-data.sh', () => {
       const r = guard(dir)
       expect(r.status).toBe(1)
       expect(r.stdout).not.toContain('OK')
-      expect(r.stderr).toContain('dépôt git')
+      expect(r.stderr).toContain('git repository')
     })
 
     it('subfolder of a git repo (not its root): fails', () => {
@@ -105,7 +105,7 @@ describe('guard-data.sh', () => {
       mkdirSync(join(dir, 'sub'))
       const r = guard(join(dir, 'sub'))
       expect(r.status).toBe(1)
-      expect(r.stderr).toContain('racine')
+      expect(r.stderr).toContain('not the root')
     })
 
     it('git unusable (invalid GIT_DIR): fails', () => {

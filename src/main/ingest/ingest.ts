@@ -247,7 +247,7 @@ async function ingestLocal(
       }
     })()
     const c = created as { id: number; uuid: string } | null
-    if (!c) throw new AppError('internal', 'insertion impossible')
+    if (!c) throw new AppError('internal', 'insert failed')
     deps.changed([c.uuid], 'created')
     deps.kick()
     return { itemUuid: c.uuid, status: 'created' }
@@ -364,7 +364,7 @@ export async function ingest(
     case 'extension':
       return ingestExtension(input.payload, opts, deps, input.uploadPath)
     default:
-      throw new AppError('not_implemented', `ingestion ${input.type} non disponible`)
+      throw new AppError('not_implemented', `${input.type} ingestion unavailable`)
   }
 }
 

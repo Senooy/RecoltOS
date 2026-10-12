@@ -25,7 +25,7 @@ export interface ShotResult {
   scene: string
   theme: string
   file: string | null
-  status: 'ok' | 'indisponible' | 'erreur'
+  status: 'ok' | 'unavailable' | 'error'
   reason?: string
 }
 
@@ -37,14 +37,14 @@ export const LANG_MODES = ['fr', 'en'] as const
 export function libraryUsageError(value: string): string | null {
   return (LIBRARY_MODES as readonly string[]).includes(value)
     ? null
-    : `--library « ${value} » inconnu (valeurs : ${LIBRARY_MODES.join(', ')})`
+    : `unknown --library "${value}" (values: ${LIBRARY_MODES.join(', ')})`
 }
 
 /** Usage message (in French) if `--theme` is not `light`, `dark` or `both`; otherwise `null`. */
 export function themeUsageError(value: string): string | null {
   return (THEME_MODES as readonly string[]).includes(value)
     ? null
-    : `--theme « ${value} » inconnu (valeurs : ${THEME_MODES.join(', ')})`
+    : `unknown --theme "${value}" (values: ${THEME_MODES.join(', ')})`
 }
 
 /**
@@ -62,7 +62,7 @@ export function realSourceRefusal(src: string): string | null {
   }
   for (const candidate of [resolved, real]) {
     if (/\/library\/application support(\/|$)/i.test(candidate))
-      return `RECOLTOS_REAL_USERDATA refusé : ${src} est un dossier de données vivant (utilise une copie)`
+      return `RECOLTOS_REAL_USERDATA refused: ${src} is a live data folder (use a copy)`
   }
   return null
 }
@@ -119,13 +119,13 @@ async function main(argv: readonly string[]): Promise<number> {
   const themeError = themeUsageError(values.theme ?? 'light')
   const realError =
     library === 'real' && !process.env.RECOLTOS_REAL_USERDATA
-      ? '--library real exige RECOLTOS_REAL_USERDATA (copie d’un dossier userData RecoltOS)'
+      ? '--library real requires RECOLTOS_REAL_USERDATA (a copy of a RecoltOS userData folder)'
       : library === 'real'
         ? realSourceRefusal(process.env.RECOLTOS_REAL_USERDATA as string)
         : null
   const langError = (LANG_MODES as readonly string[]).includes(values.lang ?? 'fr')
     ? null
-    : `--lang « ${values.lang} » inconnu (valeurs : ${LANG_MODES.join(', ')})`
+    : `unknown --lang "${values.lang}" (values: ${LANG_MODES.join(', ')})`
   const usageError = libraryError ?? themeError ?? realError ?? langError
   if (usageError) {
     console.error(`shots: ${usageError}`)
@@ -158,7 +158,7 @@ async function main(argv: readonly string[]): Promise<number> {
             scene: scene.id,
             theme,
             file: null,
-            status: 'indisponible',
+            status: 'unavailable',
             reason: played.reason,
           })
           console.log(`· ${scene.id}-${theme}: unavailable (${played.reason})`)
@@ -170,7 +170,7 @@ async function main(argv: readonly string[]): Promise<number> {
         }
       } catch (err) {
         const reason = err instanceof Error ? err.message : String(err)
-        results.push({ scene: scene.id, theme, file: null, status: 'erreur', reason })
+        results.push({ scene: scene.id, theme, file: null, status: 'error', reason })
         console.error(`✘ ${scene.id}-${theme}: ${reason}`)
       } finally {
         await handle.close()
@@ -186,7 +186,7 @@ async function main(argv: readonly string[]): Promise<number> {
   writeFileSync(manifestFile, JSON.stringify(mergeManifest(previous, results), null, 2) + '\n')
   const ok = results.filter((r) => r.status === 'ok').length
   console.log(`\nshots: ${ok}/${results.length} scene(s) captured in ${out}`)
-  return results.some((r) => r.status === 'erreur') ? 1 : 0
+  return results.some((r) => r.status === 'error') ? 1 : 0
 }
 
 // Entry guard: importing this module (tests) does not start the capture.

@@ -22,8 +22,8 @@ export const AbsPath = z
   .max(4096)
   .startsWith('/')
   .refine((p) => !p.split('/').some((seg) => seg === '.' || seg === '..'), {
-    message: 'chemin absolu sans segment . ni ..',
+    message: 'absolute path without . or .. segments',
   })
   .refine((p) => !p.includes('\0') && !p.includes('//') && p !== '/', {
-    message: 'chemin absolu sans octet NUL, sans « // » et distinct de la racine',
+    message: 'absolute path without NUL byte, without "//" and distinct from the root',
   })

@@ -89,7 +89,7 @@ export async function closeLibrary(lib: ClosableLibrary, opts: CloseOptions): Pr
       db.pragma(`busy_timeout = ${opts.checkpointBusyTimeoutMs ?? CHECKPOINT_BUSY_TIMEOUT_MS}`)
       checkpoint = checkpointTruncate(db)
     } catch (err) {
-      lib.log?.warn('[db] final checkpoint impossible', err)
+      lib.log?.warn('[db] final checkpoint failed', err)
     }
     if (checkpoint && checkpoint.busy !== 0) {
       lib.log?.warn('[db] checkpoint TRUNCATE blocked by a reader', checkpoint)

@@ -133,7 +133,7 @@ export async function importAssetFile(deps: AssetDeps, input: string): Promise<A
       naturalHeight = p.height
     }
   } catch (err) {
-    deps.log?.(`[spaces] sonde impossible pour ${rel}`, err)
+    deps.log?.(`[spaces] probe failed for ${rel}`, err)
   }
   const thumbRel = assetThumbRel(rel, kind)
   const thumbAbs = deps.lib.paths.abs(thumbRel)
@@ -155,7 +155,7 @@ export async function importAssetFile(deps: AssetDeps, input: string): Promise<A
       }
       thumbOk = await exists(thumbAbs)
     } catch (err) {
-      deps.log?.(`[spaces] vignette impossible pour ${rel}`, err)
+      deps.log?.(`[spaces] thumbnail failed for ${rel}`, err)
     }
   }
   if (!naturalWidth || !naturalHeight) {

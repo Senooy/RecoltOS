@@ -166,7 +166,7 @@ describe('CLI: numeric options validated', () => {
     )
     expect(r.status).toBe(2)
     expect(r.stderr).toContain(flag)
-    expect(r.stderr).toContain('entier ≥ 0')
+    expect(r.stderr).toContain('integer >= 0')
     expect(r.stderr).toContain('usage :')
     expect(r.stdout).not.toContain('éléments')
     expect(existsSync(join(out, 'libraries.json'))).toBe(false)

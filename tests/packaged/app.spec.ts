@@ -45,7 +45,7 @@ test('shipped build: the grid is rendered (grid-painted) with fuses closed', asy
 })
 
 test('test build (dist:test): Playwright drives the packaged app, grid visible', async () => {
-  test.skip(!existsSync(TESTBUILD), 'build de test absent (pnpm run dist:test)')
+  test.skip(!existsSync(TESTBUILD), 'test build missing (pnpm run dist:test)')
   test.setTimeout(120_000)
   const userData = makeTmpDir('pkg-pw-ud')
   await makeDemoLibrary(userData, { count: 30, collections: 2 })

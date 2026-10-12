@@ -135,6 +135,6 @@ function aiJobState(
     .get(itemId) as { last_error: string | null } | undefined
   return {
     aiJob: null,
-    aiError: parse(failed?.last_error ?? null) ?? { code: 'failed', message: 'analyse impossible' },
+    aiError: parse(failed?.last_error ?? null) ?? { code: 'failed', message: 'analysis failed' },
   }
 }

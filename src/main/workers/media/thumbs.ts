@@ -16,7 +16,7 @@ export const WEBP_MAX_EDGE = 16383
 export const DISPLAY = { maxEdge: 2048, quality: 85, effort: 4 } as const
 
 function checkWidth(w: unknown, expected: number, field: string): number {
-  if (w !== expected) throw new AppError('validation', `${field} doit valoir ${expected}`)
+  if (w !== expected) throw new AppError('validation', `${field} must be ${expected}`)
   return expected
 }
 
@@ -47,7 +47,7 @@ async function resizeToWebp(
       )
     } catch (err) {
       if (err instanceof AppError) throw err
-      throw new AppError('decode_failed', 'image illisible', rawError(err))
+      throw new AppError('decode_failed', 'unreadable image', rawError(err))
     }
   })
 }
@@ -136,7 +136,7 @@ export async function makeAvatar(
       )
     } catch (err) {
       if (err instanceof AppError) throw err
-      throw new AppError('decode_failed', 'image illisible', rawError(err))
+      throw new AppError('decode_failed', 'unreadable image', rawError(err))
     }
   })
 }

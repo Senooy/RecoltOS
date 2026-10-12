@@ -92,12 +92,12 @@ describe('parseFfprobe', () => {
       hasAudio: true,
       playable: false,
     })
-    expect(() => parseFfprobe('{"streams":[]}')).toThrow(/aucune piste vidéo/)
-    expect(() => parseFfprobe('pas du json')).toThrow()
+    expect(() => parseFfprobe('{"streams":[]}')).toThrow(/no video track/)
+    expect(() => parseFfprobe('not json')).toThrow()
   })
 })
 
-describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
+describe.skipIf(!HAS_FF)('real ffprobe / ffmpeg', () => {
   it('mp4 rotated by 90°: dimensions swapped, duration, codec, playable', async () => {
     const p = await probeVideo({ abs: fx.rot90Mp4! }, TOOLS)
     expect(p).toMatchObject({
@@ -165,7 +165,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
   })
 
   it.runIf(HAS_FF)(
-    'makePreview : petit côté ≤ 540 (portrait 1080×1920 → 540×960), sans agrandir',
+    'makePreview: short side <= 540 (portrait 1080×1920 → 540×960), no upscaling',
     async () => {
       const gen = (name: string, size: string): string => {
         const f = join(tmp.dir, name)
@@ -209,7 +209,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
   )
 
   it.runIf(HAS_FF)('missing video → not_found (probeVideo, makePoster, makePreview)', async () => {
-    const src = join(tmp.dir, 'absente.mp4')
+    const src = join(tmp.dir, 'missing.mp4')
     for (const call of [
       () => probeVideo({ abs: src }, TOOLS),
       () => makePoster({ src, dst: out('posters/a.jpg'), atMs: 0 }, TOOLS),
@@ -220,7 +220,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
   })
 
   it.runIf(HAS_FF)(
-    'source corrompue ou sans piste vidéo → decode_failed partout, message français, sans repli',
+    'corrupted source or no video track → decode_failed everywhere, message in French, no fallback',
     async () => {
       const audio = join(tmp.dir, 'audio.m4a')
       execFileSync(
@@ -265,7 +265,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
   )
 
   it.runIf(HAS_FF)(
-    'source valide mais encodeur cassé → tool_failed (et non decode_failed)',
+    'valid source but broken encoder → tool_failed (not decode_failed)',
     async () => {
       const err = await makePreview(
         { src: fx.rot90Mp4!, dst: out('enc/x.mp4'), maxSeconds: 8, height: 540 },
@@ -280,7 +280,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
   )
 
   it.runIf(process.platform === 'darwin')(
-    'h264_videotoolbox seul : encode sur ce Mac',
+    'h264_videotoolbox only: encodes on this Mac',
     async () => {
       const r = await makePreview(
         { src: fx.longMp4!, dst: out('previews/vt.mp4'), maxSeconds: 8, height: 540 },
@@ -319,7 +319,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
 describe('missing tools → tool_missing, no crash', () => {
   // The file exists (arbitrary bytes): only the tool is missing, not the source.
   const src = join(tmp.dir, 'quelconque.mp4')
-  writeFileSync(src, 'pas une vraie vidéo')
+  writeFileSync(src, 'not a real video')
   it('ffmpeg not resolved', async () => {
     await expect(
       makePreview(

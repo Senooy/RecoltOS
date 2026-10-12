@@ -12,7 +12,7 @@ import { LANGUAGE_PREFS } from './i18n/lang'
 import { AbsPath } from './ipc/define'
 
 /** Model identifier passed in a CLI's argv: no leading dash or space. */
-const ModelId = z.string().regex(/^[a-z0-9][a-z0-9._-]{0,63}$/i, 'identifiant de modèle invalide')
+const ModelId = z.string().regex(/^[a-z0-9][a-z0-9._-]{0,63}$/i, 'invalid model identifier')
 
 export const CaptureMode = z.enum(['region', 'window', 'screen'])
 export type CaptureMode = z.output<typeof CaptureMode>

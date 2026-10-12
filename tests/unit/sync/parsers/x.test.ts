@@ -390,7 +390,7 @@ describe('X utilities', () => {
     expect(parseXDate(12)).toBeNull()
   })
 
-  it('xAvatar400 et xPhotoOrig', () => {
+  it('xAvatar400 and xPhotoOrig', () => {
     expect(xAvatar400('https://pbs.twimg.com/profile_images/1/a_normal.jpg')).toBe(
       'https://pbs.twimg.com/profile_images/1/a_400x400.jpg',
     )
@@ -488,6 +488,6 @@ describe('parseXBookmarksPage — x-web client (bookmarksQuery)', () => {
     const r = expectOk(parseXBookmarksPage(page))
     expect(r.posts.map((p) => p.externalId)).toContain('1870000000000000101')
     expect(r.posts.map((p) => p.externalId)).not.toContain('1870000000000000102')
-    expect(r.issues.some((i) => i.reason === 'contenu sponsorisé')).toBe(true)
+    expect(r.issues.some((i) => i.reason === 'sponsored content')).toBe(true)
   })
 })

@@ -33,7 +33,7 @@ globalThis.fetch = (input: Parameters<typeof fetch>[0], init?: Parameters<typeof
     return realFetch(input, init)
   }
   if (!isAllowedTestHost(host)) {
-    return Promise.reject(new Error(`Réseau externe interdit en test : ${host}`))
+    return Promise.reject(new Error(`External network forbidden in tests: ${host}`))
   }
   return realFetch(input, init)
 }

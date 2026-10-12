@@ -117,7 +117,7 @@ describe('opening and registry', () => {
 
   it('libraries.json corrupt or invalid: set aside, default registry', async () => {
     fs.mkdirSync(userData, { recursive: true })
-    fs.writeFileSync(registryFile(), '{pas du json')
+    fs.writeFileSync(registryFile(), '{not json')
     await make().open()
     expect(readRegistry().active).toBe('default')
     expect(fs.readdirSync(userData).some((f) => f.startsWith('libraries.json.bad-'))).toBe(true)
@@ -509,11 +509,11 @@ describe('system and SQLite errors converted to French AppError', () => {
     } catch (e) {
       return e as AppError
     }
-    throw new Error('aucune erreur levée')
+    throw new Error('no error thrown')
   }
   const frenchIo = { code: 'io', message: 'Pas le droit d’écrire dans ce dossier.' }
 
-  it.skipIf(asRoot)('create dans un dossier en lecture seule : io, pas EACCES', async () => {
+  it.skipIf(asRoot)('create in a read-only folder: io, not EACCES', async () => {
     const m = make()
     await m.open()
     const ro = path.join(base, 'ro')
@@ -531,7 +531,7 @@ describe('system and SQLite errors converted to French AppError', () => {
     }
   })
 
-  it.skipIf(asRoot)('create sur un dossier illisible : io', async () => {
+  it.skipIf(asRoot)('create on an unreadable folder: io', async () => {
     const m = make()
     await m.open()
     const locked = path.join(base, 'locked')
@@ -550,7 +550,7 @@ describe('system and SQLite errors converted to French AppError', () => {
     const before = m.registry().libraries
     const fake = path.join(base, 'faux')
     fs.mkdirSync(fake)
-    fs.writeFileSync(path.join(fake, 'recolt.db'), 'ceci n’est pas une base SQLite'.repeat(200))
+    fs.writeFileSync(path.join(fake, 'recolt.db'), 'this is not a SQLite database'.repeat(200))
     for (let i = 0; i < 2; i++) {
       const err = await failure(m.addExisting(fake))
       expect(err).toBeInstanceOf(AppError)

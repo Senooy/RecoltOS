@@ -216,7 +216,7 @@ class FakeHost {
     for (;;) {
       const hit = this.got.find(pred)
       if (hit) return hit
-      if (Date.now() - t0 > ms) throw new Error('faux hôte : délai dépassé')
+      if (Date.now() - t0 > ms) throw new Error('fake host: timed out')
       await new Promise((r) => setTimeout(r, 25))
     }
   }
@@ -738,16 +738,16 @@ test.describe('full journey and security', () => {
         const hits = await netHits(app)
         expect(
           hits.filter((x) => x.wc !== null),
-          'requêtes externes du renderer',
+          'external requests from the renderer',
         ).toEqual([])
-        expect(hits, 'requêtes externes (main compris)').toEqual([])
+        expect(hits, 'external requests (main included)').toEqual([])
         for (const w of app.windows()) {
           if (w.isClosed()) continue
           const v = await cspHits(w).catch(() => null)
           if (v) expect(v, 'violations CSP').toEqual([])
         }
         expect(await cspHits(page)).toEqual([])
-        expect(await h!.flushErrors(), 'erreurs console / pageerror').toEqual([])
+        expect(await h!.flushErrors(), 'console errors / pageerror').toEqual([])
       })
       db.close()
     } finally {
@@ -780,10 +780,10 @@ test.describe('full journey and security', () => {
     const leaks = [...textFiles(userData, media), ...textFiles(home, new Set())].filter((f) =>
       SECRET_RE.test(fs.readFileSync(f, 'latin1')),
     )
-    expect.soft(leaks, 'secrets dans les fichiers de l’app').toEqual([])
+    expect.soft(leaks, 'secrets in the app files').toEqual([])
     const after = openDbReadonly(libraryDbPath(userData))
     try {
-      expect.soft(secretsInDb(after), 'secrets dans la base').toEqual([])
+      expect.soft(secretsInDb(after), 'secrets in the database').toEqual([])
     } finally {
       after.close()
     }

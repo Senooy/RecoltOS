@@ -4,7 +4,7 @@
  * Reduced motion: fade only (`ui.css`). Mount ONCE at the app root.
  *
  *   import { toast } from './Toaster'
- *   toast('Ajouté à Gaming', { action: { label: 'Annuler', onClick: undo } })
+ *   toast('Added to Gaming', { action: { label: 'Undo', onClick: undo } })
  */
 import { Toaster as Sonner, toast } from 'sonner'
 import { cn } from '../../lib/cn'

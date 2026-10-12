@@ -22,7 +22,7 @@ if (flags?.e2e) root.dataset.e2e = '1'
 installVideoGuard()
 
 const el = document.getElementById('root')
-if (!el) throw new Error('#root introuvable')
+if (!el) throw new Error('#root not found')
 // The mock (dev) is loaded before the first render: `getApi()` stays synchronous.
 void initApi().then(() => {
   // Language resolved by main (setting or Mac language): first render in the right language.

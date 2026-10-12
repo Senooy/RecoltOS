@@ -48,7 +48,7 @@ export const AnalysisZ = z
     tags: z.array(z.string()).transform((a) => a.slice(0, 8)),
     ocr: z.string().transform((s) => s.trim().slice(0, 1200)),
   })
-  .refine((v) => v.title !== '' || v.description !== '', 'réponse vide')
+  .refine((v) => v.title !== '' || v.description !== '', 'empty response')
 
 /** Single field or subset: absent fields default to `''` / `[]`. */
 export function analysisZ(fields: readonly AiField[] = AI_FIELDS) {
@@ -70,7 +70,7 @@ export function analysisZ(fields: readonly AiField[] = AI_FIELDS) {
       (v) =>
         fields.some((f) => (f === 'tags' ? v.tags.length > 0 : v[f] !== '')) ||
         fields.includes('ocr'),
-      'réponse vide',
+      'empty response',
     )
 }
 
@@ -79,7 +79,7 @@ export const ImagePromptZ = z
     prompt: z.string().transform((s) => s.trim().slice(0, 2000)),
     style: z.string().transform((s) => s.trim().slice(0, 200)),
   })
-  .refine((v) => v.prompt !== '', 'réponse vide')
+  .refine((v) => v.prompt !== '', 'empty response')
 
 /**
  * Tolerant decoding: strips ```json fences, takes the first balanced brace (respecting strings).

@@ -115,7 +115,7 @@ export function decodeCursor(c: string): unknown[] {
   } catch {
     // see below
   }
-  throw new AppError('validation', 'curseur invalide')
+  throw new AppError('validation', 'invalid cursor')
 }
 
 const LIVE = 'i.deleted_at IS NULL AND i.hidden_at IS NULL'
@@ -241,7 +241,7 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
   if (inp.cursor) {
     const [v, id] = decodeCursor(inp.cursor)
     if ((typeof v !== 'number' && typeof v !== 'string') || typeof id !== 'number') {
-      throw new AppError('validation', 'curseur invalide')
+      throw new AppError('validation', 'invalid cursor')
     }
     params.cv = v
     params.cid_ = id

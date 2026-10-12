@@ -270,7 +270,7 @@ function CallsLog() {
                       c.sentFiles.length,
                       bytes(c.sentFiles.reduce((s, f) => s + f.bytes, 0)),
                     )}
-                    {` · ${c.sentTextChars} car.`}
+                    {tr.aiUi.logChars(c.sentTextChars)}
                   </td>
                   <td className={c.outcome === 'ok' ? '' : 'text-danger'}>
                     {tr.aiUi.outcomes[c.outcome] ?? c.outcome}

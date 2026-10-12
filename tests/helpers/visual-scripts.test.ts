@@ -19,7 +19,7 @@ describe('scenes', () => {
   it('selectScenes: default = default scenes; unknown id refused', () => {
     expect(selectScenes(undefined)).toHaveLength(13)
     expect(selectScenes(['palette']).map((s) => s.id)).toEqual(['palette'])
-    expect(() => selectScenes(['nope'])).toThrow(/inconnue/)
+    expect(() => selectScenes(['nope'])).toThrow(/unknown scene/)
   })
 })
 
@@ -28,14 +28,18 @@ describe('shots: argument validation', () => {
     expect(libraryUsageError('demo')).toBeNull()
     expect(libraryUsageError('real')).toBeNull()
     expect(libraryUsageError('none')).toBeNull()
-    expect(libraryUsageError('autre')).toMatch(/inconnu/)
+    expect(libraryUsageError('other')).toMatch(/unknown/)
     expect(themeUsageError('both')).toBeNull()
-    expect(themeUsageError('sepia')).toMatch(/inconnu/)
+    expect(themeUsageError('sepia')).toMatch(/unknown/)
   })
 
   it('refuses a live RECOLTOS_REAL_USERDATA source (Application Support), accepts a copy', () => {
-    expect(realSourceRefusal('/Users/x/Library/Application Support/RecoltOS')).toMatch(/vivant/)
-    expect(realSourceRefusal('/Users/x/Library/Application Support/Autre/copie')).toMatch(/vivant/)
+    expect(realSourceRefusal('/Users/x/Library/Application Support/RecoltOS')).toMatch(
+      /live data folder/,
+    )
+    expect(realSourceRefusal('/Users/x/Library/Application Support/Autre/copie')).toMatch(
+      /live data folder/,
+    )
     expect(realSourceRefusal('/tmp/recoltos-real-copie')).toBeNull()
   })
 
@@ -46,7 +50,7 @@ describe('shots: argument validation', () => {
       { cwd: REPO_ROOT, encoding: 'utf8' },
     )
     expect(s.status).toBe(2)
-    expect(s.stderr).toContain('--library « foo » inconnu')
+    expect(s.stderr).toContain('unknown --library "foo"')
     expect(s.stderr).not.toContain('    at ')
   })
 })
@@ -59,9 +63,9 @@ describe('capture manifest (shots)', () => {
       { scene: 'b', theme: 'light', file: '/x/b-light.png', status: 'ok' },
       { scene: 'a', theme: 'dark', file: '/x/a-dark.png', status: 'ok' },
     ]
-    const fresh: Entry[] = [{ scene: 'a', theme: 'light', file: null, status: 'erreur' }]
+    const fresh: Entry[] = [{ scene: 'a', theme: 'light', file: null, status: 'error' }]
     expect(mergeManifest(before, fresh)).toEqual([
-      { scene: 'a', theme: 'light', file: null, status: 'erreur' },
+      { scene: 'a', theme: 'light', file: null, status: 'error' },
       { scene: 'b', theme: 'light', file: '/x/b-light.png', status: 'ok' },
       { scene: 'a', theme: 'dark', file: '/x/a-dark.png', status: 'ok' },
     ])

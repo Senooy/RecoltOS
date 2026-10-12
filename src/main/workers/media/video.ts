@@ -58,7 +58,7 @@ export async function makePoster(
 ): Promise<MediaResult<'makePoster'>> {
   const src = assertAbs(a.src, 'src')
   const dst = assertAbs(a.dst, 'dst')
-  if (!Number.isFinite(a.atMs)) throw new AppError('validation', 'atMs invalide')
+  if (!Number.isFinite(a.atMs)) throw new AppError('validation', 'invalid atMs')
   await assertDistinct(src, dst)
   const ffmpeg = requireTool(tools, 'ffmpeg')
   requireTool(tools, 'ffprobe')
@@ -90,7 +90,7 @@ export async function makePoster(
           throw sourceFailure(err)
         })
       }
-      if (!(await nonEmpty(tmp))) throw new AppError('decode_failed', 'aucune image extraite')
+      if (!(await nonEmpty(tmp))) throw new AppError('decode_failed', 'no frame extracted')
       const meta = await sharp(tmp).metadata()
       return { width: meta.width, height: meta.height }
     },
@@ -154,7 +154,7 @@ export async function makePreview(
   const src = assertAbs(a.src, 'src')
   const dst = assertAbs(a.dst, 'dst')
   if (a.maxSeconds !== PREVIEW.maxSeconds || a.height !== PREVIEW.height) {
-    throw new AppError('validation', 'aperçu attendu : 8 s, 540p')
+    throw new AppError('validation', 'preview expected: 8 s, 540p')
   }
   await assertDistinct(src, dst)
   const ffmpeg = requireTool(tools, 'ffmpeg')
@@ -187,7 +187,7 @@ export async function makePreview(
           lastErr = e
         }
       }
-      if (lastErr) throw lastErr instanceof Error ? lastErr : new Error('encodage impossible')
+      if (lastErr) throw lastErr instanceof Error ? lastErr : new Error('encoding failed')
       const p = await probeVideo({ abs: tmp }, tools, signal)
       const bytes = (await stat(tmp)).size
       return { width: p.width, height: p.height, durationMs: p.durationMs, bytes }

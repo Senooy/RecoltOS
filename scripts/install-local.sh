@@ -102,7 +102,7 @@ if ! mv "$STAGE" "$DST"; then
   if [ -d "$BACKUP" ]; then
     mv "$BACKUP" "$DST"
   fi
-  echo "install-local: installation into $DST impossible; the old version was restored." >&2
+  echo "install-local: installation into $DST failed; the old version was restored." >&2
   exit 1
 fi
 rm -rf "$BACKUP"

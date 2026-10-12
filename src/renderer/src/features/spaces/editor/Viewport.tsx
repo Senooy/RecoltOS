@@ -454,7 +454,7 @@ export function Viewport({
         return
       case 'move':
         if (g.moved && pv) {
-          commit('Déplacer', (d) => {
+          commit(tr.spacesUi.move, (d) => {
             for (const [id, v] of Object.entries(pv)) Object.assign(d[id]!, v)
           })
         } else if (!g.moved && g.wasSelected && !e.shiftKey) {
@@ -464,7 +464,7 @@ export function Viewport({
       case 'resize':
         if (pv?.[g.id]) {
           const v = pv[g.id]!
-          commit('Redimensionner', (d) => {
+          commit(tr.spacesUi.resize, (d) => {
             const n = d[g.id]
             if (!n) return
             Object.assign(n, v)
@@ -476,7 +476,7 @@ export function Viewport({
       case 'rotate':
         if (pv?.[g.id]) {
           const v = pv[g.id]!
-          commit('Pivoter', (d) => {
+          commit(tr.spacesUi.rotate, (d) => {
             if (d[g.id]) Object.assign(d[g.id]!, v)
           })
         }

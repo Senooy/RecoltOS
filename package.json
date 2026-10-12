@@ -3,7 +3,7 @@
   "productName": "RecoltOS",
   "version": "0.1.3",
   "private": true,
-  "description": "RecoltOS : bibliothèque visuelle locale pour macOS",
+  "description": "RecoltOS: a local visual library for macOS",
   "author": "Younes Khelifi",
   "license": "MIT",
   "main": "./out/main/index.js",

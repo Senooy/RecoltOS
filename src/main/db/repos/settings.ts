@@ -29,7 +29,7 @@ export function createSettingsRepo(db: Database.Database, opts: RepoOptions = {}
     },
 
     set(key: string, value: unknown, at: number = now()): void {
-      if (value === undefined) throw new AppError('validation', 'Valeur de réglage indéfinie.')
+      if (value === undefined) throw new AppError('validation', 'Undefined setting value.')
       q(
         `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)
          ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,

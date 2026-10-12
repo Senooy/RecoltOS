@@ -19,22 +19,22 @@ export const mediaDownload: JobHandler = async (job, ctx) => {
   const { lib } = ctx
   const mediaId = payloadId(job, 'mediaId')
   if (mediaId === null)
-    return { status: 'failed', error: { code: 'validation', message: 'mediaId manquant' } }
+    return { status: 'failed', error: { code: 'validation', message: 'missing mediaId' } }
   const m = lib.repos.media.getById(mediaId)
   if (!m || m.status !== 'remote') return { status: 'done' }
   if (!ctx.prefs().storage.downloadRemoteMedia) {
     return {
       status: 'failed',
-      error: { code: 'disabled', message: 'téléchargement des médias distants désactivé' },
+      error: { code: 'disabled', message: 'remote media download disabled' },
     }
   }
-  if (!m.remote_url) throw new AppError('not_found', 'URL distante absente')
+  if (!m.remote_url) throw new AppError('not_found', 'missing remote URL')
   const tmp = lib.paths.abs(rel.tmp(`${m.uuid}.part`))
   const got = await fetchToFile(ctx.fetch, m.remote_url, tmp, { signal: ctx.signal })
   const type = await detectType(got.head)
   if (!type) {
     await rm(tmp, { force: true })
-    throw new AppError('unsupported', 'contenu distant non pris en charge')
+    throw new AppError('unsupported', 'unsupported remote content')
   }
   const fileRel = rel.original(m.uuid, type.ext)
   const fileAbs = lib.paths.abs(fileRel)

@@ -37,7 +37,7 @@ const settings = (section: string): Step[] => [
 export const START_SCENES: Scene[] = [
   {
     id: 'library-all',
-    title: 'Bibliothèque, onglet Tout',
+    title: 'Library, All tab',
     steps: [
       { click: t('seg-library'), optional: true },
       { wait: `${t('grid')}, ${t('grid-skeleton')}` },
@@ -45,7 +45,7 @@ export const START_SCENES: Scene[] = [
   },
   {
     id: 'detail-video',
-    title: 'Vue détail d’une vidéo',
+    title: 'Video detail view',
     steps: [{ click: `${t('card')}[data-kind="video"]` }, { wait: t('detail') }],
   },
   {
@@ -55,22 +55,22 @@ export const START_SCENES: Scene[] = [
   },
   {
     id: 'collections-shelf',
-    title: 'Étagère Collections',
+    title: 'Collections shelf',
     steps: [{ click: t('seg-collections') }, { wait: t('shelf-cover') }, { sleep: 600 }],
   },
   {
     id: 'rediscover',
-    title: 'Redécouvrir',
+    title: 'Rediscover',
     steps: [{ click: t('btn-rediscover') }, { wait: t('rediscover') }],
   },
   {
     id: 'context-menu',
-    title: 'Menu contextuel d’une carte',
+    title: 'Card context menu',
     steps: [{ rightClick: t('card') }, { wait: t('ctx-menu') }],
   },
   {
     id: 'collection-dev',
-    title: 'Vue d’une collection',
+    title: 'Collection view',
     steps: [
       { click: t('seg-collections') },
       { wait: t('shelf-cover') },
@@ -81,48 +81,48 @@ export const START_SCENES: Scene[] = [
   },
   {
     id: 'search',
-    title: 'Recherche',
+    title: 'Search',
     steps: [{ click: t('seg-search') }, { wait: t('search-input') }, { sleep: 300 }],
   },
   {
     id: 'spaces-empty',
-    title: 'Spaces, état vide',
+    title: 'Spaces, empty state',
     empty: true,
     steps: [{ click: t('seg-spaces') }, { wait: t('space-empty-cta') }],
   },
   {
     id: 'settings-modal',
-    title: 'Réglages, coque de la modale (section Bibliothèques)',
+    title: 'Settings, modal shell (Libraries section)',
     steps: settings('libraries'),
   },
   {
     id: 'settings-syncing',
-    title: 'Réglages › Synchronisation',
+    title: 'Settings › Sync',
     steps: settings('sync'),
   },
   {
     id: 'settings-capture',
-    title: 'Réglages › Capture',
+    title: 'Settings › Capture',
     steps: settings('capture'),
   },
-  { id: 'settings-ai', title: 'Réglages › IA', steps: settings('ai') },
+  { id: 'settings-ai', title: 'Settings › AI', steps: settings('ai') },
 ]
 
 /** Extra scenes (on demand: `--scene a,b`). */
 export const EXTRA_SCENES: Scene[] = [
   {
     id: 'detail-image',
-    title: 'Vue détail d’une image',
+    title: 'Image detail view',
     steps: [{ click: `${t('card')}[data-kind="image"]` }, { wait: t('detail') }],
   },
   {
     id: 'detail-tweet',
-    title: 'Vue détail d’un post',
+    title: 'Post detail view',
     steps: [{ click: `${t('card')}[data-kind="tweet"]` }, { wait: t('detail') }],
   },
   {
     id: 'search-results',
-    title: 'Recherche avec résultats',
+    title: 'Search with results',
     steps: [
       { click: t('seg-search') },
       { type: t('search-input'), text: 'instagram' },
@@ -132,7 +132,7 @@ export const EXTRA_SCENES: Scene[] = [
   },
   {
     id: 'collection-menu',
-    title: 'Menu « … » d’une collection',
+    title: 'Collection “…” menu',
     steps: [
       { click: t('seg-collections') },
       { wait: t('shelf-cover') },
@@ -143,7 +143,7 @@ export const EXTRA_SCENES: Scene[] = [
   },
   {
     id: 'library-picker',
-    title: 'Sélecteur de bibliothèque',
+    title: 'Library picker',
     // Grid first: otherwise the menu opens before the screen is mounted (empty background).
     steps: [
       { wait: t('grid') },
@@ -153,7 +153,7 @@ export const EXTRA_SCENES: Scene[] = [
   },
   ...['appearance', 'libraries', 'tags', 'storage', 'data', 'about'].map((s): Scene => ({
     id: `settings-${s}`,
-    title: `Réglages › ${s}`,
+    title: `Settings › ${s}`,
     steps: settings(s),
   })),
 ]
@@ -186,7 +186,7 @@ export async function playScene(
     if ('click' in step) {
       if (!(await waitFor(page, step.click))) {
         if (step.optional) continue
-        return { ok: false, reason: `cible absente : ${step.click}` }
+        return { ok: false, reason: `target missing: ${step.click}` }
       }
       await page.locator(step.click).first().click()
     } else if ('clickFirst' in step) {
@@ -198,18 +198,18 @@ export async function playScene(
           break
         }
       }
-      if (!done) return { ok: false, reason: `cible absente : ${step.clickFirst.join(' | ')}` }
+      if (!done) return { ok: false, reason: `target missing: ${step.clickFirst.join(' | ')}` }
     } else if ('clickNth' in step) {
       if (!(await waitFor(page, step.clickNth)))
-        return { ok: false, reason: `cible absente : ${step.clickNth}` }
+        return { ok: false, reason: `target missing: ${step.clickNth}` }
       await page.locator(step.clickNth).nth(step.nth).click()
     } else if ('rightClick' in step) {
       if (!(await waitFor(page, step.rightClick)))
-        return { ok: false, reason: `cible absente : ${step.rightClick}` }
+        return { ok: false, reason: `target missing: ${step.rightClick}` }
       await page.locator(step.rightClick).first().click({ button: 'right' })
     } else if ('hover' in step) {
       if (!(await waitFor(page, step.hover)))
-        return { ok: false, reason: `cible absente : ${step.hover}` }
+        return { ok: false, reason: `target missing: ${step.hover}` }
       await page.locator(step.hover).first().hover()
     } else if ('key' in step) {
       await page.keyboard.press(step.key)
@@ -224,14 +224,14 @@ export async function playScene(
         item.click()
         return true
       }, step.menu)
-      if (!clicked) return { ok: false, reason: `élément de menu absent : ${step.menu}` }
+      if (!clicked) return { ok: false, reason: `menu item missing: ${step.menu}` }
     } else if ('type' in step) {
       if (!(await waitFor(page, step.type)))
-        return { ok: false, reason: `cible absente : ${step.type}` }
+        return { ok: false, reason: `target missing: ${step.type}` }
       await page.locator(step.type).first().fill(step.text)
     } else if ('wait' in step) {
       if (!(await waitFor(page, step.wait)))
-        return { ok: false, reason: `cible absente : ${step.wait}` }
+        return { ok: false, reason: `target missing: ${step.wait}` }
     } else {
       await page.waitForTimeout(step.sleep)
     }
@@ -257,8 +257,7 @@ export function selectScenes(
   const out: Scene[] = []
   for (const id of ids) {
     const s = all.find((x) => x.id === id)
-    if (!s)
-      throw new Error(`scène inconnue : ${id} (disponibles : ${all.map((x) => x.id).join(', ')})`)
+    if (!s) throw new Error(`unknown scene: ${id} (available: ${all.map((x) => x.id).join(', ')})`)
     out.push(s)
   }
   return out

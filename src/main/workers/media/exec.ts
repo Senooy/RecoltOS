@@ -34,7 +34,7 @@ export function requireTool(tools: MediaTools, tool: ToolName): string {
 
 export function assertAbs(p: unknown, field: string): string {
   if (typeof p !== 'string' || p.length === 0 || !isAbsolute(p) || p.includes('\0')) {
-    throw new AppError('validation', `chemin absolu attendu (champ ${field})`)
+    throw new AppError('validation', `absolute path expected (field ${field})`)
   }
   return p
 }
@@ -46,21 +46,21 @@ export function rawError(err: unknown): { code?: string; message: string } {
 }
 
 /**
- * Node I/O error → typed AppError with a French message: ENOENT/ENOTDIR → `not_found`,
- * EISDIR → `validation` (not a file), EACCES/EPERM → `io` « accès refusé », the rest → `io`.
+ * Node I/O error → typed AppError with a localized message: ENOENT/ENOTDIR → `not_found`,
+ * EISDIR → `validation` (not a file), EACCES/EPERM → `io` "access denied", the rest → `io`.
  * The raw Node message only goes into `details` (log), never into the text.
  */
 export function ioError(err: unknown, p: string): AppError {
   if (err instanceof AppError) return err
   const e = err as NodeJS.ErrnoException
   if (e.code === 'ENOENT' || e.code === 'ENOTDIR') {
-    return new AppError('not_found', `fichier introuvable : ${p}`)
+    return new AppError('not_found', mt().errors.fileNotFound(p))
   }
-  if (e.code === 'EISDIR') return new AppError('validation', `ce n'est pas un fichier : ${p}`)
+  if (e.code === 'EISDIR') return new AppError('validation', mt().errors.notAFile(p))
   if (e.code === 'EACCES' || e.code === 'EPERM') {
-    return new AppError('io', `accès refusé : ${p}`, rawError(err))
+    return new AppError('io', mt().errors.accessDenied(p), rawError(err))
   }
-  return new AppError('io', `erreur d'accès au fichier : ${p}`, rawError(err))
+  return new AppError('io', mt().errors.fileAccessError(p), rawError(err))
 }
 
 /** Do `src` and `dst` designate the same file (normalized paths, then inode if `dst` exists)? */
@@ -80,15 +80,14 @@ export async function sameFile(src: string, dst: string): Promise<boolean> {
  */
 export async function assertDistinct(src: string, dst: string): Promise<void> {
   if (await sameFile(src, dst)) {
-    throw new AppError('validation', 'la destination doit différer de la source')
+    throw new AppError('validation', 'the destination must differ from the source')
   }
 }
 
 /** Checks that `p` is a regular file; otherwise `not_found` / `validation` / `io`. */
 export async function assertFile(p: string): Promise<void> {
   try {
-    if (!(await stat(p)).isFile())
-      throw new AppError('validation', `ce n'est pas un fichier : ${p}`)
+    if (!(await stat(p)).isFile()) throw new AppError('validation', mt().errors.notAFile(p))
   } catch (err) {
     throw ioError(err, p)
   }
@@ -115,7 +114,7 @@ const MAX_CAPTURE = 4 * 1024 * 1024
 export function run(cmd: string, args: readonly string[], opts: RunOptions): Promise<RunResult> {
   return new Promise((resolve, reject) => {
     if (opts.signal?.aborted) {
-      reject(new AppError('cancelled', 'opération annulée'))
+      reject(new AppError('cancelled', mt().errors.operationCancelled))
       return
     }
     let stdout = ''
@@ -132,7 +131,7 @@ export function run(cmd: string, args: readonly string[], opts: RunOptions): Pro
     }
     const onAbort = (): void => {
       child.kill('SIGKILL')
-      done(() => reject(new AppError('cancelled', 'opération annulée')))
+      done(() => reject(new AppError('cancelled', mt().errors.operationCancelled)))
     }
     opts.signal?.addEventListener('abort', onAbort, { once: true })
     const timer =
@@ -155,22 +154,26 @@ export function run(cmd: string, args: readonly string[], opts: RunOptions): Pro
         reject(
           err.code === 'ENOENT' || err.code === 'EACCES'
             ? toolMissing(opts.tool)
-            : new AppError('tool_failed', `${basename(cmd)} n'a pas pu être lancé`, rawError(err)),
+            : new AppError(
+                'tool_failed',
+                mt().errors.toolLaunchFailed(basename(cmd)),
+                rawError(err),
+              ),
         ),
       )
     })
     child.on('close', (code, signal) => {
       done(() => {
         if (timedOut) {
-          reject(new AppError('timeout', `${basename(cmd)} a dépassé le délai`))
+          reject(new AppError('timeout', mt().errors.toolTimeout(basename(cmd))))
         } else if (code === 0) {
           resolve({ stdout, stderr })
         } else {
-          // Message in French; the raw stderr, in English, stays in `details`.
+          // Message in the interface language; the raw stderr stays in `details`.
           const tail = stderr.trim().split('\n').slice(-3).join(' | ').slice(0, 500)
           const status = code ?? signal ?? '?'
           reject(
-            new AppError('tool_failed', `${basename(cmd)} a échoué (code ${status})`, {
+            new AppError('tool_failed', mt().errors.toolFailed(basename(cmd), status), {
               tool: opts.tool,
               code: status,
               stderr: tail,

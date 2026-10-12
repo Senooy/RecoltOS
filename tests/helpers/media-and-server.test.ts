@@ -79,7 +79,7 @@ describe('tmpdir / clock / network guard', () => {
 
   it('fetch refuses an external host (tests/setup/node.ts)', async () => {
     await expect(fetch('https://pbs.twimg.com/profile_images/x.jpg')).rejects.toThrow(
-      /Réseau externe interdit/,
+      /External network forbidden/,
     )
   })
 

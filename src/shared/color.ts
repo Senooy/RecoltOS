@@ -20,7 +20,7 @@ const KAPPA = 3 * (6 / 29) ** 2
 
 export function hexToRgb(hex: string): Rgb {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
-  if (!m?.[1]) throw new Error(`couleur hex invalide : ${hex}`)
+  if (!m?.[1]) throw new Error(`invalid hex color: ${hex}`)
   const n = Number.parseInt(m[1], 16)
   return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]
 }
@@ -103,7 +103,7 @@ export function hueBucket(lch: Lch | null | undefined): number {
 
 export interface NamedColor {
   id: string
-  /** French label (filter chips). */
+  /** French name, accepted as an alias in search queries (the UI shows the localized name). */
   label: string
   hex: string
   /** Constant Lab D65 centre (derived from `hex`). */

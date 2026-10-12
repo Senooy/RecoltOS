@@ -260,7 +260,7 @@ export function displayShortcutLabel(label: string): string {
 
 export function getShortcut(id: ShortcutId): ShortcutDef {
   const s = SHORTCUTS.find((d) => d.id === id)
-  if (!s) throw new Error(`raccourci inconnu : ${id}`)
+  if (!s) throw new Error(`unknown shortcut: ${id}`)
   return s
 }
 

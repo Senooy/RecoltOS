@@ -165,7 +165,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
 
 /** Creates the window if absent and waits for its loading (open-file, notification, navigation). */
 export async function ensureMainWindow(): Promise<BrowserWindow> {
-  if (!options) throw new Error('createMainWindow() doit être appelé une première fois')
+  if (!options) throw new Error('createMainWindow() must be called once first')
   const w = getMainWindow() ?? createMainWindow(options)
   if (w.webContents.isLoading()) await once(w.webContents, 'did-finish-load')
   return w

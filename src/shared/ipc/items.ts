@@ -17,7 +17,7 @@ export const ItemFilters = z.object({
   period: z
     .object({ from: z.number().int().nullable(), to: z.number().int().nullable() })
     .refine((p) => p.from == null || p.to == null || p.from <= p.to, {
-      message: 'période invalide : from doit être ≤ to',
+      message: 'invalid period: from must be <= to',
     })
     .optional(),
   collectionUuid: Uuid.optional(),
@@ -32,7 +32,7 @@ const ListCommon = {
   cursor: z
     .string()
     .max(512)
-    .regex(/^[A-Za-z0-9_-]*$/, 'curseur invalide')
+    .regex(/^[A-Za-z0-9_-]*$/, 'invalid cursor')
     .nullable()
     .default(null),
   limit: z.number().int().min(1).max(500).default(120),

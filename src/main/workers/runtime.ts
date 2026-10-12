@@ -5,6 +5,7 @@
  */
 import PQueue from 'p-queue'
 import { AppError } from '../../shared/errors'
+import { mt } from '../i18n'
 import type { WorkerRequest, WorkerResponse } from '../../shared/worker-protocol'
 import { CONTROL_OPS, type WorkerHello } from './control'
 
@@ -39,7 +40,7 @@ export function detectTransport(): Transport {
       },
     }
   }
-  throw new Error('worker lancé sans canal parent')
+  throw new Error('worker started without a parent channel')
 }
 
 export function serializeError(err: unknown): { code: string; message: string; retryAt?: number } {
@@ -106,7 +107,7 @@ export function serve(opts: ServeOptions): Transport {
     inflight.set(id, ac)
     void queue
       .add(async () => {
-        if (ac.signal.aborted) throw new AppError('cancelled', 'opération annulée')
+        if (ac.signal.aborted) throw new AppError('cancelled', mt().errors.operationCancelled)
         return opts.handle(op, args, {
           signal: ac.signal,
           progress: (p) => t.post({ id, progress: p }),

@@ -35,7 +35,7 @@ async function main() {
     "INSERT INTO items(uuid, kind, title, created_at, updated_at) VALUES (?, 'image', ?, ?, ?)",
   ).run('00000000-0000-4000-8000-000000000001', 'Café crème', now, now)
   const hits = db.prepare('SELECT rowid FROM items_fts WHERE items_fts MATCH ?').all('"cafe"*')
-  if (hits.length !== 1) throw new Error(`FTS5 MATCH : ${hits.length} résultat(s)`)
+  if (hits.length !== 1) throw new Error(`FTS5 MATCH : ${hits.length} result(s)`)
   const sqliteVersion = db.prepare('SELECT sqlite_version() AS v').get().v
   const integrity = db.pragma('integrity_check', { simple: true })
   db.close()
@@ -45,8 +45,7 @@ async function main() {
     .png()
     .toBuffer()
   const out = await sharp(one).resize(8, 8).webp().toBuffer({ resolveWithObject: true })
-  if (out.info.width !== 8 || out.info.height !== 8)
-    throw new Error('sharp : redimensionnement inattendu')
+  if (out.info.width !== 8 || out.info.height !== 8) throw new Error('sharp: unexpected resize')
 
   console.log(
     JSON.stringify({

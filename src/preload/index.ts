@@ -27,7 +27,7 @@ const api: RecoltApi = {
   invoke: (channel, input) =>
     ipcRenderer.invoke(RAW_CHANNELS.rpc, channel, input) as Promise<RpcResult<unknown>>,
   on: (event, cb) => {
-    if (!KNOWN_EVENTS.has(event)) throw new Error(`événement inconnu : ${event}`)
+    if (!KNOWN_EVENTS.has(event)) throw new Error(`unknown event: ${event}`)
     const channel = `${EVENT_PREFIX}${event}`
     const listener = (_e: unknown, payload: unknown) => cb(payload)
     ipcRenderer.on(channel, listener)

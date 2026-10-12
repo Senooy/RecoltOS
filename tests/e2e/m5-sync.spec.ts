@@ -46,7 +46,7 @@ class FakeHost {
     for (;;) {
       const hit = this.got.find(pred)
       if (hit) return hit
-      if (Date.now() - t0 > ms) throw new Error('délai dépassé')
+      if (Date.now() - t0 > ms) throw new Error('timed out')
       await new Promise((r) => setTimeout(r, 25))
     }
   }

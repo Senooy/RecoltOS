@@ -30,7 +30,7 @@ export function createOpenFileBatcher(deps: OpenFileDeps, delayMs = OPEN_FILE_BA
       const items = [...r.added, ...r.duplicates]
       if (items.length === 1) deps.openItem(items[0]!.itemUuid)
     } catch (err) {
-      deps.log?.warn('[open-file] import impossible', err)
+      deps.log?.warn('[open-file] import failed', err)
     }
   }
 

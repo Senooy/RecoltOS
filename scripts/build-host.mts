@@ -62,7 +62,7 @@ export function buildSea(hostJs: string, outDir: string, nodeBinary = process.ex
   const hashFile = join(outDir, '.build-hash')
   if (existsSync(exe) && existsSync(hashFile) && readFileSync(hashFile, 'utf8') === hash) return exe
   if (!readFileSync(nodeBinary).includes(SEA_FUSE)) {
-    throw new Error(`${nodeBinary} ne contient pas le fusible SEA (binaire Node officiel requis)`)
+    throw new Error(`${nodeBinary} does not contain the SEA fuse (official Node binary required)`)
   }
   mkdirSync(outDir, { recursive: true })
   const work = join(outDir, '.sea-work')
@@ -132,7 +132,7 @@ export async function buildHost(options: BuildHostOptions = {}): Promise<string 
   })
   const bad = externalRequires(readFileSync(outfile, 'utf8'))
   if (bad.length > 0) {
-    throw new Error(`host.js requiert des modules hors builtins : ${bad.join(', ')}`)
+    throw new Error(`host.js requires non-builtin modules: ${bad.join(', ')}`)
   }
   if (options.sea) buildSea(outfile, resolve(root, 'out/native-host'), options.nodeBinary)
   return outfile
@@ -142,7 +142,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   buildHost({ sea: !process.argv.includes('--no-sea') })
     .then((out) => {
       console.log(
-        out ? `build:host : ${out}` : 'build:host : src/host/index.ts absent, nothing to build',
+        out ? `build:host : ${out}` : 'build:host: src/host/index.ts is missing, nothing to build',
       )
     })
     .catch((err: unknown) => {

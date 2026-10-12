@@ -61,9 +61,7 @@ export type HexColor = z.output<typeof HexColor>
 export const EpochMs = z.number().int().nonnegative()
 
 /** Library identifier, compatible with a host name. */
-export const LibraryId = z
-  .string()
-  .regex(/^[a-z0-9-]{1,40}$/, 'identifiant de bibliothèque invalide')
+export const LibraryId = z.string().regex(/^[a-z0-9-]{1,40}$/, 'invalid library identifier')
 export type LibraryId = z.output<typeof LibraryId>
 
 /**
@@ -93,9 +91,9 @@ const MEDIA_URL_RE = new RegExp(
 )
 export const MediaUrl = z
   .string()
-  .regex(MEDIA_URL_RE, 'URL recolt:// attendue')
+  .regex(MEDIA_URL_RE, 'recolt:// URL expected')
   .refine((u) => !(u.split('?')[0] ?? '').split('/').some((seg) => seg === '.' || seg === '..'), {
-    message: 'segment de chemin interdit (. ou ..)',
+    message: 'forbidden path segment (. or ..)',
   })
   // Encodings and empty segments: `%2e%2e`, `..%2f`, `%5c` and `//` bypass the
   // literal check. The real defense stays on the main side (decoding, realpath, root).
@@ -105,7 +103,7 @@ export const MediaUrl = z
       if (/%(2e|2f|5c)/i.test(pathPart)) return false
       return !pathPart.split('/').some((seg) => seg === '')
     },
-    { message: 'encodage ou segment vide interdit dans le chemin' },
+    { message: 'encoding or empty segment forbidden in the path' },
   )
 export type MediaUrl = z.output<typeof MediaUrl>
 

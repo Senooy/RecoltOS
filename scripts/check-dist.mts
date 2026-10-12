@@ -2,7 +2,7 @@
  * Checks on the shipped bundle,
  * called by `pnpm run dist`:
  *  - main binary and arm64 native host only, `CFBundleIdentifier = com.recoltos.app`;
- *  - `Info.plist`: « Ouvrir avec » association as `LSHandlerRank = Alternate`,
+ *  - `Info.plist`: "Open With" association as `LSHandlerRank = Alternate`,
  *    `CFBundleTypeRole = Viewer`, usage-description texts in French;
  *  - signature: `codesign --verify --deep --strict`; expected identity (`RECOLTOS_SIGN_IDENTITY`
  *    or `--identity`) for the app AND the native host; stable designated requirement (certificate, not cdhash);
@@ -192,7 +192,7 @@ async function hostPing(host: string): Promise<{ ok: boolean; detail: string }> 
     })
     child.stdin.end()
     child.kill('SIGTERM')
-    return { ok: got, detail: got ? 'ping → pong' : 'aucun pong en 5 s' }
+    return { ok: got, detail: got ? 'ping → pong' : 'no pong within 5 s' }
   } finally {
     rmSync(ud, { recursive: true, force: true })
   }
@@ -226,17 +226,17 @@ export async function checkDist(options: {
   const bin = join(C, 'MacOS', 'RecoltOS')
   const host = join(R, 'native-host', 'recolt-host')
   if (!existsSync(bin)) {
-    add('app présente', false, `${bin} introuvable (pnpm run pack)`)
+    add('app present', false, `${bin} not found (pnpm run pack)`)
     return { app, profile, ok: false, checks, sizesMb: {} }
   }
 
   // Architecture.
   for (const [label, p] of [
-    ['binaire principal', bin],
-    ['hôte natif', host],
+    ['main binary', bin],
+    ['native host', host],
   ] as const) {
     const r = sh('lipo', ['-archs', p])
-    add(`${label} arm64 seul`, r.ok && r.out.trim() === 'arm64', r.out.trim())
+    add(`${label} arm64 only`, r.ok && r.out.trim() === 'arm64', r.out.trim())
   }
 
   // Info.plist.
@@ -250,7 +250,7 @@ export async function checkDist(options: {
   )
   const docTypes = (plist.CFBundleDocumentTypes ?? []) as Record<string, unknown>[]
   add(
-    'Info.plist : LSHandlerRank = Alternate, CFBundleTypeRole = Viewer',
+    'Info.plist: LSHandlerRank = Alternate, CFBundleTypeRole = Viewer',
     docTypes.length > 0 &&
       docTypes.every((d) => d.LSHandlerRank === 'Alternate' && d.CFBundleTypeRole === 'Viewer'),
     docTypes.map((d) => `${String(d.LSHandlerRank)}/${String(d.CFBundleTypeRole)}`).join(', '),
@@ -260,31 +260,31 @@ export async function checkDist(options: {
     ([, v]) => !/RecoltOS/.test(String(v)) || /\bthe\b|\bThis app\b/i.test(String(v)),
   )
   add(
-    'Info.plist : textes d’autorisation en français',
+    'Info.plist: permission texts overridden (no Electron defaults)',
     english.length === 0,
-    english.length ? english.map(([k]) => k).join(', ') : `${usage.length} textes`,
+    english.length ? english.map(([k]) => k).join(', ') : `${usage.length} texts`,
   )
 
   // Signature.
   const verify = sh('codesign', ['--verify', '--deep', '--strict', '--verbose=2', app])
-  add('codesign --verify --deep --strict', verify.ok, verify.ok ? 'valide' : verify.out.trim())
+  add('codesign --verify --deep --strict', verify.ok, verify.ok ? 'valid' : verify.out.trim())
   const appSign = signInfo(app)
   const hostSign = signInfo(host)
   if (identity) {
     add(
-      `identité « ${identity} » (app)`,
+      `identity "${identity}" (app)`,
       appSign.authority === identity,
       appSign.authority ?? 'ad hoc',
     )
     add(
-      `identité « ${identity} » (hôte natif)`,
+      `identity "${identity}" (native host)`,
       hostSign.authority === identity,
       hostSign.authority ?? 'ad hoc',
     )
     const dr = spawnSyncStderr('codesign', ['-d', '-r-', app])
     const line = /designated => (.+)/.exec(dr)?.[1]?.trim() ?? dr.trim()
     add(
-      'exigence désignée stable (certificat, pas cdhash)',
+      'stable designated requirement (certificate, not cdhash)',
       /^identifier "com\.recoltos\.app" and /.test(line) &&
         /\bcertificate leaf(?: = H"[0-9a-f]+"|\[)/i.test(line) &&
         !/\bcdhash\b/.test(line),
@@ -292,14 +292,14 @@ export async function checkDist(options: {
     )
   } else {
     add(
-      'signature (aucune identité demandée)',
+      'signature (no identity requested)',
       true,
-      `app : ${appSign.authority ?? 'ad hoc'}, hôte : ${hostSign.authority ?? 'ad hoc'} — dev seulement`,
+      `app: ${appSign.authority ?? 'ad hoc'}, host: ${hostSign.authority ?? 'ad hoc'} — dev only`,
       appSign.adhoc,
     )
   }
   const hostVerify = sh('codesign', ['--verify', '--strict', host])
-  add('hôte natif signé', hostVerify.ok, hostVerify.ok ? 'valide' : hostVerify.out.trim())
+  add('native host signed', hostVerify.ok, hostVerify.ok ? 'valid' : hostVerify.out.trim())
 
   // Fuses.
   const wire = await getCurrentFuseWire(app)
@@ -323,17 +323,21 @@ export async function checkDist(options: {
     const state = (wire as unknown as Record<number, FuseState>)[idx]
     const want = on ? FuseState.ENABLE : FuseState.DISABLE
     add(
-      `fuse ${name} ${on ? 'activé' : 'désactivé'}`,
+      `fuse ${name} ${on ? 'enabled' : 'disabled'}`,
       state === want,
-      state === FuseState.ENABLE ? 'activé' : state === FuseState.DISABLE ? 'désactivé' : 'hérité',
+      state === FuseState.ENABLE
+        ? 'enabled'
+        : state === FuseState.DISABLE
+          ? 'disabled'
+          : 'inherited',
     )
   }
 
   // Native host.
   const hostMode = existsSync(host) ? statSync(host).mode : 0
-  add('hôte natif exécutable', (hostMode & 0o111) !== 0, host)
-  const ping = existsSync(host) ? await hostPing(host) : { ok: false, detail: 'absent' }
-  add('hôte natif autonome', ping.ok, ping.detail)
+  add('native host executable', (hostMode & 0o111) !== 0, host)
+  const ping = existsSync(host) ? await hostPing(host) : { ok: false, detail: 'missing' }
+  add('native host standalone', ping.ok, ping.detail)
 
   // Extension.
   for (const target of ['chromium', 'firefox']) {
@@ -345,12 +349,12 @@ export async function checkDist(options: {
     add(
       `extension ${target} (version ${EXTENSION_VERSION})`,
       v === EXTENSION_VERSION,
-      v ?? 'absente',
+      v ?? 'missing',
     )
     const scripts = walkFiles(dir).filter((f) => f.endsWith('.js'))
     const withImport = scripts.filter((f) => /^\s*import\s/m.test(readFileSync(f, 'utf8')))
     add(
-      `extension ${target} : scripts sans import`,
+      `extension ${target}: scripts without imports`,
       scripts.length > 0 && withImport.length === 0,
       withImport.map((f) => relative(dir, f)).join(', ') || `${scripts.length} scripts`,
     )
@@ -358,9 +362,9 @@ export async function checkDist(options: {
       /selfTest|testEndpoints|127\.0\.0\.1/.test(readFileSync(f, 'utf8')),
     )
     add(
-      `extension ${target} : aucun code de test`,
+      `extension ${target}: no test code`,
       testCode.length === 0,
-      testCode.map((f) => relative(dir, f)).join(', ') || 'aucun',
+      testCode.map((f) => relative(dir, f)).join(', ') || 'none',
     )
   }
 
@@ -368,23 +372,19 @@ export async function checkDist(options: {
   const asarPath = join(R, 'app.asar')
   const asar = readAsar(asarPath)
   const machO = asar.files.filter((f) => /\.(node|dylib)$|(^|\/)(ffmpeg|ffprobe)$/.test(f))
-  add(
-    'app.asar : aucun Mach-O',
-    machO.length === 0,
-    machO.join(', ') || `${asar.files.length} fichiers`,
-  )
+  add('app.asar: no Mach-O', machO.length === 0, machO.join(', ') || `${asar.files.length} files`)
   const maps = asar.files.filter((f) => /\.map$|\.onnx$|(^|\/)models\//.test(f))
-  add('app.asar : aucun .map / .onnx', maps.length === 0, maps.slice(0, 5).join(', ') || 'aucun')
+  add('app.asar: no .map / .onnx', maps.length === 0, maps.slice(0, 5).join(', ') || 'none')
   const preload = asar.read('out/preload/index.js')
-  const foreign = preload ? foreignRequires(preload.toString('utf8')) : ['(absent)']
-  add('preload autonome', foreign.length === 0, foreign.join(', ') || 'electron + Node seulement')
+  const foreign = preload ? foreignRequires(preload.toString('utf8')) : ['(missing)']
+  add('preload standalone', foreign.length === 0, foreign.join(', ') || 'electron + Node only')
   const leftovers = [...asar.files, ...asar.unpacked].filter((f) =>
     /(^|\/)node_modules\/(node-addon-api|[^/]+\/(src|install|deps))\//.test(f),
   )
   add(
-    'app.asar : pas de sources natives ni d’outillage de build',
+    'app.asar: no native sources or build tooling',
     leftovers.length === 0,
-    leftovers.slice(0, 5).join(', ') || 'aucun',
+    leftovers.slice(0, 5).join(', ') || 'none',
   )
 
   // Other platforms and sourcemaps across the whole bundle (excluding the Electron framework).
@@ -395,15 +395,15 @@ export async function checkDist(options: {
     ),
   )
   add(
-    'aucun binaire d’une autre plateforme',
+    'no binary for another platform',
     foreignBins.length === 0,
-    foreignBins.map((f) => relative(R, f)).join(', ') || 'aucun',
+    foreignBins.map((f) => relative(R, f)).join(', ') || 'none',
   )
   const resourceMaps = resources.filter((f) => f.endsWith('.map'))
   add(
-    'aucun .map dans Resources',
+    'no .map in Resources',
     resourceMaps.length === 0,
-    resourceMaps.map((f) => relative(R, f)).join(', ') || 'aucun',
+    resourceMaps.map((f) => relative(R, f)).join(', ') || 'none',
   )
 
   // Sizes.
@@ -417,7 +417,7 @@ export async function checkDist(options: {
   }
   for (const [k, budget] of Object.entries(SIZE_BUDGETS_MB)) {
     const v = sizesMb[k as keyof typeof sizesMb]
-    add(`taille ${k} ≤ ${budget} Mo`, v <= budget, `${v} Mo`)
+    add(`size ${k} <= ${budget} MB`, v <= budget, `${v} MB`)
   }
 
   return { app, profile, ok: checks.every((c) => c.ok), checks, sizesMb }

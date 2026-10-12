@@ -107,7 +107,7 @@ export abstract class CliProviderBase implements AiProvider {
       const parsed = zod.safeParse(
         typeof out.json === 'string' ? decodeTolerant(out.json) : out.json,
       )
-      if (!parsed.success) throw new AiError('BAD_OUTPUT', 'réponse invalide', { retryable: true })
+      if (!parsed.success) throw new AiError('BAD_OUTPUT', 'invalid response', { retryable: true })
       const meta: AiCallMeta = {
         provider: this.id,
         durationMs: Date.now() - started,

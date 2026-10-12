@@ -29,7 +29,7 @@ export function fixtureNames(dir: Dir): string[] {
 }
 
 export function expectOk(r: PageParseResult): PageParseOk {
-  if (!r.ok) throw new Error(`échec inattendu : ${JSON.stringify(r.error)}`)
+  if (!r.ok) throw new Error(`unexpected failure: ${JSON.stringify(r.error)}`)
   return r
 }
 

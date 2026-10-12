@@ -37,7 +37,7 @@ export class FrameDecoder {
         this.pending = Buffer.alloc(0)
         out.push({
           kind: 'fatal',
-          reason: len === 0 ? 'trame vide' : `trame de ${len} octets refusée`,
+          reason: len === 0 ? 'empty frame' : `${len}-byte frame refused`,
         })
         return out
       }
@@ -47,7 +47,7 @@ export class FrameDecoder {
       try {
         out.push({ kind: 'message', value: JSON.parse(body.toString('utf8')) })
       } catch {
-        out.push({ kind: 'invalid', reason: 'JSON invalide' })
+        out.push({ kind: 'invalid', reason: 'invalid JSON' })
       }
     }
     return out

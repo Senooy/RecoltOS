@@ -61,7 +61,7 @@ export function createClaudeStreamGuard(opts: { jobDir: string }): ClaudeGuard {
         if (bad.length > 0 || mcp.length > 0) {
           g.error = new AiError(
             'TOOL_VIOLATION',
-            `outils non autorisés exposés au modèle : ${[...bad.map(String), ...(mcp.length ? ['mcp'] : [])].join(', ')}`,
+            `unauthorized tools exposed to the model: ${[...bad.map(String), ...(mcp.length ? ['mcp'] : [])].join(', ')}`,
           )
           return 'kill'
         }
@@ -84,7 +84,7 @@ export function createClaudeStreamGuard(opts: { jobDir: string }): ClaudeGuard {
           info.status !== 'allowed_warning'
         ) {
           const resetAt = typeof info.resetsAt === 'number' ? info.resetsAt * 1000 : undefined
-          g.error = new AiError('RATE_LIMITED', 'limite de l’abonnement atteinte', {
+          g.error = new AiError('RATE_LIMITED', 'subscription limit reached', {
             ...(resetAt ? { resetAt } : {}),
             raw: info.status,
           })
@@ -106,8 +106,8 @@ export function createClaudeStreamGuard(opts: { jobDir: string }): ClaudeGuard {
             g.error = new AiError(
               'TOOL_VIOLATION',
               name === 'Read'
-                ? 'lecture hors du dossier du job'
-                : `tentative d’utiliser l’outil ${name} détectée dans le contenu`,
+                ? 'read outside the job folder'
+                : `attempt to use the ${name} tool detected in the content`,
             )
             return 'kill'
           }
@@ -172,13 +172,9 @@ export function createCodexStreamGuard(): CodexGuard {
               : '?'
         g.itemTypes.push(it)
         if (!CODEX_ALLOWED_ITEMS.has(it)) {
-          g.error = new AiError(
-            'TOOL_VIOLATION',
-            'tentative d’exécution détectée dans le contenu',
-            {
-              raw: it,
-            },
-          )
+          g.error = new AiError('TOOL_VIOLATION', 'execution attempt detected in the content', {
+            raw: it,
+          })
           return 'kill'
         }
         if (it === 'agent_message' && typeof item.text === 'string') g.lastMessage = item.text

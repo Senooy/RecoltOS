@@ -63,17 +63,17 @@ export function parseRecoltPath(pathname: string): { rel: string } | { denied: s
   try {
     rel = decodeURIComponent(pathname)
   } catch {
-    return { denied: 'encodage invalide' }
+    return { denied: 'invalid encoding' }
   }
   if (rel.startsWith('/')) rel = rel.slice(1)
   if (rel.includes('\0')) return { denied: 'octet NUL' }
   if (rel.includes('\\')) return { denied: 'antislash' }
   const segments = rel.split('/')
   if (segments.some((s) => s === '' || s === '.' || s === '..')) {
-    return { denied: 'segment vide, . ou ..' }
+    return { denied: 'empty segment, . or ..' }
   }
   if (segments.length < 2 || !MEDIA_ROOT_SET.has(segments[0]!)) {
-    return { denied: 'racine inconnue' }
+    return { denied: 'unknown root' }
   }
   return { rel }
 }
@@ -116,9 +116,9 @@ export function createRecoltHandler(deps: RecoltHandlerDeps): RecoltHandler {
     try {
       url = new URL(req.url)
     } catch {
-      return deny('URL invalide', req.url)
+      return deny('invalid URL', req.url)
     }
-    if (url.protocol !== `${RECOLT_PROTOCOL}:`) return deny('schéma', req.url)
+    if (url.protocol !== `${RECOLT_PROTOCOL}:`) return deny('scheme', req.url)
 
     const parsed = parseRecoltPath(url.pathname)
     if ('denied' in parsed) return deny(parsed.denied, req.url)
@@ -128,7 +128,7 @@ export function createRecoltHandler(deps: RecoltHandlerDeps): RecoltHandler {
 
     const root = path.resolve(lib.root)
     const abs = path.resolve(root, parsed.rel)
-    if (!isStrictlyUnder(abs, root)) return deny('hors de la racine', req.url)
+    if (!isStrictlyUnder(abs, root)) return deny('outside the root', req.url)
 
     let real: string
     let realRoot: string
@@ -141,7 +141,7 @@ export function createRecoltHandler(deps: RecoltHandlerDeps): RecoltHandler {
     const inside = path.relative(realRoot, real)
     const first = inside.split(path.sep)[0] ?? ''
     if (!isStrictlyUnder(real, realRoot) || !MEDIA_ROOT_SET.has(first)) {
-      return deny('lien hors des racines servies', req.url)
+      return deny('link outside the served roots', req.url)
     }
 
     let handle: fs.promises.FileHandle

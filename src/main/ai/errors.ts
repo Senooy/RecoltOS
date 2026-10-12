@@ -31,25 +31,25 @@ export function classifyError(
   const raw = text.slice(0, 300)
   if (source === 'spawn') {
     if (extra?.code === 'ENOENT' || extra?.code === 'EACCES')
-      return new AiError('NOT_INSTALLED', 'CLI introuvable', { raw })
-    return new AiError('PROCESS', 'lancement impossible', { raw, retryable: true })
+      return new AiError('NOT_INSTALLED', 'CLI not found', { raw })
+    return new AiError('PROCESS', 'launch failed', { raw, retryable: true })
   }
   if (source === 'exit') {
-    return new AiError('PROCESS', 'le CLI s’est arrêté sans résultat', { raw, retryable: true })
+    return new AiError('PROCESS', 'the CLI stopped without a result', { raw, retryable: true })
   }
   if (source === 'claude-retry') {
-    if (RETRY_AUTH.has(text)) return new AiError('NOT_AUTHENTICATED', 'non connecté', { raw })
+    if (RETRY_AUTH.has(text)) return new AiError('NOT_AUTHENTICATED', 'not signed in', { raw })
     if (RETRY_RATE.has(text)) return new AiError('RATE_LIMITED', 'limite atteinte', { raw })
     // Other categories (server_error…): the CLI retries; we let the attempt run its course.
-    return new AiError('PROCESS', `erreur ${text}`, { raw, retryable: true })
+    return new AiError('PROCESS', `error ${text}`, { raw, retryable: true })
   }
   // claude-result / codex-event: CLI error message only.
-  if (RE_AUTH.test(text)) return new AiError('NOT_AUTHENTICATED', 'non connecté', { raw })
+  if (RE_AUTH.test(text)) return new AiError('NOT_AUTHENTICATED', 'not signed in', { raw })
   if (RE_RATE.test(text)) {
     const resetAt = parseResetAt(text)
     return new AiError('RATE_LIMITED', 'limite atteinte', { raw, ...(resetAt ? { resetAt } : {}) })
   }
-  return new AiError('PROCESS', 'erreur du CLI', { raw, retryable: true })
+  return new AiError('PROCESS', 'CLI error', { raw, retryable: true })
 }
 
 /** Final codes: never retried. */
@@ -77,9 +77,9 @@ export function toAiError(err: unknown): AiError {
   if (err instanceof AiError) return err
   if (err && typeof err === 'object' && 'code' in err) {
     const c = (err as { code?: unknown }).code
-    if (c === 'cancelled' || c === 'CANCELLED') return new AiError('CANCELLED', 'annulé')
+    if (c === 'cancelled' || c === 'CANCELLED') return new AiError('CANCELLED', 'cancelled')
     if (c === 'not_found' || c === 'decode_failed' || c === 'system.decode_failed')
-      return new AiError('FILE_MISSING', 'média illisible ou introuvable')
+      return new AiError('FILE_MISSING', 'media unreadable or not found')
   }
   const msg = err instanceof Error ? err.message : String(err)
   return new AiError('PROCESS', msg.slice(0, 300), { retryable: true })

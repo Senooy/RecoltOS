@@ -65,9 +65,8 @@ async function launchOnce(
         const mounted = found.find((m) => m.name === 'app-mounted')
         return { grid: grid.uptime * 1000, mounted: mounted ? mounted.uptime * 1000 : null }
       }
-      if (Date.now() - t0 > timeoutMs)
-        throw new Error('marque grid-painted absente (délai dépassé)')
-      if (child.exitCode !== null) throw new Error(`l'app s'est arrêtée (code ${child.exitCode})`)
+      if (Date.now() - t0 > timeoutMs) throw new Error('grid-painted mark missing (timed out)')
+      if (child.exitCode !== null) throw new Error(`the app exited (code ${child.exitCode})`)
       await new Promise((r) => setTimeout(r, 50))
     }
   } finally {
@@ -85,12 +84,10 @@ export async function measureStartup(options: {
 }): Promise<StartupReport> {
   const real = join(homedir(), 'Library', 'Application Support', 'RecoltOS')
   if (resolve(options.userData).startsWith(real)) {
-    throw new Error(
-      `refus : ${options.userData} est le dossier réel de RecoltOS (utilise un clone)`,
-    )
+    throw new Error(`refused: ${options.userData} is the real RecoltOS folder (use a clone)`)
   }
   const bin = join(options.app, 'Contents', 'MacOS', 'RecoltOS')
-  if (!existsSync(bin)) throw new Error(`${bin} introuvable (pnpm run pack)`)
+  if (!existsSync(bin)) throw new Error(`${bin} not found (pnpm run pack)`)
   const home = mkdtempSync(join(tmpdir(), 'recolt-startup-home-'))
   try {
     await launchOnce(bin, options.userData, home) // warm-up

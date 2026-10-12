@@ -46,7 +46,7 @@ let prefs: Prefs = DEFAULT_PREFS
 const ok = <T>(data: T): RpcResult<T> => ({ ok: true, data })
 const notImplemented = (channel: string): RpcResult<never> => ({
   ok: false,
-  error: { code: 'not_implemented', message: `${channel} (maquette) n'est pas disponible` },
+  error: { code: 'not_implemented', message: `${channel} (mock) is not available` },
 })
 
 function live(i: ItemCard): boolean {
@@ -175,7 +175,7 @@ function handle(channel: string, input: unknown): RpcResult<unknown> {
       return ok(counts())
     case 'items.get': {
       const d = detail((input as { uuid: string }).uuid)
-      return d ? ok(d) : { ok: false, error: { code: 'not_found', message: 'élément introuvable' } }
+      return d ? ok(d) : { ok: false, error: { code: 'not_found', message: 'item not found' } }
     }
     case 'items.recentlyViewed':
       return ok(MOCK_ITEMS.slice(0, (input as { limit?: number } | undefined)?.limit ?? 12))

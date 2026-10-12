@@ -149,7 +149,7 @@ export async function withOffscreenWindow<T>(
   let timer: NodeJS.Timeout | null = null
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
-      () => reject(new AppError('timeout', 'fenêtre hors écran : délai dépassé')),
+      () => reject(new AppError('timeout', 'offscreen window: timed out')),
       opts.timeoutMs ?? OFFSCREEN_TIMEOUT_MS,
     )
   })

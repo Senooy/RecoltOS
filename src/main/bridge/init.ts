@@ -63,7 +63,7 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
   const isPackaged = ctx.isPackaged
   if (process.argv.includes(UNINSTALL_FLAG)) {
     const removed = uninstallNativeHosts({ userData: ctx.userData, home })
-    ctx.log.info(`[bridge] ${removed.length} manifest(s) retiré(s)`)
+    ctx.log.info(`[bridge] ${removed.length} manifest(s) removed`)
     app.quit()
     return
   }

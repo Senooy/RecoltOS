@@ -20,7 +20,7 @@ export const remoteFetch: JobHandler = async (job, ctx) => {
   if (!ctx.prefs().storage.downloadRemoteMedia) {
     return {
       status: 'failed',
-      error: { code: 'disabled', message: 'téléchargement des médias distants désactivé' },
+      error: { code: 'disabled', message: 'remote media download disabled' },
     }
   }
   const tmp = lib.paths.abs(rel.tmp(`remote-${job.id}.part`))
@@ -31,7 +31,7 @@ export const remoteFetch: JobHandler = async (job, ctx) => {
   const type = await detectType(got.head)
   if (!type || type.mediaType !== 'image') {
     await rm(tmp, { force: true })
-    throw new AppError('unsupported', 'image distante illisible')
+    throw new AppError('unsupported', 'unreadable remote image')
   }
   const remoteRel = rel.remote(url, type.ext)
   const abs = lib.paths.abs(remoteRel)

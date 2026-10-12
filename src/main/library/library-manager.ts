@@ -344,7 +344,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         if (!f.startsWith('.')) fs.rmSync(path.join(root, f), { recursive: true, force: true })
       }
     } catch (err) {
-      deps.log?.warn('[library] cleanup of the cancelled creation impossible', err)
+      deps.log?.warn('[library] cleanup of the cancelled creation failed', err)
     }
   }
 
@@ -532,7 +532,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         } catch (err) {
           if (r.active === DEFAULT_LIBRARY_ID) throw err
           deps.log?.error(
-            `[library] ${r.active} indisponible, repli sur ${DEFAULT_LIBRARY_ID}`,
+            `[library] ${r.active} unavailable, falling back to ${DEFAULT_LIBRARY_ID}`,
             err,
           )
           if (!r.libraries.some((l) => l.id === DEFAULT_LIBRARY_ID)) {

@@ -11,6 +11,7 @@ import { pipeline } from 'node:stream/promises'
 import sharp from 'sharp'
 import yazl from 'yazl'
 import { AppError } from '../../../shared/errors'
+import { mt } from '../../i18n'
 import type { MediaResult, ZipEntry } from '../../../shared/worker-protocol'
 import {
   assertAbs,
@@ -31,7 +32,7 @@ export function toPng(
 ): Promise<MediaResult<'toPng'>> {
   const abs = assertAbs(a.abs, 'abs')
   if (a.maxEdge !== undefined && !(Number.isInteger(a.maxEdge) && a.maxEdge > 0)) {
-    throw new AppError('validation', 'maxEdge invalide')
+    throw new AppError('validation', 'invalid maxEdge')
   }
   return withReadable(abs, tools, signal, async ({ input }) => {
     try {
@@ -47,7 +48,7 @@ export function toPng(
       const { data, info } = await img.png().toBuffer({ resolveWithObject: true })
       return { png: new Uint8Array(data), width: info.width, height: info.height }
     } catch (err) {
-      throw new AppError('decode_failed', 'image illisible', rawError(err))
+      throw new AppError('decode_failed', 'unreadable image', rawError(err))
     }
   })
 }
@@ -73,7 +74,7 @@ function zipError(err: unknown, out: string): AppError {
   if (err instanceof AppError) return err
   const e = err as NodeJS.ErrnoException
   if (/unexpected number of bytes/.test(e.message ?? '')) {
-    return new AppError('conflict', "fichier source modifié pendant l'export")
+    return new AppError('conflict', mt().errors.exportSourceChanged)
   }
   return ioError(err, e.path ?? out)
 }
@@ -100,14 +101,14 @@ export async function cloneFile(a: {
 /** Safe archive path: relative, using `/`, without `..` or empty segment. */
 export function safeZipName(name: string): string {
   if (typeof name !== 'string' || name.length === 0 || name.length > 1024) {
-    throw new AppError('validation', 'nom d’entrée zip invalide')
+    throw new AppError('validation', 'invalid zip entry name')
   }
   if (name.includes('\\') || name.includes('\0') || name.startsWith('/') || /^[a-z]:/i.test(name)) {
-    throw new AppError('validation', `nom d’entrée zip invalide : ${name}`)
+    throw new AppError('validation', `invalid zip entry name: ${name}`)
   }
   const parts = name.split('/')
   if (parts.some((p) => p === '' || p === '.' || p === '..')) {
-    throw new AppError('validation', `nom d’entrée zip invalide : ${name}`)
+    throw new AppError('validation', `invalid zip entry name: ${name}`)
   }
   return posix.normalize(name)
 }
@@ -144,7 +145,7 @@ export function resolveEntryAbs(root: string, abs: string): string {
   const resolved = resolve(root, abs)
   const rel = relative(root, resolved)
   if (rel === '' || rel === '..' || rel.startsWith('../') || isAbsolute(rel)) {
-    throw new AppError('validation', `chemin source hors de la bibliothèque : ${abs}`)
+    throw new AppError('validation', `source path outside the library: ${abs}`)
   }
   return resolved
 }
@@ -189,7 +190,7 @@ async function assertEntryContained(realRoot: string, rel: string, abs: string):
     throw ioError(err, abs)
   }
   if (!isInside(realRoot, real)) {
-    throw new AppError('validation', `chemin source hors de la bibliothèque : ${rel}`)
+    throw new AppError('validation', `source path outside the library: ${rel}`)
   }
 }
 
@@ -205,20 +206,20 @@ export async function zipLibrary(
 ): Promise<MediaResult<'zipLibrary'>> {
   const root = assertAbs(a.root, 'root')
   const out = assertAbs(a.out, 'out')
-  if (!Array.isArray(a.entries)) throw new AppError('validation', 'entries attendu')
+  if (!Array.isArray(a.entries)) throw new AppError('validation', 'entries expected')
   const seen = new Set<string>()
   const entries = a.entries.map((raw: unknown) => {
     // A malformed entry (null, number, object without a name) is a validation error, not a
     // TypeError that would surface as `internal`.
     const e = raw as Partial<ZipEntry> | null
-    if (!e || typeof e !== 'object') throw new AppError('validation', 'entrée zip invalide')
+    if (!e || typeof e !== 'object') throw new AppError('validation', 'invalid zip entry')
     const name = safeZipName(e.name as string)
     // APFS is case-insensitive: "A.txt" and "a.txt" would clash during extraction.
     const key = name.normalize('NFC').toLowerCase()
-    if (seen.has(key)) throw new AppError('validation', `entrée zip en double : ${name}`)
+    if (seen.has(key)) throw new AppError('validation', `duplicate zip entry: ${name}`)
     seen.add(key)
     if (typeof e.abs !== 'string' || e.abs.length === 0) {
-      throw new AppError('validation', 'chemin source manquant')
+      throw new AppError('validation', 'missing source path')
     }
     const isRel = !isAbsolute(e.abs)
     return { name, abs: resolveEntryAbs(root, e.abs), rel: isRel ? e.abs : null }
@@ -228,11 +229,11 @@ export async function zipLibrary(
   // included): the atomic rename would replace the original.
   const outReal = join(await realpathLoose(dirname(out)), basename(out))
   if (isInside(realRoot, outReal)) {
-    throw new AppError('validation', `sortie dans la bibliothèque refusée : ${out}`)
+    throw new AppError('validation', `output inside the library refused: ${out}`)
   }
   for (const e of entries) {
     if ((await realpathLoose(e.abs)) === outReal || (await sameFile(out, e.abs))) {
-      throw new AppError('validation', `la sortie est une des sources : ${out}`)
+      throw new AppError('validation', `the output is one of the sources: ${out}`)
     }
   }
   const total = entries.length
@@ -267,9 +268,9 @@ export async function zipLibrary(
             throw ioError(err, e.abs)
           }
           if (st.isSymbolicLink()) {
-            throw new AppError('validation', `lien symbolique refusé : ${e.abs}`)
+            throw new AppError('validation', `symbolic link refused: ${e.abs}`)
           }
-          if (!st.isFile()) throw new AppError('validation', `pas un fichier : ${e.abs}`)
+          if (!st.isFile()) throw new AppError('validation', `not a file: ${e.abs}`)
           zip.addReadStreamLazy(
             e.name,
             {
@@ -297,7 +298,7 @@ export async function zipLibrary(
         ws.destroy()
         // The temporary file must be closed before writeAtomic deletes it.
         if (!ws.closed) await once(ws, 'close').catch(() => undefined)
-        if (signal?.aborted) throw new AppError('cancelled', 'export annulé')
+        if (signal?.aborted) throw new AppError('cancelled', mt().errors.exportCancelled)
         throw zipError(err, out)
       }
       return { bytes: (await stat(tmp)).size }

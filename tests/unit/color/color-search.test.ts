@@ -45,7 +45,7 @@ const SHARMA: [Lab, Lab, number][] = [
 ]
 
 describe('ΔE2000 (culori wrapper)', () => {
-  it.each(SHARMA)('paire de Sharma %#', (a, b, expected) => {
+  it.each(SHARMA)('Sharma pair %#', (a, b, expected) => {
     expect(deltaE2000(a, b)).toBeCloseTo(expected, 3)
   })
 })

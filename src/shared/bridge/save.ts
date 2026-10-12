@@ -51,7 +51,7 @@ export const SaveRequest = z
     note: z.string().max(5000).optional(),
   })
   .refine((v) => !(v.inlineMedia && v.upload), {
-    message: '`inlineMedia` et `upload` sont exclusifs',
+    message: '`inlineMedia` and `upload` are mutually exclusive',
   })
 export type SaveRequest = z.output<typeof SaveRequest>
 

@@ -160,17 +160,17 @@ export function parseMessage(raw: unknown): ParseResult {
   const env = Envelope.safeParse(raw)
   if (!env.success) {
     const id = (raw as { id?: unknown } | null)?.id
-    return { ok: false, id: typeof id === 'string' ? id : null, error: 'enveloppe invalide' }
+    return { ok: false, id: typeof id === 'string' ? id : null, error: 'invalid envelope' }
   }
   const schema = (MESSAGE_SCHEMAS as Record<string, z.ZodType>)[env.data.type]
-  if (!schema) return { ok: false, id: env.data.id, error: `type inconnu : ${env.data.type}` }
+  if (!schema) return { ok: false, id: env.data.id, error: `unknown type: ${env.data.type}` }
   const p = schema.safeParse(env.data.payload)
   if (!p.success) {
     const issue = p.error.issues[0]
     return {
       ok: false,
       id: env.data.id,
-      error: `${env.data.type} : ${issue ? `${issue.path.join('.')} ${issue.message}` : 'invalide'}`,
+      error: `${env.data.type} : ${issue ? `${issue.path.join('.')} ${issue.message}` : 'invalid'}`,
     }
   }
   return { ok: true, message: { ...env.data, payload: p.data } as TypedMessage }

@@ -107,6 +107,7 @@ export const ai = {
       violation: 'outil refusé',
     } as Record<string, string>,
     logFiles: (n: number, kb: string) => (n === 0 ? 'texte seul' : `${n} JPEG · ${kb}`),
+    logChars: (n: number) => ` · ${n} car.`,
     // Feuille « Changer »
     sheetTitle: 'Moteur IA',
     sheetDesc:

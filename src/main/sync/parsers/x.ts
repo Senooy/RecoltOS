@@ -89,7 +89,7 @@ function classifyErrors(errors: unknown): PageParseResult | null {
     }
   }
   const first = list[0]!
-  return errorResult('x', 'api_changed', 'graphql_error', str(first.message) ?? 'Erreur GraphQL')
+  return errorResult('x', 'api_changed', 'graphql_error', str(first.message) ?? 'GraphQL error')
 }
 
 // ------------------------------------------------------------------------------------ timeline
@@ -467,7 +467,7 @@ function xMediaList(t: Json, onDrop: (reason: string) => void): NormalizedMedia[
     const height = posInt(info.height)
     if (type === 'photo') {
       if (base === null) {
-        onDrop('photo sans media_url_https')
+        onDrop('photo without media_url_https')
         continue
       }
       out.push({ ...emptyMedia('image'), url: xPhotoOrig(base), width, height })
@@ -476,7 +476,7 @@ function xMediaList(t: Json, onDrop: (reason: string) => void): NormalizedMedia[
       const mp4 = bestMp4(vi.variants)
       const hls = hlsOf(vi.variants)
       if (mp4 === null && hls === null) {
-        onDrop('vidéo sans variante exploitable')
+        onDrop('video without a usable variant')
         continue
       }
       out.push({
@@ -491,7 +491,7 @@ function xMediaList(t: Json, onDrop: (reason: string) => void): NormalizedMedia[
         gif: type === 'animated_gif',
       })
     } else {
-      onDrop(`type de média inconnu (${type ?? '?'})`)
+      onDrop(`unknown media type (${type ?? '?'})`)
     }
   }
   return out
@@ -539,7 +539,7 @@ function toPost(
   position: number,
   onDrop: (reason: string) => void,
 ): NormalizedPost {
-  if (tweetId(entryTweet) === null) fail('rest_id absent')
+  if (tweetId(entryTweet) === null) fail('rest_id missing')
   let t = entryTweet
   let retweetedBy: NormalizedAuthor | null = null
   let retweetId: string | null = null
@@ -553,8 +553,8 @@ function toPost(
     }
   }
   const id = tweetId(t)
-  if (id === null) fail('rest_id absent')
-  if (!isObj(t.legacy)) fail('legacy absent')
+  if (id === null) fail('rest_id missing')
+  if (!isObj(t.legacy)) fail('legacy missing')
   const legacy = t.legacy
   const author = xAuthor(t)
   const q = quotedOf(t)
@@ -620,12 +620,12 @@ function tweetResultOf(content: Json): unknown {
 // ------------------------------------------------------------------------------------ page
 
 function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
-  if (!isObj(json)) return errorResult('x', 'api_changed', 'unknown_shape', 'Réponse X illisible')
+  if (!isObj(json)) return errorResult('x', 'api_changed', 'unknown_shape', 'Unreadable X response')
   const instructions = findInstructions(obj(json.data))
   if (instructions === null) {
     return (
       classifyErrors(json.errors) ??
-      errorResult('x', 'api_changed', 'unknown_shape', 'Réponse X sans timeline de favoris')
+      errorResult('x', 'api_changed', 'unknown_shape', 'X response without a bookmarks timeline')
     )
   }
   const log = new PageLog()
@@ -649,17 +649,17 @@ function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
       (entryId !== null && entryId.startsWith('tweet-')) ||
       ic.itemType === 'TimelineTweet'
     if (!looksTweet) {
-      log.note('ignored', index, entryId, 'entrée non-tweet')
+      log.note('ignored', index, entryId, 'non-tweet entry')
       return
     }
     sawTweet = true
     if (isObj(ic.promotedMetadata)) {
-      log.note('ignored', index, entryId, 'contenu sponsorisé')
+      log.note('ignored', index, entryId, 'sponsored content')
       return
     }
     const u = unwrap(result)
     if (u === null) {
-      log.note('malformed', index, entryId, 'tweet_results absent ou illisible')
+      log.note('malformed', index, entryId, 'tweet_results missing or unreadable')
       return
     }
     if ('unavailable' in u) {
@@ -671,7 +671,7 @@ function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
         log.note('media_dropped', index, entryId, reason),
       )
       if (seen.has(post.sourceKey)) {
-        log.note('ignored', index, entryId, 'doublon dans la page')
+        log.note('ignored', index, entryId, 'duplicate on the page')
         return
       }
       seen.add(post.sourceKey)

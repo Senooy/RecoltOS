@@ -80,7 +80,7 @@ describe('gallery: tokens only', () => {
     expect(/#[0-9a-fA-F]{3,8}\b/.test(gallerySource)).toBe(false)
   })
 
-  it('all buttons without text have a non-empty French aria-label; every slider is named', () => {
+  it('all buttons without text have a non-empty aria-label; every slider is named', () => {
     const { container } = render(<Gallery />)
     const iconOnly = [...container.querySelectorAll('button')].filter(
       (b) => (b.textContent ?? '').trim() === '',
@@ -92,24 +92,21 @@ describe('gallery: tokens only', () => {
     for (const s of container.querySelectorAll('[role="slider"]')) {
       expect((s.getAttribute('aria-label') ?? '').trim()).not.toBe('')
     }
-    // No common English accessible name in the icon controls.
-    const names = iconOnly.map((b) => b.getAttribute('aria-label') ?? '')
-    expect(names.join('|')).not.toMatch(/\b(Close|Settings|Delete|Search)\b/)
   })
 })
 
 describe('Toaster: pill', () => {
-  it('shows a toast with the "Annuler" action', async () => {
+  it('shows a toast with the "Undo" action', async () => {
     render(<Toaster />)
     act(() => {
-      toast('Ajouté à Gaming', { action: { label: 'Annuler', onClick: () => undefined } })
+      toast('Added to Gaming', { action: { label: 'Undo', onClick: () => undefined } })
     })
-    const text = await screen.findByText('Ajouté à Gaming')
+    const text = await screen.findByText('Added to Gaming')
     const pill = text.closest('[data-sonner-toast]') as HTMLElement
     expect(pill.className).toContain('h-10')
     expect(pill.className).toContain('rounded-full')
     expect(pill.className).toContain('bg-surface')
-    const action = screen.getByRole('button', { name: 'Annuler' })
+    const action = screen.getByRole('button', { name: 'Undo' })
     expect(action.className).toContain('bg-accent')
     fireEvent.click(action)
   })

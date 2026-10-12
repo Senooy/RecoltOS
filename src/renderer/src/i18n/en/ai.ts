@@ -99,6 +99,7 @@ export const ai: Widen<typeof frAi> = {
       violation: 'tool refused',
     },
     logFiles: (n: number, kb: string) => (n === 0 ? 'text only' : `${n} JPEG · ${kb}`),
+    logChars: (n: number) => ` · ${n} chars`,
     // “Change” sheet
     sheetTitle: 'AI Engine',
     sheetDesc:

@@ -12,7 +12,7 @@ import { mt } from '../../i18n'
 export const mediaPreview: JobHandler = async (job, ctx) => {
   const mediaId = payloadId(job, 'mediaId')
   if (mediaId === null)
-    return { status: 'failed', error: { code: 'validation', message: 'mediaId manquant' } }
+    return { status: 'failed', error: { code: 'validation', message: 'missing mediaId' } }
   const m = ctx.lib.repos.media.getById(mediaId)
   if (!m || m.media_type !== 'video' || !m.file_rel || m.status === 'remote')
     return { status: 'done' }

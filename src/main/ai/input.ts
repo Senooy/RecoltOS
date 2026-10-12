@@ -142,7 +142,7 @@ export async function buildAiInput(
         : cover
           ? imageSource(lib, cover)
           : null
-    if (!src) throw new AiError('FILE_MISSING', 'média introuvable')
+    if (!src) throw new AiError('FILE_MISSING', 'media not found')
     await prep(src, 1)
   } else if (item.kind === 'tweet') {
     if (!pc) {
@@ -150,7 +150,7 @@ export async function buildAiInput(
       if (src) await prep(src, 1)
     }
   } else if (item.kind === 'video') {
-    if (!cover) throw new AiError('FILE_MISSING', 'média introuvable')
+    if (!cover) throw new AiError('FILE_MISSING', 'media not found')
     const video = cover.media_type === 'video' ? existing(lib, [cover.file_rel]) : null
     const canFrames = deps.hasTool('ffmpeg') && deps.hasTool('ffprobe')
     const kf = await getVideoKeyframes({
@@ -167,7 +167,7 @@ export async function buildAiInput(
       },
       extract: video && canFrames ? workerFrameExtractor(deps.media, deps.signal) : null,
     })
-    if (kf.frames.length === 0) throw new AiError('FILE_MISSING', 'aucune image de la vidéo')
+    if (kf.frames.length === 0) throw new AiError('FILE_MISSING', 'no frames in the video')
     let i = 1
     for (const f of kf.frames) await prep(f, i++, AI_FRAME_MAX_EDGE)
     if (kf.durationSec) ctx.videoDurationSec = Math.round(kf.durationSec * 10) / 10
@@ -183,14 +183,14 @@ export async function buildAiInput(
     const total = Math.max(item.media_count, rows.length)
     if (item.kind === 'image' && total >= 2) {
       const picks = pickSlides(slides, 3)
-      if (picks.length === 0) throw new AiError('FILE_MISSING', 'média introuvable')
+      if (picks.length === 0) throw new AiError('FILE_MISSING', 'media not found')
       let i = 1
       for (const s of picks) await prep(s.path, i++)
       ctx.carousel = { total, slideNumbers: picks.map((s) => s.index + 1) }
     } else {
       const first = slides.find((s) => s.type === 'image')
       const src = first?.path ?? (cover ? imageSource(lib, cover) : null)
-      if (!src) throw new AiError('FILE_MISSING', 'média introuvable')
+      if (!src) throw new AiError('FILE_MISSING', 'media not found')
       await prep(src, 1)
     }
   }

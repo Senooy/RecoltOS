@@ -7,6 +7,6 @@ import type { JobHandler } from './types'
 
 export const aiPrompt: JobHandler = (job, ctx) => {
   const s = getAiService()
-  if (!s) return Promise.reject(new AppError('not_implemented', 'service IA indisponible'))
+  if (!s) return Promise.reject(new AppError('not_implemented', 'AI service unavailable'))
   return s.handleJob(job, ctx)
 }

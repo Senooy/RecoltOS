@@ -91,7 +91,7 @@ export function checkWorkspace(yamlText: string): string[] {
   let catalogName: string | null = null // `catalogs`: current catalog
   let lineNo = 0
   const fail = (why: string): void => {
-    errors.push(`pnpm-workspace.yaml ligne ${lineNo} : ${why} (refus par prudence)`)
+    errors.push(`pnpm-workspace.yaml line ${lineNo}: ${why} (refused as a precaution)`)
   }
   for (const raw of yamlText.split(/\r?\n/)) {
     lineNo++
@@ -114,7 +114,7 @@ export function checkWorkspace(yamlText: string): string[] {
       catalogName = null
       if (key !== null && (SECTIONS as readonly string[]).includes(key)) {
         section = key as (typeof SECTIONS)[number]
-        if (value !== '') fail(`« ${key} » doit être un bloc indenté (valeur en ligne refusée)`)
+        if (value !== '') fail(`"${key}" must be an indented block (inline value refused)`)
       }
       continue
     }
@@ -122,13 +122,13 @@ export function checkWorkspace(yamlText: string): string[] {
 
     if (childIndent === -1) childIndent = indent
     if (indent < childIndent) {
-      fail(`indentation inattendue dans « ${section} »`)
+      fail(`unexpected indentation in "${section}"`)
       continue
     }
     if (section === 'catalogs' && indent === childIndent) {
       // Catalog name: a block only, never a direct version.
       if (key === null || value !== '') {
-        fail(`entrée de « catalogs » non analysable`)
+        fail(`unparseable "catalogs" entry`)
         catalogName = null
         continue
       }
@@ -136,23 +136,23 @@ export function checkWorkspace(yamlText: string): string[] {
       continue
     }
     if (section === 'catalogs' && indent > childIndent && catalogName === null) {
-      fail(`entrée de « catalogs » sans catalogue`)
+      fail(`"catalogs" entry without a catalog`)
       continue
     }
     if (indent > childIndent && section !== 'catalogs') {
-      fail(`entrée imbriquée non analysable dans « ${section} »`)
+      fail(`unparseable nested entry in "${section}"`)
       continue
     }
     if (key === null) {
-      fail(`ligne non analysable dans « ${section} »`)
+      fail(`unparseable line in "${section}"`)
       continue
     }
     const spec = unquote(value)
     const label = section === 'catalogs' ? `catalogs.${catalogName}.${key}` : `${section}.${key}`
     if (spec === '') {
-      fail(`« ${label} » sans version (bloc non analysable)`)
+      fail(`"${label}" without a version (unparseable block)`)
     } else if (!isExactSpec(spec)) {
-      errors.push(`${label} : version « ${spec} » non exacte (ni ^, ni ~, ni plage)`)
+      errors.push(`${label}: version "${spec}" is not exact (no ^, no ~, no range)`)
     }
   }
   return errors
@@ -163,14 +163,14 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
 
   for (const name of Object.keys(pkg.scripts ?? {})) {
     if (PNPM_BUILTINS.includes(name) && !ALLOWED_BUILTIN_SCRIPTS.includes(name)) {
-      errors.push(`script « ${name} » : collision avec une commande intégrée de pnpm`)
+      errors.push(`script "${name}": collides with a pnpm built-in command`)
     }
   }
 
   for (const field of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
     for (const [name, spec] of Object.entries(pkg[field] ?? {})) {
       if (!isExactSpec(spec)) {
-        errors.push(`${field}.${name} : version « ${spec} » non exacte (ni ^, ni ~, ni plage)`)
+        errors.push(`${field}.${name}: version "${spec}" is not exact (no ^, no ~, no range)`)
       }
     }
   }
@@ -183,7 +183,7 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
       // A nested (object) or non-string override cannot be checked here: refused.
       if (typeof spec !== 'string' || !isExactSpec(spec)) {
         errors.push(
-          `${label}.${name} : version « ${typeof spec === 'string' ? spec : JSON.stringify(spec)} » non exacte (ni ^, ni ~, ni plage)`,
+          `${label}.${name}: version "${typeof spec === 'string' ? spec : JSON.stringify(spec)}" is not exact (no ^, no ~, no range)`,
         )
       }
     }
@@ -192,19 +192,19 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
   for (const name of Object.keys(pkg.dependencies ?? {})) {
     if (!DEPENDENCIES_ALLOWLIST.includes(name)) {
       errors.push(
-        `dependencies.${name} : hors liste blanche (${DEPENDENCIES_ALLOWLIST.join(', ')}) ; à placer en devDependencies (bundlé)`,
+        `dependencies.${name}: not in the allowlist (${DEPENDENCIES_ALLOWLIST.join(', ')}); move to devDependencies (bundled)`,
       )
     }
   }
 
   if (!pkg.packageManager?.startsWith(PACKAGE_MANAGER_PREFIX)) {
     errors.push(
-      `packageManager : « ${pkg.packageManager ?? '(absent)'} » ; attendu « ${PACKAGE_MANAGER_PREFIX}… »`,
+      `packageManager: "${pkg.packageManager ?? '(missing)'}"; expected "${PACKAGE_MANAGER_PREFIX}…"`,
     )
   }
 
   if (pkg.type === 'module') {
-    errors.push('"type": "module" interdit : main et preload sont en CJS')
+    errors.push('"type": "module" is forbidden: main and preload are CJS')
   }
 
   return errors

@@ -191,7 +191,7 @@ describe('recolt:// — refusals', () => {
 
   it('refusals are reported to the log', () => {
     expect(denied.length).toBeGreaterThan(0)
-    expect(denied).toContain('racine inconnue')
+    expect(denied).toContain('unknown root')
   })
 })
 

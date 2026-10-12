@@ -79,7 +79,7 @@ const opts = (jobDir: string, timeoutMs = 20_000) => ({
 beforeAll(() => {
   ud = mkdtempSync(join(tmpdir(), 'recolt-ai-prov-'))
   log = join(ud, 'argv.log')
-  process.env.ANTHROPIC_API_KEY = 'sk-test-ne-doit-pas-fuir'
+  process.env.ANTHROPIC_API_KEY = 'sk-test-must-not-leak'
 })
 afterAll(() => {
   delete process.env.ANTHROPIC_API_KEY
@@ -290,7 +290,7 @@ describe('classification and tools', () => {
     expect(classifyError('claude-retry', 'authentication_failed').code).toBe('NOT_AUTHENTICATED')
     expect(classifyError('claude-result', 'Please run /login').code).toBe('NOT_AUTHENTICATED')
     expect(classifyError('codex-event', 'usage limit reached').code).toBe('RATE_LIMITED')
-    expect(classifyError('exit', 'rate limit 429 dans stderr').code).toBe('PROCESS')
+    expect(classifyError('exit', 'rate limit 429 in stderr').code).toBe('PROCESS')
     expect(classifyError('spawn', 'x', { code: 'ENOENT' }).code).toBe('NOT_INSTALLED')
     expect(parseResetAt('limit reached|1791800000')).toBe(1791800000000)
   })
@@ -325,7 +325,7 @@ describe('classification and tools', () => {
   it('runCli: stdin closed, safeguard that kills the group', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'recolt-run-'))
     const script = join(dir, 's.sh')
-    writeFileSync(script, '#!/bin/sh\necho un\necho deux\nsleep 30\n', { mode: 0o755 })
+    writeFileSync(script, '#!/bin/sh\necho one\necho two\nsleep 30\n', { mode: 0o755 })
     const t0 = Date.now()
     const r = await runCli({
       bin: script,
@@ -333,7 +333,7 @@ describe('classification and tools', () => {
       cwd: dir,
       env: { PATH: '/bin:/usr/bin' },
       timeoutMs: 20_000,
-      onLine: (l) => (l === 'deux' ? 'kill' : undefined),
+      onLine: (l) => (l === 'two' ? 'kill' : undefined),
     })
     expect(r.killedByGuard).toBe(true)
     expect(Date.now() - t0).toBeLessThan(5_000)

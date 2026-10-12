@@ -79,7 +79,7 @@ function errorOf(err: unknown): { code: string; message: string; retryAt?: numbe
   if (typeof err === 'object' && err !== null) {
     const e = err as { code?: unknown; message?: unknown; details?: unknown; retryAt?: unknown }
     const code = typeof e.code === 'string' ? e.code : 'internal'
-    const message = typeof e.message === 'string' ? e.message : 'erreur inconnue'
+    const message = typeof e.message === 'string' ? e.message : 'unknown error'
     const details = e.details as { retryAt?: unknown } | undefined
     const retryAt =
       typeof e.retryAt === 'number'
@@ -89,7 +89,7 @@ function errorOf(err: unknown): { code: string; message: string; retryAt?: numbe
           : undefined
     return retryAt === undefined ? { code, message } : { code, message, retryAt }
   }
-  return { code: 'internal', message: typeof err === 'string' ? err : 'erreur inconnue' }
+  return { code: 'internal', message: typeof err === 'string' ? err : 'unknown error' }
 }
 
 export class JobQueue {
@@ -241,7 +241,7 @@ export class JobQueue {
         try {
           job = services.lib.repos.jobs.claimNext(type, this.now())
         } catch (err) {
-          services.log.error('[jobs] selection impossible', err)
+          services.log.error('[jobs] selection failed', err)
           return
         }
         if (!job) break

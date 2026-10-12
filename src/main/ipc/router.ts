@@ -50,7 +50,7 @@ export function notImplemented<D extends Domain>(domain: D): DomainHandlers<D> {
   for (const ch of CHANNELS) {
     if (domainOf(ch) !== domain) continue
     out[ch] = () => {
-      throw new AppError('not_implemented', `${ch} n'est pas encore implémenté`)
+      throw new AppError('not_implemented', `${ch} is not implemented yet`)
     }
   }
   return out as unknown as DomainHandlers<D>
@@ -82,7 +82,7 @@ export async function dispatch(
   if (!isChannel(channel)) {
     return {
       ok: false,
-      error: { code: 'unknown_channel', message: `canal inconnu : ${String(channel)}` },
+      error: { code: 'unknown_channel', message: `unknown channel: ${String(channel)}` },
     }
   }
   const def = contract[channel]
@@ -103,7 +103,7 @@ export async function dispatch(
   if (!handler) {
     return {
       ok: false,
-      error: { code: 'not_implemented', message: `${channel} n'a pas de handler` },
+      error: { code: 'not_implemented', message: `${channel} has no handler` },
     }
   }
   try {
@@ -162,7 +162,7 @@ export interface RegisterRpcOptions extends DispatchOptions {
 export function registerRpc(opts: RegisterRpcOptions): () => void {
   const listener = async (e: IpcMainInvokeEvent, channel: unknown, input: unknown) => {
     if (!opts.isAllowedSender(e.senderFrame?.url)) {
-      return { ok: false, error: { code: 'forbidden_sender', message: 'expéditeur non autorisé' } }
+      return { ok: false, error: { code: 'forbidden_sender', message: 'sender not allowed' } }
     }
     return dispatch(channel, input, { sender: e.sender }, opts)
   }

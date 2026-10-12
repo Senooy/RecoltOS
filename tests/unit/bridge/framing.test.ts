@@ -42,7 +42,7 @@ describe('FrameDecoder', () => {
   it('length 0 → clean close, no message', () => {
     const d = new FrameDecoder()
     const evs = d.push(Buffer.from([0, 0, 0, 0, 1, 2, 3]))
-    expect(evs).toEqual([{ kind: 'fatal', reason: 'trame vide' }])
+    expect(evs).toEqual([{ kind: 'fatal', reason: 'empty frame' }])
     expect(d.closed).toBe(true)
     expect(d.push(encodeFrame({ a: 1 }) as Buffer)).toEqual([])
   })
@@ -61,7 +61,7 @@ describe('FrameDecoder', () => {
     const d = new FrameDecoder()
     const evs = d.push(Buffer.concat([head, body, encodeFrame({ ok: true }) as Buffer]))
     expect(evs).toEqual([
-      { kind: 'invalid', reason: 'JSON invalide' },
+      { kind: 'invalid', reason: 'invalid JSON' },
       { kind: 'message', value: { ok: true } },
     ])
   })

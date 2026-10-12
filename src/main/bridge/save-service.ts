@@ -108,7 +108,7 @@ export class SaveService {
     } catch (err) {
       const e = err as { code?: string; message?: string }
       this.deps.log.warn(`[bridge] record refused: ${e.code ?? 'error'}`)
-      return { status: 'error', error: e.message ?? 'Enregistrement impossible.' }
+      return { status: 'error', error: e.message ?? mt().errors.recordFailed }
     }
   }
 
@@ -137,7 +137,7 @@ export class SaveService {
     }
     if (up.failed || up.done) return
     if (m.error) up.failed = m.error
-    else if (m.seq !== up.nextSeq) up.failed = 'ordre des morceaux'
+    else if (m.seq !== up.nextSeq) up.failed = 'chunk order'
     if (up.failed) {
       up.stream.destroy()
       await rm(up.abs, { force: true })
@@ -146,7 +146,7 @@ export class SaveService {
     const buf = Buffer.from(m.data, 'base64')
     up.bytes += buf.length
     if (up.bytes > MAX_UPLOAD_BYTES) {
-      up.failed = 'trop volumineux'
+      up.failed = 'too large'
       up.stream.destroy()
       await rm(up.abs, { force: true })
       return

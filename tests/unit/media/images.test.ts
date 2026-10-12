@@ -310,7 +310,7 @@ describe('missing source file or folder', () => {
         (e: unknown) => e,
       )
       expect(err).toMatchObject({ code: 'not_found' })
-      expect((err as Error).message).toMatch(/^fichier introuvable : /)
+      expect((err as Error).message).toMatch(/^Fichier introuvable : /)
       expect((err as Error).message).not.toMatch(/ENOENT|no such file/i)
     })
   }

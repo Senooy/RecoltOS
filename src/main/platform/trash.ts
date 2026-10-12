@@ -1,10 +1,11 @@
 /**
  * Sending files to the macOS Trash (`shell.trashItem`): automatic purge,
- * recoverable. Only an explicit « Vider la corbeille » does an `fs.rm` (elsewhere).
+ * recoverable. Only an explicit "Empty Trash" does an `fs.rm` (elsewhere).
  * `trashItem` is injectable; by default, Electron's (loaded at call time).
  */
 import { lstat } from 'node:fs/promises'
 import { isAbsolute } from 'node:path'
+import { mt } from '../i18n'
 
 export type TrashItemFn = (abs: string) => Promise<void>
 
@@ -12,7 +13,7 @@ export interface TrashReport {
   trashed: string[]
   /** Already absent: nothing to do (idempotent purge). */
   missing: string[]
-  /** `message` is in French; `details` (raw Node message) is for the log only. */
+  /** `message` is in the interface language; `details` (raw Node message) is for the log only. */
   failed: { path: string; message: string; details?: string }[]
 }
 
@@ -33,7 +34,7 @@ export async function moveToTrash(
   const report: TrashReport = { trashed: [], missing: [], failed: [] }
   for (const p of paths) {
     if (typeof p !== 'string' || !isAbsolute(p) || p.includes('\0')) {
-      report.failed.push({ path: String(p), message: 'chemin absolu attendu' })
+      report.failed.push({ path: String(p), message: mt().errors.trashAbsolutePath })
       continue
     }
     try {
@@ -47,7 +48,7 @@ export async function moveToTrash(
         const denied = code === 'EACCES' || code === 'EPERM'
         report.failed.push({
           path: p,
-          message: denied ? `accès refusé : ${p}` : `impossible de vérifier : ${p}`,
+          message: denied ? mt().errors.accessDenied(p) : mt().errors.trashCheckFailed(p),
           details: rawMessage(err),
         })
       }
@@ -59,7 +60,7 @@ export async function moveToTrash(
     } catch (err) {
       report.failed.push({
         path: p,
-        message: 'impossible de déplacer dans la corbeille',
+        message: mt().errors.trashMoveFailed,
         details: rawMessage(err),
       })
     }

@@ -99,7 +99,7 @@ export async function decodeForeign(
   const src = assertAbs(a.src, 'src')
   const dst = assertAbs(a.dst, 'dst')
   if (a.format !== 'jpeg' && a.format !== 'png') {
-    throw new AppError('validation', 'format attendu : jpeg ou png')
+    throw new AppError('validation', 'format expected: jpeg or png')
   }
   await assertDistinct(src, dst)
   await assertFile(src)

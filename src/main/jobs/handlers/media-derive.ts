@@ -28,17 +28,16 @@ export const mediaDerive: JobHandler = async (job, ctx) => {
   const { lib } = ctx
   const mediaId = payloadId(job, 'mediaId')
   if (mediaId === null)
-    return { status: 'failed', error: { code: 'validation', message: 'mediaId manquant' } }
+    return { status: 'failed', error: { code: 'validation', message: 'missing mediaId' } }
   const m = lib.repos.media.getById(mediaId)
   if (!m) return { status: 'done' }
   if (m.status === 'remote') {
     // Not downloaded yet: `media.download` will re-run the derivation.
     return { status: 'done' }
   }
-  if (!m.file_rel) throw new AppError('not_found', 'média sans fichier')
+  if (!m.file_rel) throw new AppError('not_found', 'media without a file')
   const originalAbs = lib.paths.abs(m.file_rel)
-  if (!(await exists(originalAbs)))
-    throw new AppError('not_found', `fichier introuvable : ${m.file_rel}`)
+  if (!(await exists(originalAbs))) throw new AppError('not_found', `file not found: ${m.file_rel}`)
   const call = { jobId: job.id, signal: ctx.signal }
 
   let posterRel = m.poster_rel

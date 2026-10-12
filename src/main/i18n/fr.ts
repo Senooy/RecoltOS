@@ -82,6 +82,9 @@ export const mainFr = {
   library: {
     defaultName: 'Bibliothèque',
     importedFromGatheros: 'Importée de GatherOS',
+    untitled: 'Sans titre',
+    untitledSpace: 'Space sans titre',
+    copyOf: (name: string) => `${name} (copie)`,
   },
   verify: {
     missingOriginals: 'Originaux introuvables',
@@ -212,5 +215,20 @@ export const mainFr = {
     unreadableFile: 'le fichier est illisible ou corrompu',
     workerNotStarting: (name: string, op: string) =>
       `le worker ${name} ne démarre pas (${op}) : redémarre l'application ou réinstalle-la`,
+    accessDenied: (path: string) => `accès refusé : ${path}`,
+    fileAccessError: (path: string) => `erreur d'accès au fichier : ${path}`,
+    trashAbsolutePath: 'chemin absolu attendu',
+    trashCheckFailed: (path: string) => `impossible de vérifier : ${path}`,
+    trashMoveFailed: 'impossible de déplacer dans la corbeille',
+    exportSourceChanged: "fichier source modifié pendant l'export",
+    exportCancelled: 'export annulé',
+    operationCancelled: 'opération annulée',
+    toolLaunchFailed: (tool: string) => `${tool} n'a pas pu être lancé`,
+    toolTimeout: (tool: string) => `${tool} a dépassé le délai`,
+    toolFailed: (tool: string, code: string | number) => `${tool} a échoué (code ${code})`,
+    workerCrashed: (name: string, op: string) => `le worker ${name} s'est arrêté pendant ${op}`,
+    recordFailed: 'Enregistrement impossible.',
+    postUnreadable: 'Publication illisible.',
+    operationTimeout: (op: string) => `${op} : délai dépassé`,
   },
 } as const

@@ -300,9 +300,9 @@ export class XClient implements PlatformClient {
 
   async fetchPage(cursor: string | null, fetch: FetchFn): Promise<PageOutcome> {
     const ct0 = await readCookie('x', 'ct0')
-    if (!ct0) return err('auth_required', 'session X absente')
+    if (!ct0) return err('auth_required', 'X session missing')
     let cfg = await this.config(fetch)
-    if (!cfg) return err('api_changed', this.lastDiscoveryError ?? 'configuration de X introuvable')
+    if (!cfg) return err('api_changed', this.lastDiscoveryError ?? 'X configuration not found')
     let repairs = 0
     for (;;) {
       const url = this.buildUrl(cfg, cursor)
@@ -341,7 +341,7 @@ export class XClient implements PlatformClient {
         if (!this.rediscovered) {
           const fresh = await this.rediscover(fetch)
           if (!fresh)
-            return err('api_changed', this.lastDiscoveryError ?? 'configuration de X introuvable')
+            return err('api_changed', this.lastDiscoveryError ?? 'X configuration not found')
           cfg = fresh
           continue
         }
@@ -387,7 +387,7 @@ export function shortcodeToPk(code: string): string {
   let n = 0n
   for (const c of code.slice(0, 11)) {
     const i = alpha.indexOf(c)
-    if (i < 0) throw new Error('code court invalide')
+    if (i < 0) throw new Error('invalid shortcode')
     n = n * 64n + BigInt(i)
   }
   return n.toString()
@@ -607,7 +607,7 @@ export class CosmosClient implements PlatformClient {
           t = again
           continue
         }
-        return err('auth_required', 'session Cosmos absente : utilisateur introuvable (me)')
+        return err('auth_required', 'Cosmos session missing: user not found (me)')
       }
       const r = await this.gql(
         'GetAllElements',

@@ -120,10 +120,10 @@ describe('migrate()', () => {
   })
 
   it('parseMigrations: invalid names and gaps refused', () => {
-    expect(() => parseMigrations({ './migrations/init.sql': '' })).toThrow(/invalide/)
+    expect(() => parseMigrations({ './migrations/init.sql': '' })).toThrow(/invalid migration name/)
     expect(() =>
       parseMigrations({ './migrations/0001_a.sql': '', './migrations/0003_c.sql': '' }),
-    ).toThrow(/contiguës/)
+    ).toThrow(/non-contiguous/)
     expect(
       parseMigrations({ 'x/0002_b.sql': 'B', 'x/0001_a.sql': 'A' }).map((m) => m.name),
     ).toEqual(['a', 'b'])

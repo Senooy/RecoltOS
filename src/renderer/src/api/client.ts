@@ -11,7 +11,10 @@ import type { RecoltApi } from '../../../preload/api'
 function disconnectedApi(): RecoltApi {
   return {
     invoke: () =>
-      Promise.resolve({ ok: false, error: { code: 'not_implemented', message: 'preload absent' } }),
+      Promise.resolve({
+        ok: false,
+        error: { code: 'not_implemented', message: 'preload missing' },
+      }),
     on: () => () => undefined,
     startDrag: () => undefined,
     pathForFile: () => '',

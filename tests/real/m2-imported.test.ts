@@ -24,7 +24,7 @@ describe.skipIf(!SRC)('M2 on the imported library', () => {
   let base: string
   let m: LibraryManager
   beforeAll(async () => {
-    if (/application support/i.test(SRC)) throw new Error('dossier vivant refusé : passe une copie')
+    if (/application support/i.test(SRC)) throw new Error('live folder refused: pass a copy')
     base = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-m2real-'))
     const ud = path.join(base, 'userData')
     fs.mkdirSync(ud)

@@ -423,15 +423,15 @@ test('V1: detail view, 6 smooth ←/→ navigations, ambient glow without black 
     memory: { before, during },
   }
   console.warn('V1', JSON.stringify(report.viewer))
-  expect(kinds, 'images et vidéos parcourues').toContain('video')
-  expect(kinds, 'images et vidéos parcourues').toContain('image')
+  expect(kinds, 'images and videos browsed').toContain('video')
+  expect(kinds, 'images and videos browsed').toContain('image')
   expect(stats.over50, `images > 50 ms (max ${stats.maxms} ms)`).toBe(0)
   expect(
     results.filter((r) => r.worst > 0),
-    'aplats noirs (tuiles manquantes) dans l’ambiance',
+    'black flats (missing tiles) in the ambient backdrop',
   ).toEqual([])
-  expect(tiles.checkerboard, 'tuiles absentes dessinées par le compositeur').toBe(0)
-  expect(tiles.oom, 'mémoire de tuiles insuffisante').toBe(0)
+  expect(tiles.checkerboard, 'missing tiles drawn by the compositor').toBe(0)
+  expect(tiles.oom, 'insufficient tile memory').toBe(0)
 })
 
 test('E1: shelf, cascading entry and hover over 5 slices smooth', async ({ app, page }) => {
@@ -497,7 +497,7 @@ test('E1: shelf, cascading entry and hover over 5 slices smooth', async ({ app, 
     memory: { before, during },
   }
   console.warn('E1', JSON.stringify(report.shelf))
-  expect(stats.p95ms, 'p95 des images (ms)').toBeLessThanOrEqual(20)
+  expect(stats.p95ms, 'image p95 (ms)').toBeLessThanOrEqual(20)
   expect(long.map(Math.round), 'longtasks').toEqual([])
-  expect(tiles.checkerboard, 'tuiles absentes dessinées par le compositeur').toBe(0)
+  expect(tiles.checkerboard, 'missing tiles drawn by the compositor').toBe(0)
 })

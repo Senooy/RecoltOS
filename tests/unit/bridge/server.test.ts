@@ -46,7 +46,7 @@ function client(path: string) {
     until: async (pred: () => boolean, ms = 2_000) => {
       const t0 = Date.now()
       while (!pred()) {
-        if (Date.now() - t0 > ms) throw new Error('délai dépassé')
+        if (Date.now() - t0 > ms) throw new Error('timed out')
         await new Promise((r) => setTimeout(r, 10))
       }
     },

@@ -65,7 +65,7 @@ export const test = base.extend<Fixtures>({
     await handle.close()
     // The `userData` created here is not deleted by `close()` (it is not "its own").
     if (seeded && !appLaunch.userData) removeTmpDir(seeded)
-    expect(errors, 'erreurs console / pageerror pendant le test').toEqual([])
+    expect(errors, 'console errors / pageerror during the test').toEqual([])
   },
   page: async ({ app }, use) => {
     await use(await app.firstWindow())

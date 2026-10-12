@@ -251,7 +251,7 @@ export class BridgeServer {
         'error',
         typeof proto === 'number' && proto !== BRIDGE_PROTOCOL_VERSION
           ? { code: 'PROTOCOL_MISMATCH', appProtocol: BRIDGE_PROTOCOL_VERSION }
-          : { code: 'VALIDATION', message: 'host.hello attendu' },
+          : { code: 'VALIDATION', message: 'host.hello expected' },
         re,
       )
       conn.socket.end()

@@ -178,7 +178,7 @@ export async function startGatherosImport(input: {
         phase: 'done',
         done: 0,
         total: 0,
-        message: e.code === 'cancelled' ? 'cancelled' : (e.message ?? 'erreur'),
+        message: e.code === 'cancelled' ? 'cancelled' : (e.message ?? 'error'),
       })
     })
     .finally(() => {

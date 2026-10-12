@@ -49,7 +49,7 @@ describe('seed-bench CLI: --count validated', () => {
       { cwd: REPO_ROOT, encoding: 'utf8' },
     )
     expect(r.status).toBe(2)
-    expect(r.stderr).toContain('--count doit être un entier ≥ 0')
+    expect(r.stderr).toContain('--count must be an integer >= 0')
     expect(r.stderr).toContain('usage :')
     expect(existsSync(join(out, 'libraries.json'))).toBe(false)
   })

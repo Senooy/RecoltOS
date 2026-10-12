@@ -285,7 +285,7 @@ export function TextNodeView({ node, editing }: { node: TextN; editing: boolean 
       el.style.width = st.autoWidth ? '' : `${width}px`
       height = Math.max(24, Math.ceil(el.getBoundingClientRect().height / z), lineH)
     }
-    commit('Modifier le texte', (d) => {
+    commit(tr.spacesUi.editText, (d) => {
       const m = d[node.uuid]
       if (!m || m.type !== 'text') return
       m.content = v

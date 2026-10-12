@@ -65,7 +65,7 @@ export type JobFailureHook = (
 ) => void
 
 export function notImplementedJob(type: JobType): JobHandler {
-  return () => Promise.reject(new AppError('not_implemented', `job ${type} non implémenté`))
+  return () => Promise.reject(new AppError('not_implemented', `job ${type} not implemented`))
 }
 
 /** Numeric identifier of a payload (`mediaId`, `authorId`…) or `null`. */

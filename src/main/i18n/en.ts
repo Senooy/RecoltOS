@@ -83,6 +83,9 @@ export const mainEn: Widen<typeof mainFr> = {
   library: {
     defaultName: 'Library',
     importedFromGatheros: 'Imported from GatherOS',
+    untitled: 'Untitled',
+    untitledSpace: 'Untitled space',
+    copyOf: (name: string) => `${name} (copy)`,
   },
   verify: {
     missingOriginals: 'Missing originals',
@@ -212,5 +215,20 @@ export const mainEn: Widen<typeof mainFr> = {
     unreadableFile: 'the file is unreadable or corrupted',
     workerNotStarting: (name: string, op: string) =>
       `The ${name} worker won’t start (${op}): restart the app or reinstall it.`,
+    accessDenied: (path: string) => `access denied: ${path}`,
+    fileAccessError: (path: string) => `file access error: ${path}`,
+    trashAbsolutePath: 'absolute path expected',
+    trashCheckFailed: (path: string) => `couldn’t check: ${path}`,
+    trashMoveFailed: 'couldn’t move to the Trash',
+    exportSourceChanged: 'source file changed during the export',
+    exportCancelled: 'export cancelled',
+    operationCancelled: 'operation cancelled',
+    toolLaunchFailed: (tool: string) => `${tool} couldn’t be launched`,
+    toolTimeout: (tool: string) => `${tool} timed out`,
+    toolFailed: (tool: string, code: string | number) => `${tool} failed (code ${code})`,
+    workerCrashed: (name: string, op: string) => `the ${name} worker stopped during ${op}`,
+    recordFailed: 'Couldn’t save.',
+    postUnreadable: 'Unreadable post.',
+    operationTimeout: (op: string) => `${op}: timed out`,
   },
 }

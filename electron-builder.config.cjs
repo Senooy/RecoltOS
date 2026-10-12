@@ -70,9 +70,9 @@ function resolveSignIdentity() {
   const found = names.find(([, hash, name]) => name === identity || hash === identity.toUpperCase())
   if (!found) {
     throw new Error(
-      `RECOLTOS_SIGN_IDENTITY="${identity}" : aucune identité de signature valide de ce nom dans le trousseau ` +
-        '(vérifie `security find-identity -v -p codesigning` ; le certificat doit être approuvé pour la signature ' +
-        'de code, voir docs/signature.md). Retire la variable pour une signature ad hoc.',
+      `RECOLTOS_SIGN_IDENTITY="${identity}": no valid signing identity with this name in the keychain ` +
+        '(check `security find-identity -v -p codesigning`; the certificate must be trusted for code signing, ' +
+        'see docs/signature.md). Unset the variable for an ad hoc signature.',
     )
   }
   const developerId = found[2].startsWith('Developer ID Application:')
@@ -91,7 +91,7 @@ const signing = resolveSignIdentity()
 const notarize = process.env.RECOLTOS_NOTARIZE === '1'
 if (notarize && (!signing.developerId || testProfile || !process.env.APPLE_TEAM_ID?.trim())) {
   throw new Error(
-    'La notarisation exige une identité Developer ID Application, APPLE_TEAM_ID et le profil livré.',
+    'Notarization requires a Developer ID Application identity, APPLE_TEAM_ID and the shipped profile.',
   )
 }
 const releaseHooks = require('./scripts/notarize.cjs')

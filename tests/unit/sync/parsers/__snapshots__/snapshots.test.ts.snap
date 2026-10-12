@@ -410,7 +410,7 @@ exports[`snapshots cosmos > me.json 1`] = `
 {
   "error": {
     "code": "api_changed",
-    "message": "Réponse Cosmos sans allElementsV2",
+    "message": "Cosmos response without allElementsV2",
     "reason": "unknown_shape",
   },
   "ok": false,
@@ -1142,7 +1142,7 @@ exports[`snapshots cosmos > schema-2026.json 1`] = `
       "id": "1500000005",
       "index": 4,
       "kind": "ignored",
-      "reason": "tuile texte (V1)",
+      "reason": "text tile (V1)",
     },
   ],
   "nextCursor": "Y3Vyc2V1ci0y",
@@ -1420,7 +1420,7 @@ exports[`snapshots cosmos > texte.json 1`] = `
       "id": "1400000004",
       "index": 0,
       "kind": "ignored",
-      "reason": "tuile texte (V1)",
+      "reason": "text tile (V1)",
     },
   ],
   "nextCursor": null,

@@ -17,7 +17,7 @@ function run(root: string, label: string, args: string[], env: NodeJS.ProcessEnv
     timeout: 300_000,
   })
   if (r.status !== 0) {
-    throw new Error(`${label} a échoué (code ${r.status}) :\n${r.stdout}\n${r.stderr}`)
+    throw new Error(`${label} failed (code ${r.status}):\n${r.stdout}\n${r.stderr}`)
   }
 }
 

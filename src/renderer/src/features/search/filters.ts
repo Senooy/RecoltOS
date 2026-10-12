@@ -1,6 +1,7 @@
 /**
  * State of the Search filters and conversion to `ItemFilters`.
  */
+import { tr } from '../../i18n'
 import { DEFAULT_COLOR_TOLERANCE, NAMED_COLORS } from '../../../../shared/color'
 import type { ItemKind, Source } from '../../../../shared/enums'
 import type { ItemFilters } from '../../../../shared/ipc/items'
@@ -70,5 +71,11 @@ export const SWATCHES = NAMED_COLORS
 
 /** Label of a filter colour: its name if it is a swatch, otherwise the hex. */
 export function colorLabel(hex: string): string {
-  return NAMED_COLORS.find((c) => c.hex === hex.toLowerCase())?.label ?? hex
+  const c = NAMED_COLORS.find((n) => n.hex === hex.toLowerCase())
+  return c ? swatchLabel(c.id) : hex
+}
+
+/** Localized name of a swatch (by `NamedColor.id`). */
+export function swatchLabel(id: string): string {
+  return tr.colorUi.names[id] ?? id
 }

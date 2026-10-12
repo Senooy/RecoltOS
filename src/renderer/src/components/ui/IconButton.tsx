@@ -66,9 +66,7 @@ export function IconButton({
   ...rest
 }: IconButtonProps) {
   if (label.trim() === '') {
-    throw new Error(
-      'IconButton : `label` (nom accessible FR) est obligatoire et ne peut pas être vide.',
-    )
+    throw new Error('IconButton: `label` (the accessible name) is required and cannot be empty.')
   }
   const button = (
     <button

@@ -33,7 +33,7 @@ export function refererFor(u: URL): string | null {
 /** Summary of a written file (same shape as `fetchToFile`). */
 async function describe(dst: string, status = 200): Promise<FetchedFile> {
   const st = await stat(dst)
-  if (st.size === 0) throw new AppError('http_4xx', 'réponse vide', { status })
+  if (st.size === 0) throw new AppError('http_4xx', 'empty response', { status })
   const fh = await open(dst, 'r')
   const hash = createHash('sha256')
   const head = Buffer.alloc(Math.min(4100, st.size))
@@ -88,8 +88,8 @@ export function hlsDownload(ffmpeg: () => string | null) {
         clearTimeout(timer)
         if (code === 0) resolve()
         else if (/40[134]/.test(err))
-          reject(new AppError('http_4xx', 'liste de lecture refusée', { status: 403 }))
-        else reject(new AppError('network', 'ffmpeg a échoué', { message: err }))
+          reject(new AppError('http_4xx', 'playlist refused', { status: 403 }))
+        else reject(new AppError('network', 'ffmpeg failed', { message: err }))
       })
     })
     try {

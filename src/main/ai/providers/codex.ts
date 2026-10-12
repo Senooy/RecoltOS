@@ -119,7 +119,7 @@ export class CodexCliProvider extends CliProviderBase {
 
   protected async exec(spec: ExecSpec, o: AiCallOptions): Promise<ExecOutput> {
     const cli = await this.rt.resolve()
-    if (!cli) throw new AiError('NOT_INSTALLED', 'codex introuvable')
+    if (!cli) throw new AiError('NOT_INSTALLED', 'codex not found')
     const prefs = this.rt.prefs()
     const disable = await codexDisableList(cli.version, () =>
       this.simple(cli.path, ['features', 'list']),
@@ -148,8 +148,8 @@ export class CodexCliProvider extends CliProviderBase {
     if (r.spawnError)
       throw classifyError('spawn', r.spawnError.message, { code: r.spawnError.code ?? '' })
     if (guard.error) throw guard.error
-    if (r.aborted) throw new AiError('CANCELLED', 'annulé')
-    if (r.timedOut) throw new AiError('TIMEOUT', 'délai dépassé', { retryable: true })
+    if (r.aborted) throw new AiError('CANCELLED', 'cancelled')
+    if (r.timedOut) throw new AiError('TIMEOUT', 'timed out', { retryable: true })
     let text: string | null = null
     try {
       text = await readFile(join(spec.jobDir, 'out.json'), 'utf8')
@@ -158,7 +158,7 @@ export class CodexCliProvider extends CliProviderBase {
     }
     if (text === null || text.trim() === '') {
       if (r.code !== 0) throw classifyError('exit', r.stderr)
-      throw new AiError('BAD_OUTPUT', 'aucun résultat', { retryable: true })
+      throw new AiError('BAD_OUTPUT', 'no result', { retryable: true })
     }
     const tokens = guard.usage.input ?? parseTokensUsed(r.stderr)
     const used = guard.model ?? model

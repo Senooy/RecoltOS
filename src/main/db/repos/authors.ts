@@ -44,7 +44,7 @@ export function createAuthorsRepo(db: Database.Database, opts: RepoOptions = {})
      */
     upsert(a: AuthorInput, at: number = now()): number {
       const handle = normalizeHandle(a.handle)
-      if (!handle) throw new AppError('validation', 'Identifiant d’auteur vide.')
+      if (!handle) throw new AppError('validation', 'Empty author identifier.')
       const row = q(
         `INSERT INTO authors (platform, handle, name, avatar_url, sample_external_id, updated_at)
          VALUES (@platform, @handle, @name, @avatar_url, @sample, @at)

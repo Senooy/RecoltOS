@@ -89,7 +89,7 @@ describe('media preparation', () => {
       fallbackImage: null,
       cacheDir: a.framesDir,
       durationSec: () => Promise.resolve(10),
-      extract: () => Promise.reject(new Error('ne doit pas être appelé')),
+      extract: () => Promise.reject(new Error('must not be called')),
     })
     expect(again.frames).toEqual(r.frames)
   })

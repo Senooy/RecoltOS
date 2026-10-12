@@ -46,8 +46,7 @@ export function isMediaOp(op: string): op is MediaOp {
 
 /** Runs `op`; the arguments must be an object (fine-grained validation in each op). */
 export function runMediaOp(op: string, args: unknown, ctx: OpContext): Promise<unknown> {
-  if (!isMediaOp(op))
-    return Promise.reject(new AppError('unknown_op', `opération inconnue : ${op}`))
+  if (!isMediaOp(op)) return Promise.reject(new AppError('unknown_op', `unknown operation: ${op}`))
   if (typeof args !== 'object' || args === null) {
     return Promise.reject(new AppError('validation', 'arguments attendus'))
   }

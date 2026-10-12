@@ -30,7 +30,7 @@ let shortcuts: ReturnType<typeof createShortcutManager> | null = null
 let registered = false
 
 export function getCaptureService(): CaptureService {
-  if (!service) throw new Error('capture non initialisée')
+  if (!service) throw new Error('capture not initialized')
   return service
 }
 

@@ -171,7 +171,7 @@ export function errorResult(
 /** Readable reason for an unexpected exception (never propagated). */
 export function errMessage(err: unknown): string {
   if (err instanceof Error) return err.message.slice(0, 200)
-  return 'erreur inconnue'
+  return 'unknown error'
 }
 
 export function emptyMedia(type: 'image' | 'video'): NormalizedMedia {
@@ -228,7 +228,7 @@ export function buildPostMeta(p: PostMetaParts): PostMeta {
     quoted: p.quoted ?? null,
     thread: p.thread ?? [],
   })
-  if (!r.success) fail('post_meta invalide')
+  if (!r.success) fail('invalid post_meta')
   return r.data
 }
 

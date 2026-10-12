@@ -49,11 +49,11 @@ async function probeSharp(input: string): Promise<MediaResult<'probeImage'>> {
   try {
     meta = await sharp(input).metadata()
   } catch (err) {
-    throw new AppError('decode_failed', 'image illisible', rawError(err))
+    throw new AppError('decode_failed', 'unreadable image', rawError(err))
   }
   const format = meta.format === 'heif' && meta.compression === 'av1' ? 'avif' : meta.format
   const mime = MIME_BY_FORMAT[format]
-  if (!mime) throw new AppError('unsupported', `format d'image non pris en charge : ${format}`)
+  if (!mime) throw new AppError('unsupported', `unsupported image format: ${format}`)
   // For an animated image, sharp returns the height of one page (first frame).
   // EXIF orientation 5 to 8: 90° rotation → dimensions swapped.
   const { width, height } = orientedSize({
@@ -106,19 +106,19 @@ export function parseFfprobe(json: string): MediaResult<'probeVideo'> {
   try {
     data = JSON.parse(json) as FfprobeOut
   } catch {
-    throw new AppError('decode_failed', 'sortie ffprobe illisible')
+    throw new AppError('decode_failed', 'unreadable ffprobe output')
   }
   const streams = data.streams ?? []
   const video = streams.find((s) => s.codec_type === 'video' && !s.disposition?.attached_pic)
   if (!video || !video.width || !video.height) {
-    throw new AppError('decode_failed', 'aucune piste vidéo')
+    throw new AppError('decode_failed', 'no video track')
   }
   let width = video.width
   let height = video.height
   const rot = ((Math.round(streamRotation(video)) % 360) + 360) % 360
   if (rot === 90 || rot === 270) [width, height] = [height, width]
   const durSec = Number(data.format?.duration ?? video.duration ?? NaN)
-  const codec = video.codec_name ?? 'inconnu'
+  const codec = video.codec_name ?? 'unknown'
   return {
     width,
     height,

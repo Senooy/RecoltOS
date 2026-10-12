@@ -197,16 +197,18 @@ export class WorkerHost {
     internal: boolean,
   ): Promise<unknown> {
     if (this._state === 'stopping' || this._state === 'stopped') {
-      return Promise.reject(new AppError('cancelled', `worker ${this.name} arrêté`))
+      return Promise.reject(new AppError('cancelled', `worker ${this.name} stopped`))
     }
     if (this._state === 'broken') {
       return Promise.reject(this.unavailable(op, opts.jobId))
     }
-    if (opts.signal?.aborted) return Promise.reject(new AppError('cancelled', 'opération annulée'))
+    if (opts.signal?.aborted)
+      return Promise.reject(new AppError('cancelled', mt().errors.operationCancelled))
     const id = this.nextId++
     return new Promise((resolve, reject) => {
       let timer: ReturnType<typeof setTimeout> | null = null
-      const onAbort = (): void => this.abandon(id, new AppError('cancelled', 'opération annulée'))
+      const onAbort = (): void =>
+        this.abandon(id, new AppError('cancelled', mt().errors.operationCancelled))
       const p: Pending = {
         id,
         op,
@@ -225,7 +227,7 @@ export class WorkerHost {
       opts.signal?.addEventListener('abort', onAbort, { once: true })
       if (opts.timeoutMs !== undefined) {
         timer = setTimeout(
-          () => this.abandon(id, new AppError('timeout', `${op} : délai dépassé`)),
+          () => this.abandon(id, new AppError('timeout', mt().errors.operationTimeout(op))),
           opts.timeoutMs,
         )
       }
@@ -386,7 +388,7 @@ export class WorkerHost {
       p.reject(
         broken
           ? this.unavailable(p.op, p.opts.jobId)
-          : new AppError('worker_crashed', `le worker ${this.name} s'est arrêté pendant ${p.op}`, {
+          : new AppError('worker_crashed', mt().errors.workerCrashed(this.name, p.op), {
               jobId: p.opts.jobId,
             }),
       )
@@ -441,7 +443,7 @@ export class WorkerHost {
     this._state = 'stopped'
     for (const p of this.pending.values()) {
       p.cleanup()
-      p.reject(new AppError('cancelled', `worker ${this.name} arrêté`))
+      p.reject(new AppError('cancelled', `worker ${this.name} stopped`))
     }
     this.pending.clear()
     const waiters = this.exitWaiters

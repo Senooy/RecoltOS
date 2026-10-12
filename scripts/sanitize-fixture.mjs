@@ -209,7 +209,7 @@ export function assertNoLeak(source, clean, allowed = new Set()) {
   if (leaks.length > 0) {
     // Never display the value (real data): length only.
     throw new Error(
-      `${leaks.length} chaîne(s) de 8 caractères ou plus de la source survivent dans la sortie ` +
+      `${leaks.length} string(s) of 8 characters or more from the source survive in the output ` +
         `(longueurs : ${leaks.map((l) => l.length).join(', ')})`,
     )
   }

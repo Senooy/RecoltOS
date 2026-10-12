@@ -61,42 +61,38 @@ const strictlyWithin = (outer: string, inner: string): boolean =>
 export function protectedReason(target: string, options: SafeOutOptions = {}): string | null {
   const home = realish(options.home ?? homedir())
   const repo = realish(options.repoRoot ?? REPO_ROOT)
-  if (dirname(target) === target) return 'la racine du disque'
-  if (within(target, home)) return 'le dossier personnel (ou un de ses parents)'
-  if (within(target, repo)) return 'la racine du dépôt (ou un de ses parents)'
+  if (dirname(target) === target) return 'the disk root'
+  if (within(target, home)) return 'the home folder (or one of its parents)'
+  if (within(target, repo)) return 'the repository root (or one of its parents)'
   const segments = target.split(sep)
-  if (segments.some((s) => s.toLowerCase() === 'gatheros'))
-    return 'un dossier GatherOS (lecture seule)'
+  if (segments.some((s) => s.toLowerCase() === 'gatheros')) return 'a GatherOS folder (read-only)'
   for (let i = 0; i < segments.length; i++) {
-    if (segments[i] === 'Library' && i > 0) return 'un dossier Library (données applicatives)'
-    if (segments[i] === 'Application Support') return 'un dossier Application Support'
+    if (segments[i] === 'Library' && i > 0) return 'a Library folder (application data)'
+    if (segments[i] === 'Application Support') return 'an Application Support folder'
   }
   return null
 }
 
 /**
- * Validates `out` before any deletion and returns its resolved path. Throws an `Error` (message in
- * French) if the folder is refused.
+ * Validates `out` before any deletion and returns its resolved path. Throws an `Error` if the folder is refused.
  */
 export function assertSafeOutDir(out: string, options: SafeOutOptions = {}): string {
   if (!out || out.trim() === '')
-    throw new Error('--out vide : refus de supprimer un dossier non désigné')
+    throw new Error('--out is empty: refusing to delete an unspecified folder')
   const target = realish(out)
 
   const why = protectedReason(target, options)
-  if (why) throw new Error(`--out ${out} refusé : c'est ${why}. Rien n'a été supprimé.`)
+  if (why) throw new Error(`--out ${out} refused: it is ${why}. Nothing was deleted.`)
 
   if (existsSync(target)) {
     const st = lstatSync(target)
     if (!st.isDirectory())
-      throw new Error(
-        `--out ${out} refusé : existe et n'est pas un dossier. Rien n'a été supprimé.`,
-      )
+      throw new Error(`--out ${out} refused: exists and is not a folder. Nothing was deleted.`)
     const entries = readdirSync(target).filter((e) => e !== '.DS_Store')
     if (entries.length > 0 && !entries.includes(FIXTURE_MARKER))
       throw new Error(
-        `--out ${out} refusé : dossier non vide qui n'a pas été fabriqué par ce script ` +
-          `(marqueur ${FIXTURE_MARKER} absent). Choisir un dossier vide ou inexistant. Rien n'a été supprimé.`,
+        `--out ${out} refused: non-empty folder not created by this script ` +
+          `(marker ${FIXTURE_MARKER} missing). Choose an empty or non-existent folder. Nothing was deleted.`,
       )
   }
 
@@ -105,8 +101,8 @@ export function assertSafeOutDir(out: string, options: SafeOutOptions = {}): str
     const zones = [join(repo, '.tmp'), realish(options.tmp ?? tmpdir())]
     if (!zones.some((z) => strictlyWithin(z, target)))
       throw new Error(
-        `--out ${out} refusé : hors de <dépôt>/.tmp et du dossier temporaire système ` +
-          `(${zones.join(', ')}). Ajouter --force pour l'autoriser. Rien n'a été supprimé.`,
+        `--out ${out} refused: outside <repo>/.tmp and the system temp folder ` +
+          `(${zones.join(', ')}). Add --force to allow it. Nothing was deleted.`,
       )
   }
   return target

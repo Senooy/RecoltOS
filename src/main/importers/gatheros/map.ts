@@ -163,7 +163,7 @@ export function parsePalette(
         .filter((h): h is string => typeof h === 'string' && /^#[0-9a-f]{6}$/i.test(h))
         .map((h) => h.toLowerCase())
   } catch {
-    warn('palette illisible')
+    warn('unreadable palette')
   }
   if (hex.length === 0) return none
   hex = hex.slice(0, 8)
@@ -183,7 +183,7 @@ export function parsePalette(
     // recomputed below
   }
   if (lab && deltaE76(hexToLab(hex[0]!), lab[0]!) > 5) {
-    warn('palette_lab incohérente avec palette : recalculée')
+    warn('palette_lab inconsistent with palette: recomputed')
     lab = null
   }
   if (!lab) lab = hex.map((h) => [...hexToLab(h)] as [number, number, number])
@@ -316,7 +316,7 @@ export function mapSave(save: SaveRow, tags: readonly string[], opts: MapOptions
 
   // Post (`tweet_meta` → `post_meta` v1).
   const tm = parseTweetMeta(save.tweet_meta)
-  if (save.tweet_meta && !tm) warn('tweet_meta illisible')
+  if (save.tweet_meta && !tm) warn('unreadable tweet_meta')
   let postMeta: PostMeta | null = null
   let author: MappedSave['author'] = null
   let quotedAuthor: AuthorInput | null = null
@@ -396,7 +396,7 @@ export function mapSave(save: SaveRow, tags: readonly string[], opts: MapOptions
           })
           postMedia.push({ type, remoteUrl: remote, posterUrl: remotePoster, mediaUuid: uuid })
         } else {
-          warn(`média ${k} sans URL exploitable`)
+          warn(`media ${k} without a usable URL`)
         }
       })
     } else if (kind === 'image' || kind === 'video') {
@@ -455,7 +455,7 @@ export function mapSave(save: SaveRow, tags: readonly string[], opts: MapOptions
     }
     const parsed = PostMetaSchema.safeParse(candidate)
     if (parsed.success) postMeta = parsed.data
-    else warn('tweet_meta non convertible : post ignoré')
+    else warn('tweet_meta not convertible: post skipped')
   }
 
   const pal = parsePalette(save.palette, save.palette_lab, warn)

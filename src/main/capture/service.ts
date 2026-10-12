@@ -78,10 +78,10 @@ export function createCaptureService(deps: CaptureDeps) {
           if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err
         }
       }
-      throw new Error('trop de fichiers du même nom')
+      throw new Error('too many files with the same name')
     } catch (err) {
       lastDropError = (err as NodeJS.ErrnoException).code ?? (err as Error).message
-      deps.log?.warn('[capture] dossier de dépôt', err)
+      deps.log?.warn('[capture] drop folder', err)
       return undefined
     }
   }

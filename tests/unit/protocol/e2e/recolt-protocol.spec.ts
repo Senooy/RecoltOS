@@ -27,7 +27,7 @@ test.use({
   allowErrors: [/Failed to load resource: .*status of (403|416)\b/],
 })
 
-test.skip(!findFfmpeg(), 'ffmpeg absent : la démo n’a pas de mp4 lisible')
+test.skip(!findFfmpeg(), 'ffmpeg missing: the demo has no readable mp4')
 
 test('recolt:// in the renderer: Range, video seek, CORS canvas, image copy', async ({
   app,
@@ -49,7 +49,7 @@ test('recolt:// in the renderer: Range, video seek, CORS canvas, image copy', as
       .get(type) as MediaPick
   const video = pick('video')
   const image = pick('image')
-  expect(video, 'la démo contient une vidéo').toBeTruthy()
+  expect(video, 'the demo contains a video').toBeTruthy()
   expect(image.file_rel).toMatch(/\.webp$/)
   const videoUrl = assetUrl('default', video.file_rel, video.derive_version)
   const thumbUrl = assetUrl('default', image.thumb_rel!, image.derive_version)

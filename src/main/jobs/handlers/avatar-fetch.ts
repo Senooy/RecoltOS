@@ -26,13 +26,13 @@ export const avatarFetch: JobHandler = async (job, ctx) => {
   const { lib } = ctx
   const authorId = payloadId(job, 'authorId')
   if (authorId === null)
-    return { status: 'failed', error: { code: 'validation', message: 'authorId manquant' } }
+    return { status: 'failed', error: { code: 'validation', message: 'missing authorId' } }
   const a = lib.repos.authors.getById(authorId)
   if (!a?.avatar_url || a.avatar_status === 'ok') return { status: 'done' }
   if (!ctx.prefs().storage.downloadRemoteMedia) {
     return {
       status: 'failed',
-      error: { code: 'disabled', message: 'téléchargement des médias distants désactivé' },
+      error: { code: 'disabled', message: 'remote media download disabled' },
     }
   }
   const tmp = lib.paths.abs(rel.tmp(`avatar-${a.id}.part`))

@@ -31,7 +31,7 @@ describe.skipIf(!SRC)('M4 on the imported library', () => {
   let m: LibraryManager
   let svc: AiService
   beforeAll(async () => {
-    if (/application support/i.test(SRC)) throw new Error('dossier vivant refusé : passe une copie')
+    if (/application support/i.test(SRC)) throw new Error('live folder refused: pass a copy')
     base = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-m4real-'))
     ud = path.join(base, 'userData')
     fs.mkdirSync(ud)
@@ -52,7 +52,7 @@ describe.skipIf(!SRC)('M4 on the imported library', () => {
       services: () => ({
         lib,
         media,
-        fetch: () => Promise.reject(new Error('réseau interdit')),
+        fetch: () => Promise.reject(new Error('network forbidden')),
         prefs: () => prefs,
         changed: () => undefined,
         hasTool: (n) => Boolean(n === 'ffmpeg' ? FFMPEG : FFPROBE),

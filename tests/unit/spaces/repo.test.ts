@@ -84,7 +84,7 @@ describe('spaces: repository', () => {
     )
   })
 
-  it('item inconnu → itemUuid null (« Élément supprimé »)', () => {
+  it('unknown item → itemUuid null (“Élément supprimé”)', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib)
     const n = {

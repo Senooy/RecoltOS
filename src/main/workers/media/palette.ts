@@ -228,7 +228,7 @@ export async function palette(
 ): Promise<MediaResult<'palette'>> {
   const src = assertAbs(a.src, 'src')
   const k = a.k ?? PALETTE.k
-  if (k !== PALETTE.k) throw new AppError('validation', 'k doit valoir 8')
+  if (k !== PALETTE.k) throw new AppError('validation', 'k must be 8')
   return withReadable(src, tools, signal, async ({ input }) => {
     let raw: { data: Buffer; info: OutputInfo }
     try {
@@ -239,7 +239,7 @@ export async function palette(
         .raw()
         .toBuffer({ resolveWithObject: true })
     } catch (err) {
-      throw new AppError('decode_failed', 'image illisible', rawError(err))
+      throw new AppError('decode_failed', 'unreadable image', rawError(err))
     }
     return paletteFromRgba(raw.data, raw.info.channels, k)
   })

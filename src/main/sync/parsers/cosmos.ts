@@ -95,7 +95,7 @@ function classifyErrors(errors: unknown): PageParseResult | null {
     'cosmos',
     'api_changed',
     'graphql_error',
-    str(list[0]!.message) ?? 'Erreur GraphQL',
+    str(list[0]!.message) ?? 'GraphQL error',
   )
 }
 
@@ -113,14 +113,14 @@ function cosmosPost(
   onDrop: (reason: string) => void,
 ): NormalizedPost | 'text' {
   const id = idStr(el.id)
-  if (id === null) fail('id absent')
+  if (id === null) fail('id missing')
   const images: NormalizedMedia[] = []
   const seenUrls = new Set<string>()
   const addImage = (raw: unknown, label: string) => {
     if (raw === null || raw === undefined || images.length >= MAX_MEDIA_PER_POST) return
     const img = cosmosImage(raw)
     if (img === null) {
-      onDrop(`${label} sans URL exploitable`)
+      onDrop(`${label} without a usable URL`)
       return
     }
     if (seenUrls.has(img.url!)) return
@@ -180,7 +180,7 @@ function cosmosPost(
   } else if (nonEmpty(el.text) !== null || el.__typename === 'TextElementTile') {
     return 'text'
   } else {
-    fail('élément sans média ni lien')
+    fail('item without media or link')
   }
 
   // `source.author`: string (old shape) or object `{ fullName, username }`.
@@ -229,13 +229,13 @@ function cosmosPost(
 
 function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
   if (!isObj(json)) {
-    return errorResult('cosmos', 'api_changed', 'unknown_shape', 'Réponse Cosmos illisible')
+    return errorResult('cosmos', 'api_changed', 'unknown_shape', 'Unreadable Cosmos response')
   }
   const conn = findConnection(obj(json.data))
   if (conn === null) {
     return (
       classifyErrors(json.errors) ??
-      errorResult('cosmos', 'api_changed', 'unknown_shape', 'Réponse Cosmos sans allElementsV2')
+      errorResult('cosmos', 'api_changed', 'unknown_shape', 'Cosmos response without allElementsV2')
     )
   }
   const log = new PageLog()
@@ -245,7 +245,7 @@ function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
   items.forEach((raw, index) => {
     log.stats.entries += 1
     if (!isObj(raw)) {
-      log.note('malformed', index, null, 'élément illisible')
+      log.note('malformed', index, null, 'unreadable item')
       return
     }
     const id = str(raw.id)
@@ -254,11 +254,11 @@ function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
         log.note('media_dropped', index, id, reason),
       )
       if (post === 'text') {
-        log.note('ignored', index, id, 'tuile texte (V1)')
+        log.note('ignored', index, id, 'text tile (V1)')
         return
       }
       if (seen.has(post.sourceKey)) {
-        log.note('ignored', index, id, 'doublon dans la page')
+        log.note('ignored', index, id, 'duplicate on the page')
         return
       }
       seen.add(post.sourceKey)

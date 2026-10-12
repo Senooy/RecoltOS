@@ -101,6 +101,6 @@ export function getPrefsStore(): PrefsStore | null {
 
 /** Store initialized by `initPrefs`, otherwise `AppError('internal')`. */
 export function requirePrefsStore(): PrefsStore {
-  if (!instance) throw new AppError('internal', 'Préférences non initialisées.')
+  if (!instance) throw new AppError('internal', 'Preferences not initialized.')
   return instance
 }

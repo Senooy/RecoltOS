@@ -115,6 +115,6 @@ export class FakeChrome {
 
 export function lastPort(f: FakeChrome): FakePort {
   const p = f.ports.at(-1)
-  if (!p) throw new Error('aucun port')
+  if (!p) throw new Error('no port')
   return p
 }

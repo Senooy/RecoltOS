@@ -102,11 +102,11 @@ describe('electron-builder.config.cjs', () => {
       const other = fakeSecurity(listing('Autre identité'))
       expect(() =>
         loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: other }),
-      ).toThrow(/aucune identité de signature valide/)
+      ).toThrow(/no valid signing identity/)
       const broken = fakeSecurity('', 1)
       expect(() =>
         loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: broken }),
-      ).toThrow(/aucune identité de signature valide/)
+      ).toThrow(/no valid signing identity/)
     })
   })
 

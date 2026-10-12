@@ -289,7 +289,7 @@ export async function runGatherosImport(
         const r = lib.repos.collections.upsertByOrigin(
           {
             uuid: c.id.toLowerCase(),
-            name: c.name.trim() || 'Sans titre',
+            name: c.name.trim() || mt().library.untitled,
             color: /^#[0-9a-f]{6}$/i.test(c.color) ? c.color.toLowerCase() : '#007aff',
             orderIndex: Number(c.order_index) || 0,
             origin: ORIGIN,
@@ -340,7 +340,7 @@ export async function runGatherosImport(
           inc('tag_links', m.tags.length)
         } catch (err) {
           warnings.push(
-            `${m.item.originId} : tag refusé (${err instanceof Error ? err.message : 'erreur'})`,
+            `${m.item.originId}: tag refused (${err instanceof Error ? err.message : 'error'})`,
           )
         }
       }
@@ -387,7 +387,7 @@ export async function runGatherosImport(
         if (b.nodes > 0) inc('space_nodes', b.nodes)
         if (b.skipped > 0) {
           inc('space_nodes_skipped', b.skipped)
-          warnings.push(`${b.skipped} élément(s) de board ignoré(s)`)
+          warnings.push(`${b.skipped} board item(s) skipped`)
         }
       } finally {
         legacy.close()
@@ -513,7 +513,7 @@ export async function runGatherosImport(
       finishedAt,
       counts,
       warnings,
-      error: err instanceof Error ? err.message : 'erreur inconnue',
+      error: err instanceof Error ? err.message : 'unknown error',
       missingFiles,
       urlDuplicates: [],
       missingDescription: 0,

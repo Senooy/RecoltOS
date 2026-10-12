@@ -50,7 +50,7 @@ function finish(code: number): void {
 async function waitFor(cond: () => boolean, label: string, timeoutMs: number): Promise<void> {
   const until = Date.now() + timeoutMs
   while (!cond()) {
-    if (Date.now() > until) throw new Error(`délai dépassé : ${label}`)
+    if (Date.now() > until) throw new Error(`timed out: ${label}`)
     await new Promise((r) => setTimeout(r, 25))
   }
 }
@@ -113,7 +113,7 @@ async function run(): Promise<void> {
 
     // SIGKILL of the utilityProcess during makePreview (the worker is already ready).
     const pid = mw.host.pid
-    if (pid === undefined) throw new Error('worker sans pid')
+    if (pid === undefined) throw new Error('worker without a pid')
     const pending = mw.call(
       'makePreview',
       { src: cfg.src, dst: cfg.preview, maxSeconds: 8, height: 540 },
@@ -127,7 +127,7 @@ async function run(): Promise<void> {
       crashed = err
     }
     if ((crashed as { code?: string } | undefined)?.code !== 'worker_crashed') {
-      throw new Error(`makePreview tué : attendu worker_crashed, reçu ${JSON.stringify(crashed)}`)
+      throw new Error(`makePreview killed: expected worker_crashed, got ${JSON.stringify(crashed)}`)
     }
     for (const c of crashes) {
       result.crashes.push({
@@ -137,7 +137,7 @@ async function run(): Promise<void> {
     }
 
     // Automatic restart, then a successful call (the job re-queued by the queue).
-    await waitFor(() => mw.host.state === 'ready', 'redémarrage du worker', 15_000)
+    await waitFor(() => mw.host.state === 'ready', 'worker restart', 15_000)
     result.restarts = mw.host.restarts
     result.restartedState = mw.host.state
     const again = (await mw.call(

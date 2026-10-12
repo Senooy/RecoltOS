@@ -61,7 +61,7 @@ export function assertWebUrl(url: string): URL {
   try {
     u = new URL(url)
   } catch {
-    throw new AppError('validation', 'adresse invalide')
+    throw new AppError('validation', 'invalid address')
   }
   if (u.protocol !== 'https:' && u.protocol !== 'http:') {
     throw new AppError('validation', 'adresse http(s) attendue')
@@ -107,9 +107,9 @@ export async function fetchToFile(
   try {
     res = await fetchFn(url, { headers: { ...policy.headers, ...opts.headers }, signal })
   } catch (err) {
-    if (opts.signal?.aborted) throw new AppError('cancelled', 'téléchargement annulé')
-    if (timeout.aborted) throw new AppError('timeout', 'téléchargement trop long')
-    throw new AppError('network', 'réseau indisponible', {
+    if (opts.signal?.aborted) throw new AppError('cancelled', 'download cancelled')
+    if (timeout.aborted) throw new AppError('timeout', 'download timed out')
+    throw new AppError('network', 'network unavailable', {
       message: err instanceof Error ? err.message : String(err),
     })
   }
@@ -119,15 +119,15 @@ export async function fetchToFile(
     }
     await res.body?.cancel().catch(() => undefined)
     if (res.status < 500 && res.status !== 408 && res.status !== 429) {
-      throw new AppError('http_4xx', `réponse ${res.status}`, { status: res.status })
+      throw new AppError('http_4xx', `response ${res.status}`, { status: res.status })
     }
-    throw new AppError('http_error', `réponse ${res.status}`, { status: res.status })
+    throw new AppError('http_error', `response ${res.status}`, { status: res.status })
   }
   const max = opts.maxBytes ?? FETCH_MAX_BYTES
   const declared = Number(res.headers.get('content-length') ?? NaN)
   if (Number.isFinite(declared) && declared > max) {
     await res.body?.cancel().catch(() => undefined)
-    throw new AppError('limit_exceeded', 'fichier trop volumineux')
+    throw new AppError('limit_exceeded', 'file too large')
   }
   const contentType = (res.headers.get('content-type') ?? '').split(';')[0]?.trim().toLowerCase()
   await mkdir(dirname(dst), { recursive: true })
@@ -137,7 +137,7 @@ export async function fetchToFile(
   let headLen = 0
   let bytes = 0
   try {
-    if (!res.body) throw new AppError('network', 'réponse vide')
+    if (!res.body) throw new AppError('network', 'empty response')
     const reader = res.body.getReader() as ReadableStreamDefaultReader<Uint8Array>
     for (;;) {
       const r = await reader.read()
@@ -146,7 +146,7 @@ export async function fetchToFile(
       bytes += chunk.length
       if (bytes > max) {
         await reader.cancel().catch(() => undefined)
-        throw new AppError('limit_exceeded', 'fichier trop volumineux')
+        throw new AppError('limit_exceeded', 'file too large')
       }
       if (headLen < 4100) {
         headParts.push(chunk.subarray(0, 4100 - headLen))
@@ -162,15 +162,15 @@ export async function fetchToFile(
     out.destroy()
     await rm(dst, { force: true })
     if (err instanceof AppError) throw err
-    if (opts.signal?.aborted) throw new AppError('cancelled', 'téléchargement annulé')
-    if (timeout.aborted) throw new AppError('timeout', 'téléchargement trop long')
-    throw new AppError('network', 'téléchargement interrompu', {
+    if (opts.signal?.aborted) throw new AppError('cancelled', 'download cancelled')
+    if (timeout.aborted) throw new AppError('timeout', 'download timed out')
+    throw new AppError('network', 'download interrupted', {
       message: err instanceof Error ? err.message : String(err),
     })
   }
   if (bytes === 0) {
     await rm(dst, { force: true })
-    throw new AppError('http_4xx', 'réponse vide', { status: res.status })
+    throw new AppError('http_4xx', 'empty response', { status: res.status })
   }
   return {
     bytes,

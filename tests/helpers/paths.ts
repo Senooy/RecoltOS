@@ -19,7 +19,7 @@ function findRoot(start: string): string {
       }
     }
     const parent = dirname(dir)
-    if (parent === dir) throw new Error(`racine RecoltOS introuvable depuis ${start}`)
+    if (parent === dir) throw new Error(`RecoltOS root not found from ${start}`)
     dir = parent
   }
 }

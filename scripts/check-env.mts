@@ -5,7 +5,7 @@
  *
  * Known limitation: with pnpm 9 (e.g. `/opt/homebrew/bin/pnpm` 9.15.0), `pnpm run check:env` fails
  * before reaching the script (`ERROR packages field missing or empty`, due to `pnpm-workspace.yaml`
- * of pnpm 12). The warning « pnpm/9.15.0 détecté » is then only visible with
+ * of pnpm 12). The warning "pnpm/9.15.0 detected" is then only visible with
  * `corepack pnpm run check:env` or `tsx --tsconfig tsconfig.node.json scripts/doctor.mts`.
  */
 import { spawnSync } from 'node:child_process'
@@ -48,25 +48,25 @@ export function checkPackageManager(
   whichAll: readonly string[] = [],
 ): Check {
   const v = parsePnpmUserAgent(ua)
-  const where = whichAll.length > 0 ? ` (which -a pnpm : ${whichAll.join(', ')})` : ''
+  const where = whichAll.length > 0 ? ` (which -a pnpm: ${whichAll.join(', ')})` : ''
   if (v === EXPECTED_PNPM) return mk('pnpm', 'ok', 'pnpm', `pnpm/${v} (corepack)`)
   if (v === LEGACY_PNPM) {
     return mk(
       'pnpm',
       'warn',
       'pnpm',
-      `pnpm/${v} détecté (/opt/homebrew/bin/pnpm ?) : le projet exige pnpm/${EXPECTED_PNPM} via corepack. ` +
-        `Lance plutôt « COREPACK_ENABLE_DOWNLOAD_PROMPT=0 corepack pnpm run <script> » (ou place le shim corepack avant Homebrew dans le PATH)${where}.`,
+      `pnpm/${v} detected (/opt/homebrew/bin/pnpm?): the project requires pnpm/${EXPECTED_PNPM} via corepack. ` +
+        `Run "COREPACK_ENABLE_DOWNLOAD_PROMPT=0 corepack pnpm run <script>" instead (or put the corepack shim before Homebrew in PATH)${where}.`,
     )
   }
   if (v) {
-    return mk('pnpm', 'warn', 'pnpm', `pnpm/${v} détecté ; attendu pnpm/${EXPECTED_PNPM}${where}`)
+    return mk('pnpm', 'warn', 'pnpm', `pnpm/${v} detected; expected pnpm/${EXPECTED_PNPM}${where}`)
   }
   return mk(
     'pnpm',
     'warn',
     'pnpm',
-    `lancé hors de « pnpm run » (user agent : ${ua ?? 'absent'}) ; attendu pnpm/${EXPECTED_PNPM}${where}`,
+    `not launched through "pnpm run" (user agent: ${ua ?? 'missing'}); expected pnpm/${EXPECTED_PNPM}${where}`,
   )
 }
 
@@ -78,14 +78,14 @@ export function checkNodeVersion(versions: { node: string } = process.versions):
         'node',
         'fail',
         'Node',
-        `v${versions.node} : majeure ${SUPPORTED_NODE_MAJORS.join(' ou ')} requise (.node-version)`,
+        `v${versions.node}: major ${SUPPORTED_NODE_MAJORS.join(' or ')} required (.node-version)`,
       )
 }
 
 export function checkPlatform(platform = process.platform, arch = process.arch): Check {
   return platform === 'darwin' && arch === 'arm64'
-    ? mk('platform', 'ok', 'Plateforme', 'macOS arm64')
-    : mk('platform', 'fail', 'Plateforme', `${platform} ${arch} : macOS arm64 uniquement`)
+    ? mk('platform', 'ok', 'Platform', 'macOS arm64')
+    : mk('platform', 'fail', 'Platform', `${platform} ${arch}: macOS arm64 only`)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -123,15 +123,15 @@ function runProbe(cmd: string, args: string[], env: NodeJS.ProcessEnv, cwd: stri
   try {
     return { probe: JSON.parse(r.stdout) as Probe } as const
   } catch {
-    return { error: `sortie illisible : ${r.stdout.slice(0, 120)}` } as const
+    return { error: `unreadable output: ${r.stdout.slice(0, 120)}` } as const
   }
 }
 
 function describeProbe(id: string, label: string, res: ReturnType<typeof runProbe>): Check {
-  if ('error' in res) return mk(id, 'fail', label, `échec du chargement des natifs : ${res.error}`)
+  if ('error' in res) return mk(id, 'fail', label, `native modules failed to load: ${res.error}`)
   const p = res.probe
   if (p.fts !== 1 || !p.opts)
-    return mk(id, 'fail', label, 'FTS5 absent (les triggers du schéma en dépendent)')
+    return mk(id, 'fail', label, 'FTS5 missing (the schema triggers depend on it)')
   return mk(
     id,
     'ok',
@@ -143,7 +143,7 @@ function describeProbe(id: string, label: string, res: ReturnType<typeof runProb
 export function checkNativesInNode(root: string): Check {
   return describeProbe(
     'natives-node',
-    `Natifs sous Node ${process.versions.node}`,
+    `Natives under Node ${process.versions.node}`,
     runProbe(process.execPath, ['-e', NATIVE_PROBE], { ...process.env }, root),
   )
 }
@@ -156,17 +156,17 @@ export function checkNativesInElectron(root: string): Check {
     return mk(
       'natives-electron',
       'fail',
-      'Natifs sous Electron',
-      `binaire Electron introuvable (${(err as Error).message.split('\n')[0]}). ` +
-        'Si `node_modules/electron/dist` manque : `node node_modules/electron/install.js`.',
+      'Natives under Electron',
+      `Electron binary not found (${(err as Error).message.split('\n')[0]}). ` +
+        'If `node_modules/electron/dist` is missing: `node node_modules/electron/install.js`.',
     )
   }
   if (typeof exe !== 'string' || !existsSync(exe)) {
     return mk(
       'natives-electron',
       'fail',
-      'Natifs sous Electron',
-      `exécutable absent : ${String(exe)}`,
+      'Natives under Electron',
+      `executable missing: ${String(exe)}`,
     )
   }
   const res = runProbe(
@@ -175,10 +175,10 @@ export function checkNativesInElectron(root: string): Check {
     { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
     root,
   )
-  const check = describeProbe('natives-electron', 'Natifs sous Electron', res)
+  const check = describeProbe('natives-electron', 'Natives under Electron', res)
   const version = 'probe' in res ? res.probe?.electron : null
   return check.level === 'ok' && version
-    ? { ...check, label: `Natifs sous Electron ${version}` }
+    ? { ...check, label: `Natives under Electron ${version}` }
     : check
 }
 
@@ -223,42 +223,42 @@ export function checkOptionalTools(): Check[] {
       label: 'ffmpeg',
       bin: 'ffmpeg',
       args: ['-version'],
-      hint: 'brew install ffmpeg (mode dégradé sans vidéo)',
+      hint: 'brew install ffmpeg (degraded mode without video)',
     },
     {
       id: 'ffprobe',
       label: 'ffprobe',
       bin: 'ffprobe',
       args: ['-version'],
-      hint: 'fourni par ffmpeg (Homebrew)',
+      hint: 'provided by ffmpeg (Homebrew)',
     },
     {
       id: 'sips',
       label: 'sips',
       bin: 'sips',
       args: ['--version'],
-      hint: 'outil système macOS (/usr/bin/sips)',
+      hint: 'macOS system tool (/usr/bin/sips)',
     },
     {
       id: 'claude',
       label: 'claude (CLI)',
       bin: 'claude',
       args: ['--version'],
-      hint: 'IA désactivée tant que la CLI manque',
+      hint: 'AI disabled while the CLI is missing',
     },
     {
       id: 'codex',
       label: 'codex (CLI)',
       bin: 'codex',
       args: ['--version'],
-      hint: 'secours IA indisponible',
+      hint: 'AI fallback unavailable',
     },
   ]
   return specs.map((s) => {
     const path = findExecutable(s.bin)
     return path
       ? mk(s.id, 'ok', s.label, `${path} — ${toolVersion(path, s.args)}`)
-      : mk(s.id, 'warn', s.label, `introuvable (${s.hint})`)
+      : mk(s.id, 'warn', s.label, `not found (${s.hint})`)
   })
 }
 
@@ -267,15 +267,10 @@ export function checkDisk(root: string): Check {
     const s = statfsSync(root)
     const gib = (s.bavail * s.bsize) / 1024 ** 3
     return gib >= MIN_FREE_GIB
-      ? mk('disk', 'ok', 'Disque', `${gib.toFixed(0)} Gio libres`)
-      : mk(
-          'disk',
-          'warn',
-          'Disque',
-          `${gib.toFixed(1)} Gio libres (< ${MIN_FREE_GIB} Gio recommandés)`,
-        )
+      ? mk('disk', 'ok', 'Disk', `${gib.toFixed(0)} GiB free`)
+      : mk('disk', 'warn', 'Disk', `${gib.toFixed(1)} GiB free (< ${MIN_FREE_GIB} GiB recommended)`)
   } catch (err) {
-    return mk('disk', 'warn', 'Disque', `mesure impossible : ${(err as Error).message}`)
+    return mk('disk', 'warn', 'Disk', `measurement failed: ${(err as Error).message}`)
   }
 }
 
@@ -283,12 +278,7 @@ export function checkXcode(): Check {
   const r = spawnSync('xcode-select', ['-p'], { encoding: 'utf8' })
   return r.status === 0
     ? mk('xcode', 'ok', 'Xcode', r.stdout.trim())
-    : mk(
-        'xcode',
-        'warn',
-        'Xcode',
-        'xcode-select -p a échoué (nécessaire pour iconutil et la signature)',
-      )
+    : mk('xcode', 'warn', 'Xcode', 'xcode-select -p failed (needed for iconutil and signing)')
 }
 
 export function checkSignIdentity(): Check | null {
@@ -298,12 +288,12 @@ export function checkSignIdentity(): Check | null {
     encoding: 'utf8',
   })
   return r.stdout?.includes(id)
-    ? mk('sign', 'ok', 'Identité de signature', id)
+    ? mk('sign', 'ok', 'Signing identity', id)
     : mk(
         'sign',
         'warn',
-        'Identité de signature',
-        `« ${id} » absente du Trousseau (security find-identity -v -p codesigning)`,
+        'Signing identity',
+        `"${id}" missing from the Keychain (security find-identity -v -p codesigning)`,
       )
 }
 

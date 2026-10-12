@@ -11,7 +11,14 @@ import { Button, Popover, SegmentedSmall, Slider, Tooltip } from '../../componen
 import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { flattenTree, useCollections } from '../../state/collections'
-import { EMPTY_FILTERS, SWATCHES, toggle, type Period, type SearchFilters } from './filters'
+import {
+  EMPTY_FILTERS,
+  SWATCHES,
+  swatchLabel,
+  toggle,
+  type Period,
+  type SearchFilters,
+} from './filters'
 
 const KINDS: ItemKind[] = ['image', 'video', 'tweet', 'url']
 const SOURCES: Source[] = ['x', 'instagram', 'cosmos', 'web', 'capture', 'local']
@@ -109,11 +116,11 @@ export function FiltersPopover({
             {SWATCHES.map((c) => {
               const on = value.colors.includes(c.hex)
               return (
-                <Tooltip key={c.id} content={c.label} side="top">
+                <Tooltip key={c.id} content={swatchLabel(c.id)} side="top">
                   <button
                     type="button"
                     data-color={c.id}
-                    aria-label={tr.searchUi.colorChip(c.label)}
+                    aria-label={tr.searchUi.colorChip(swatchLabel(c.id))}
                     aria-pressed={on}
                     className="flex h-[22px] w-[22px] items-center justify-center rounded-full border border-[rgba(128,128,128,.35)]"
                     style={{ background: c.hex }}

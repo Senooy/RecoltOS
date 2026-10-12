@@ -69,12 +69,12 @@ export function readGatheros(dbPath: string): GatherosData {
   try {
     const warnings: string[] = []
     const userVersion = Number(db.pragma('user_version', { simple: true }))
-    if (userVersion !== 17) warnings.push(`schéma GatherOS v${userVersion} (validé : v17)`)
+    if (userVersion !== 17) warnings.push(`GatherOS schema v${userVersion} (validated: v17)`)
     const saves: SaveRow[] = []
     for (const raw of db.prepare('SELECT * FROM saves ORDER BY created_at, id').all()) {
       const r = SaveRow.safeParse(raw)
       if (r.success) saves.push(r.data)
-      else warnings.push(`élément illisible ignoré : ${String((raw as { id?: unknown }).id)}`)
+      else warnings.push(`unreadable item skipped: ${String((raw as { id?: unknown }).id)}`)
     }
     const collections = hasTable(db, 'collections')
       ? db

@@ -33,9 +33,9 @@ abort() {
 
 # The target directory must BE the root of a git repository (not an untracked subfolder of another
 # repository, whose `git ls-files` would be empty).
-TOP="$(git rev-parse --show-toplevel 2>/dev/null)" || abort "$ROOT n'est pas dans un dépôt git exploitable"
+TOP="$(git rev-parse --show-toplevel 2>/dev/null)" || abort "$ROOT is not in a usable git repository"
 HERE="$(pwd -P)"
-[ "$(cd "$TOP" && pwd -P)" = "$HERE" ] || abort "$HERE n'est pas la racine d'un dépôt git (racine : $TOP)"
+[ "$(cd "$TOP" && pwd -P)" = "$HERE" ] || abort "$HERE is not the root of a git repository (root: $TOP)"
 
 LIST="$(mktemp)"
 trap 'rm -f "$LIST"' EXIT

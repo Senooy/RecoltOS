@@ -57,7 +57,7 @@ export function guardOffscreenHandler<S>(
     const trusted =
       pages.length > 0 && pages.every((u) => isInternalOffscreenUrl(u, deps.rendererUrl))
     if (!trusted) {
-      deps.onDenied?.('page hors écran non interne', req.url)
+      deps.onDenied?.('non-internal offscreen page', req.url)
       return Promise.resolve(new Response(null, { status: 403 }))
     }
     return inner(req)

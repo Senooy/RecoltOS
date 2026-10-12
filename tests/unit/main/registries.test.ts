@@ -83,7 +83,7 @@ describe('IPC handler registry', () => {
     const r = await dispatch(stub, {}, {}, { handlers, validateOutput: true })
     expect(r).toEqual({
       ok: false,
-      error: { code: 'not_implemented', message: `${stub} n'est pas encore implémenté` },
+      error: { code: 'not_implemented', message: `${stub} is not implemented yet` },
     })
   })
 })

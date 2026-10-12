@@ -29,13 +29,13 @@ export function parseMigrations(files: Record<string, string>): Migration[] {
   for (const [file, sql] of Object.entries(files)) {
     const base = file.split('/').pop() ?? file
     const m = FILE_RE.exec(base)
-    if (!m?.[1] || !m[2]) throw new Error(`nom de migration invalide : ${base}`)
+    if (!m?.[1] || !m[2]) throw new Error(`invalid migration name: ${base}`)
     out.push({ version: Number(m[1]), name: m[2], sql })
   }
   out.sort((a, b) => a.version - b.version)
   out.forEach((mig, i) => {
     if (mig.version !== i + 1) {
-      throw new Error(`migrations non contiguës : attendu ${i + 1}, trouvé ${mig.version}`)
+      throw new Error(`non-contiguous migrations: expected ${i + 1}, found ${mig.version}`)
     }
   })
   return out

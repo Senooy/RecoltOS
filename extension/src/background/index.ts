@@ -162,7 +162,7 @@ async function onPopup(msg: PopupRequest): Promise<unknown> {
         })
       }
       const tab = msg.tabId !== null ? await a.tabs.get(msg.tabId) : await activeTab()
-      if (!tab) return { status: 'error', error: 'onglet introuvable' }
+      if (!tab) return { status: 'error', error: 'tab not found' }
       const t: TabLike = { ...tab, ...(msg.title ? { title: msg.title } : {}) }
       if (msg.mode === 'image' && tab.id !== undefined) {
         const meta = await exec(tab.id, readPageMeta, []).catch(() => null)

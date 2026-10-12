@@ -191,7 +191,7 @@ export function nudge(dx: number, dy: number): void {
   if (nodes.length === 0) return
   const key = `nudge:${nodes.map((n) => n.uuid).join(',')}`
   commit(
-    'Déplacer',
+    t().move,
     (d) => {
       for (const n of nodes) {
         const m = d[n.uuid]!
@@ -216,7 +216,7 @@ export function reorderSelection(op: 'forward' | 'backward' | 'front' | 'back'):
 export function alignSelection(kind: AlignKind): void {
   const nodes = selected().filter((n) => !n.locked)
   const p = align(nodes, kind)
-  commit('Aligner', (d) => {
+  commit(t().align, (d) => {
     for (const [id, v] of Object.entries(p)) Object.assign(d[id]!, v)
   })
 }
@@ -224,7 +224,7 @@ export function alignSelection(kind: AlignKind): void {
 export function distributeSelection(axis: 'h' | 'v'): void {
   const nodes = selected().filter((n) => !n.locked)
   const p = distribute(nodes, axis)
-  commit('Répartir', (d) => {
+  commit(t().distribute, (d) => {
     for (const [id, v] of Object.entries(p)) Object.assign(d[id]!, v)
   })
 }
@@ -258,7 +258,7 @@ export function setContent(uuid: string, content: string): void {
   const n = useSpace.getState().nodes[uuid]
   if (!n || (n.type !== 'note' && n.type !== 'text' && n.type !== 'shape') || n.content === content)
     return
-  commit(n.type === 'note' ? 'Modifier la note' : 'Modifier le texte', (d) => {
+  commit(n.type === 'note' ? t().editNote : t().editText, (d) => {
     const m = d[uuid]
     if (m && 'content' in m) m.content = content
   })
@@ -340,7 +340,7 @@ export function addItemsAt(cards: readonly ItemCard[], at: Vec = viewCenterWorld
     style: defaultItemStyle(),
   }))
   commit(
-    `Ajouter ${nodes.length} éléments`,
+    t().addNodes(nodes.length),
     (d) => {
       for (const n of nodes) d[n.uuid] = n
     },
@@ -412,7 +412,7 @@ export function placeAssetsAt(assets: readonly AssetInfo[], at: Vec = viewCenter
   if (assets.length === 0 || !guardCap(assets.length)) return
   const nodes = imageNodes(assets, at)
   commit(
-    `Ajouter ${nodes.length} images`,
+    t().addImages(nodes.length),
     (d) => {
       for (const n of nodes) d[n.uuid] = n
     },

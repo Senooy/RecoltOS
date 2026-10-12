@@ -192,7 +192,7 @@ describe('zipLibrary', () => {
       entries: [{ abs: 'etclink/hosts', name: 'hosts' }],
     }).catch((e: unknown) => e)
     expect(err).toMatchObject({ code: 'validation' })
-    expect((err as Error).message).toMatch(/hors de la bibliothèque/)
+    expect((err as Error).message).toMatch(/outside the library/)
     expect(existsSync(out)).toBe(false)
     const ok = await zipLibrary({
       root,

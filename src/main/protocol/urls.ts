@@ -18,7 +18,7 @@ const MEDIA_ROOT_SET: ReadonlySet<string> = new Set(MEDIA_ROOTS)
  */
 export function assetUrl(libId: string, rel: string, v?: number | null): string {
   if (!LibraryId.safeParse(libId).success) {
-    throw new Error(`identifiant de bibliothèque invalide : ${JSON.stringify(libId)}`)
+    throw new Error(`invalid library identifier: ${JSON.stringify(libId)}`)
   }
   const segments = rel.split('/')
   if (
@@ -28,7 +28,7 @@ export function assetUrl(libId: string, rel: string, v?: number | null): string 
       (s) => s === '' || s === '.' || s === '..' || s.includes('\\') || s.includes('\0'),
     )
   ) {
-    throw new Error(`chemin média non servi : ${JSON.stringify(rel)}`)
+    throw new Error(`media path not served: ${JSON.stringify(rel)}`)
   }
   const encoded = segments.map((s) => encodeURIComponent(s)).join('/')
   // `?v` only for a finite integer: NaN / Infinity would produce `?v=NaN` (URL accepted by
@@ -38,7 +38,7 @@ export function assetUrl(libId: string, rel: string, v?: number | null): string 
   const url = `${RECOLT_PROTOCOL}://${libId}/${encoded}${query}`
   // Final check: the exact shape accepted by the contract (`MediaUrl`).
   if (!MediaUrl.safeParse(url).success) {
-    throw new Error(`URL média invalide : ${JSON.stringify(url)}`)
+    throw new Error(`invalid media URL: ${JSON.stringify(url)}`)
   }
   return url
 }

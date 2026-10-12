@@ -107,6 +107,6 @@ export class ProviderGate {
     }
     return untils.length > 0
       ? { waitUntil: Math.min(...untils), reason: paused[primary]!.reason }
-      : { reason: paused[primary]?.reason ?? 'indisponible' }
+      : { reason: paused[primary]?.reason ?? 'unavailable' }
   }
 }

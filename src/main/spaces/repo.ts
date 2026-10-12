@@ -31,7 +31,6 @@ import { mt } from '../i18n'
 type Lib = Pick<LibraryContext, 'id' | 'root' | 'db' | 'repos' | 'paths'>
 export type ApplyBatch = z.output<typeof ApplyBatchInput>
 
-export const UNTITLED_SPACE = 'Space sans titre'
 /** Gap between the existing content and the items added by "Add to a space ›". */
 export const ADD_ITEMS_GAP = 80
 
@@ -316,7 +315,10 @@ export function duplicateSpace(lib: Lib, uuid: string, at = Date.now()): { uuid:
   const s = spaceRow(lib, uuid)
   return guard(() =>
     lib.db.transaction(() => {
-      const copy = lib.repos.spaces.create({ name: `${s.name || UNTITLED_SPACE} (copie)` }, at)
+      const copy = lib.repos.spaces.create(
+        { name: mt().library.copyOf(s.name || mt().library.untitledSpace) },
+        at,
+      )
       lib.db
         .prepare('UPDATE spaces SET viewport = ?, background = ? WHERE id = ?')
         .run(s.viewport, s.background, copy.id)

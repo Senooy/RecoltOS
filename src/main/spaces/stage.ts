@@ -46,7 +46,7 @@ async function waitStage(win: BrowserWindow): Promise<void> {
     if (ok) return
     await new Promise((r) => setTimeout(r, 25))
   }
-  throw new AppError('timeout', 'fenêtre stage : chargement trop long')
+  throw new AppError('timeout', 'stage window: load timed out')
 }
 
 /** PNG of a space (all or a selection) at the requested scale (capped at 8,192 px / 40 Mpx). */

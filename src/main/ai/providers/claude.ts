@@ -150,9 +150,9 @@ export class ClaudeCliProvider extends CliProviderBase {
 
   protected async exec(spec: ExecSpec, o: AiCallOptions): Promise<ExecOutput> {
     const cli = await this.rt.resolve()
-    if (!cli) throw new AiError('NOT_INSTALLED', 'claude introuvable')
+    if (!cli) throw new AiError('NOT_INSTALLED', 'claude not found')
     if (cli.version && compareSemver(cli.version, CLAUDE_MIN_VERSION) < 0)
-      throw new AiError('UNSUPPORTED_CLI', `claude ${cli.version} trop ancien`)
+      throw new AiError('UNSUPPORTED_CLI', `claude ${cli.version} is too old`)
     const prefs = this.rt.prefs()
     const flags = await this.flags(cli.path, cli.version)
     const model = o.model ?? prefs.claude.model
@@ -188,8 +188,8 @@ export class ClaudeCliProvider extends CliProviderBase {
     if (r.spawnError)
       throw classifyError('spawn', r.spawnError.message, { code: r.spawnError.code ?? '' })
     if (guard.error) throw guard.error
-    if (r.aborted) throw new AiError('CANCELLED', 'annulé')
-    if (r.timedOut) throw new AiError('TIMEOUT', 'délai dépassé', { retryable: true })
+    if (r.aborted) throw new AiError('CANCELLED', 'cancelled')
+    if (r.timedOut) throw new AiError('TIMEOUT', 'timed out', { retryable: true })
     let result = guard.result
     if (!streaming) {
       try {
@@ -200,18 +200,18 @@ export class ClaudeCliProvider extends CliProviderBase {
     }
     if (!result) {
       if (r.code !== 0) throw classifyError('exit', r.stderr)
-      throw new AiError('BAD_OUTPUT', 'aucun résultat', { retryable: true })
+      throw new AiError('BAD_OUTPUT', 'no result', { retryable: true })
     }
     const denials = result.permission_denials
     if (Array.isArray(denials) && denials.length > 0)
-      throw new AiError('PROCESS', 'lecture refusée, essayer --add-dir', { retryable: false })
+      throw new AiError('PROCESS', 'read refused, try --add-dir', { retryable: false })
     if (result.is_error === true) {
       const text =
         typeof result.result === 'string'
           ? result.result
           : typeof result.subtype === 'string'
             ? result.subtype
-            : 'erreur'
+            : 'error'
       throw classifyError('claude-result', text)
     }
     const usage = (result.usage ?? {}) as {

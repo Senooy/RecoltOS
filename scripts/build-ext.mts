@@ -130,7 +130,7 @@ export async function buildExt(options: BuildExtOptions = {}): Promise<string | 
   if (!existsSync(join(root, 'extension/manifest.ts'))) return null
   const out = options.outDir ?? join(root, 'dist-extension')
   if (options.testBase && !options.outDir) {
-    throw new Error('build de test : --out obligatoire (jamais dist-extension/)')
+    throw new Error('test build: --out is required (never dist-extension/)')
   }
   for (const t of options.targets ?? EXT_TARGETS) {
     await buildTarget(root, t, join(out, t), options)

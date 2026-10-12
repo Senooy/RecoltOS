@@ -94,7 +94,7 @@ export const ENDPOINTS = TEST_BASE ? testEndpoints(TEST_BASE) : PROD
 
 export function endpoint(p: BridgePlatform, key: string): string {
   const v = ENDPOINTS[p][key]
-  if (typeof v !== 'string') throw new Error(`adresse inconnue : ${p}.${key}`)
+  if (typeof v !== 'string') throw new Error(`unknown address: ${p}.${key}`)
   return v
 }
 

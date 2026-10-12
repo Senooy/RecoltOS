@@ -113,7 +113,7 @@ describe('sanitize-fixture: end guard', () => {
     const source = { note: 'Texte confidentiel de 30 caractères', court: 'abc' }
     const fuite = { champ: 'préfixe Texte confidentiel de 30 caractères suffixe', court: 'abc' }
     expect(findLeaks(source, fuite)).toEqual(['Texte confidentiel de 30 caractères'])
-    expect(() => assertNoLeak(source, fuite)).toThrow(/survivent/)
+    expect(() => assertNoLeak(source, fuite)).toThrow(/survive/)
     // The real value is never copied into the error message.
     expect(() => assertNoLeak(source, fuite)).not.toThrow(/confidentiel/)
   })

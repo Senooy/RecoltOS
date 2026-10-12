@@ -51,12 +51,12 @@ describe('parseDragPayload', () => {
   })
 
   it.each([
-    ['vide', { uuids: [] }],
-    ['uuid invalide', { uuids: ['../../etc'] }],
-    ['pas un objet', 'x'],
-    ['uuids tous invalides', { uuids: ['x', 42, null] }],
-    ['uuids absent', { iconDataUrl: PNG }],
-  ])('refuse %s', (_l, raw) => {
+    ['empty', { uuids: [] }],
+    ['invalid uuid', { uuids: ['../../etc'] }],
+    ['not an object', 'x'],
+    ['all uuids invalid', { uuids: ['x', 42, null] }],
+    ['missing uuids', { iconDataUrl: PNG }],
+  ])('refuses %s', (_l, raw) => {
     expect(parseDragPayload(raw)).toBeNull()
   })
 
@@ -64,8 +64,8 @@ describe('parseDragPayload', () => {
     ['JPEG', 'data:image/jpeg;base64,AAAA'],
     ['webp', 'data:image/webp;base64,AAAA'],
     ['URL', 'file:///etc/passwd'],
-    ['trop grande', PNG_DATA_URL_PREFIX + 'A'.repeat(DRAG_ICON_MAX_CHARS)],
-    ['pas une chaîne', 42],
+    ['too large', PNG_DATA_URL_PREFIX + 'A'.repeat(DRAG_ICON_MAX_CHARS)],
+    ['not a string', 42],
   ])('invalid icon (%s): payload kept, icon reset to null', (_l, icon) => {
     expect(parseDragPayload({ uuids: [A], iconDataUrl: icon })).toEqual({
       uuids: [A],
@@ -74,7 +74,7 @@ describe('parseDragPayload', () => {
   })
 
   it('drops invalid uuids without discarding the payload', () => {
-    expect(parseDragPayload({ uuids: [A, 'pas-un-uuid', B, 7] })).toEqual({
+    expect(parseDragPayload({ uuids: [A, 'not-a-uuid', B, 7] })).toEqual({
       uuids: [A, B],
       iconDataUrl: null,
     })
@@ -122,7 +122,7 @@ describe('makeDragIcon', () => {
 
   it('missing fallback → system icon', () => {
     const imgs = fakeImages({ createFromPath: img('f', true) })
-    expect((makeDragIcon(imgs as never, '/absent.png', null) as unknown as Img).tag).toBe('system')
+    expect((makeDragIcon(imgs as never, '/missing.png', null) as unknown as Img).tag).toBe('system')
     expect(imgs.createFromNamedImage).toHaveBeenCalledWith(SYSTEM_DRAG_ICON)
   })
 })
@@ -206,7 +206,7 @@ describe('registerDrag', () => {
       expect(startDrag.mock.calls[0]![0]).toMatchObject({ icon: fallback })
     }
     startDrag.mockClear()
-    send({ uuids: [A, 'pas-un-uuid'], iconDataUrl: PNG })
+    send({ uuids: [A, 'not-a-uuid'], iconDataUrl: PNG })
     expect(files).toHaveBeenLastCalledWith([A])
     expect(startDrag).toHaveBeenCalledTimes(1)
   })

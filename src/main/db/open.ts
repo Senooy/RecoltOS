@@ -128,7 +128,7 @@ export function openLibraryDb(root: string, opts: OpenLibraryDbOptions = {}): Op
       ...(opts.now ? { now: opts.now } : {}),
     })
     if (db.pragma('foreign_keys', { simple: true }) !== 1) {
-      throw new AppError('library_unavailable', 'Clés étrangères inactives sur la connexion.')
+      throw new AppError('library_unavailable', 'Foreign keys are off on the connection.')
     }
     return { db, file, migration }
   } catch (err) {

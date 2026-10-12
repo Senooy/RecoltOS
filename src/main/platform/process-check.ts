@@ -21,7 +21,7 @@ const defaultExec: ExecFileFn = (cmd, args) =>
       }
       const code = (err as { code?: unknown }).code
       if (typeof code === 'number') resolve({ code, stdout: String(stdout) })
-      else reject(err instanceof Error ? err : new Error('pgrep : échec inattendu'))
+      else reject(err instanceof Error ? err : new Error('pgrep: unexpected failure'))
     })
   })
 
@@ -38,11 +38,11 @@ export async function isProcessRunning(
   name: string,
   exec: ExecFileFn = defaultExec,
 ): Promise<boolean> {
-  if (!isSafeProcessName(name)) throw new Error(`nom de processus invalide : ${name}`)
+  if (!isSafeProcessName(name)) throw new Error(`invalid process name: ${name}`)
   const { code } = await exec(PGREP, ['-x', name])
   if (code === 0) return true
   if (code === 1) return false
-  throw new Error(`pgrep a échoué (code ${code})`)
+  throw new Error(`pgrep failed (code ${code})`)
 }
 
 /** `isRunning` dependency injected into the importer. */

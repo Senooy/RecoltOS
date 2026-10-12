@@ -678,7 +678,7 @@ describe('util', () => {
 })
 
 describe('integrity after a full scenario', () => {
-  it('foreign_keys = 1, integrity_check = ok, foreign_key_check vide', () => {
+  it('foreign_keys = 1, integrity_check = ok, foreign_key_check empty', () => {
     const { items, collections, tags } = lib.repos
     const a = items.insertWithMedia({ kind: 'image' }, [{ mediaType: 'image' }]).id
     const c = collections.create({ name: 'C' }).id

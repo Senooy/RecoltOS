@@ -49,8 +49,7 @@ export function initSpaces(ctx: ServiceContext): () => void {
   })
   const onSync = (e: IpcMainEvent, payload: unknown) => {
     try {
-      if (!allowed(e.senderFrame?.url))
-        throw new AppError('forbidden_sender', 'expéditeur non autorisé')
+      if (!allowed(e.senderFrame?.url)) throw new AppError('forbidden_sender', 'sender not allowed')
       const lib = getActiveLibrary()
       if (!lib) throw new AppError('library_unavailable', mt().errors.noLibrary)
       const parsed = SyncInput.safeParse(payload)

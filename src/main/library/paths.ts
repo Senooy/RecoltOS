@@ -55,15 +55,15 @@ export function libraryPaths(root: string): LibraryPaths {
  */
 export function resolveInside(root: string, rel: string): string {
   if (!rel || rel.includes('\0') || path.isAbsolute(rel) || rel.includes('\\')) {
-    throw new AppError('validation', `chemin relatif invalide : ${JSON.stringify(rel)}`)
+    throw new AppError('validation', `invalid relative path: ${JSON.stringify(rel)}`)
   }
   if (rel.split('/').some((seg) => seg === '..' || seg === '.' || seg === '')) {
-    throw new AppError('validation', `chemin relatif invalide : ${JSON.stringify(rel)}`)
+    throw new AppError('validation', `invalid relative path: ${JSON.stringify(rel)}`)
   }
   const base = path.resolve(root)
   const abs = path.resolve(base, rel)
   if (!abs.startsWith(base + path.sep)) {
-    throw new AppError('validation', 'chemin hors de la bibliothèque')
+    throw new AppError('validation', 'path outside the library')
   }
   return abs
 }
@@ -71,7 +71,7 @@ export function resolveInside(root: string, rel: string): string {
 const sha1 = (s: string) => createHash('sha1').update(s).digest('hex')
 const cleanExt = (ext: string) => {
   const e = ext.replace(/^\./, '').toLowerCase()
-  if (!/^[a-z0-9]{1,8}$/.test(e)) throw new AppError('validation', `extension invalide : ${ext}`)
+  if (!/^[a-z0-9]{1,8}$/.test(e)) throw new AppError('validation', `invalid extension: ${ext}`)
   return e
 }
 

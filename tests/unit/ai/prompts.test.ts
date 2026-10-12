@@ -76,12 +76,12 @@ const inputs: Record<string, AiInput> = {
 }
 
 describe('prompts', () => {
-  it('prompt système figé', () => {
+  it('frozen system prompt', () => {
     expect(SYSTEM_FR).toMatchSnapshot()
   })
 
   for (const [name, input] of Object.entries(inputs)) {
-    it(`analyse ${name} (claude et codex) figée`, () => {
+    it(`frozen ${name} analysis (claude and codex)`, () => {
       expect(buildAnalyzePrompt(input, 'claude')).toMatchSnapshot()
       expect(buildAnalyzePrompt(input, 'codex')).toMatchSnapshot()
     })
@@ -108,7 +108,7 @@ describe('prompts', () => {
     expect(p).toContain("n'était pas un JSON valide")
   })
 
-  it("prompt d'image figé", () => {
+  it('frozen image prompt', () => {
     expect(buildImagePromptPrompt(inputs.image!, 'claude')).toMatchSnapshot()
   })
 

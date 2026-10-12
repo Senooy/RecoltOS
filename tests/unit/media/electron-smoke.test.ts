@@ -32,9 +32,9 @@ function electronBinary(): string | undefined {
 const ELECTRON = electronBinary()
 const HAS_FFMPEG = Boolean(FFMPEG && FFPROBE)
 const SKIP_REASON = !ELECTRON
-  ? 'binaire Electron absent (node_modules/electron non téléchargé)'
+  ? 'Electron binary missing (node_modules/electron not downloaded)'
   : !HAS_FFMPEG
-    ? 'ffmpeg/ffprobe système absents'
+    ? 'system ffmpeg/ffprobe missing'
     : ''
 if (SKIP_REASON) console.warn(`[electron-smoke] skipped: ${SKIP_REASON}`)
 
@@ -117,7 +117,7 @@ describe.skipIf(SKIP_REASON !== '')('media-worker in Electron (real utilityProce
       child.stderr.on('data', (c: Buffer) => (stderr += String(c)))
       const timer = setTimeout(() => {
         child.kill('SIGKILL')
-        fail(new Error(`Electron bloqué (120 s)\n${stderr.slice(-2000)}`))
+        fail(new Error(`Electron stuck (120 s)\n${stderr.slice(-2000)}`))
       }, 120_000)
       child.on('exit', (c) => {
         clearTimeout(timer)

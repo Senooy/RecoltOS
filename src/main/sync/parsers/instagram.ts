@@ -65,7 +65,7 @@ function classifyFailure(root: Json): PageParseResult {
   if (/wait a few minutes|rate.?limit|feedback_required|spam/i.test(token) || root.spam === true) {
     return errorResult('instagram', 'rate_limited', 'rate_limit', message || 'Limite atteinte')
   }
-  return errorResult('instagram', 'api_changed', 'fail', message || 'Réponse en échec')
+  return errorResult('instagram', 'api_changed', 'fail', message || 'Failed response')
 }
 
 // ------------------------------------------------------------------------------------ media
@@ -156,7 +156,7 @@ function igCaption(m: Json): string | null {
 
 function igPost(m: Json, position: number, onDrop: (reason: string) => void): NormalizedPost {
   const code = idStr(m.code ?? m.shortcode, SHORTCODE)
-  if (code === null) fail('code absent')
+  if (code === null) fail('code missing')
   const children = Array.isArray(m.carousel_media)
     ? m.carousel_media
     : arr(obj(m.edge_sidecar_to_children).edges).map((e) => obj(e).node)
@@ -166,13 +166,13 @@ function igPost(m: Json, position: number, onDrop: (reason: string) => void): No
   if (mediaType === 8 || children.length > 0) {
     children.slice(0, MAX_MEDIA_PER_POST).forEach((child, i) => {
       const one = isObj(child) ? igSingle(child) : null
-      if (one === null) onDrop(`élément ${i} du carrousel sans URL exploitable`)
+      if (one === null) onDrop(`carousel item ${i} without a usable URL`)
       else media.push(one)
     })
-    if (media.length === 0) fail('carrousel sans média exploitable')
+    if (media.length === 0) fail('carousel without usable media')
   } else {
     const one = igSingle(m)
-    if (one === null) fail('média sans URL exploitable')
+    if (one === null) fail('media without a usable URL')
     media.push(one)
   }
   const author = igAuthor(m)
@@ -248,14 +248,14 @@ function parseMediaList(
     log.stats.entries += 1
     const m = unwrapItem(raw)
     if (!isObj(m)) {
-      log.note('malformed', index, null, 'élément sans média')
+      log.note('malformed', index, null, 'item without media')
       return
     }
     const id = str(m.code) ?? str(m.shortcode)
     try {
       const post = igPost(m, posts.length, (reason) => log.note('media_dropped', index, id, reason))
       if (seen.has(post.sourceKey)) {
-        log.note('ignored', index, id, 'doublon dans la page')
+        log.note('ignored', index, id, 'duplicate on the page')
         return
       }
       seen.add(post.sourceKey)
@@ -277,7 +277,7 @@ function restItem(raw: unknown): unknown {
 
 function parsePage(json: unknown, opts: PageParseOptions, single: boolean): PageParseResult {
   if (!isObj(json)) {
-    return errorResult('instagram', 'api_changed', 'unknown_shape', 'Réponse Instagram illisible')
+    return errorResult('instagram', 'api_changed', 'unknown_shape', 'Unreadable Instagram response')
   }
   if (Array.isArray(json.items)) {
     const { posts, log } = parseMediaList(json.items, restItem)
@@ -309,7 +309,12 @@ function parsePage(json: unknown, opts: PageParseOptions, single: boolean): Page
       }
     }
   }
-  return errorResult('instagram', 'api_changed', 'unknown_shape', 'Réponse Instagram sans items')
+  return errorResult(
+    'instagram',
+    'api_changed',
+    'unknown_shape',
+    'Instagram response without items',
+  )
 }
 
 /**

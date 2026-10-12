@@ -48,8 +48,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export const Envelope = z.object({
   v: z.literal(BRIDGE_PROTOCOL_VERSION),
-  id: z.string().regex(UUID_RE, 'uuid attendu'),
-  re: z.string().regex(UUID_RE, 'uuid attendu').optional(),
+  id: z.string().regex(UUID_RE, 'uuid expected'),
+  re: z.string().regex(UUID_RE, 'uuid expected').optional(),
   type: z.string().max(64),
   ts: z.number().int().optional(),
   payload: z.unknown(),

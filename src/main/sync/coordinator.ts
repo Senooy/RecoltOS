@@ -292,7 +292,7 @@ export class SyncCoordinator {
     })
     if (!on) {
       const r = this.runningFor(p)
-      if (r) this.finish(r, 'aborted', 'désactivé')
+      if (r) this.finish(r, 'aborted', 'disabled')
     } else {
       void this.start(p, this.state(lib, p).backfill_done ? 'incremental' : 'backfill', 'toggle')
     }
@@ -426,7 +426,7 @@ export class SyncCoordinator {
       maxPages: maxPages ?? MAX_PAGES[mode][p],
       allowBackgroundTab: !!st.allow_background_tab,
     })
-    if (!sent) this.finish(ctx, 'network', 'extension injoignable')
+    if (!sent) this.finish(ctx, 'network', 'extension unreachable')
     this.publish()
     return runId
   }
@@ -438,7 +438,7 @@ export class SyncCoordinator {
     const now = this.d.now()
     for (const r of this.runs.values()) {
       if (!r.finished && now - r.lastActivity > RUN_STALE_MS)
-        this.finish(r, 'aborted', 'sans nouvelles')
+        this.finish(r, 'aborted', 'no response')
     }
     for (const p of BRIDGE_PLATFORMS) {
       const st = this.state(lib, p)
@@ -781,7 +781,7 @@ export class SyncCoordinator {
     const lib = this.d.lib()
     if (!lib) throw new Error(mt().errors.noLibrary)
     const post = toPost(req)
-    if (!post) throw new Error('Publication illisible.')
+    if (!post) throw new Error(mt().errors.postUnreadable)
     const now = this.d.now()
     const res = ingestPage(
       { lib, prefs: () => this.d.prefs(), now: () => this.d.now() },
@@ -847,6 +847,6 @@ export class SyncCoordinator {
   /** Shutdown: runs abandoned cleanly. */
   dispose(): void {
     for (const t of this.hintTimers.values()) clearTimeout(t)
-    for (const r of [...this.runs.values()]) this.finish(r, 'aborted', 'arrêt de l’app')
+    for (const r of [...this.runs.values()]) this.finish(r, 'aborted', 'app shutting down')
   }
 }
