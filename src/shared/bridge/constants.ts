@@ -9,8 +9,9 @@ export const BRIDGE_PROTOCOL_VERSION = 1 as const
  * augmenter à chaque changement du code de l'extension : l'app ne recopie l'extension dans
  * `<userData>/extension/` que si la version (ou le manifest) change, et demande alors à une extension
  * plus ancienne connectée de se recharger. 1.0.1 : sync X x-web et Cosmos (ERRATA §G.3).
+ * 1.0.2 : nouvelles icônes (logo « graine qui germe »).
  */
-export const EXTENSION_VERSION = '1.0.1'
+export const EXTENSION_VERSION = '1.0.2'
 /** Nom de l'hôte native messaging (build livré) et de dev (`RECOLTOS_INSTALL_DEV_HOST=1`). */
 export const NATIVE_HOST_NAME = 'com.recoltos.host'
 export const NATIVE_HOST_NAME_DEV = 'com.recoltos.host.dev'
