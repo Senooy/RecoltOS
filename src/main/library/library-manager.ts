@@ -26,9 +26,13 @@ import {
   type LibraryContext,
 } from './library-context'
 import { defaultLibraryRoot, LIBRARY_DIRS, libraryPaths, userDataPaths } from './paths'
+import { mt } from '../i18n'
 
 export const DEFAULT_LIBRARY_ID = 'default'
-export const DEFAULT_LIBRARY_NAME = 'Bibliothèque'
+/** Nom de la bibliothèque par défaut, dans la langue active au moment de sa création. */
+export function defaultLibraryName(): string {
+  return mt().library.defaultName
+}
 
 const RegistryEntry = z.object({
   id: LibraryId,
@@ -52,7 +56,7 @@ const LibraryName = z.string().trim().min(1).max(100)
 function parseName(name: unknown): string {
   const r = LibraryName.safeParse(name)
   if (!r.success) {
-    throw new AppError('validation', 'Le nom de la bibliothèque doit faire de 1 à 100 caractères.')
+    throw new AppError('validation', mt().errors.libraryNameLength)
   }
   return r.data
 }
@@ -136,10 +140,7 @@ export function isSyncedFolder(target: string, home: string = os.homedir()): boo
 
 function assertNotSynced(target: string, home: string): void {
   if (isSyncedFolder(target, home)) {
-    throw new AppError(
-      'synced_folder_refused',
-      'Ce dossier est synchronisé (iCloud Drive, Dropbox…) : choisis un dossier local.',
-    )
+    throw new AppError('synced_folder_refused', mt().errors.syncedFolder)
   }
 }
 
@@ -169,28 +170,20 @@ export function toAppError(err: unknown): unknown {
     case 'EACCES':
     case 'EPERM':
     case 'EROFS':
-      return new AppError('io', 'Pas le droit d’écrire dans ce dossier.', details)
+      return new AppError('io', mt().errors.noWritePermission, details)
     case 'ENOSPC':
-      return new AppError('io', 'Il n’y a plus assez de place sur le disque.', details)
+      return new AppError('io', mt().errors.diskFull, details)
     case 'ENOENT':
     case 'ENOTDIR':
-      return new AppError(
-        'library_unavailable',
-        'Le dossier de la bibliothèque est introuvable.',
-        details,
-      )
+      return new AppError('library_unavailable', mt().errors.libraryFolderMissing, details)
     case 'SQLITE_BUSY':
     case 'SQLITE_LOCKED':
-      return new AppError('busy', 'La bibliothèque est utilisée par un autre processus.', details)
+      return new AppError('busy', mt().errors.libraryLocked, details)
     default:
       if (e.code.startsWith('SQLITE_')) {
-        return new AppError(
-          'library_unavailable',
-          'Ce fichier recolt.db est illisible ou abîmé.',
-          details,
-        )
+        return new AppError('library_unavailable', mt().errors.dbUnreadable, details)
       }
-      return new AppError('io', 'Opération impossible sur ce dossier.', details)
+      return new AppError('io', mt().errors.folderOpFailed, details)
   }
 }
 
@@ -238,7 +231,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     version: 1,
     active: DEFAULT_LIBRARY_ID,
     libraries: [
-      { id: DEFAULT_LIBRARY_ID, name: DEFAULT_LIBRARY_NAME, path: null, createdAt: now() },
+      { id: DEFAULT_LIBRARY_ID, name: defaultLibraryName(), path: null, createdAt: now() },
     ],
   })
 
@@ -307,7 +300,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
 
   const entry = (id: string): RegistryEntry => {
     const e = load().libraries.find((l) => l.id === id)
-    if (!e) throw new AppError('not_found', 'Bibliothèque introuvable.')
+    if (!e) throw new AppError('not_found', mt().errors.libraryNotFound)
     return e
   }
 
@@ -324,10 +317,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     for (const dir of managed) {
       for (const d of new Set([path.resolve(dir), realpathOfNearest(dir)])) {
         if (candidates.some((p) => isUnder(p, d))) {
-          throw new AppError(
-            'conflict',
-            'Ce dossier est déjà utilisé par une bibliothèque RecoltOS : choisis un autre emplacement.',
-          )
+          throw new AppError('conflict', mt().errors.folderUsedByLibrary)
         }
       }
     }
@@ -399,7 +389,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     const root = rootOf(e)
     const mayCreate = opts.create === true || e.id === DEFAULT_LIBRARY_ID
     if (!mayCreate && (!fs.existsSync(root) || !fs.existsSync(path.join(root, DB_FILE)))) {
-      throw new AppError('library_unavailable', `Dossier de bibliothèque introuvable : ${root}`)
+      throw new AppError('library_unavailable', mt().errors.libraryFolderNotFound(root))
     }
     const paths = libraryPaths(root)
     for (const d of LIBRARY_DIRS) fs.mkdirSync(paths.dir(d), { recursive: true })
@@ -596,16 +586,13 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
           assertNotManaged(custom)
           const st = fs.statSync(custom, { throwIfNoEntry: false })
           if (st && !st.isDirectory()) {
-            throw new AppError('validation', 'Ce chemin n’est pas un dossier.')
+            throw new AppError('validation', mt().errors.notAFolder)
           }
           if (fs.existsSync(path.join(custom, DB_FILE))) {
-            throw new AppError(
-              'conflict',
-              'Ce dossier contient déjà une bibliothèque : utilise « Ouvrir un dossier ».',
-            )
+            throw new AppError('conflict', mt().errors.folderHasLibrary)
           }
           if (fs.existsSync(custom) && fs.readdirSync(custom).some((f) => !f.startsWith('.'))) {
-            throw new AppError('conflict', 'Choisis un dossier vide pour la nouvelle bibliothèque.')
+            throw new AppError('conflict', mt().errors.chooseEmptyFolder)
           }
         }
         // Emplacement par défaut (`userData/libraries/<id>`) : pas de contrôle, comme `open()`
@@ -637,7 +624,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         const root = path.resolve(dir)
         assertNotSynced(root, home)
         if (!fs.existsSync(path.join(root, DB_FILE))) {
-          throw new AppError('not_found', 'Ce dossier ne contient pas de bibliothèque RecoltOS.')
+          throw new AppError('not_found', mt().errors.noLibraryInFolder)
         }
         const r = load()
         let e = r.libraries.find((l) => path.resolve(rootOf(l)) === root)
@@ -645,7 +632,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         if (!e) {
           e = {
             id: freshId(),
-            name: path.basename(root).trim().slice(0, 100) || DEFAULT_LIBRARY_NAME,
+            name: path.basename(root).trim().slice(0, 100) || defaultLibraryName(),
             path: root,
             createdAt: now(),
           }
@@ -685,7 +672,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       const r = load()
       entry(id)
       if ((ctx?.id ?? r.active) === id) {
-        throw new AppError('conflict', 'Ouvre une autre bibliothèque avant de retirer celle-ci.')
+        throw new AppError('conflict', mt().errors.cannotRemoveActive)
       }
       try {
         save({ ...r, libraries: r.libraries.filter((l) => l.id !== id) })

@@ -18,6 +18,7 @@ import { snapshotPath, snapshotStamp } from '../db/migrate'
 import type { LibraryContext } from '../library/library-context'
 import { snapshotFile } from './snapshots'
 import { verifyLibrary } from './verify'
+import { mt } from '../i18n'
 
 export interface RestoreManager {
   active(): LibraryContext | null
@@ -56,16 +57,16 @@ export async function restoreSnapshot(
   now: () => number = Date.now,
 ): Promise<RestoreResult> {
   const lib = manager.active()
-  if (!lib) throw new AppError('library_unavailable', 'Aucune bibliothèque ouverte.')
+  if (!lib) throw new AppError('library_unavailable', mt().errors.noLibrary)
   const src = snapshotFile(lib, name)
-  if (!fs.existsSync(src)) throw new AppError('not_found', 'Instantané introuvable.')
+  if (!fs.existsSync(src)) throw new AppError('not_found', mt().errors.snapshotNotFound)
   const paths = lib.paths
   const tmp = path.join(paths.dir('tmp'), `restore-${snapshotStamp(now())}-${process.pid}.db`)
   fs.mkdirSync(path.dirname(tmp), { recursive: true })
   fs.copyFileSync(src, tmp)
   if (!quickCheck(tmp)) {
     fs.rmSync(tmp, { force: true })
-    throw new AppError('validation', 'Cet instantané est endommagé : restauration annulée.')
+    throw new AppError('validation', mt().errors.snapshotDamaged)
   }
 
   try {
@@ -99,7 +100,7 @@ export async function restoreSnapshot(
       }
     }
     await manager.reopen()
-    throw new AppError('io', 'Restauration impossible : la base actuelle a été conservée.', {
+    throw new AppError('io', mt().errors.restoreFailed, {
       cause: String(err),
     })
   }

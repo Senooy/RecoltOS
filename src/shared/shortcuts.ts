@@ -5,6 +5,7 @@
  *
  * AZERTY : chiffres comparés par `e.code` (`Digit1`…), lettres par `e.key.toLowerCase()`.
  */
+import { getLang } from './i18n/lang'
 
 export type ShortcutScope = 'menu' | 'renderer' | 'global'
 
@@ -250,6 +251,11 @@ export const MENU_COMMANDS = [
   'snapshot',
 ] as const
 export type MenuCommand = (typeof MENU_COMMANDS)[number]
+
+/** Libellé affiché d'un raccourci : glyphes identiques, seule la touche Échap se traduit (« Esc »). */
+export function displayShortcutLabel(label: string): string {
+  return label === 'Échap' && getLang() !== 'fr' ? 'Esc' : label
+}
 
 export function getShortcut(id: ShortcutId): ShortcutDef {
   const s = SHORTCUTS.find((d) => d.id === id)

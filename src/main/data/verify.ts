@@ -7,6 +7,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { JOB_PRIORITY } from '../../shared/jobs'
 import type { LibraryContext } from '../library/library-context'
+import { mt } from '../i18n'
 
 export interface VerifyIssue {
   code: 'missing_original' | 'orphan_file' | 'missing_thumb'
@@ -86,10 +87,10 @@ export function verifyLibrary(
 
   const issues: VerifyIssue[] = []
   if (missing > 0)
-    issues.push({ code: 'missing_original', message: 'Originaux introuvables', count: missing })
+    issues.push({ code: 'missing_original', message: mt().verify.missingOriginals, count: missing })
   if (orphans > 0)
-    issues.push({ code: 'orphan_file', message: 'Fichiers sans élément', count: orphans })
+    issues.push({ code: 'orphan_file', message: mt().verify.orphanFiles, count: orphans })
   if (missingThumb > 0)
-    issues.push({ code: 'missing_thumb', message: 'Miniatures manquantes', count: missingThumb })
+    issues.push({ code: 'missing_thumb', message: mt().verify.missingThumbs, count: missingThumb })
   return { ok: issues.length === 0, issues }
 }

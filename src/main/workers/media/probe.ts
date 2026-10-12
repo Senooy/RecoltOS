@@ -14,6 +14,7 @@ import {
   type MediaTools,
 } from './exec'
 import { FOREIGN_MIME, orientedSize, sniffForeign, withReadable } from './foreign'
+import { mt } from '../../i18n'
 
 const MIME_BY_FORMAT: Record<string, string> = {
   jpeg: 'image/jpeg',
@@ -142,7 +143,7 @@ export async function probeVideo(
     { tool: 'ffprobe', timeoutMs: 60_000, signal },
   ).catch((err: unknown) => {
     if (err instanceof AppError && err.code === 'tool_failed') {
-      throw new AppError('decode_failed', 'le fichier est illisible ou corrompu', {
+      throw new AppError('decode_failed', mt().errors.unreadableFile, {
         stderr: toolStderr(err),
       })
     }

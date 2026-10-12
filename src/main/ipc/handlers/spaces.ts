@@ -24,6 +24,7 @@ import {
 } from '../../spaces/repo'
 import type { DomainHandlers } from '../router'
 import { ingestDeps } from './ingest'
+import { mt } from '../../i18n'
 
 const changed = (uuids: string[]) => emitEvent('spaces.changed', { uuids })
 
@@ -96,17 +97,17 @@ export const spacesHandlers: DomainHandlers<'spaces'> = {
   'spaces.promoteAsset': async ({ spaceUuid, nodeUuid }) => {
     const lib = requireLibrary()
     const space = lib.repos.spaces.getByUuid(spaceUuid)
-    if (!space) throw new AppError('not_found', 'Space introuvable.')
+    if (!space) throw new AppError('not_found', mt().errors.spaceNotFound)
     const node = lib.db
       .prepare('SELECT * FROM space_nodes WHERE uuid = ? AND space_id = ?')
       .get(nodeUuid, space.id) as
       { id: number; type: string; asset_rel: string | null; style: string } | undefined
     if (!node || node.type !== 'image' || !node.asset_rel) {
-      throw new AppError('not_found', 'Image introuvable dans ce space.')
+      throw new AppError('not_found', mt().errors.spaceImageNotFound)
     }
     const r = await ingest({ type: 'file', path: lib.paths.abs(node.asset_rel) }, {}, ingestDeps())
     const item = lib.repos.items.getByUuid(r.itemUuid)
-    if (!item) throw new AppError('not_found', 'Élément introuvable après l’ajout.')
+    if (!item) throw new AppError('not_found', mt().errors.itemNotFoundAfterAdd)
     const old = JSON.parse(node.style) as Record<string, unknown>
     const style = ItemStyle.parse({
       fit: old.fit ?? 'cover',

@@ -4,6 +4,7 @@
  * Les chemins des binaires arrivent par `__configure` (jamais via le `PATH`).
  */
 import sharp from 'sharp'
+import { isLang, setLang } from '../../shared/i18n/lang'
 import type { MediaTools } from './media/exec'
 import { runMediaOp } from './media/ops'
 import { serve } from './runtime'
@@ -24,7 +25,9 @@ function pickTools(a: unknown): MediaTools {
 serve({
   concurrency: 4,
   configure(args) {
-    tools = pickTools((args as { tools?: unknown } | null)?.tools)
+    const a = args as { tools?: unknown; lang?: unknown } | null
+    tools = pickTools(a?.tools)
+    if (isLang(a?.lang)) setLang(a.lang)
   },
   handle: (op, args, ctx) =>
     runMediaOp(op, args, { tools, signal: ctx.signal, progress: ctx.progress }),

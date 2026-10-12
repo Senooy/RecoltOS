@@ -1,7 +1,8 @@
 /**
  * Application des résultats en UNE transaction, conditionnée à `deleted_at IS NULL` :
  * description, OCR (si non vide, ou si `force`), titre IA (`ai_title` toujours ; `title` selon la
- * politique), tags `source='ai'` (les tags `user` / `import` ne sont jamais touchés), `ai_lang='fr'`.
+ * politique), tags `source='ai'` (les tags `user` / `import` ne sont jamais touchés), `ai_lang` = langue de sortie
+ * demandée (celle de l'interface, `fr` ou `en`).
  * La FTS suit par les triggers de 0001 (`items` : title, ocr_text, ai_description, ai_tags ;
  * `item_tags`). Règles du titre :
  * - `title_source = 'user'` : JAMAIS écrasé ;
@@ -10,6 +11,7 @@
  * - vide, `'source'` (titre de page) ou `'ai'` : remplacé si `autoName`.
  */
 import { AI_FIELDS, type AiAnalysis, type AiCallMeta, type AiField } from '../../shared/ai-types'
+import { getLang } from '../../shared/i18n/lang'
 import type { ItemRow } from '../db/repos/items'
 import type { LibraryContext } from '../library/library-context'
 import { filterTags } from './tags'
@@ -55,7 +57,7 @@ export function applyAnalysis(
       aiState: 'done',
       aiProvider: meta.provider,
       aiModel: meta.model ?? null,
-      aiLang: 'fr',
+      aiLang: getLang(),
       aiUpdatedAt: o.now,
       updatedAt: o.now,
     }

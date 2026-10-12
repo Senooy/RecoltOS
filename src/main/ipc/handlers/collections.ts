@@ -7,10 +7,11 @@ import { collectionNode, collectionTree } from '../../dto/collection-node'
 import { emitCollectionsChanged, emitItemsChanged } from '../../events'
 import { requireLibrary, type LibraryContext } from '../../library/library-context'
 import type { DomainHandlers } from '../router'
+import { mt } from '../../i18n'
 
 function colId(lib: LibraryContext, uuid: string): number {
   const id = lib.repos.collections.idByUuid(uuid)
-  if (id === undefined) throw new AppError('not_found', 'Collection introuvable.')
+  if (id === undefined) throw new AppError('not_found', mt().errors.collectionNotFound)
   return id
 }
 
@@ -21,7 +22,7 @@ function itemIds(lib: LibraryContext, uuids: readonly string[]): number[] {
 
 function node(lib: LibraryContext, uuid: string) {
   const n = collectionNode(lib, lib.db, uuid)
-  if (!n) throw new AppError('not_found', 'Collection introuvable.')
+  if (!n) throw new AppError('not_found', mt().errors.collectionNotFound)
   return n
 }
 

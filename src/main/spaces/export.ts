@@ -15,6 +15,7 @@ import type { HandlerContext } from '../ipc/router'
 import { requireLibrary } from '../library/library-context'
 import { getSpace } from './repo'
 import { renderSpacePng } from './stage'
+import { mt } from '../i18n'
 
 type ExportInput = z.output<(typeof spacesContract)['spaces.exportPng']['input']>
 
@@ -33,14 +34,14 @@ export async function exportSpacePng(
   input: ExportInput,
   ctx: HandlerContext,
 ): Promise<{ path: string } | { cancelled: true }> {
-  if (controller) throw new AppError('busy', 'Un export est déjà en cours.')
+  if (controller) throw new AppError('busy', mt().errors.exportBusy)
   const lib = requireLibrary()
   const doc = getSpace(lib, input.uuid)
   const win = ctx.sender ? BrowserWindow.fromWebContents(ctx.sender) : null
   const options = {
-    title: 'Exporter en PNG',
+    title: mt().dialogs.exportPng,
     defaultPath: path.join(app.getPath('downloads'), `${safeName(input.name)}.png`),
-    filters: [{ name: 'Image PNG', extensions: ['png'] }],
+    filters: [{ name: mt().dialogs.pngImage, extensions: ['png'] }],
   }
   const r = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options)
   if (r.canceled || !r.filePath) return { cancelled: true }

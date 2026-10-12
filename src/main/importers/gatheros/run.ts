@@ -35,6 +35,7 @@ import {
 import { readGatheros } from './read'
 import Database from 'better-sqlite3'
 import { importGatherosBoards } from '../../spaces/migrate-gatheros'
+import { mt } from '../../i18n'
 
 export interface ImportDeps {
   lib: LibraryContext
@@ -62,7 +63,7 @@ export interface ImportInput {
 }
 
 function checkAbort(signal?: AbortSignal): void {
-  if (signal?.aborted) throw new AppError('cancelled', 'Import annulé.')
+  if (signal?.aborted) throw new AppError('cancelled', mt().errors.importCancelled)
 }
 
 function sizeOf(abs: string): number | null {

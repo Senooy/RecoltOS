@@ -8,10 +8,11 @@ import { AppError } from '../../../shared/errors'
 import { getLibraryManager } from '../../library/init'
 import type { LibraryManager } from '../../library/library-manager'
 import type { DomainHandlers } from '../router'
+import { mt } from '../../i18n'
 
 function manager(): LibraryManager {
   const m = getLibraryManager()
-  if (!m) throw new AppError('library_unavailable', 'Gestionnaire de bibliothèques indisponible.')
+  if (!m) throw new AppError('library_unavailable', mt().errors.librariesUnavailable)
   return m
 }
 
@@ -27,8 +28,8 @@ export const librariesHandlers: DomainHandlers<'libraries'> = {
 
   'libraries.openFolder': async (_input, ctx) => {
     const options: OpenDialogOptions = {
-      title: 'Ouvrir une bibliothèque',
-      buttonLabel: 'Ouvrir',
+      title: mt().dialogs.openLibrary,
+      buttonLabel: mt().dialogs.open,
       properties: ['openDirectory'],
     }
     const win = ctx.sender ? BrowserWindow.fromWebContents(ctx.sender) : null
@@ -49,7 +50,6 @@ export const librariesHandlers: DomainHandlers<'libraries'> = {
   'libraries.reveal': async ({ id }) => {
     const err = await shell.openPath(manager().rootOf(id))
     // Le texte de macOS est en anglais : il part dans `details`, jamais dans le toast.
-    if (err)
-      throw new AppError('io', 'Impossible d’ouvrir le dossier dans le Finder.', { message: err })
+    if (err) throw new AppError('io', mt().errors.revealFailed, { message: err })
   },
 }

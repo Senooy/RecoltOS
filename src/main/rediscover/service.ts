@@ -7,6 +7,7 @@ import type Database from 'better-sqlite3'
 import { AppError } from '../../shared/errors'
 import type { Repos } from '../db/repos'
 import { drawOrder, loadCandidates, recentCollections } from './select'
+import { mt } from '../i18n'
 
 export type RediscoverAction = 'keep' | 'trash' | 'collection' | 'skip'
 
@@ -49,7 +50,7 @@ export function createRediscover() {
       let cid: number | null = null
       if (input.collectionUuid) {
         const id = repos.collections.idByUuid(input.collectionUuid)
-        if (id === undefined) throw new AppError('not_found', 'Collection introuvable.')
+        if (id === undefined) throw new AppError('not_found', mt().errors.collectionNotFound)
         cid = id
       }
       const key = `${input.seed}:${cid ?? 'lib'}`
@@ -77,7 +78,7 @@ export function createRediscover() {
       const { db, repos } = deps
       const now = (deps.now ?? Date.now)()
       const item = repos.items.getByUuid(input.itemUuid)
-      if (!item) throw new AppError('not_found', 'Élément introuvable.')
+      if (!item) throw new AppError('not_found', mt().errors.itemNotFound)
       const entry: Done = {
         at: now,
         logId: 0,
@@ -94,9 +95,9 @@ export function createRediscover() {
         } else if (input.action === 'trash') {
           repos.items.trash([item.id], now)
         } else if (input.action === 'collection') {
-          if (!input.collectionUuid) throw new AppError('validation', 'Choisis une collection.')
+          if (!input.collectionUuid) throw new AppError('validation', mt().errors.chooseCollection)
           const id = repos.collections.idByUuid(input.collectionUuid)
-          if (id === undefined) throw new AppError('not_found', 'Collection introuvable.')
+          if (id === undefined) throw new AppError('not_found', mt().errors.collectionNotFound)
           collectionId = id
           const already = db
             .prepare('SELECT 1 FROM collection_items WHERE collection_id = ? AND item_id = ?')

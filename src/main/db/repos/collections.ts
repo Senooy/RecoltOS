@@ -9,6 +9,7 @@ import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
 import { newUuid } from '../../../shared/ids'
 import { buildSet, idList, repoBase, type ColumnSpec, type RepoOptions } from './util'
+import { mt } from '../../i18n'
 
 export interface CollectionRow {
   id: number
@@ -80,7 +81,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
 
   const requireById = (id: number): CollectionRow => {
     const row = getById(id)
-    if (!row) throw new AppError('not_found', 'Collection introuvable.')
+    if (!row) throw new AppError('not_found', mt().errors.collectionNotFound)
     return row
   }
 
@@ -111,7 +112,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
   const assertNoCycle = (id: number, newParentId: number | null): void => {
     if (newParentId === null) return
     if (newParentId === id) {
-      throw new AppError('collection_cycle', 'Une collection ne peut pas se contenir elle-même.')
+      throw new AppError('collection_cycle', mt().errors.collectionSelf)
     }
     const hit = q(
       `WITH RECURSIVE a(id) AS (
@@ -121,17 +122,14 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
        SELECT 1 FROM a WHERE id = ?`,
     ).get(newParentId, id)
     if (hit) {
-      throw new AppError(
-        'collection_cycle',
-        'Impossible de déplacer une collection dans une de ses sous-collections.',
-      )
+      throw new AppError('collection_cycle', mt().errors.collectionIntoChild)
     }
   }
 
   /** Un nom de collection ne peut pas être vide (après rognage des espaces). */
   const assertName = (name: string): void => {
     if (name.trim() === '') {
-      throw new AppError('validation', 'Le nom de la collection ne peut pas être vide.')
+      throw new AppError('validation', mt().errors.collectionNameEmpty)
     }
   }
 
@@ -278,7 +276,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
           index = (siblings.at(-1)?.order_index ?? 0) + 1
         } else {
           const pos = siblings.findIndex((s) => s.id === beforeId)
-          if (pos < 0) throw new AppError('not_found', 'Collection de référence introuvable.')
+          if (pos < 0) throw new AppError('not_found', mt().errors.collectionRefNotFound)
           const next = siblings[pos]!.order_index
           const prev = pos > 0 ? siblings[pos - 1]!.order_index : next - 2
           index = (prev + next) / 2

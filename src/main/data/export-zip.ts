@@ -12,6 +12,7 @@ import type { ZipEntry } from '../../shared/worker-protocol'
 import { AppError } from '../../shared/errors'
 import { snapshotStamp, vacuumInto } from '../db/migrate'
 import type { LibraryContext } from '../library/library-context'
+import { mt } from '../i18n'
 
 export interface ExportOptions {
   includeDerived: boolean
@@ -51,7 +52,7 @@ function itemIdsFor(lib: Lib, collectionUuid: string | undefined): number[] | nu
   if (!collectionUuid) return null
   const col = lib.db.prepare('SELECT id FROM collections WHERE uuid = ?').get(collectionUuid) as
     { id: number } | undefined
-  if (!col) throw new AppError('not_found', 'Collection introuvable.')
+  if (!col) throw new AppError('not_found', mt().errors.collectionNotFound)
   return (
     lib.db
       .prepare(

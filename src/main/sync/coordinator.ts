@@ -28,6 +28,7 @@ import {
   type NormalizedPost,
   type PageParseResult,
 } from './parsers'
+import { mt } from '../i18n'
 
 export const INTERVAL_MIN: Readonly<Record<BridgePlatform, number>> = {
   x: 15,
@@ -778,7 +779,7 @@ export class SyncCoordinator {
     toPost: (r: SaveRequest) => NormalizedPost | null,
   ): IngestResult {
     const lib = this.d.lib()
-    if (!lib) throw new Error('Aucune bibliothèque ouverte.')
+    if (!lib) throw new Error(mt().errors.noLibrary)
     const post = toPost(req)
     if (!post) throw new Error('Publication illisible.')
     const now = this.d.now()
@@ -798,7 +799,7 @@ export class SyncCoordinator {
       )
       .get(post.platform, post.externalId) as
       { id: number; uuid: string; deleted_at: number | null } | undefined
-    if (!row) throw new Error('Publication écartée (supprimée auparavant).')
+    if (!row) throw new Error(mt().errors.postDiscarded)
     if (collectionUuid) {
       const cid = lib.repos.collections.idByUuid(collectionUuid)
       if (cid !== undefined) lib.repos.collections.addItems(cid, [row.id])

@@ -17,6 +17,7 @@ import { bundledExtensionDir, installedExtensionDir } from '../../bridge/paths'
 import { getBridgeRuntime, type BridgeRuntime } from '../../bridge/runtime'
 import type { BridgeClient as ServerClient } from '../../bridge/server'
 import type { DomainHandlers } from '../router'
+import { mt } from '../../i18n'
 
 export function clientDto(c: ServerClient, stale: boolean): BridgeClient {
   const state = (p: 'x' | 'instagram' | 'cosmos') => {
@@ -114,8 +115,7 @@ export const bridgeHandlers: DomainHandlers<'bridge'> = {
   },
 
   'bridge.reinstallHosts': async () => {
-    if (!getBridgeRuntime())
-      throw new AppError('bridge_unavailable', 'Le pont avec l’extension est arrêté.')
+    if (!getBridgeRuntime()) throw new AppError('bridge_unavailable', mt().errors.bridgeStopped)
     return { installed: await reinstallHosts() }
   },
 
@@ -127,7 +127,7 @@ export const bridgeHandlers: DomainHandlers<'bridge'> = {
 
   'bridge.revealExtensionFolder': ({ target }) => {
     const rt = getBridgeRuntime()
-    if (!rt) throw new AppError('bridge_unavailable', 'Le pont avec l’extension est arrêté.')
+    if (!rt) throw new AppError('bridge_unavailable', mt().errors.bridgeStopped)
     const xpi = target === 'firefox' ? signedXpi(rt) : null
     if (xpi) {
       shell.showItemInFolder(xpi)
@@ -135,7 +135,7 @@ export const bridgeHandlers: DomainHandlers<'bridge'> = {
     }
     const installed = path.join(installedExtensionDir(rt.userData), target)
     const dir = existsSync(installed) ? installed : bundledExtensionDir(target, rt)
-    if (!existsSync(dir)) throw new AppError('not_found', 'Extension introuvable.')
+    if (!existsSync(dir)) throw new AppError('not_found', mt().errors.extensionNotFound)
     shell.showItemInFolder(path.join(dir, 'manifest.json'))
   },
 }

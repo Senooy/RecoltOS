@@ -11,13 +11,14 @@ import type { ItemRow } from '../db/repos/items'
 import type { MediaRow } from '../db/repos/media'
 import { resolveMediaUrls } from '../protocol/urls'
 import { postView, remoteImageUrls, toItemCard, type DtoLib } from './item-card'
+import { mt } from '../i18n'
 
 const HEX = /^#[0-9a-f]{6}$/i
 
 export function toItemDetail(lib: DtoLib, db: Database.Database, uuid: string): ItemDetail {
   const row = cardRowsByUuid(db, [uuid])[0]
   const item = db.prepare('SELECT * FROM items WHERE uuid = ?').get(uuid) as ItemRow | undefined
-  if (!row || !item) throw new AppError('not_found', 'Élément introuvable.')
+  if (!row || !item) throw new AppError('not_found', mt().errors.itemNotFound)
   const card = toItemCard(lib, row)
   const media = db
     .prepare('SELECT * FROM item_media WHERE item_id = ? ORDER BY position')

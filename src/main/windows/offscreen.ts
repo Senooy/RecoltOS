@@ -15,6 +15,7 @@
  */
 import { BrowserWindow, session, type Session } from 'electron'
 import path from 'node:path'
+import { getLang } from '../../shared/i18n/lang'
 import { pathToFileURL } from 'node:url'
 import { AppError } from '../../shared/errors'
 
@@ -35,7 +36,7 @@ export type OffscreenRoute = 'tweet-card' | 'space-stage'
 
 /** URL de `renderer/offscreen.html?render=<route>` (serveur Vite en dev, `file://` en prod). */
 export function offscreenUrl(route: OffscreenRoute, params: Record<string, string> = {}): string {
-  const q = new URLSearchParams({ render: route, ...params }).toString()
+  const q = new URLSearchParams({ render: route, lang: getLang(), ...params }).toString()
   const dev = process.env.ELECTRON_RENDERER_URL
   if (dev) return `${dev.replace(/\/$/, '')}/offscreen.html?${q}`
   return `${pathToFileURL(path.join(__dirname, '../renderer/offscreen.html')).toString()}?${q}`

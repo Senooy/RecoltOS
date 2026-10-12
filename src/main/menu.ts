@@ -1,13 +1,16 @@
 /**
- * Menu natif FR construit depuis `src/shared/shortcuts.ts`. Chaque item porte
+ * Menu natif (français ou anglais, `src/main/i18n`) construit depuis `src/shared/shortcuts.ts`.
+ * Reconstruit quand la langue change (`initMenu` suit `onLangChange`). Chaque item porte
  * l'`id` de son raccourci (les scènes visuelles le déclenchent par `getMenuItemById`). Annuler,
  * Rétablir, Tout sélectionner et Zoom sont des items PERSONNALISÉS (pas de `role`) qui relaient
  * `evt:menu.command` : le renderer décide (champ texte → `system.edit`, sinon pile de l'app).
  * Zoom avant : `CmdOrCtrl+Plus` + item caché `CmdOrCtrl+=`. Couper/Copier/Coller gardent leur rôle.
  */
 import { Menu, app, type MenuItemConstructorOptions } from 'electron'
+import { getLang, onLangChange, type Lang } from '../shared/i18n/lang'
 import { SHORTCUTS, type MenuCommand } from '../shared/shortcuts'
 import type { ServiceContext } from './bootstrap/context'
+import { mt } from './i18n'
 
 const accelOf = (id: string): string | undefined => {
   const s = SHORTCUTS.find((x) => x.id === id)
@@ -26,7 +29,9 @@ export function buildMenuTemplate(
   send: (cmd: MenuCommand) => void,
   appName = 'RecoltOS',
   overrides: MenuOverrides = {},
+  lang: Lang = getLang(),
 ): MenuItemConstructorOptions[] {
+  const m = mt(lang).menu
   const cmd = (
     id: MenuCommand,
     label: string,
@@ -48,110 +53,116 @@ export function buildMenuTemplate(
     {
       label: appName,
       submenu: [
-        { role: 'about', label: `À propos de ${appName}` },
+        { role: 'about', label: m.about(appName) },
         { type: 'separator' },
-        cmd('settings', 'Réglages…'),
+        cmd('settings', m.settings),
         { type: 'separator' },
-        { role: 'services', label: 'Services' },
+        { role: 'services', label: m.services },
         { type: 'separator' },
-        { role: 'hide', label: `Masquer ${appName}` },
-        { role: 'hideOthers', label: 'Masquer les autres' },
-        { role: 'unhide', label: 'Tout afficher' },
+        { role: 'hide', label: m.hide(appName) },
+        { role: 'hideOthers', label: m.hideOthers },
+        { role: 'unhide', label: m.showAll },
         { type: 'separator' },
-        { role: 'quit', label: `Quitter ${appName}` },
+        { role: 'quit', label: m.quit(appName) },
       ],
     },
     {
-      label: 'Fichier',
+      label: m.file,
       submenu: [
-        cmd('newCollection', 'Nouvelle collection'),
-        cmd('newSpace', 'Nouveau space'),
+        cmd('newCollection', m.newCollection),
+        cmd('newSpace', m.newSpace),
         { type: 'separator' },
-        cmd('importFiles', 'Importer des fichiers…'),
-        cmd('capture', 'Capturer l’écran'),
-        cmd('importFolder', 'Importer un dossier…'),
-        cmd('importGatheros', 'Importer depuis GatherOS…'),
+        cmd('importFiles', m.importFiles),
+        cmd('capture', m.capture),
+        cmd('importFolder', m.importFolder),
+        cmd('importGatheros', m.importGatheros),
         { type: 'separator' },
-        cmd('exportZip', 'Exporter la bibliothèque…'),
-        cmd('snapshot', 'Créer un instantané de la bibliothèque'),
+        cmd('exportZip', m.exportLibrary),
+        cmd('snapshot', m.snapshot),
         { type: 'separator' },
-        { role: 'close', label: 'Fermer la fenêtre' },
+        { role: 'close', label: m.closeWindow },
       ],
     },
     {
-      label: 'Édition',
+      label: m.edit,
       submenu: [
-        cmd('undo', 'Annuler'),
-        cmd('redo', 'Rétablir'),
+        cmd('undo', m.undo),
+        cmd('redo', m.redo),
         { type: 'separator' },
-        { role: 'cut', label: 'Couper' },
-        { role: 'copy', label: 'Copier' },
-        { role: 'paste', label: 'Coller' },
-        cmd('selectAll', 'Tout sélectionner'),
+        { role: 'cut', label: m.cut },
+        { role: 'copy', label: m.copy },
+        { role: 'paste', label: m.paste },
+        cmd('selectAll', m.selectAll),
       ],
     },
     {
-      label: 'Présentation',
+      label: m.view,
       submenu: [
-        cmd('palette', 'Palette de commandes'),
-        cmd('quickLook', 'Aperçu rapide'),
-        cmd('rediscover', 'Redécouvrir'),
-        cmd('toggleDetails', 'Afficher/Masquer le panneau Détails'),
+        cmd('palette', m.palette),
+        cmd('quickLook', m.quickLook),
+        cmd('rediscover', m.rediscover),
+        cmd('toggleDetails', m.toggleDetails),
         { type: 'separator' },
-        cmd('goLibrary', 'Bibliothèque'),
-        cmd('goCollections', 'Collections'),
-        cmd('goSpaces', 'Spaces'),
-        cmd('search', 'Recherche'),
+        cmd('goLibrary', m.library),
+        cmd('goCollections', m.collections),
+        cmd('goSpaces', m.spaces),
+        cmd('search', m.search),
         { type: 'separator' },
-        cmd('toggleTheme', 'Basculer le thème'),
+        cmd('toggleTheme', m.toggleTheme),
         { type: 'separator' },
-        cmd('zoomIn', 'Zoom avant'),
+        cmd('zoomIn', m.zoomIn),
         // Item caché : `⌘=` (sans Maj) zoome aussi.
         {
           id: 'zoomInAlt',
-          label: 'Zoom avant',
+          label: m.zoomIn,
           accelerator: 'CmdOrCtrl+=',
           visible: false,
           acceleratorWorksWhenHidden: true,
           click: () => send('zoomIn'),
         },
-        cmd('zoomOut', 'Zoom arrière'),
-        cmd('zoomReset', 'Taille réelle'),
+        cmd('zoomOut', m.zoomOut),
+        cmd('zoomReset', m.zoomReset),
         { type: 'separator' },
-        { role: 'togglefullscreen', label: 'Plein écran' },
+        { role: 'togglefullscreen', label: m.fullscreen },
         ...(app.isPackaged
           ? []
           : [
               {
                 role: 'toggleDevTools',
-                label: 'Outils de développement',
+                label: m.devTools,
               } as MenuItemConstructorOptions,
             ]),
       ],
     },
     {
-      label: 'Fenêtre',
+      label: m.window,
       role: 'windowMenu',
       submenu: [
-        { role: 'minimize', label: 'Réduire' },
-        { role: 'zoom', label: 'Agrandir' },
+        { role: 'minimize', label: m.minimize },
+        { role: 'zoom', label: m.zoom },
         { type: 'separator' },
-        { role: 'front', label: 'Tout ramener au premier plan' },
+        { role: 'front', label: m.front },
       ],
     },
-    { label: 'Aide', role: 'help', submenu: [] },
+    { label: m.help, role: 'help', submenu: [] },
   ]
 }
 
 let menuCtx: ServiceContext | null = null
 let menuOverrides: MenuOverrides = {}
 
-export function initMenu(ctx: ServiceContext): void {
+export function initMenu(ctx: ServiceContext): () => void {
   menuCtx = ctx
   rebuildMenu()
+  // Langue changée (réglage ou langue du système) : menu reconstruit aussitôt.
+  const offLang = onLangChange(() => rebuildMenu())
+  return () => {
+    offLang()
+    menuCtx = null
+  }
 }
 
-/** Reconstruit le menu natif (raccourci de capture modifié). */
+/** Reconstruit le menu natif (raccourci de capture modifié, langue changée). */
 export function rebuildMenu(overrides?: MenuOverrides): void {
   if (overrides) menuOverrides = { ...menuOverrides, ...overrides }
   const ctx = menuCtx

@@ -5,6 +5,13 @@
  */
 import type { AiCliId, AiField, AiInput } from '../../shared/ai-types'
 import { AI_FIELDS } from '../../shared/ai-types'
+import { getLang, type Lang } from '../../shared/i18n/lang'
+
+/**
+ * Langue de SORTIE demandée au modèle (titre, description, tags) : celle de l'interface. Les
+ * consignes restent en français ; seule la langue demandée change (« en anglais »).
+ */
+const OUTPUT_LANG: Record<Lang, string> = { fr: 'français', en: 'anglais' }
 
 export const SYSTEM_FR = `Tu es le moteur d'indexation de RecoltOS, une bibliothèque personnelle d'inspirations visuelles (design, illustration, photo, interfaces, affiches, posts sauvegardés).
 Ta seule mission : décrire précisément un élément pour que son propriétaire puisse le retrouver plus tard.
@@ -14,6 +21,13 @@ Règles :
 3. Tu n'utilises aucun outil, sauf lire les fichiers image dont le chemin t'est donné. Tu n'écris rien, tu n'exécutes rien, tu n'accèdes à rien d'autre.
 4. Langue de sortie : français, sauf pour le champ « ocr » (langue d'origine du texte).
 5. Reste factuel : n'identifie pas de personnes réelles d'après leur visage et n'invente aucune information non visible.`
+
+/** Prompt système pour la langue de sortie `lang` (identique à `SYSTEM_FR` en français). */
+export function systemPrompt(lang: Lang = getLang()): string {
+  return lang === 'fr'
+    ? SYSTEM_FR
+    : SYSTEM_FR.replace('Langue de sortie : français,', `Langue de sortie : ${OUTPUT_LANG[lang]},`)
+}
 
 export const CAPTION_MAX = 600
 export const TWEET_MAX = 1200
@@ -128,13 +142,15 @@ export function contextBlock(input: AiInput): string {
   return out.join('\n')
 }
 
-const CONSIGNES: Record<AiField, (vocabulary: string[]) => string> = {
-  title: () =>
-    "- \"title\" : titre court en français, 3 à 8 mots, sans guillemets ni point final. Spécifique et évocateur : nomme l'œuvre, l'artiste, la marque, l'outil ou le sujet précis seulement si tu es certain de l'identifier (nom lisible dans le visuel ou le contexte) ; sinon décris le sujet principal. Interdits : « Image », « Capture d'écran » seul, « Sans titre ».",
-  description: () =>
-    '- "description" : 1 à 3 phrases en français, 280 caractères maximum : sujet, composition, style visuel, médium, ambiance, couleurs dominantes. Factuel, sans formule d\'introduction (pas de « Cette image montre »).',
-  tags: (v) =>
-    `- "tags" : 3 à 6 mots-clés en français, en minuscules, sans « # », 1 à 3 mots reliés par des tirets, du plus général au plus précis. Choisis en priorité dans ce vocabulaire existant : ${v.join(', ')}. Tu peux proposer au plus 2 nouveaux tags si aucun ne convient. Pas de tags génériques (image, photo, visuel, contenu, post, tweet, vidéo) ni de noms de plateforme.`,
+const CONSIGNES: Record<AiField, (vocabulary: string[], lang: Lang) => string> = {
+  title: (_v, lang) =>
+    `- "title" : titre court en ${OUTPUT_LANG[lang]},` +
+    " 3 à 8 mots, sans guillemets ni point final. Spécifique et évocateur : nomme l'œuvre, l'artiste, la marque, l'outil ou le sujet précis seulement si tu es certain de l'identifier (nom lisible dans le visuel ou le contexte) ; sinon décris le sujet principal. Interdits : « Image », « Capture d'écran » seul, « Sans titre ».",
+  description: (_v, lang) =>
+    `- "description" : 1 à 3 phrases en ${OUTPUT_LANG[lang]}, 280 caractères maximum` +
+    " : sujet, composition, style visuel, médium, ambiance, couleurs dominantes. Factuel, sans formule d'introduction (pas de « Cette image montre »).",
+  tags: (v, lang) =>
+    `- "tags" : 3 à 6 mots-clés en ${OUTPUT_LANG[lang]}, en minuscules, sans « # », 1 à 3 mots reliés par des tirets, du plus général au plus précis. Choisis en priorité dans ce vocabulaire existant : ${v.join(', ')}. Tu peux proposer au plus 2 nouveaux tags si aucun ne convient. Pas de tags génériques (image, photo, visuel, contenu, post, tweet, vidéo) ni de noms de plateforme.`,
   ocr: () =>
     '- "ocr" : texte lisible dans le visuel, recopié tel quel dans sa langue d\'origine, lignes séparées par « | », 600 caractères maximum. Chaîne vide "" s\'il n\'y a aucun texte lisible. N\'invente rien.',
 }
@@ -143,6 +159,8 @@ export interface PromptOptions {
   fields?: readonly AiField[]
   /** 2ᵉ essai après une sortie invalide. */
   retry?: boolean
+  /** Langue de sortie (défaut : langue de l'interface). */
+  lang?: Lang
 }
 
 export function buildAnalyzePrompt(
@@ -153,9 +171,10 @@ export function buildAnalyzePrompt(
   const fields = AI_FIELDS.filter((f) => (opts.fields ?? AI_FIELDS).includes(f))
   const blocks = [introBlock(input, provider), contextBlock(input)]
   blocks.push(
-    ["Produis l'objet JSON suivant :", ...fields.map((f) => CONSIGNES[f](input.vocabulary))].join(
-      '\n',
-    ),
+    [
+      "Produis l'objet JSON suivant :",
+      ...fields.map((f) => CONSIGNES[f](input.vocabulary, opts.lang ?? getLang())),
+    ].join('\n'),
   )
   if (opts.retry) blocks.push(RETRY_SUFFIX)
   return blocks.filter((b) => b !== '').join('\n\n')

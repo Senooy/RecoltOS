@@ -13,6 +13,7 @@ import type Database from 'better-sqlite3'
 import fs from 'node:fs'
 import path from 'node:path'
 import { AppError } from '../../shared/errors'
+import { mt } from '../i18n'
 
 export interface Migration {
   version: number
@@ -104,10 +105,7 @@ export function migrate(db: Database.Database, opts: MigrateOptions = {}): Migra
   const latest = migrations.length
   const from = db.pragma('user_version', { simple: true }) as number
   if (from > latest) {
-    throw new AppError(
-      'library_unavailable',
-      `Cette bibliothèque vient d'une version plus récente de RecoltOS (schéma v${from}).`,
-    )
+    throw new AppError('library_unavailable', mt().errors.libraryTooNew(from))
   }
   const pending = migrations.filter((m) => m.version > from)
   if (pending.length === 0) return { from, to: from, applied: [], snapshot: null }
@@ -159,7 +157,7 @@ function applyWithForeignKeysOff(db: Database.Database, mig: Migration): void {
       if (broken.length > 0) {
         throw new AppError(
           'library_unavailable',
-          `Migration v${mig.version} annulée : ${broken.length} ligne(s) avec clé étrangère invalide.`,
+          mt().errors.migrationAborted(mig.version, broken.length),
         )
       }
       db.pragma(`user_version = ${mig.version}`)

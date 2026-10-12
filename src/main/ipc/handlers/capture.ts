@@ -9,6 +9,7 @@ import { getScreenAccess, openPermissionPane, relaunchApp } from '../../capture/
 import { getSignatureKind } from '../../capture/signature'
 import { requirePrefsStore } from '../../prefs/store'
 import type { DomainHandlers } from '../router'
+import { mt } from '../../i18n'
 
 export const captureHandlers: DomainHandlers<'capture'> = {
   'capture.run': ({ mode, collectionUuid }) =>
@@ -41,8 +42,8 @@ export const captureHandlers: DomainHandlers<'capture'> = {
   },
   'capture.pickDropFolder': async (_input, ctx) => {
     const options: OpenDialogOptions = {
-      title: 'Dossier de dépôt des captures',
-      buttonLabel: 'Choisir',
+      title: mt().dialogs.dropFolder,
+      buttonLabel: mt().dialogs.choose,
       properties: ['openDirectory', 'createDirectory'],
     }
     const win = ctx.sender ? BrowserWindow.fromWebContents(ctx.sender) : null

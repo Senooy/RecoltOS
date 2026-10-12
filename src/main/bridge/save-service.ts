@@ -19,6 +19,7 @@ import { emitCollectionsChanged } from '../events'
 import { ingestExtension, type IngestDeps, type IngestResult } from '../ingest/ingest'
 import { rel } from '../library/paths'
 import type { LibraryContext } from '../library/library-context'
+import { mt } from '../i18n'
 
 export type PostSaver = (req: SaveRequest, collectionUuid: string | null) => Promise<IngestResult>
 
@@ -67,7 +68,7 @@ export class SaveService {
     try {
       deps = this.deps.ingestDeps()
     } catch {
-      return { status: 'error', error: 'Aucune bibliothèque ouverte.' }
+      return { status: 'error', error: mt().errors.noLibrary }
     }
     const collectionUuid =
       req.collectionId && deps.lib.repos.collections.getByUuid(req.collectionId)
@@ -76,13 +77,13 @@ export class SaveService {
     try {
       let res: IngestResult
       if (req.kind === 'post') {
-        if (!this.postSaver) throw new AppError('unsupported', 'Synchronisation indisponible.')
+        if (!this.postSaver) throw new AppError('unsupported', mt().errors.syncUnavailable)
         res = await this.postSaver(req, collectionUuid)
       } else {
         let uploadPath: string | undefined
         if (req.upload) {
           const up = this.uploads.get(req.upload.id)
-          if (!up?.done || up.failed) throw new AppError('validation', 'Envoi incomplet.')
+          if (!up?.done || up.failed) throw new AppError('validation', mt().errors.uploadIncomplete)
           this.uploads.delete(req.upload.id)
           uploadPath = up.abs
         }

@@ -23,8 +23,9 @@ import {
 } from '../../../shared/ai-types'
 import type { AiPrefs } from '../../../shared/prefs'
 import type { ResolvedCli } from '../cli/resolve'
+import { mt } from '../../i18n'
 import { promptSha256, sentFilesOf } from '../privacy'
-import { SYSTEM_FR, buildAnalyzePrompt, buildImagePromptPrompt, sentTextChars } from '../prompts'
+import { buildAnalyzePrompt, buildImagePromptPrompt, sentTextChars, systemPrompt } from '../prompts'
 import {
   IMAGE_PROMPT_SCHEMA,
   ImagePromptZ,
@@ -101,7 +102,8 @@ export abstract class CliProviderBase implements AiProvider {
   ): Promise<AiResult<T>> {
     const started = Date.now()
     return this.withJobDir(o, async (jobDir) => {
-      const out = await this.exec({ task, system: SYSTEM_FR, prompt, schema, input, jobDir }, o)
+      const system = systemPrompt()
+      const out = await this.exec({ task, system, prompt, schema, input, jobDir }, o)
       const parsed = zod.safeParse(
         typeof out.json === 'string' ? decodeTolerant(out.json) : out.json,
       )
@@ -110,8 +112,8 @@ export abstract class CliProviderBase implements AiProvider {
         provider: this.id,
         durationMs: Date.now() - started,
         sentFiles: sentFilesOf(input),
-        sentTextChars: sentTextChars(SYSTEM_FR, prompt),
-        promptSha256: promptSha256(SYSTEM_FR, prompt),
+        sentTextChars: sentTextChars(system, prompt),
+        promptSha256: promptSha256(system, prompt),
         ...(out.model ? { model: out.model } : {}),
         ...(out.costUsd !== undefined ? { costUsd: out.costUsd } : {}),
         ...(out.inputTokens !== undefined ? { inputTokens: out.inputTokens } : {}),
@@ -163,13 +165,13 @@ export abstract class CliProviderBase implements AiProvider {
         ok: status.installed && status.loggedIn !== false,
         status,
         ...(!status.installed
-          ? { error: 'CLI introuvable' }
+          ? { error: mt().ai.cliNotFound }
           : status.loggedIn === false
-            ? { error: 'Non connecté' }
+            ? { error: mt().ai.notLoggedIn }
             : {}),
       }
     }
-    if (!this.rt.makeTestInput) return { ok: false, status, error: 'test indisponible' }
+    if (!this.rt.makeTestInput) return { ok: false, status, error: mt().ai.testUnavailable }
     const ac = new AbortController()
     try {
       const r = await this.withJobDir({ signal: ac.signal, timeoutMs: 120_000 }, async (jobDir) => {

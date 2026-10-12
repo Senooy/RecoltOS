@@ -5,6 +5,7 @@
  * ne peuvent pas être détournés. Zod seul : importable par main, preload et renderer.
  */
 import { z } from 'zod'
+import { pick } from './i18n/lang'
 import './zod-locale'
 
 const COMMAND_MODIFIERS = ['CommandOrControl', 'CmdOrCtrl', 'Command', 'Cmd', 'Super', 'Meta']
@@ -39,8 +40,11 @@ export const Accelerator = z
   .string()
   .max(64)
   .refine((s) => parseAccel(s) !== null, {
-    message:
-      'raccourci attendu : au moins un modificateur puis une touche, ex. CommandOrControl+Shift+S',
+    error: () =>
+      pick({
+        fr: 'raccourci attendu : au moins un modificateur puis une touche, ex. CommandOrControl+Shift+S',
+        en: 'expected shortcut: at least one modifier then a key, e.g. CommandOrControl+Shift+S',
+      }),
   })
   .refine(
     (s) => {
@@ -49,6 +53,12 @@ export const Accelerator = z
       const withCommand = parsed.mods.some((m) => COMMAND_MODIFIERS.includes(m))
       return !(withCommand && RESERVED_WITH_COMMAND.has(parsed.key))
     },
-    { message: 'raccourci réservé par le système ou l’application' },
+    {
+      error: () =>
+        pick({
+          fr: 'raccourci réservé par le système ou l’application',
+          en: 'shortcut reserved by the system or the app',
+        }),
+    },
   )
 export type Accelerator = z.output<typeof Accelerator>

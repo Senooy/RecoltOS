@@ -9,6 +9,7 @@ import { basename, join, sep } from 'node:path'
 import type { IngestProgress, IngestReport } from '../../shared/dto/items'
 import { AppError } from '../../shared/errors'
 import { ingest, type IngestDeps } from './ingest'
+import { mt } from '../i18n'
 
 export const MAX_FILES = 20_000
 export const MAX_DEPTH = 12
@@ -87,7 +88,7 @@ export async function ingestPaths(
       if (r.status === 'created') report.added.push({ itemUuid: r.itemUuid, path })
       else report.duplicates.push({ itemUuid: r.itemUuid, path })
     } catch (err) {
-      const e = err instanceof AppError ? err : new AppError('io', 'Import impossible.')
+      const e = err instanceof AppError ? err : new AppError('io', mt().errors.importFailed)
       report.failed.push({ path, code: e.code, message: e.message })
       deps.log.warn(`[ingest] ${basename(path)} : ${e.code}`, err)
     }

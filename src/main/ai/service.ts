@@ -44,14 +44,18 @@ import { ProviderGate } from './gate'
 import { buildAiInput } from './input'
 import { purgeOldJobDirs } from './media'
 import { promptSha256, previewOf, sentFilesOf, type PayloadPreview } from './privacy'
-import { SYSTEM_FR, buildAnalyzePrompt, buildImagePromptPrompt, sentTextChars } from './prompts'
+import { buildAnalyzePrompt, buildImagePromptPrompt, sentTextChars, systemPrompt } from './prompts'
 import { createProviders, type ProviderRegistry } from './providers'
 import { syntheticInput } from './synthetic'
 import { buildVocabulary } from './tags'
+import { getLang } from '../../shared/i18n/lang'
+import { mt } from '../i18n'
 
 export const AI_JOB_TYPES = ['ai.enrich', 'ai.prompt'] as const
-export const BARE_MESSAGE =
-  'claude -p est peut-être passé en mode « bare » après une mise à jour : l’abonnement n’est plus lu. La file est en pause.'
+/** Message affiché quand `claude -p` ne lit plus l'abonnement (mode « bare »), langue active. */
+export function bareMessage(): string {
+  return mt().ai.bare
+}
 const WAIT_MANUAL_MS = 10 * 60_000
 const SNAPSHOT_THROTTLE_MS = 250
 
@@ -139,7 +143,7 @@ export class AiService {
 
   private requireServices(): JobServices {
     const s = this.deps.services()
-    if (!s) throw new AppError('library_unavailable', 'Aucune bibliothèque ouverte.')
+    if (!s) throw new AppError('library_unavailable', mt().errors.noLibrary)
     return s
   }
 
@@ -159,19 +163,14 @@ export class AiService {
 
   private assertEnabled(): Prefs['ai'] {
     const ai = this.deps.prefs().ai
-    if (ai.provider === 'off')
-      throw new AppError('ai_disabled', 'Choisis d’abord un fournisseur dans Réglages › IA.')
+    if (ai.provider === 'off') throw new AppError('ai_disabled', mt().errors.aiNoProvider)
     if (!ai.consentVersion || ai.consentVersion < AI_CONSENT_VERSION)
-      throw new AppError(
-        'ai_consent_required',
-        'Accepte d’abord les conditions d’envoi (Réglages › IA).',
-      )
+      throw new AppError('ai_consent_required', mt().errors.aiConsent)
     return ai
   }
 
   consent(version: number): void {
-    if (version < AI_CONSENT_VERSION)
-      throw new AppError('validation', 'Version de consentement périmée.')
+    if (version < AI_CONSENT_VERSION) throw new AppError('validation', mt().errors.aiConsentStale)
     this.deps.setPrefs({ ai: { consentVersion: version, consentAt: this.now() } })
     this.deps.queue()?.kick()
     this.scheduleSnapshot()
@@ -218,9 +217,9 @@ export class AiService {
         ok: status.installed && status.loggedIn !== false,
         status,
         ...(!status.installed
-          ? { error: 'CLI introuvable' }
+          ? { error: mt().ai.cliNotFound }
           : status.loggedIn === false
-            ? { error: 'Non connecté' }
+            ? { error: mt().ai.notLoggedIn }
             : {}),
       }
     }
@@ -280,8 +279,8 @@ export class AiService {
   private descriptor(input: AiInput, prompt: string) {
     return {
       sentFiles: sentFilesOf(input),
-      sentTextChars: sentTextChars(SYSTEM_FR, prompt),
-      promptSha256: promptSha256(SYSTEM_FR, prompt),
+      sentTextChars: sentTextChars(systemPrompt(), prompt),
+      promptSha256: promptSha256(systemPrompt(), prompt),
     }
   }
 
@@ -321,7 +320,8 @@ export class AiService {
       task === 'analyze' &&
       !payload.force &&
       !payload.fields &&
-      item.ai_lang === 'fr' &&
+      // Déjà décrit dans la langue de l'interface : rien à refaire.
+      item.ai_lang === getLang() &&
       (item.ai_description ?? '') !== ''
     ) {
       if (item.ai_state !== 'done') this.setState(lib, item.id, 'done')
@@ -498,7 +498,7 @@ export class AiService {
     const error = { code: e.code, message: e.message }
     switch (e.code) {
       case 'CANCELLED':
-        throw new AppError('cancelled', 'annulé')
+        throw new AppError('cancelled', mt().errors.cancelled)
       case 'RATE_LIMITED': {
         const n = (this.strikes[provider] ?? 0) + 1
         this.strikes[provider] = n
@@ -513,11 +513,11 @@ export class AiService {
         const bare = provider === 'claude' && changed !== undefined && now - changed < 86_400_000
         this.gate.pause(provider, { reason: 'NOT_AUTHENTICATED' })
         this.setProvider(lib, job.id, null)
-        ctx.log.warn(`[ai] ${provider} : ${bare ? BARE_MESSAGE : 'non connecté'}`)
+        ctx.log.warn(`[ai] ${provider} : ${bare ? bareMessage() : 'non connecté'}`)
         return {
           status: 'defer',
           retryAt: now,
-          error: bare ? { code: e.code, message: BARE_MESSAGE } : error,
+          error: bare ? { code: e.code, message: bareMessage() } : error,
         }
       }
       case 'NOT_INSTALLED':
@@ -579,8 +579,11 @@ export class AiService {
     const where: string[] = [ELIGIBLE]
     const params: unknown[] = []
     if (f.missingDescription) where.push("coalesce(i.ai_description, '') = ''")
-    if (f.regenerateFr)
-      where.push("coalesce(i.ai_description, '') <> '' AND coalesce(i.ai_lang, '') <> 'fr'")
+    // « Régénérer en français » : en anglais, régénère ce qui n'est pas en anglais.
+    if (f.regenerateFr) {
+      where.push("coalesce(i.ai_description, '') <> '' AND coalesce(i.ai_lang, '') <> ?")
+      params.push(getLang())
+    }
     if (f.importRunId !== undefined) where.push("i.origin = 'gatheros'")
     if (f.collectionUuid) {
       where.push(
@@ -694,11 +697,11 @@ export class AiService {
             : {}
     const ids = this.idsFor(s.lib, filter)
     const labels: Record<Plan['scope'], string> = {
-      unanalyzed: 'Analyser les éléments non analysés',
-      import: 'Enrichir la bibliothèque importée',
-      'regenerate-fr': 'Régénérer en français',
-      all: 'Tout analyser',
-      collection: 'Analyser la collection',
+      unanalyzed: mt().ai.batch.unanalyzed,
+      import: mt().ai.batch.import,
+      'regenerate-fr': mt().ai.batch.regenerateFr,
+      all: mt().ai.batch.all,
+      collection: mt().ai.batch.collection,
     }
     const plan: Plan = {
       id: randomUUID(),
@@ -725,7 +728,7 @@ export class AiService {
   batchStart(planId: string): { batchUuid: string } {
     this.assertEnabled()
     const plan = this.plans.get(planId)
-    if (!plan) throw new AppError('not_found', 'Plan de lot introuvable ou expiré.')
+    if (!plan) throw new AppError('not_found', mt().errors.aiPlanNotFound)
     this.plans.delete(planId)
     const s = this.requireServices()
     const uuid = randomUUID()
@@ -850,9 +853,9 @@ export class AiService {
           )
           .get() as { uuid: string } | undefined
       )?.uuid
-    if (!pick) throw new AppError('not_found', 'Aucun élément à prévisualiser.')
+    if (!pick) throw new AppError('not_found', mt().errors.aiNothingToPreview)
     const item = s.lib.repos.items.getByUuid(pick)
-    if (!item || item.deleted_at !== null) throw new AppError('not_found', 'Élément introuvable.')
+    if (!item || item.deleted_at !== null) throw new AppError('not_found', mt().errors.itemNotFound)
     const pref = this.deps.prefs().ai.provider
     const provider: AiCliId = pref === 'off' ? 'claude' : pref
     const dir = join(this.providers.sandboxDir(provider), 'jobs', `preview-${randomUUID()}`)
@@ -867,7 +870,7 @@ export class AiService {
         task === 'imagePrompt'
           ? buildImagePromptPrompt(input, provider)
           : buildAnalyzePrompt(input, provider)
-      return { provider, itemUuid: item.uuid, ...(await previewOf(input, SYSTEM_FR, prompt)) }
+      return { provider, itemUuid: item.uuid, ...(await previewOf(input, systemPrompt(), prompt)) }
     } catch (err) {
       const e = toAiError(err)
       throw new AppError(e.code === 'FILE_MISSING' ? 'not_found' : 'internal', e.message)
@@ -992,7 +995,7 @@ export function getAiService(): AiService | null {
   return service
 }
 export function requireAiService(): AiService {
-  if (!service) throw new AppError('not_implemented', 'Service IA indisponible.')
+  if (!service) throw new AppError('not_implemented', mt().errors.aiUnavailable)
   return service
 }
 

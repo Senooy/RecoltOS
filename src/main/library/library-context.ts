@@ -8,6 +8,7 @@ import { AppError } from '../../shared/errors'
 import type { CloseHooks } from '../db/close'
 import type { Repos } from '../db/repos'
 import type { LibraryPaths } from './paths'
+import { mt } from '../i18n'
 
 export interface LibraryContext {
   id: string
@@ -47,7 +48,7 @@ export function getActiveLibrary(): LibraryContext | null {
 
 /** Bibliothèque active ou `AppError('library_unavailable')`. */
 export function requireLibrary(): LibraryContext {
-  if (!active) throw new AppError('library_unavailable', 'Aucune bibliothèque ouverte.')
+  if (!active) throw new AppError('library_unavailable', mt().errors.noLibrary)
   return active
 }
 

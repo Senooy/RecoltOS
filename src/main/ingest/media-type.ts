@@ -6,6 +6,7 @@
 import { open } from 'node:fs/promises'
 import { fileTypeFromBuffer } from 'file-type'
 import { AppError } from '../../shared/errors'
+import { mt } from '../i18n'
 
 export interface DetectedType {
   mime: string
@@ -77,6 +78,6 @@ export async function detectType(head: Uint8Array): Promise<DetectedType | null>
 
 export async function requireType(head: Uint8Array, name: string): Promise<DetectedType> {
   const t = await detectType(head)
-  if (!t) throw new AppError('unsupported', `Format non pris en charge : ${name}`)
+  if (!t) throw new AppError('unsupported', mt().errors.formatUnsupported(name))
   return t
 }

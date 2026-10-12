@@ -24,6 +24,7 @@ import type { ImportPreview } from '../../../shared/ipc/import'
 import { isGatherOSRunning } from '../../platform/process-check'
 import { STARTER_TAG } from './map'
 import { readGatheros } from './read'
+import { mt } from '../../i18n'
 
 const execFileP = promisify(execFile)
 
@@ -79,7 +80,7 @@ export function listGatherosLibraries(root: string): {
 export function pickLibrary(root: string, id?: string): GatherosLibrary {
   const { active, libraries } = listGatherosLibraries(root)
   const lib = libraries.find((l) => l.id === (id ?? active)) ?? (id ? undefined : libraries[0])
-  if (!lib) throw new AppError('not_found', 'Aucune bibliothèque GatherOS trouvée.')
+  if (!lib) throw new AppError('not_found', mt().errors.gatherosNotFound)
   return lib
 }
 
@@ -157,8 +158,7 @@ export function snapshotGatherosDb(
   try {
     db.pragma('wal_checkpoint(TRUNCATE)')
     const qc = db.pragma('quick_check', { simple: true })
-    if (qc !== 'ok')
-      throw new AppError('library_unavailable', 'La base GatherOS est abîmée (quick_check).')
+    if (qc !== 'ok') throw new AppError('library_unavailable', mt().errors.gatherosDamaged)
     const userVersion = Number(db.pragma('user_version', { simple: true }))
     db.pragma('journal_mode = DELETE')
     return { path: dst, userVersion }

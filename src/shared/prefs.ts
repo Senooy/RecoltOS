@@ -8,6 +8,7 @@
 import { z } from 'zod'
 import { Accelerator } from './accelerator'
 import { SortMode, Theme } from './enums'
+import { LANGUAGE_PREFS } from './i18n/lang'
 import { AbsPath } from './ipc/define'
 
 /** Identifiant de modèle passé en argv d'une CLI : pas de tiret initial ni d'espace. */
@@ -95,6 +96,11 @@ export const StoragePrefs = z.object({
   downloadRemoteMedia: z.boolean().default(true),
 })
 
+export const UiPrefs = z.object({
+  /** Langue de l'interface : `system` suit la première langue préférée du Mac (français ou anglais). */
+  language: z.enum(LANGUAGE_PREFS).default('system'),
+})
+
 export const PrefsSchema = z.object({
   version: z.literal(1).default(1),
   theme: Theme.default('system'),
@@ -116,6 +122,7 @@ export const PrefsSchema = z.object({
   ai: AiPrefs.prefault({}),
   tools: ToolsPrefs.prefault({}),
   storage: StoragePrefs.prefault({}),
+  ui: UiPrefs.prefault({}),
 })
 
 export type Prefs = z.output<typeof PrefsSchema>

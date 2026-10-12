@@ -13,6 +13,7 @@ import path from 'node:path'
 import type { CaptureResult } from '../../shared/dto/capture'
 import type { CaptureMode } from '../../shared/prefs'
 import { buildArgs, dropFileName, isPngFile } from './process'
+import { mt } from '../i18n'
 
 export type CaptureTrigger = 'shortcut' | 'menu' | 'palette' | 'button'
 
@@ -137,7 +138,7 @@ export function createCaptureService(deps: CaptureDeps) {
       try {
         r = await deps.ingest(file, o.collectionUuid)
       } catch (err) {
-        return { status: 'error', message: (err as Error).message || 'La capture a échoué.' }
+        return { status: 'error', message: (err as Error).message || mt().capture.failed }
       }
       const duplicate = r.status === 'duplicate' || r.status === 'dismissed'
       // (7) Dossier de dépôt (non bloquant).

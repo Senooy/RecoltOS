@@ -11,6 +11,7 @@ import { AppError } from '../../shared/errors'
 import type { MediaRow } from '../db/repos/media'
 import type { ItemRow } from '../db/repos/items'
 import type { LibraryContext } from '../library/library-context'
+import { mt } from '../i18n'
 
 export interface ItemWithMedia {
   item: ItemRow
@@ -22,7 +23,7 @@ type Lib = Pick<LibraryContext, 'repos' | 'paths'>
 
 export function loadItem(lib: Lib, uuid: string): ItemWithMedia {
   const item = lib.repos.items.getByUuid(uuid)
-  if (!item) throw new AppError('not_found', 'Élément introuvable.')
+  if (!item) throw new AppError('not_found', mt().errors.itemNotFound)
   const media = lib.repos.media.listByItem(item.id)
   const coverIdx = media.findIndex((m) => m.id === item.cover_media_id)
   if (coverIdx > 0) media.unshift(...media.splice(coverIdx, 1))
@@ -77,7 +78,7 @@ export function itemOriginals(lib: Lib, uuid: string): string[] {
 /** Original de la couverture ou `AppError('not_found')` (post texte, média distant ou perdu). */
 export function requireCoverOriginal(lib: Lib, uuid: string): string {
   const [first] = itemOriginals(lib, uuid)
-  if (!first) throw new AppError('not_found', 'Aucun fichier local pour cet élément.')
+  if (!first) throw new AppError('not_found', mt().errors.noLocalFile)
   return first
 }
 
@@ -88,7 +89,7 @@ export function requireCoverOriginal(lib: Lib, uuid: string): string {
 export function copyImageSource(lib: Lib, uuid: string): string {
   const { media } = loadItem(lib, uuid)
   const cover = media[0]
-  if (!cover) throw new AppError('not_found', 'Cet élément n’a pas d’image.')
+  if (!cover) throw new AppError('not_found', mt().errors.noImage)
   const candidates =
     cover.media_type === 'video'
       ? [cover.poster_rel, cover.thumb_rel, cover.legacy_thumb_rel, cover.large_rel]
@@ -103,7 +104,7 @@ export function copyImageSource(lib: Lib, uuid: string): string {
     const abs = existingAbs(lib, rel)
     if (abs) return abs
   }
-  throw new AppError('not_found', 'Aucune image locale pour cet élément.')
+  throw new AppError('not_found', mt().errors.noLocalImage)
 }
 
 /**

@@ -11,8 +11,16 @@ import type { RecoltApi, RecoltFlags } from './api'
 const KNOWN_EVENTS: ReadonlySet<string> = new Set(EVENT_NAME_LIST)
 
 function readFlags(argv: readonly string[]): RecoltFlags {
-  const theme = argv.find((a) => a.startsWith(PRELOAD_ARG.theme))?.slice(PRELOAD_ARG.theme.length)
-  return { theme: theme === 'dark' ? 'dark' : 'light', e2e: argv.includes(PRELOAD_ARG.e2e) }
+  const arg = (prefix: string) => argv.find((a) => a.startsWith(prefix))?.slice(prefix.length)
+  const theme = arg(PRELOAD_ARG.theme)
+  const lang = arg(PRELOAD_ARG.lang)
+  const systemLang = arg(PRELOAD_ARG.systemLang)
+  return {
+    theme: theme === 'dark' ? 'dark' : 'light',
+    e2e: argv.includes(PRELOAD_ARG.e2e),
+    lang: lang === 'en' ? 'en' : 'fr',
+    systemLang: systemLang === 'en' ? 'en' : 'fr',
+  }
 }
 
 const api: RecoltApi = {

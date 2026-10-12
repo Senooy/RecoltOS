@@ -23,4 +23,8 @@ export const EVENT_PREFIX = 'evt:'
 export const PRELOAD_ARG = {
   theme: '--recolt-theme=',
   e2e: '--recolt-e2e',
+  /** Langue effective au lancement (`fr` | `en`) : premier rendu dans la bonne langue. */
+  lang: '--recolt-lang=',
+  /** Langue du système (`fr` | `en`) : résout `ui.language: 'system'` côté renderer. */
+  systemLang: '--recolt-system-lang=',
 } as const

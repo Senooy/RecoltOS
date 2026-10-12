@@ -9,6 +9,7 @@ import { mkdir, readdir, readFile, rename, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { parseMessage } from '../../shared/bridge/messages'
 import type { SaveAck, SaveRequest } from '../../shared/bridge/save'
+import { mt } from '../i18n'
 
 export interface InboxDeps {
   dir: string
@@ -66,7 +67,7 @@ export class Inbox {
       if (ack && ack.status !== 'error') {
         await rm(file, { force: true })
         n += 1
-      } else if (ack?.error === 'Aucune bibliothèque ouverte.') {
+      } else if (ack?.error === mt().errors.noLibrary) {
         // Réessayé plus tard (bibliothèque en cours d'ouverture).
         break
       } else {

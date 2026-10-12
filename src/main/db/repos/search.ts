@@ -6,6 +6,7 @@
 import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
 import { repoBase, type RepoOptions } from './util'
+import { mt } from '../../i18n'
 
 export const FTS_LIMIT = 300
 
@@ -48,7 +49,7 @@ export function createSearchRepo(db: Database.Database, opts: RepoOptions = {}) 
           limit: options.limit ?? FTS_LIMIT,
         }) as FtsHit[]
       } catch (err) {
-        if (isFtsSyntaxError(err)) throw new AppError('validation', 'Recherche invalide.')
+        if (isFtsSyntaxError(err)) throw new AppError('validation', mt().errors.searchInvalid)
         throw err
       }
     },

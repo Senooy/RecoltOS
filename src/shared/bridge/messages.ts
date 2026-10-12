@@ -97,6 +97,11 @@ export const HelloAck = z.object({
     maxPages: PerPlatform(z.number().int().min(1).max(MAX_SYNC_PAGES)),
     wantedAuthors: z.array(AuthorRef).max(MAX_WANTED_AUTHORS),
   }),
+  /**
+   * Langue de l'interface de l'app (`fr` | `en`) : popup, menus et toasts de l'extension la
+   * suivent. Optionnelle (compatibilité avec les apps plus anciennes) ; renvoyée à chaque changement.
+   */
+  lang: z.enum(['fr', 'en']).optional(),
 })
 export type HelloAck = z.output<typeof HelloAck>
 

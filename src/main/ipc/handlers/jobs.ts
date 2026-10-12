@@ -5,10 +5,11 @@
 import { AppError } from '../../../shared/errors'
 import { getJobQueue, requireJobServices } from '../../jobs/runtime'
 import type { DomainHandlers } from '../router'
+import { mt } from '../../i18n'
 
 function queue() {
   const q = getJobQueue()
-  if (!q) throw new AppError('library_unavailable', 'File de jobs indisponible.')
+  if (!q) throw new AppError('library_unavailable', mt().errors.jobsUnavailable)
   return q
 }
 

@@ -19,6 +19,7 @@ import { requireLibrary } from '../../library/library-context'
 import { getMediaWorker } from '../../protocol/media-worker'
 import { getMainWindow } from '../../windows/main-window'
 import type { DomainHandlers, HandlerContext } from '../router'
+import { mt } from '../../i18n'
 
 function windowOf(ctx: HandlerContext): BrowserWindow | null {
   return (ctx.sender ? BrowserWindow.fromWebContents(ctx.sender) : null) ?? getMainWindow()
@@ -29,20 +30,20 @@ let exporting = false
 export const dataHandlers: DomainHandlers<'data'> = {
   'data.exportZip': async ({ includeDerived, collectionUuid }, ctx) => {
     const lib = requireLibrary()
-    if (exporting) throw new AppError('conflict', 'Un export est déjà en cours.')
+    if (exporting) throw new AppError('conflict', mt().errors.exportBusy)
     let label = lib.name
     if (collectionUuid) {
       const c = lib.db
         .prepare('SELECT name FROM collections WHERE uuid = ?')
         .get(collectionUuid) as { name: string } | undefined
-      if (!c) throw new AppError('not_found', 'Collection introuvable.')
+      if (!c) throw new AppError('not_found', mt().errors.collectionNotFound)
       label = c.name
     }
     const win = windowOf(ctx)
     const options = {
       defaultPath: path.join(app.getPath('downloads'), defaultExportName(label, Date.now())),
-      buttonLabel: 'Exporter',
-      filters: [{ name: 'Archive zip', extensions: ['zip'] }],
+      buttonLabel: mt().dialogs.exportButton,
+      filters: [{ name: mt().dialogs.zipArchive, extensions: ['zip'] }],
     }
     const res = win
       ? await dialog.showSaveDialog(win, options)
@@ -50,7 +51,7 @@ export const dataHandlers: DomainHandlers<'data'> = {
     if (res.canceled || !res.filePath) return { cancelled: true as const }
     const out = res.filePath.endsWith('.zip') ? res.filePath : `${res.filePath}.zip`
     const worker = getMediaWorker()
-    if (!worker) throw new AppError('worker_unavailable', 'Le processus média est indisponible.')
+    if (!worker) throw new AppError('worker_unavailable', mt().errors.mediaWorkerUnavailable)
     exporting = true
     try {
       const r = await exportZip(
@@ -81,7 +82,7 @@ export const dataHandlers: DomainHandlers<'data'> = {
 
   'data.snapshot.restore': async ({ name }) => {
     const manager = getLibraryManager()
-    if (!manager) throw new AppError('library_unavailable', 'Aucune bibliothèque ouverte.')
+    if (!manager) throw new AppError('library_unavailable', mt().errors.noLibrary)
     await restoreSnapshot(manager, name)
   },
 

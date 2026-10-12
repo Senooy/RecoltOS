@@ -21,6 +21,7 @@ import {
 import { rendererIndexPath } from '../windows/main-window'
 import { gcSpaceAssets } from './gc'
 import { applyBatch } from './repo'
+import { mt } from '../i18n'
 
 const SyncInput = ApplyBatchInput.extend({
   upsert: ApplyBatchInput.shape.upsert.max(MAX_SYNC_BATCH),
@@ -51,7 +52,7 @@ export function initSpaces(ctx: ServiceContext): () => void {
       if (!allowed(e.senderFrame?.url))
         throw new AppError('forbidden_sender', 'expéditeur non autorisé')
       const lib = getActiveLibrary()
-      if (!lib) throw new AppError('library_unavailable', 'Aucune bibliothèque ouverte.')
+      if (!lib) throw new AppError('library_unavailable', mt().errors.noLibrary)
       const parsed = SyncInput.safeParse(payload)
       if (!parsed.success) throw new AppError('validation', formatIssues(parsed.error.issues))
       const data = applyBatch(lib, parsed.data)

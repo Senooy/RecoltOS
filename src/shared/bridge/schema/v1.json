@@ -661,6 +661,10 @@
               }
             },
             "required": ["sync", "allowBackgroundTab", "intervalsMin", "maxPages", "wantedAuthors"]
+          },
+          "lang": {
+            "type": "string",
+            "enum": ["fr", "en"]
           }
         },
         "required": ["appVersion", "protocol", "needsReload", "bundledExtVersion", "settings"]

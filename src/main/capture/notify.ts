@@ -6,6 +6,7 @@
  */
 import { randomUUID } from 'node:crypto'
 import { Notification, app, shell, type BrowserWindow } from 'electron'
+import { mt } from '../i18n'
 
 const live = new Map<string, Notification>()
 
@@ -31,13 +32,13 @@ export function notifyCapture(
   const n = new Notification(
     o.kind === 'permission'
       ? {
-          title: 'Autorisation requise',
-          body: 'Ouvre RecoltOS pour autoriser l’enregistrement de l’écran.',
+          title: mt().notify.permissionTitle,
+          body: mt().notify.permissionBody,
           silent: true,
         }
       : {
-          title: o.duplicate ? 'Déjà dans la bibliothèque' : 'Capture ajoutée',
-          body: 'Enregistrée dans RecoltOS · Non classés',
+          title: o.duplicate ? mt().notify.captureDuplicate : mt().notify.captureDone,
+          body: mt().notify.captureBody,
           silent: true,
         },
   )

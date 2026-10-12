@@ -7,6 +7,7 @@ import { randomBytes } from 'node:crypto'
 import { mkdir, rename, rm, stat } from 'node:fs/promises'
 import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path'
 import { AppError } from '../../../shared/errors'
+import { mt } from '../../i18n'
 
 /** Chemins absolus des binaires, résolus par main (`platform/binaries.ts`). */
 export interface MediaTools {
@@ -21,10 +22,7 @@ export type ToolName = 'ffmpeg' | 'ffprobe' | 'sips'
 export const DEFAULT_SIPS = '/usr/bin/sips'
 
 export function toolMissing(tool: ToolName): AppError {
-  const hint =
-    tool === 'sips'
-      ? 'sips est introuvable (/usr/bin/sips).'
-      : `${tool} est introuvable : installe-le avec « brew install ffmpeg » puis clique sur Re-détecter.`
+  const hint = tool === 'sips' ? mt().errors.sipsMissing : mt().errors.toolMissing(tool)
   return new AppError('tool_missing', hint, { tool })
 }
 
@@ -203,7 +201,7 @@ const SOURCE_STDERR =
 export function sourceFailure(err: unknown): unknown {
   const stderr = toolStderr(err)
   if (stderr && SOURCE_STDERR.test(stderr)) {
-    return new AppError('decode_failed', 'le fichier est illisible ou corrompu', { stderr })
+    return new AppError('decode_failed', mt().errors.unreadableFile, { stderr })
   }
   return err
 }

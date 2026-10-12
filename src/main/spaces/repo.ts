@@ -26,6 +26,7 @@ import type { SpaceNodeInput, SpaceNodeRow, SpaceRow } from '../db/repos/spaces'
 import { toItemCard } from '../dto/item-card'
 import type { LibraryContext } from '../library/library-context'
 import { assetUrlOrNull } from '../protocol/urls'
+import { mt } from '../i18n'
 
 type Lib = Pick<LibraryContext, 'id' | 'root' | 'db' | 'repos' | 'paths'>
 export type ApplyBatch = z.output<typeof ApplyBatchInput>
@@ -45,16 +46,16 @@ export function asSpacesError(err: unknown): AppError {
   const code = typeof raw === 'string' ? raw : ''
   const msg = err instanceof Error ? err.message : String(err)
   if (code.startsWith('SQLITE_CONSTRAINT'))
-    return new AppError('validation', `Nœud invalide : ${msg}`)
+    return new AppError('validation', mt().errors.invalidNode(msg))
   if (code.startsWith('SQLITE_BUSY') || code.startsWith('SQLITE_LOCKED')) {
-    return new AppError('busy', 'Base occupée, nouvel essai.')
+    return new AppError('busy', mt().errors.dbBusyRetry)
   }
   if (
     code.startsWith('SQLITE_IOERR') ||
     code === 'SQLITE_FULL' ||
     code.startsWith('SQLITE_READONLY')
   ) {
-    return new AppError('io', `Écriture impossible : ${msg}`)
+    return new AppError('io', mt().errors.writeFailed(msg))
   }
   return new AppError('internal', msg)
 }
@@ -74,7 +75,7 @@ export function assetThumbRel(assetRel: string, kind: 'image' | 'video'): string
 
 function spaceRow(lib: Lib, uuid: string): SpaceRow {
   const row = lib.repos.spaces.getByUuid(uuid)
-  if (!row || row.deleted_at !== null) throw new AppError('not_found', 'Space introuvable.')
+  if (!row || row.deleted_at !== null) throw new AppError('not_found', mt().errors.spaceNotFound)
   return row
 }
 
@@ -269,7 +270,7 @@ export function applyBatch(
           .prepare('SELECT count(*) AS n FROM space_nodes WHERE space_id = ?')
           .get(s.id) as { n: number }
         if (n > MAX_NODES_PER_SPACE) {
-          throw new AppError('limit_exceeded', 'Ce space a atteint sa taille maximale.')
+          throw new AppError('limit_exceeded', mt().errors.spaceFull)
         }
       }
       if (input.name !== undefined || input.background !== undefined) {
@@ -389,7 +390,7 @@ export function addItems(
   return guard(() =>
     lib.db.transaction(() => {
       if (existing.length + nodes.length > MAX_NODES_PER_SPACE) {
-        throw new AppError('limit_exceeded', 'Ce space a atteint sa taille maximale.')
+        throw new AppError('limit_exceeded', mt().errors.spaceFull)
       }
       lib.repos.spaces.upsertNodes(s.id, nodes, at)
       return { added: nodes.length, nodeUuids: nodes.map((n) => n.uuid) }

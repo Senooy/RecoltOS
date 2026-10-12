@@ -12,6 +12,7 @@ import { AppError } from '../../../shared/errors'
 import { JOB_PRIORITY } from '../../../shared/jobs'
 import { rel } from '../../library/paths'
 import { payloadId, type JobFailureHook, type JobHandler } from './types'
+import { mt } from '../../i18n'
 
 const IMAGE_TIMEOUT = 60_000
 const VIDEO_TIMEOUT = 180_000
@@ -65,7 +66,7 @@ export const mediaDerive: JobHandler = async (job, ctx) => {
       }
     }
     if (!posterRel || !(await exists(lib.paths.abs(posterRel)))) {
-      if (!ctx.hasTool('ffmpeg')) throw new AppError('tool_missing', 'ffmpeg est introuvable.')
+      if (!ctx.hasTool('ffmpeg')) throw new AppError('tool_missing', mt().errors.ffmpegMissing)
       posterRel = rel.poster(m.uuid)
       const pAbs = lib.paths.abs(posterRel)
       await mkdir(dirname(pAbs), { recursive: true })

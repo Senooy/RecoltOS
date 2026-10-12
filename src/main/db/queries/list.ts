@@ -8,6 +8,7 @@ import { AppError } from '../../../shared/errors'
 import type { ItemsListInput } from '../../../shared/ipc/items'
 import type { ItemFilters } from '../../../shared/ipc/items'
 import type { LibraryTab, SortMode } from '../../../shared/enums'
+import { mt } from '../../i18n'
 
 /** Colonnes d'une carte : item + média de couverture + auteur (jointures sur clé primaire). */
 export const CARD_SELECT = `
@@ -203,7 +204,7 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
   if (scope === 'collection') {
     const col = db.prepare('SELECT id FROM collections WHERE uuid = ?').get(inp.collectionUuid) as
       { id: number } | undefined
-    if (!col) throw new AppError('not_found', 'Collection introuvable.')
+    if (!col) throw new AppError('not_found', mt().errors.collectionNotFound)
     params.cid = col.id
     from = `${CARD_FROM} JOIN collection_items ci ON ci.item_id = i.id AND ci.collection_id = @cid`
     countFrom = 'items i JOIN collection_items ci ON ci.item_id = i.id AND ci.collection_id = @cid'

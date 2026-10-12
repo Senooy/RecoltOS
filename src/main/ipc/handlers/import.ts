@@ -13,6 +13,7 @@ import {
 } from '../../importers/gatheros/service'
 import type { DomainHandlers } from '../router'
 import { AppError } from '../../../shared/errors'
+import { mt } from '../../i18n'
 
 export const importHandlers: DomainHandlers<'import'> = {
   'import.gatheros.detect': () => detectGatheros(),
@@ -29,7 +30,7 @@ export const importHandlers: DomainHandlers<'import'> = {
   'import.gatheros.pending': () => pending(),
   'import.gatheros.revealReport': () => {
     const r = lastReport()
-    if (!r?.reportRel) throw new AppError('not_found', 'Aucun rapport d’import.')
+    if (!r?.reportRel) throw new AppError('not_found', mt().errors.noImportReport)
     shell.showItemInFolder(requireLibrary().paths.abs(r.reportRel))
   },
 }

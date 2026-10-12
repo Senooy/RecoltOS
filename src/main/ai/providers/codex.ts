@@ -17,6 +17,7 @@ import { createCodexStreamGuard, parseTokensUsed } from '../cli/stream-guard'
 import { classifyError } from '../errors'
 import { decodeTolerant } from '../schemas'
 import { CliProviderBase, type CliRuntime, type ExecOutput, type ExecSpec } from './base'
+import { mt } from '../../i18n'
 
 export interface CodexArgsInput {
   sandboxDir: string
@@ -98,8 +99,7 @@ export class CodexCliProvider extends CliProviderBase {
     const out = await this.simple(cli.path, ['login', 'status']).catch(() => '')
     const chatgpt = /Logged in using ChatGPT/i.test(out)
     const apiKey = /API key/i.test(out)
-    if (apiKey)
-      warnings.push('Clé API détectée : facturation à l’usage, contraire à ton choix d’abonnement.')
+    if (apiKey) warnings.push(mt().ai.apiKey)
     const loggedIn = chatgpt || apiKey
     return {
       installed: true,

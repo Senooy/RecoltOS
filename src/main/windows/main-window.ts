@@ -6,7 +6,9 @@ import { BrowserWindow, app, ipcMain, nativeTheme, screen } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { once } from 'node:events'
 import path from 'node:path'
+import { getLang } from '../../shared/i18n/lang'
 import { PRELOAD_ARG, RAW_CHANNELS } from '../../shared/ipc/channels'
+import { getSystemLang } from '../i18n'
 import type { RuntimeFlags } from '../bootstrap/env'
 import { MIN_WINDOW } from '../bootstrap/env'
 import {
@@ -117,6 +119,8 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
       spellcheck: false,
       additionalArguments: [
         `${PRELOAD_ARG.theme}${dark ? 'dark' : 'light'}`,
+        `${PRELOAD_ARG.lang}${getLang()}`,
+        `${PRELOAD_ARG.systemLang}${getSystemLang()}`,
         ...(flags.e2e ? [PRELOAD_ARG.e2e] : []),
       ],
     },

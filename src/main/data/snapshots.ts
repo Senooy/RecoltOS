@@ -10,6 +10,7 @@ import type { SnapshotInfo } from '../../shared/ipc/data'
 import { AppError } from '../../shared/errors'
 import { snapshotPath, snapshotStamp, vacuumInto } from '../db/migrate'
 import type { LibraryContext } from '../library/library-context'
+import { mt } from '../i18n'
 
 export const SNAPSHOT_RE = /^recolt-(\d{8})-(\d{6})(?:-([a-z0-9-]+))?\.db$/
 export const KEEP_DAILY = 7
@@ -45,7 +46,7 @@ export function parseSnapshotName(
 /** Fichier d'instantané validé (nom strict, dans `snapshots/`). */
 export function snapshotFile(lib: Pick<LibraryContext, 'paths'>, name: string): string {
   if (!SNAPSHOT_RE.test(name) || name.includes('/')) {
-    throw new AppError('validation', 'Nom d’instantané invalide.')
+    throw new AppError('validation', mt().errors.snapshotNameInvalid)
   }
   return path.join(dirOf(lib), name)
 }
@@ -96,7 +97,7 @@ export function createSnapshot(lib: SnapLib, reason: string, at: number): Snapsh
 /** Supprime un instantané et ses compagnons `-wal` / `-shm` éventuels (`pre-restore`). */
 export function deleteSnapshot(lib: Pick<LibraryContext, 'paths'>, name: string): void {
   const file = snapshotFile(lib, name)
-  if (!fs.existsSync(file)) throw new AppError('not_found', 'Instantané introuvable.')
+  if (!fs.existsSync(file)) throw new AppError('not_found', mt().errors.snapshotNotFound)
   for (const f of [file, `${file}-wal`, `${file}-shm`]) fs.rmSync(f, { force: true })
 }
 

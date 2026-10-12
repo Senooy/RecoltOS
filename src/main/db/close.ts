@@ -14,6 +14,7 @@
 import type Database from 'better-sqlite3'
 import fs from 'node:fs'
 import { AppError } from '../../shared/errors'
+import { mt } from '../i18n'
 
 export const JOBS_DRAIN_TIMEOUT_MS = 10_000
 /** Attente maximale des lecteurs pendant le checkpoint final. */
@@ -111,11 +112,7 @@ export async function closeLibrary(lib: ClosableLibrary, opts: CloseOptions): Pr
       await hooks.startWorkers?.()
       await hooks.resumeJobs?.()
     }
-    throw new AppError(
-      'wal_not_empty',
-      'La base est encore utilisée par un autre lecteur : opération annulée.',
-      checkpoint ?? undefined,
-    )
+    throw new AppError('wal_not_empty', mt().errors.dbInUse, checkpoint ?? undefined)
   }
   return { checkpoint }
 }

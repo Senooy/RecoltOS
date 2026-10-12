@@ -14,6 +14,7 @@ import { runCli, type RunCliResult } from '../cli/spawn'
 import { createClaudeStreamGuard } from '../cli/stream-guard'
 import { classifyError } from '../errors'
 import { CliProviderBase, type CliRuntime, type ExecOutput, type ExecSpec } from './base'
+import { mt } from '../../i18n'
 
 export const CLAUDE_MIN_VERSION = '2.1.259'
 export const CLAUDE_FLAGS = [
@@ -119,12 +120,9 @@ export class ClaudeCliProvider extends CliProviderBase {
       warnings,
     }
     if (cli.version && compareSemver(cli.version, CLAUDE_MIN_VERSION) < 0)
-      warnings.push(
-        `Version ${cli.version} trop ancienne : mets à jour claude (≥ ${CLAUDE_MIN_VERSION}).`,
-      )
+      warnings.push(mt().ai.tooOld(cli.version, CLAUDE_MIN_VERSION))
     const flags = await this.flags(cli.path, cli.version).catch(() => new Set<ClaudeFlag>())
-    if (!flags.has('safe-mode'))
-      warnings.push('Version ancienne : --safe-mode indisponible, mets à jour claude.')
+    if (!flags.has('safe-mode')) warnings.push(mt().ai.noSafeMode)
     const r = await this.run({
       bin: cli.path,
       args: ['auth', 'status'],
@@ -141,8 +139,7 @@ export class ClaudeCliProvider extends CliProviderBase {
     // Champs d'identité (e-mail, organisation) jamais lus ni renvoyés.
     const loggedIn = auth.loggedIn === true
     const sub = auth.authMethod === 'claude.ai' && auth.apiProvider === 'firstParty'
-    if (loggedIn && !sub)
-      warnings.push('Clé API détectée : facturation à l’usage, contraire à ton choix d’abonnement.')
+    if (loggedIn && !sub) warnings.push(mt().ai.apiKey)
     return {
       ...base,
       loggedIn,

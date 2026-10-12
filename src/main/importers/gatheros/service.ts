@@ -24,6 +24,7 @@ import {
   readGatherosPrefs,
 } from './detect'
 import { createImportRun, lastImportReport, pendingImport, runGatherosImport } from './run'
+import { mt } from '../../i18n'
 
 export interface ImportServiceDeps {
   home: string | null
@@ -47,7 +48,7 @@ export function configureImportService(d: ImportServiceDeps | null): void {
 }
 
 function requireDeps(): ImportServiceDeps {
-  if (!deps) throw new AppError('library_unavailable', 'Import indisponible.')
+  if (!deps) throw new AppError('library_unavailable', mt().errors.importUnavailable)
   return deps
 }
 
@@ -130,14 +131,14 @@ export async function startGatherosImport(input: {
   resumeRunId?: number
 }): Promise<{ runId: number }> {
   const d = requireDeps()
-  if (running) throw new AppError('busy', 'Un import est déjà en cours.')
+  if (running) throw new AppError('busy', mt().errors.importBusy)
   const r = root()
   const state = await detectRunning(r)
   if (state.running) {
-    throw new AppError('gatheros_running', 'Quitte GatherOS pour importer.', { host: state.host })
+    throw new AppError('gatheros_running', mt().errors.gatherosRunning, { host: state.host })
   }
   const source = pickLibrary(r, input.libraryId)
-  if (input.target === 'new') await d.createLibrary('Importée de GatherOS')
+  if (input.target === 'new') await d.createLibrary(mt().library.importedFromGatheros)
   const lib = requireLibrary()
   const abort = new AbortController()
   // Un run interrompu (crash) est repris : chaque phase est idempotente.

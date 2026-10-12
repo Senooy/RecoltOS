@@ -2,6 +2,7 @@
  * Drapeaux d'exécution lus une fois au démarrage (contrats de testabilité).
  * Sans import `electron` : testable sous Node.
  */
+import { langFromLocale, type Lang } from '../../shared/i18n/lang'
 
 export interface RuntimeFlags {
   /** `RECOLTOS_E2E=1` : ni raccourci global, ni sync, ni IA, ni manifests, ni réseau ; animations coupées. */
@@ -14,6 +15,11 @@ export interface RuntimeFlags {
   rendererUrl: string | null
   /** `RECOLTOS_INSTALL_DEV_HOST=1` : manifests de dev (`com.recoltos.host.dev`). */
   installDevHost: boolean
+  /**
+   * `RECOLTOS_LANG=fr|en` : langue du système SIMULÉE (tests e2e et visuels, captures). Le réglage
+   * `ui.language` garde la priorité ; `null` = langue préférée du Mac.
+   */
+  systemLang: Lang | null
 }
 
 export const DEFAULT_WINDOW = { width: 1280, height: 820 } as const
@@ -36,5 +42,6 @@ export function readFlags(env: Record<string, string | undefined> = process.env)
     home: env.RECOLTOS_HOME ? env.RECOLTOS_HOME : null,
     rendererUrl: env.ELECTRON_RENDERER_URL ? env.ELECTRON_RENDERER_URL : null,
     installDevHost: env.RECOLTOS_INSTALL_DEV_HOST === '1',
+    systemLang: env.RECOLTOS_LANG ? langFromLocale(env.RECOLTOS_LANG) : null,
   }
 }

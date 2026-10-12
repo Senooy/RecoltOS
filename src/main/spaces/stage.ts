@@ -11,6 +11,7 @@ import { AppError } from '../../shared/errors'
 import { aabb, unionRect } from '../../shared/spaces-geometry'
 import { offscreenUrl, withOffscreenWindow } from '../windows/offscreen'
 import { placeTile, planExport, type ExportPlan } from './tiles'
+import { mt } from '../i18n'
 
 export type StageMode = 'hidden' | 'offscreen' | 'visible'
 /** Mode retenu après mesure (fenêtre hors écran). */
@@ -57,7 +58,7 @@ export async function renderSpacePng(
   const ids = job.scope === 'selection' && job.ids ? new Set(job.ids) : null
   const nodes = ids ? doc.nodes.filter((n) => ids.has(n.uuid)) : doc.nodes
   const box = unionRect(nodes.map(aabb))
-  if (!box) throw new AppError('validation', 'Rien à exporter : le space est vide.')
+  if (!box) throw new AppError('validation', mt().errors.spaceEmptyExport)
   return withOffscreenWindow(
     {
       width: STAGE_TILE.w,

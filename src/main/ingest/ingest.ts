@@ -24,6 +24,7 @@ import { AI_MAX_ATTEMPTS } from '../ai/errors'
 import { autoJobPayload } from '../ai/service'
 import { aiGate } from './ai-gate'
 import { detectType, readHead, requireType, type DetectedType } from './media-type'
+import { mt } from '../i18n'
 
 export type IngestInput =
   | { type: 'file'; path: string }
@@ -88,7 +89,7 @@ function findByHash(deps: IngestDeps, sha: string) {
 function addToCollection(deps: IngestDeps, itemId: number, collectionUuid?: string): void {
   if (!collectionUuid) return
   const cid = deps.lib.repos.collections.idByUuid(collectionUuid)
-  if (cid === undefined) throw new AppError('not_found', 'Collection introuvable.')
+  if (cid === undefined) throw new AppError('not_found', mt().errors.collectionNotFound)
   deps.lib.repos.collections.addItems(cid, [itemId])
 }
 
@@ -281,7 +282,7 @@ async function ingestUrl(
   }
   await rm(tmpAbs, { force: true })
   if (got.contentType !== 'text/html' || !deps.captureUrl) {
-    throw new AppError('unsupported', `Contenu non pris en charge : ${u.hostname}`)
+    throw new AppError('unsupported', mt().errors.unsupportedContent(u.hostname))
   }
   const page = await deps.captureUrl(url)
   const pngAbs = deps.lib.paths.abs(rel.tmp(`${newUuid()}.page.png`))
@@ -322,8 +323,8 @@ export async function ingest(
   switch (input.type) {
     case 'file': {
       const st = await stat(input.path).catch(() => null)
-      if (!st) throw new AppError('not_found', `Fichier introuvable : ${basename(input.path)}`)
-      if (!st.isFile()) throw new AppError('validation', `Pas un fichier : ${basename(input.path)}`)
+      if (!st) throw new AppError('not_found', mt().errors.fileNotFound(basename(input.path)))
+      if (!st.isFile()) throw new AppError('validation', mt().errors.notAFile(basename(input.path)))
       return ingestLocal(
         {
           abs: input.path,
@@ -416,7 +417,7 @@ export async function ingestExtension(
     const src = req.srcUrl ?? ''
     const data = DATA_URL.exec(src)
     if (data) {
-      if (!data[2]) throw new AppError('unsupported', 'Image intégrée non prise en charge.')
+      if (!data[2]) throw new AppError('unsupported', mt().errors.embeddedImageUnsupported)
       const abs = await writeTmp(src.slice(data[0].length), 'data')
       return ingestLocal({ ...base, abs, owned: true, name: 'image' }, opts, deps)
     }
@@ -466,5 +467,5 @@ export async function ingestExtension(
     const target = req.kind === 'link' ? (req.linkUrl ?? '') : req.pageUrl
     return ingestUrl(target, opts, deps)
   }
-  throw new AppError('unsupported', 'Type d’enregistrement non pris en charge.')
+  throw new AppError('unsupported', mt().errors.saveTypeUnsupported)
 }

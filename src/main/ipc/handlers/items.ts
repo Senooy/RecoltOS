@@ -12,6 +12,7 @@ import { emitItemsChanged } from '../../events'
 import { getJobQueue } from '../../jobs/runtime'
 import { requireLibrary, type LibraryContext } from '../../library/library-context'
 import type { DomainHandlers } from '../router'
+import { mt } from '../../i18n'
 
 function ids(lib: LibraryContext, uuids: readonly string[]): number[] {
   const map = lib.repos.items.idsByUuids(uuids)
@@ -59,7 +60,7 @@ export const itemsHandlers: DomainHandlers<'items'> = {
   'items.update': ({ uuid, patch }) => {
     const lib = requireLibrary()
     const item = lib.repos.items.getByUuid(uuid)
-    if (!item) throw new AppError('not_found', 'Élément introuvable.')
+    if (!item) throw new AppError('not_found', mt().errors.itemNotFound)
     lib.repos.items.update(item.id, {
       ...(patch.title !== undefined
         ? { title: patch.title?.trim() || null, titleSource: 'user' as const }

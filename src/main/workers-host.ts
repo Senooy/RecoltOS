@@ -18,6 +18,8 @@
  * `child_process.fork` dans les tests.
  */
 import { AppError } from '../shared/errors'
+import { getLang, onLangChange, type Lang } from '../shared/i18n/lang'
+import { mt } from './i18n'
 import type {
   MediaArgs,
   MediaOp,
@@ -233,11 +235,9 @@ export class WorkerHost {
   }
 
   private unavailable(op: string, jobId: number | undefined): AppError {
-    return new AppError(
-      'worker_unavailable',
-      `le worker ${this.name} ne démarre pas (${op}) : redémarre l'application ou réinstalle-la`,
-      { jobId },
-    )
+    return new AppError('worker_unavailable', mt().errors.workerNotStarting(this.name, op), {
+      jobId,
+    })
   }
 
   /** Rejette une requête et demande au worker de l'annuler. */
@@ -513,12 +513,24 @@ export function createMediaWorker(
   opts: Omit<WorkerHostOptions, 'name' | 'config'> & { tools: MediaTools },
 ): MediaWorker {
   const { tools, ...rest } = opts
-  const host = new WorkerHost({ ...rest, name: MEDIA_SERVICE_NAME, config: { tools } })
+  // La langue suit l'app : les messages d'erreur du worker (outil introuvable…) sont traduits.
+  let config: { tools: MediaTools; lang: Lang } = { tools, lang: getLang() }
+  const host = new WorkerHost({ ...rest, name: MEDIA_SERVICE_NAME, config })
+  const offLang = onLangChange((lang) => {
+    config = { ...config, lang }
+    host.setConfig(config).catch(() => undefined)
+  })
   return {
     host,
     call: (op, args, o) => host.call(op, args, o) as Promise<never>,
     restart: () => host.restart(),
-    setTools: (t) => host.setConfig({ tools: t }),
-    stop: () => host.stop(),
+    setTools: (t) => {
+      config = { ...config, tools: t }
+      return host.setConfig(config)
+    },
+    stop: () => {
+      offLang()
+      return host.stop()
+    },
   }
 }

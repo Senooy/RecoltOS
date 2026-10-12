@@ -11,6 +11,7 @@ import { createHash } from 'node:crypto'
 import { open, rm, stat } from 'node:fs/promises'
 import { AppError } from '../../shared/errors'
 import { registerFetchPolicy, type FetchedFile, type FetchToFileOptions } from '../jobs/fetch'
+import { mt } from '../i18n'
 
 export const BROWSER_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36'
@@ -49,7 +50,7 @@ async function describe(dst: string, status = 200): Promise<FetchedFile> {
 export function hlsDownload(ffmpeg: () => string | null) {
   return async (url: string, dst: string, opts: FetchToFileOptions): Promise<FetchedFile> => {
     const bin = ffmpeg()
-    if (!bin) throw new AppError('tool_missing', 'ffmpeg est requis pour cette vidéo')
+    if (!bin) throw new AppError('tool_missing', mt().errors.ffmpegRequired)
     const headers = Object.entries(opts.headers ?? {})
       .map(([k, v]) => `${k}: ${v}\r\n`)
       .join('')

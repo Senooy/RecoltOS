@@ -31,6 +31,7 @@ import { JobQueue } from './queue'
 import { createChangeBatcher, setIngestProgressEmitter, setJobRuntime } from './runtime'
 import { startAutoPurge } from './auto-purge'
 import { cleanupAtOpen } from './startup'
+import { mt } from '../i18n'
 
 export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
   if (typeof net?.fetch !== 'function') {
@@ -127,8 +128,7 @@ export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
     applyPrefs: (patch) => prefsStore.set(patch),
     createLibrary: async (name) => {
       const m = getLibraryManager()
-      if (!m)
-        throw new AppError('library_unavailable', 'Gestionnaire de bibliothèques indisponible.')
+      if (!m) throw new AppError('library_unavailable', mt().errors.librariesUnavailable)
       await m.create({ name })
     },
     tmpDir: () => {

@@ -10,6 +10,7 @@ import { ingest } from '../../ingest/ingest'
 import { emitIngestProgress, getPageCapture, requireJobServices } from '../../jobs/runtime'
 import type { DomainHandlers, HandlerContext } from '../router'
 import type { IngestDeps } from '../../ingest/ingest'
+import { intlLocale, mt } from '../../i18n'
 
 /** Services d'ingestion de la bibliothèque active (+ capture de page hors écran). */
 export function ingestDeps(): IngestDeps {
@@ -19,8 +20,8 @@ export function ingestDeps(): IngestDeps {
 
 async function pick(ctx: HandlerContext, folder: boolean): Promise<string[] | null> {
   const options: OpenDialogOptions = {
-    title: folder ? 'Importer un dossier' : 'Importer des fichiers',
-    buttonLabel: 'Importer',
+    title: folder ? mt().dialogs.importFolder : mt().dialogs.importFiles,
+    buttonLabel: mt().dialogs.importButton,
     properties: folder ? ['openDirectory'] : ['openFile', 'multiSelections'],
   }
   const win = ctx.sender ? BrowserWindow.fromWebContents(ctx.sender) : null
@@ -33,9 +34,9 @@ function confirmer(ctx?: HandlerContext) {
   return async (count: number): Promise<boolean> => {
     const options = {
       type: 'question' as const,
-      message: `Importer ${new Intl.NumberFormat('fr-FR').format(count)} fichiers ?`,
-      detail: 'Les dossiers déposés sont parcourus jusqu’à 12 niveaux.',
-      buttons: ['Importer', 'Annuler'],
+      message: mt().dialogs.confirmImport(new Intl.NumberFormat(intlLocale()).format(count)),
+      detail: mt().dialogs.confirmImportDetail,
+      buttons: [mt().dialogs.importButton, mt().dialogs.cancel],
       defaultId: 0,
       cancelId: 1,
     }
@@ -74,7 +75,7 @@ const single = async (
     report.failed.push({
       path: label,
       code: e.code ?? 'io',
-      message: e.message ?? 'Import impossible.',
+      message: e.message ?? mt().errors.importFailed,
     })
   }
   return report

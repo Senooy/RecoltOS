@@ -19,6 +19,7 @@ import type { MediaCaller } from '../jobs/handlers/types'
 import type { LibraryContext } from '../library/library-context'
 import { assetUrl, assetUrlOrNull } from '../protocol/urls'
 import { assetThumbRel } from './repo'
+import { mt } from '../i18n'
 
 /** Fichiers par dépôt. */
 export const MAX_ASSET_FILES = 200
@@ -61,19 +62,19 @@ async function exists(abs: string): Promise<boolean> {
 /** Chemin reçu du renderer : réel, fichier régulier, taille bornée. */
 async function checkSource(input: string): Promise<{ abs: string; size: number }> {
   if (!path.isAbsolute(input) || input.includes('\0')) {
-    throw new AppError('validation', 'Chemin invalide.')
+    throw new AppError('validation', mt().errors.invalidPath)
   }
   let abs: string
   try {
     abs = await realpath(input)
   } catch {
-    throw new AppError('not_found', `Fichier introuvable : ${path.basename(input)}`)
+    throw new AppError('not_found', mt().errors.fileNotFound(path.basename(input)))
   }
   const st = await lstat(abs)
-  if (st.isDirectory()) throw new AppError('validation', 'Les dossiers ne sont pas acceptés.')
-  if (!st.isFile()) throw new AppError('validation', `Pas un fichier : ${path.basename(input)}`)
-  if (st.size === 0) throw new AppError('validation', `Fichier vide : ${path.basename(input)}`)
-  if (st.size > MAX_ASSET_BYTES) throw new AppError('validation', 'Fichier trop volumineux.')
+  if (st.isDirectory()) throw new AppError('validation', mt().errors.foldersRefused)
+  if (!st.isFile()) throw new AppError('validation', mt().errors.notAFile(path.basename(input)))
+  if (st.size === 0) throw new AppError('validation', mt().errors.emptyFile(path.basename(input)))
+  if (st.size > MAX_ASSET_BYTES) throw new AppError('validation', mt().errors.fileTooLarge)
   return { abs, size: st.size }
 }
 
@@ -92,12 +93,12 @@ async function copyAtomic(src: string, dst: string): Promise<void> {
 export async function importAssetFile(deps: AssetDeps, input: string): Promise<AssetInfo> {
   const { abs } = await checkSource(input)
   const t = await detectType(await readHead(abs))
-  if (!t) throw new AppError('unsupported', `Format non pris en charge : ${path.basename(abs)}`)
+  if (!t) throw new AppError('unsupported', mt().errors.formatUnsupported(path.basename(abs)))
   if (t.mime === 'image/vnd.adobe.photoshop') {
-    throw new AppError('unsupported', `Format non pris en charge : ${path.basename(abs)}`)
+    throw new AppError('unsupported', mt().errors.formatUnsupported(path.basename(abs)))
   }
   if (t.mediaType === 'video' && !VIDEO_EXT.has(t.ext)) {
-    throw new AppError('unsupported', `Vidéo non prise en charge : ${path.basename(abs)}`)
+    throw new AppError('unsupported', mt().errors.videoUnsupported(path.basename(abs)))
   }
   const sha = await sha256File(abs)
   const isHeic = t.mime === 'image/heic' || t.mime === 'image/heif'
@@ -178,7 +179,7 @@ export async function importAssetFiles(
   paths: readonly string[],
 ): Promise<{ assets: AssetInfo[]; failed: { path: string; message: string }[] }> {
   if (paths.length > MAX_ASSET_FILES) {
-    throw new AppError('limit_exceeded', `${MAX_ASSET_FILES} fichiers au plus par dépôt.`)
+    throw new AppError('limit_exceeded', mt().errors.tooManyFiles(MAX_ASSET_FILES))
   }
   const assets: AssetInfo[] = []
   const failed: { path: string; message: string }[] = []
@@ -194,7 +195,7 @@ export async function importAssetFiles(
 
 /** Octets (presse-papiers, fichier d'un autre navigateur) → fichier temporaire → asset. */
 export async function importAssetBuffer(deps: AssetDeps, bytes: Uint8Array): Promise<AssetInfo> {
-  if (bytes.byteLength === 0) throw new AppError('validation', 'Contenu vide.')
+  if (bytes.byteLength === 0) throw new AppError('validation', mt().errors.emptyContent)
   const tmpDir = deps.lib.paths.abs('tmp/spaces')
   await mkdir(tmpDir, { recursive: true })
   const tmp = path.join(tmpDir, `${newUuid()}.bin`)

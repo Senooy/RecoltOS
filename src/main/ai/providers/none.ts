@@ -6,9 +6,10 @@ import {
   type AiProvider,
   type ProviderStatus,
 } from '../../../shared/ai-types'
+import { mt } from '../../i18n'
 
 const disabled = (_i?: AiInput, _o?: AiCallOptions): Promise<never> =>
-  Promise.reject(new AiError('DISABLED', 'IA désactivée'))
+  Promise.reject(new AiError('DISABLED', mt().ai.disabled))
 
 export class NullProvider implements AiProvider {
   readonly id = 'none' as const
@@ -19,7 +20,7 @@ export class NullProvider implements AiProvider {
     return Promise.resolve({
       ok: false,
       status: { installed: false, warnings: [] },
-      error: 'IA désactivée',
+      error: mt().ai.disabled,
     })
   }
   analyze = disabled

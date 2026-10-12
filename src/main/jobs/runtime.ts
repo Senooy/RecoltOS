@@ -6,6 +6,7 @@ import { AppError } from '../../shared/errors'
 import type { PageCapture } from '../ingest/ingest'
 import type { ChangeReason, JobServices } from './handlers/types'
 import type { JobQueue } from './queue'
+import { mt } from '../i18n'
 
 let queue: JobQueue | null = null
 let servicesFn: (() => JobServices | null) | null = null
@@ -43,7 +44,7 @@ export function getJobQueue(): JobQueue | null {
 
 export function requireJobServices(): JobServices {
   const s = servicesFn?.() ?? null
-  if (!s) throw new AppError('library_unavailable', 'Aucune bibliothèque ouverte.')
+  if (!s) throw new AppError('library_unavailable', mt().errors.noLibrary)
   return s
 }
 

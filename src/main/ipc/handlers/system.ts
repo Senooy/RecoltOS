@@ -27,6 +27,7 @@ import { copyImageSource, loadItem, requireCoverOriginal } from '../../protocol/
 import { getMediaWorker, localMediaWorker } from '../../protocol/media-worker'
 import { getMainWindow } from '../../windows/main-window'
 import type { DomainHandlers, HandlerContext } from '../router'
+import { mt } from '../../i18n'
 
 /** Côté le plus long de l'image copiée (un original de 50 Mpx donnerait un PNG énorme). */
 export const COPY_IMAGE_MAX_EDGE = 4096
@@ -39,7 +40,7 @@ function windowOf(ctx: HandlerContext): BrowserWindow | null {
 
 function webContentsOf(ctx: HandlerContext): WebContents {
   const wc = ctx.sender ?? getMainWindow()?.webContents
-  if (!wc || wc.isDestroyed()) throw new AppError('not_found', 'Aucune fenêtre active.')
+  if (!wc || wc.isDestroyed()) throw new AppError('not_found', mt().errors.noActiveWindow)
   return wc
 }
 
@@ -67,7 +68,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     // Le contrat (`WebUrl`) l'impose déjà ; défense en profondeur avant de passer la main à macOS.
     const protocol = new URL(url).protocol
     if (protocol !== 'http:' && protocol !== 'https:') {
-      throw new AppError('validation', 'Seuls les liens http(s) peuvent être ouverts.')
+      throw new AppError('validation', mt().errors.httpOnly)
     }
     await shell.openExternal(url)
   },
@@ -75,8 +76,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
   'system.copyImage': async ({ itemUuid }) => {
     const src = copyImageSource(requireLibrary(), itemUuid)
     const mw = getMediaWorker()
-    if (!mw)
-      throw new AppError('system.worker_unavailable', 'Le traitement des images est indisponible.')
+    if (!mw) throw new AppError('system.worker_unavailable', mt().errors.imageWorkerUnavailable)
     const { png } = await mw.call(
       'toPng',
       { abs: src, maxEdge: COPY_IMAGE_MAX_EDGE },
@@ -86,7 +86,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     // Electron 44 : `clipboard.writeImage` n'existe plus ; `write([ClipboardItem])` (W3C).
     // `nativeImage` sert seulement à vérifier que le PNG du worker est décodable et non vide.
     if (nativeImage.createFromBuffer(bytes).isEmpty()) {
-      throw new AppError('system.decode_failed', 'Impossible de copier cette image.')
+      throw new AppError('system.decode_failed', mt().errors.copyImageFailed)
     }
     await clipboard.write([
       new ClipboardItem({ 'image/png': new Blob([bytes], { type: 'image/png' }) }),
@@ -106,7 +106,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
       suggestedFileName(item.title ?? item.ai_title, src),
     )
     const win = windowOf(ctx)
-    const options = { defaultPath, buttonLabel: 'Enregistrer' }
+    const options = { defaultPath, buttonLabel: mt().dialogs.save }
     const res = win
       ? await dialog.showSaveDialog(win, options)
       : await dialog.showSaveDialog(options)
@@ -115,7 +115,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     try {
       await fs.promises.copyFile(src, res.filePath)
     } catch (err) {
-      throw new AppError('io', 'Impossible d’enregistrer le fichier à cet endroit.', {
+      throw new AppError('io', mt().errors.saveFileFailed, {
         code: (err as NodeJS.ErrnoException).code,
       })
     }
@@ -126,7 +126,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     const lib = requireLibrary()
     const abs = requireCoverOriginal(lib, itemUuid)
     const win = windowOf(ctx)
-    if (!win) throw new AppError('not_found', 'Aucune fenêtre active.')
+    if (!win) throw new AppError('not_found', mt().errors.noActiveWindow)
     const { item } = loadItem(lib, itemUuid)
     win.previewFile(abs, item.title || path.basename(abs))
   },
@@ -160,7 +160,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
     const dir = path.dirname(file)
     await fs.promises.mkdir(dir, { recursive: true })
     const err = await shell.openPath(dir)
-    if (err) throw new AppError('io', 'Impossible d’ouvrir le dossier des journaux.', { err })
+    if (err) throw new AppError('io', mt().errors.openLogsFailed, { err })
   },
 
   'system.redetectTools': async () => {

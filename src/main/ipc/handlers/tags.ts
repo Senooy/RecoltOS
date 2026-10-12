@@ -8,6 +8,7 @@ import type { TagRow } from '../../db/repos/tags'
 import { emitItemsChanged } from '../../events'
 import { requireLibrary, type LibraryContext } from '../../library/library-context'
 import type { DomainHandlers } from '../router'
+import { mt } from '../../i18n'
 
 function itemIds(lib: LibraryContext, uuids: readonly string[]): number[] {
   const map = lib.repos.items.idsByUuids(uuids)
@@ -16,7 +17,7 @@ function itemIds(lib: LibraryContext, uuids: readonly string[]): number[] {
 
 function tagId(lib: LibraryContext, uuid: string): number {
   const t = lib.repos.tags.getByUuid(uuid)
-  if (!t) throw new AppError('not_found', 'Tag introuvable.')
+  if (!t) throw new AppError('not_found', mt().errors.tagNotFound)
   return t.id
 }
 
@@ -62,7 +63,7 @@ export const tagsHandlers: DomainHandlers<'tags'> = {
     const lib = requireLibrary()
     const t = lib.repos.tags.ensure(name)
     const row = lib.repos.tags.getById(t.id)
-    if (!row) throw new AppError('not_found', 'Tag introuvable.')
+    if (!row) throw new AppError('not_found', mt().errors.tagNotFound)
     return info(lib, row)
   },
   'tags.rename': ({ uuid, name }) => {
@@ -81,7 +82,7 @@ export const tagsHandlers: DomainHandlers<'tags'> = {
       target,
     )
     const t = lib.repos.tags.getById(target)
-    if (!t) throw new AppError('not_found', 'Tag introuvable.')
+    if (!t) throw new AppError('not_found', mt().errors.tagNotFound)
     return info(lib, t)
   },
 }

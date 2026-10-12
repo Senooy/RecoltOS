@@ -13,6 +13,7 @@ import { AppError } from '../../shared/errors'
 import type { ItemFilters } from '../../shared/ipc/items'
 import { cardRowsByIds, filterWhere, type CardRow } from '../db/queries/list'
 import { toFtsQuery, type ParsedQuery } from '../../shared/search-query'
+import { mt } from '../i18n'
 
 /** Plafond interne des identifiants examinés (au-delà, la liste est tronquée). */
 export const SEARCH_CAP = 5000
@@ -83,7 +84,7 @@ export function runSearch(
       ).map((r) => r.id)
     }
   } catch (err) {
-    if (isFtsError(err)) throw new AppError('validation', 'Recherche invalide.')
+    if (isFtsError(err)) throw new AppError('validation', mt().errors.searchInvalid)
     throw err
   }
 

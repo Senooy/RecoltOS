@@ -9,6 +9,10 @@ export interface RecoltFlags {
   theme: 'light' | 'dark'
   /** `RECOLTOS_E2E=1` : animations coupées, vidéos sans autoplay. */
   e2e: boolean
+  /** Langue effective au lancement (premier rendu). */
+  lang: 'fr' | 'en'
+  /** Langue du système : résout `ui.language: 'system'` quand le réglage change. */
+  systemLang: 'fr' | 'en'
 }
 
 export interface RecoltApi {

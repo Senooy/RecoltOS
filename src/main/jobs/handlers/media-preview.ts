@@ -7,6 +7,7 @@ import { dirname } from 'node:path'
 import { AppError } from '../../../shared/errors'
 import { rel } from '../../library/paths'
 import { payloadId, type JobHandler } from './types'
+import { mt } from '../../i18n'
 
 export const mediaPreview: JobHandler = async (job, ctx) => {
   const mediaId = payloadId(job, 'mediaId')
@@ -15,7 +16,7 @@ export const mediaPreview: JobHandler = async (job, ctx) => {
   const m = ctx.lib.repos.media.getById(mediaId)
   if (!m || m.media_type !== 'video' || !m.file_rel || m.status === 'remote')
     return { status: 'done' }
-  if (!ctx.hasTool('ffmpeg')) throw new AppError('tool_missing', 'ffmpeg est introuvable.')
+  if (!ctx.hasTool('ffmpeg')) throw new AppError('tool_missing', mt().errors.ffmpegMissing)
   const previewRel = rel.preview(m.uuid)
   const dst = ctx.lib.paths.abs(previewRel)
   await mkdir(dirname(dst), { recursive: true })

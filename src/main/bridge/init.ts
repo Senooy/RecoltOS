@@ -10,6 +10,7 @@ import { writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { BRIDGE_PROTOCOL_VERSION, EXTENSION_VERSION } from '../../shared/bridge/constants'
+import { getLang, onLangChange } from '../../shared/i18n/lang'
 import type { Disposer, ServiceContext } from '../bootstrap/context'
 import { onCollectionsChanged } from '../events'
 import { getActiveLibrary, registerLibraryLifecycle } from '../library/library-context'
@@ -111,22 +112,19 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
     ).catch((err: unknown) => ctx.log.warn(`[bridge] extension ${target}`, err))
   }
 
+  const helloAck = (needsReload: boolean) => ({
+    appVersion: app.getVersion(),
+    protocol: BRIDGE_PROTOCOL_VERSION,
+    needsReload,
+    bundledExtVersion: EXTENSION_VERSION,
+    settings: helloSettings(),
+    lang: getLang(),
+  })
   server.handle('hello', (m, client) => {
     const p = m.payload
     // En dev, jamais de rechargement demandé.
     const needsReload = isPackaged && isOlderVersion(p.extVersion, EXTENSION_VERSION)
-    server.send(
-      client.connId,
-      'hello.ack',
-      {
-        appVersion: app.getVersion(),
-        protocol: BRIDGE_PROTOCOL_VERSION,
-        needsReload,
-        bundledExtVersion: EXTENSION_VERSION,
-        settings: helloSettings(),
-      },
-      m.id,
-    )
+    server.send(client.connId, 'hello.ack', helloAck(needsReload), m.id)
     server.send(client.connId, 'collections.list.result', { collections: saves.collections() })
   })
   server.handle('ext.stale', (_m, client) => {
@@ -164,6 +162,14 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
   const offCollections = onCollectionsChanged(() => {
     server.broadcast('collections.changed', { collections: saves.collections() })
   })
+  // Langue changée : `hello.ack` renvoyé aux extensions connectées (sauf celles à recharger).
+  const offLang = onLangChange(() => {
+    const stale = getBridgeRuntime()?.stale
+    for (const c of server.clients()) {
+      if (stale?.has(c.connId)) continue
+      server.send(c.connId, 'hello.ack', helloAck(false))
+    }
+  })
 
   const spool = new Inbox({ dir: inbox, save: (req) => saves.save(req), log: ctx.log })
   if (getActiveLibrary()) spool.start()
@@ -181,6 +187,7 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
     offLib()
     offClients()
     offCollections()
+    offLang()
     spool.stop()
     setBridgeRuntime(null)
     await server.stop()

@@ -2,6 +2,7 @@
  * Erreurs applicatives transportées par l'IPC sous la forme `{ code, message }`.
  * Pas de propriétés de paramètre (`erasableSyntaxOnly`).
  */
+import { getLang } from './i18n/lang'
 
 export const APP_ERROR_CODES = [
   'not_implemented',
@@ -30,16 +31,18 @@ export type KnownAppErrorCode = (typeof APP_ERROR_CODES)[number]
 export type AppErrorCode = KnownAppErrorCode | (string & {})
 
 /**
- * Message lisible d'une liste d'anomalies zod, en français. Remplace
+ * Message lisible d'une liste d'anomalies zod, dans la langue de l'interface. Remplace
  * `z.prettifyError`, qui insère « at » et des libellés anglais dans les toasts.
  */
 export function formatIssues(
   issues: readonly { message: string; path: readonly PropertyKey[] }[],
 ): string {
-  if (issues.length === 0) return 'Entrée invalide'
+  const fr = getLang() === 'fr'
+  if (issues.length === 0) return fr ? 'Entrée invalide' : 'Invalid input'
   return issues
     .map((i) => {
-      const where = i.path.length > 0 ? ` (champ ${i.path.map(String).join('.')})` : ''
+      const field = i.path.map(String).join('.')
+      const where = i.path.length > 0 ? (fr ? ` (champ ${field})` : ` (field ${field})`) : ''
       return `${i.message}${where}`
     })
     .join(' ; ')

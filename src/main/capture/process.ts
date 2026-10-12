@@ -6,6 +6,7 @@
 import { execFile } from 'node:child_process'
 import { open, stat } from 'node:fs/promises'
 import type { CaptureMode } from '../../shared/prefs'
+import { mt } from '../i18n'
 
 export const DEFAULT_SCREENCAPTURE = '/usr/sbin/screencapture'
 
@@ -85,11 +86,15 @@ export async function isPngFile(path: string): Promise<boolean> {
   }
 }
 
-/** « Capture RecoltOS 2026-10-11 à 14.32.07.png » (heure locale). */
+/**
+ * « Capture RecoltOS 2026-10-11 à 14.32.07.png » (heure locale) ; en anglais
+ * « RecoltOS Capture 2026-10-11 at 14.32.07.png ».
+ */
 export function dropFileName(at: Date, n = 1): string {
   const p = (v: number) => String(v).padStart(2, '0')
-  const base =
-    `Capture RecoltOS ${at.getFullYear()}-${p(at.getMonth() + 1)}-${p(at.getDate())} à ` +
-    `${p(at.getHours())}.${p(at.getMinutes())}.${p(at.getSeconds())}`
+  const base = mt().capture.fileBase(
+    `${at.getFullYear()}-${p(at.getMonth() + 1)}-${p(at.getDate())}`,
+    `${p(at.getHours())}.${p(at.getMinutes())}.${p(at.getSeconds())}`,
+  )
   return n > 1 ? `${base} (${n}).png` : `${base}.png`
 }

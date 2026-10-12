@@ -8,6 +8,7 @@ import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
 import { newUuid } from '../../../shared/ids'
 import { idList, repoBase, type RepoOptions } from './util'
+import { mt } from '../../i18n'
 
 export const RESERVED_TAG_NAMES = ['x', 'instagram', 'cosmos', 'bookmark'] as const
 export const TAG_NAME_MAX = 64
@@ -35,9 +36,9 @@ export function normalizeTagName(raw: string): string {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '-')
-  if (!name) throw new AppError('validation', 'Nom de tag vide.')
+  if (!name) throw new AppError('validation', mt().errors.tagEmpty)
   if ([...name].length > TAG_NAME_MAX) {
-    throw new AppError('validation', `Nom de tag trop long (${TAG_NAME_MAX} caractères au plus).`)
+    throw new AppError('validation', mt().errors.tagTooLong(TAG_NAME_MAX))
   }
   return name
 }
@@ -49,7 +50,7 @@ export function isReservedTagName(name: string): boolean {
 function checkedName(raw: string, allowReserved: boolean): string {
   const name = normalizeTagName(raw)
   if (!allowReserved && isReservedTagName(name)) {
-    throw new AppError('tag_reserved', `« ${name} » est réservé aux sources (#${name}).`)
+    throw new AppError('tag_reserved', mt().errors.tagReserved(name))
   }
   return name
 }
@@ -116,9 +117,9 @@ export function createTagsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return db.transaction(() => {
         const name = checkedName(raw, false)
         const current = q('SELECT * FROM tags WHERE id = ?').get(id) as TagRow | undefined
-        if (!current) throw new AppError('not_found', 'Tag introuvable.')
+        if (!current) throw new AppError('not_found', mt().errors.tagNotFound)
         const clash = q('SELECT id FROM tags WHERE name = ? AND id <> ?').get(name, id)
-        if (clash) throw new AppError('conflict', `Le tag « ${name} » existe déjà.`)
+        if (clash) throw new AppError('conflict', mt().errors.tagExists(name))
         q('UPDATE tags SET name = ? WHERE id = ?').run(name, id)
         return { ...current, name }
       })()
@@ -133,7 +134,7 @@ export function createTagsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return db.transaction(() => {
         const sources = sourceIds.filter((id) => id !== targetId)
         if (!q('SELECT 1 FROM tags WHERE id = ?').get(targetId)) {
-          throw new AppError('not_found', 'Tag cible introuvable.')
+          throw new AppError('not_found', mt().errors.tagTargetNotFound)
         }
         const list = idList(sources)
         q(
