@@ -5,7 +5,7 @@
  */
 import { useEffect } from 'react'
 import { toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { rpc, subscribe } from '../../lib/rpc'
 import { openViewerByUuid } from '../viewer/open'
 import { useCaptureUi } from './capture-actions'
@@ -18,21 +18,21 @@ export function CaptureFeedback() {
     const offs = [
       subscribe('capture.done', (r) => {
         if (r.status !== 'ok') {
-          if (r.status === 'error') toast(r.message || fr.capture.failed)
+          if (r.status === 'error') toast(r.message || tr.capture.failed)
           return
         }
         const uuid = r.itemUuid
         if (r.duplicate) {
-          toast(fr.capture.duplicate, {
-            action: { label: fr.captureUi.view, onClick: () => openViewerByUuid(uuid) },
+          toast(tr.capture.duplicate, {
+            action: { label: tr.captureUi.view, onClick: () => openViewerByUuid(uuid) },
           })
           return
         }
-        toast(fr.capture.done, {
+        toast(tr.capture.done, {
           duration: 8000,
-          action: { label: fr.captureUi.view, onClick: () => openViewerByUuid(uuid) },
+          action: { label: tr.captureUi.view, onClick: () => openViewerByUuid(uuid) },
           cancel: {
-            label: fr.captureUi.undo,
+            label: tr.captureUi.undo,
             onClick: () => void rpc('items.trash', { uuids: [uuid] }).catch(() => undefined),
           },
         })

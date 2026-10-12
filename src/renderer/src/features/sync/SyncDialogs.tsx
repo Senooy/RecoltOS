@@ -8,16 +8,14 @@ import { useEffect, useState } from 'react'
 import type { ItemCard } from '../../../../shared/dto/items'
 import type { ExtensionInfo, SyncRunInfo, SyncStatus } from '../../../../shared/dto/sync'
 import { Button, Dialog, SegmentedSmall, Spinner, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import type { SyncPlatformKey } from '../../i18n/fr/sync'
 import { dateShort } from '../../lib/format'
 import { mediaSrc } from '../../lib/media-url'
 import { RpcError, rpc } from '../../lib/rpc'
 
-const T = fr.syncUi
-
 function fail(err: unknown) {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 export function ActivationSheet({
@@ -40,15 +38,15 @@ export function ActivationSheet({
   return (
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
       <Dialog.Content
-        title={T.activate.title(platform)}
+        title={tr.syncUi.activate.title(platform)}
         className="w-[min(460px,calc(100vw-48px))]"
         data-testid="sync-activate"
       >
         <div className="px-5 pb-5 pt-3 text-[13px] leading-[18px]">
           <ul className="sync-bullets">
-            <li>{T.activate.risk1(platform)}</li>
-            <li>{T.activate.risk2}</li>
-            <li>{T.activate.risk3}</li>
+            <li>{tr.syncUi.activate.risk1(platform)}</li>
+            <li>{tr.syncUi.activate.risk2}</li>
+            <li>{tr.syncUi.activate.risk3}</li>
           </ul>
           <label className="mt-3 flex items-start gap-2 text-fg-muted">
             <input
@@ -58,21 +56,23 @@ export function ActivationSheet({
               data-testid="sync-activate-tab"
               onChange={(e) => setAllowTab(e.target.checked)}
             />
-            <span>{T.activate.backgroundTab(platform)}</span>
+            <span>{tr.syncUi.activate.backgroundTab(platform)}</span>
           </label>
           {gatheros ? (
             <p className="sync-ext-warn mt-3" data-testid="sync-activate-gatheros">
-              {platform === 'instagram' ? T.activate.gatherosBlock : T.extension.gatheros}
+              {platform === 'instagram'
+                ? tr.syncUi.activate.gatherosBlock
+                : tr.syncUi.extension.gatheros}
             </p>
           ) : null}
           <div className="mt-4 flex justify-end gap-2">
             <Button size="sm" variant="ghost" onClick={onClose}>
-              {T.activate.cancel}
+              {tr.syncUi.activate.cancel}
             </Button>
             {blocked ? (
               <>
                 <Button size="sm" onClick={recheck} data-testid="sync-activate-done">
-                  {T.activate.done}
+                  {tr.syncUi.activate.done}
                 </Button>
                 <Button
                   size="sm"
@@ -80,7 +80,7 @@ export function ActivationSheet({
                   onClick={() => onConfirm(allowTab)}
                   data-testid="sync-activate-anyway"
                 >
-                  {T.activate.anyway}
+                  {tr.syncUi.activate.anyway}
                 </Button>
               </>
             ) : (
@@ -90,7 +90,7 @@ export function ActivationSheet({
                 onClick={() => onConfirm(allowTab)}
                 data-testid="sync-activate-confirm"
               >
-                {T.activate.confirm}
+                {tr.syncUi.activate.confirm}
               </Button>
             )}
           </div>
@@ -116,11 +116,11 @@ function CopyAddress({ text }: { text: string }) {
       className="sync-link"
       onClick={() =>
         void rpc('system.copyText', { text })
-          .then(() => toast(T.install.copied))
+          .then(() => toast(tr.syncUi.install.copied))
           .catch(fail)
       }
     >
-      {T.install.copy} <code className="sync-code">{text}</code>
+      {tr.syncUi.install.copy} <code className="sync-code">{text}</code>
     </button>
   )
 }
@@ -145,52 +145,52 @@ export function InstallSheet({
   return (
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
       <Dialog.Content
-        title={T.install.title}
+        title={tr.syncUi.install.title}
         className="w-[min(520px,calc(100vw-48px))]"
         data-testid="sync-install-sheet"
       >
         <div className="px-5 pb-5 pt-3 text-[13px] leading-[18px]">
           <SegmentedSmall
-            label={T.install.title}
+            label={tr.syncUi.install.title}
             value={tab}
             onChange={setTab}
             options={[
-              { value: 'firefox', label: T.install.firefox },
-              { value: 'chromium', label: T.install.chromium },
+              { value: 'firefox', label: tr.syncUi.install.firefox },
+              { value: 'chromium', label: tr.syncUi.install.chromium },
             ]}
           />
           {tab === 'firefox' ? (
             <div className="mt-3 space-y-3">
               <div>
-                <div className="font-medium">{T.install.ffSignedTitle}</div>
+                <div className="font-medium">{tr.syncUi.install.ffSignedTitle}</div>
                 {info?.firefoxXpi ? (
                   <ol className="mt-1.5 space-y-1.5">
                     <Step n={1}>
-                      {T.install.ffSigned1}{' '}
+                      {tr.syncUi.install.ffSigned1}{' '}
                       <button type="button" className="sync-link" onClick={() => reveal('firefox')}>
-                        {T.extension.revealXpi}
+                        {tr.syncUi.extension.revealXpi}
                       </button>
                     </Step>
-                    <Step n={2}>{T.install.ffSigned2}</Step>
+                    <Step n={2}>{tr.syncUi.install.ffSigned2}</Step>
                   </ol>
                 ) : (
-                  <p className="mt-1 text-fg-muted">{T.install.ffNoSigned}</p>
+                  <p className="mt-1 text-fg-muted">{tr.syncUi.install.ffNoSigned}</p>
                 )}
               </div>
               <div>
-                <div className="font-medium">{T.install.ffTempTitle}</div>
+                <div className="font-medium">{tr.syncUi.install.ffTempTitle}</div>
                 <ol className="mt-1.5 space-y-1.5">
                   <Step n={1}>
-                    {T.install.ffTemp1}
+                    {tr.syncUi.install.ffTemp1}
                     <div>
                       <CopyAddress text="about:debugging#/runtime/this-firefox" />
                     </div>
                   </Step>
-                  <Step n={2}>{T.install.ffTemp2}</Step>
+                  <Step n={2}>{tr.syncUi.install.ffTemp2}</Step>
                   <Step n={3}>
-                    {T.install.ffTemp3}{' '}
+                    {tr.syncUi.install.ffTemp3}{' '}
                     <button type="button" className="sync-link" onClick={() => reveal('firefox')}>
-                      {T.extension.reveal}
+                      {tr.syncUi.extension.reveal}
                     </button>
                   </Step>
                 </ol>
@@ -199,16 +199,16 @@ export function InstallSheet({
           ) : (
             <ol className="mt-3 space-y-1.5">
               <Step n={1}>
-                {T.install.cr1}
+                {tr.syncUi.install.cr1}
                 <div>
                   <CopyAddress text="chrome://extensions" />
                 </div>
               </Step>
-              <Step n={2}>{T.install.cr2}</Step>
+              <Step n={2}>{tr.syncUi.install.cr2}</Step>
               <Step n={3}>
-                {T.install.cr3}{' '}
+                {tr.syncUi.install.cr3}{' '}
                 <button type="button" className="sync-link" onClick={() => reveal('chromium')}>
-                  {T.extension.reveal}
+                  {tr.syncUi.extension.reveal}
                 </button>
               </Step>
             </ol>
@@ -221,10 +221,12 @@ export function InstallSheet({
               data-testid="sync-install-state"
             >
               <i aria-hidden="true" />
-              {browsers.length ? T.install.done(browsers.join(', ')) : T.install.waiting}
+              {browsers.length
+                ? tr.syncUi.install.done(browsers.join(', '))
+                : tr.syncUi.install.waiting}
             </span>
             <Button size="sm" variant="primary" onClick={onClose}>
-              {T.install.close}
+              {tr.syncUi.install.close}
             </Button>
           </div>
         </div>
@@ -246,7 +248,7 @@ export function JournalSheet({
       .then(setRuns)
       .catch(() => setRuns([]))
   }, [platform])
-  const j = T.journal
+  const j = tr.syncUi.journal
   return (
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>
       <Dialog.Content
@@ -289,7 +291,7 @@ export function RecoveredDialog({ onClose }: { onClose: () => void }) {
       .then((r) => setItems(r.items))
       .catch(() => setItems([]))
   }, [])
-  const r = T.review
+  const r = tr.syncUi.review
   const done = () => void rpc('sync.ackRecovered', {}).then(onClose).catch(fail)
   return (
     <Dialog.Root open onOpenChange={(o) => !o && onClose()}>

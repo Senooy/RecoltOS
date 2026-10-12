@@ -1,16 +1,28 @@
 /**
- * Libellés internes du kit UI (accessibilité : noms accessibles, infobulles). Les textes de
- * `i18n/fr` sont réutilisés quand ils existent ; le reste est propre au kit (tutoiement, FR).
+ * Libellés internes du kit UI (accessibilité : noms accessibles, infobulles), dans la langue
+ * active : chaque libellé est relu à l'usage (accesseurs), jamais figé à l'import.
  */
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 
 export const UI_LABELS = {
-  close: fr.viewer.close,
-  loading: fr.app.loading,
-  remove: (label: string) => `Retirer ${label}`,
-  video: fr.card.video,
-  gif: fr.card.gif,
-  slide: (current: number, total: number) => `Diapositive ${current} sur ${total}`,
-  notifications: 'Notifications',
-  dismiss: 'Ignorer la notification',
-} as const
+  get close(): string {
+    return tr.viewer.close
+  },
+  get loading(): string {
+    return tr.app.loading
+  },
+  remove: (label: string): string => tr.uiKit.remove(label),
+  get video(): string {
+    return tr.card.video
+  },
+  get gif(): string {
+    return tr.card.gif
+  },
+  slide: (current: number, total: number): string => tr.uiKit.slide(current, total),
+  get notifications(): string {
+    return tr.uiKit.notifications
+  },
+  get dismiss(): string {
+    return tr.uiKit.dismiss
+  },
+}

@@ -5,16 +5,18 @@
  */
 import { ChartPie, Folder, Library, Search } from 'lucide-react'
 import { LayoutGroup, motion } from 'motion/react'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 import { cn } from '../lib/cn'
 
 export type NavValue = 'search' | 'library' | 'collections' | 'spaces'
 
-const SEGMENTS = [
-  { value: 'library', label: fr.nav.library, Icon: Library },
-  { value: 'collections', label: fr.nav.collections, Icon: Folder },
-  { value: 'spaces', label: fr.nav.spaces, Icon: ChartPie },
-] as const
+/** Libellés lus au rendu : ils suivent la langue active. */
+const segments = () =>
+  [
+    { value: 'library', label: tr.nav.library, Icon: Library },
+    { value: 'collections', label: tr.nav.collections, Icon: Folder },
+    { value: 'spaces', label: tr.nav.spaces, Icon: ChartPie },
+  ] as const
 
 const SPRING = { type: 'spring', stiffness: 520, damping: 42, mass: 0.8 } as const
 
@@ -33,7 +35,7 @@ export function NavSegmented({
     <LayoutGroup id="nav">
       <nav
         data-testid="nav-segmented"
-        aria-label={fr.nav.library}
+        aria-label={tr.nav.library}
         className={cn(
           'app-no-drag absolute left-1/2 top-[29px] flex h-[52px] w-[480px] -translate-x-1/2 items-center gap-[2px] rounded-full border p-[5px]',
           dark
@@ -45,7 +47,7 @@ export function NavSegmented({
         <button
           type="button"
           data-testid="seg-search"
-          aria-label={fr.nav.search}
+          aria-label={tr.nav.search}
           aria-current={value === 'search' ? 'page' : undefined}
           className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full"
           onClick={() => onChange('search')}
@@ -72,7 +74,7 @@ export function NavSegmented({
             )}
           />
         </button>
-        {SEGMENTS.map(({ value: v, label, Icon }) => {
+        {segments().map(({ value: v, label, Icon }) => {
           const active = value === v
           return (
             <button

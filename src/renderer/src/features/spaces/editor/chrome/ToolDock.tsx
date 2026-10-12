@@ -21,16 +21,16 @@ import {
 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Menu, Tooltip } from '../../../../components/ui'
-import { fr } from '../../../../i18n/fr'
+import { tr } from '../../../../i18n'
 import { history, redo, setTool, undo, useSpace, type Tool } from '../store/spaceStore'
 
 const ICON = { size: 18, strokeWidth: 1.75 } as const
 
 const SHAPES: { tool: Tool; icon: ReactNode; label: () => string; key?: string }[] = [
-  { tool: 'rect', icon: <Square {...ICON} />, label: () => fr.spaces.tools.rect, key: 'R' },
-  { tool: 'ellipse', icon: <Circle {...ICON} />, label: () => fr.spaces.tools.ellipse, key: 'O' },
-  { tool: 'triangle', icon: <Triangle {...ICON} />, label: () => fr.spacesExtra.triangle },
-  { tool: 'diamond', icon: <Diamond {...ICON} />, label: () => fr.spacesExtra.diamond },
+  { tool: 'rect', icon: <Square {...ICON} />, label: () => tr.spaces.tools.rect, key: 'R' },
+  { tool: 'ellipse', icon: <Circle {...ICON} />, label: () => tr.spaces.tools.ellipse, key: 'O' },
+  { tool: 'triangle', icon: <Triangle {...ICON} />, label: () => tr.spacesExtra.triangle },
+  { tool: 'diamond', icon: <Diamond {...ICON} />, label: () => tr.spacesExtra.diamond },
 ]
 
 function ToolButton({
@@ -79,14 +79,14 @@ export function ToolDock() {
   return (
     <div
       role="toolbar"
-      aria-label={fr.spacesUi.toolsLabel}
+      aria-label={tr.spacesUi.toolsLabel}
       data-testid="space-dock"
       className="sp-float absolute bottom-6 left-1/2 z-20 flex h-11 -translate-x-1/2 items-center gap-0.5 p-1"
       onPointerDown={(e) => e.stopPropagation()}
     >
       <ToolButton
         testId="tool-select"
-        label={fr.spaces.tools.select}
+        label={tr.spaces.tools.select}
         shortcut="V"
         active={tool === 'select'}
         onClick={() => setTool('select')}
@@ -95,7 +95,7 @@ export function ToolDock() {
       </ToolButton>
       <ToolButton
         testId="tool-hand"
-        label={fr.spaces.tools.hand}
+        label={tr.spaces.tools.hand}
         shortcut="H"
         active={tool === 'hand'}
         onClick={() => setTool('hand')}
@@ -105,7 +105,7 @@ export function ToolDock() {
       <span className="sp-sep" />
       <ToolButton
         testId="tool-note"
-        label={fr.spaces.tools.note}
+        label={tr.spaces.tools.note}
         shortcut="N"
         active={tool === 'note'}
         onClick={() => setTool('note')}
@@ -114,7 +114,7 @@ export function ToolDock() {
       </ToolButton>
       <ToolButton
         testId="tool-text"
-        label={fr.spaces.tools.text}
+        label={tr.spaces.tools.text}
         shortcut="T"
         active={tool === 'text'}
         onClick={() => setTool('text')}
@@ -135,7 +135,7 @@ export function ToolDock() {
           <button
             type="button"
             data-testid="tool-shapes"
-            aria-label={fr.spacesExtra.shapes}
+            aria-label={tr.spacesExtra.shapes}
             className="-ml-1 flex h-9 w-4 items-center justify-center rounded-full text-fg-faint hover:text-fg"
           >
             <ChevronUp size={12} strokeWidth={2} />
@@ -161,7 +161,7 @@ export function ToolDock() {
       <span className="sp-sep" />
       <ToolButton
         testId="tool-image"
-        label={fr.spacesUi.pickImages}
+        label={tr.spacesUi.pickImages}
         shortcut="I"
         onClick={() =>
           document.querySelector<HTMLInputElement>('[data-testid="space-file-input"]')?.click()
@@ -171,7 +171,7 @@ export function ToolDock() {
       </ToolButton>
       <ToolButton
         testId="tool-library"
-        label={fr.spacesUi.drawer}
+        label={tr.spacesUi.drawer}
         shortcut="L"
         active={drawerOpen}
         onClick={() => useSpace.setState((s) => ({ drawerOpen: !s.drawerOpen }))}
@@ -181,7 +181,7 @@ export function ToolDock() {
       <span className="sp-sep" />
       <ToolButton
         testId="space-undo"
-        label={fr.spacesUi.undo}
+        label={tr.spacesUi.undo}
         shortcut="⌘Z"
         disabled={!history.canUndo}
         onClick={() => void undo()}
@@ -190,7 +190,7 @@ export function ToolDock() {
       </ToolButton>
       <ToolButton
         testId="space-redo"
-        label={fr.spacesUi.redo}
+        label={tr.spacesUi.redo}
         shortcut="⇧⌘Z"
         disabled={!history.canRedo}
         onClick={() => void redo()}

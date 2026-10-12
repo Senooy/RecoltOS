@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import type { AiEstimate } from '../../../../shared/dto/ai'
 import type { Out } from '../../../../shared/ipc'
 import { Button, Dialog, Spinner, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { bytes } from '../../lib/format'
 import { RpcError, rpc } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
@@ -31,15 +31,15 @@ function PreviewDialog() {
     })
       .then(setData)
       .catch((err: unknown) =>
-        setError(err instanceof RpcError ? err.message : fr.aiUi.previewEmpty),
+        setError(err instanceof RpcError ? err.message : tr.aiUi.previewEmpty),
       )
   }, [req])
-  const name = data ? (fr.aiUi.shortNames[data.provider] ?? data.provider) : ''
+  const name = data ? (tr.aiUi.shortNames[data.provider] ?? data.provider) : ''
   return (
     <Dialog.Root open={req !== null} onOpenChange={(o) => !o && close()}>
       <Dialog.Content
-        title={fr.aiUi.previewTitle}
-        description={data ? fr.aiUi.previewDesc(name) : undefined}
+        title={tr.aiUi.previewTitle}
+        description={data ? tr.aiUi.previewDesc(name) : undefined}
         className="w-[min(560px,calc(100vw-48px))]"
         data-testid="ai-preview-dialog"
       >
@@ -49,7 +49,7 @@ function PreviewDialog() {
           {data ? (
             <>
               {data.files.length === 0 ? (
-                <p className="text-fg-muted">{fr.aiUi.previewNoFile}</p>
+                <p className="text-fg-muted">{tr.aiUi.previewNoFile}</p>
               ) : (
                 <div className="flex flex-wrap gap-3" data-testid="ai-preview-files">
                   {data.files.map((f) => (
@@ -68,7 +68,7 @@ function PreviewDialog() {
               )}
               <details className="mt-3" open>
                 <summary className="cursor-default text-[13px] font-medium">
-                  {fr.aiUi.previewPrompt} · {fr.aiUi.previewChars(data.textChars)}
+                  {tr.aiUi.previewPrompt} · {tr.aiUi.previewChars(data.textChars)}
                 </summary>
                 <pre
                   className="ai-mono mt-1.5 rounded-md bg-surface p-2.5"
@@ -79,7 +79,7 @@ function PreviewDialog() {
               </details>
               <details className="mt-2">
                 <summary className="cursor-default text-[13px] font-medium">
-                  {fr.aiUi.previewSystem}
+                  {tr.aiUi.previewSystem}
                 </summary>
                 <pre className="ai-mono mt-1.5 rounded-md bg-surface p-2.5">{data.system}</pre>
               </details>
@@ -128,7 +128,7 @@ function EnrichDialog() {
         await rpc('ai.batch.start', { planId: p2.planId })
         n += p2.estimate.count
       }
-      toast(fr.aiUi.enrichStarted(n))
+      toast(tr.aiUi.enrichStarted(n))
       close()
     })()
       .catch(aiFail)
@@ -138,7 +138,7 @@ function EnrichDialog() {
   return (
     <Dialog.Root open={scope !== null} onOpenChange={(o) => !o && close()}>
       <Dialog.Content
-        title={fr.ai.enrichTitle}
+        title={tr.ai.enrichTitle}
         className="w-[min(480px,calc(100vw-48px))]"
         data-testid="ai-enrich"
       >
@@ -147,9 +147,9 @@ function EnrichDialog() {
             <Spinner />
           ) : (
             <>
-              <p>{fr.aiUi.enrichDesc(plan.estimate.count)}</p>
+              <p>{tr.aiUi.enrichDesc(plan.estimate.count)}</p>
               <p className="mt-1.5 text-fg-muted" data-testid="ai-enrich-eta">
-                {fr.aiUi.enrichEta(calls, fr.aiUi.eta(calls * perCall), ai.perHour)}
+                {tr.aiUi.enrichEta(calls, tr.aiUi.eta(calls * perCall), ai.perHour)}
               </p>
               {regen > 0 ? (
                 <label className="mt-3 flex items-start gap-2 text-[12.5px]">
@@ -159,19 +159,19 @@ function EnrichDialog() {
                     checked={withRegen}
                     onChange={(e) => setWithRegen(e.target.checked)}
                   />
-                  {fr.aiUi.enrichRegen(regen)}
+                  {tr.aiUi.enrichRegen(regen)}
                 </label>
               ) : null}
-              <p className="mt-2 text-[12px] text-fg-subtle">{fr.aiUi.enrichXCarousels}</p>
+              <p className="mt-2 text-[12px] text-fg-subtle">{tr.aiUi.enrichXCarousels}</p>
               <button
                 type="button"
                 className="mt-2 text-[12.5px] underline underline-offset-2"
                 onClick={() => useAi.getState().openPreview(null)}
               >
-                {fr.ai.previewPayload}
+                {tr.ai.previewPayload}
               </button>
               <div className="mt-4 flex justify-end gap-2">
-                <Button onClick={close}>{fr.aiUi.enrichLater}</Button>
+                <Button onClick={close}>{tr.aiUi.enrichLater}</Button>
                 <Button
                   variant="primary"
                   loading={busy}
@@ -179,7 +179,7 @@ function EnrichDialog() {
                   data-testid="ai-enrich-start"
                   onClick={start}
                 >
-                  {ready ? fr.aiUi.enrichStart : fr.aiUi.change}
+                  {ready ? tr.aiUi.enrichStart : tr.aiUi.change}
                 </Button>
               </div>
             </>

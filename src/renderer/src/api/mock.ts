@@ -7,6 +7,7 @@ import type { RecoltApi } from '../../../preload/api'
 import type { CollectionNode } from '../../../shared/dto/collections'
 import type { ItemCard, ItemDetail, ItemsPage, TabCounts } from '../../../shared/dto/items'
 import type { RpcResult } from '../../../shared/errors'
+import { langFromLocale } from '../../../shared/i18n/lang'
 import type { In, Out } from '../../../shared/ipc'
 import { DEFAULT_PREFS, mergePrefs, type Prefs, type PrefsPatch } from '../../../shared/prefs'
 import fixture from './mock-items.json'
@@ -215,6 +216,12 @@ export function createMockApi(): RecoltApi {
     onFlushRequest: () => () => undefined,
     flushDone: () => undefined,
     applyBatchSync: () => null,
-    flags: { theme: dark ? 'dark' : 'light', e2e: false },
+    flags: {
+      theme: dark ? 'dark' : 'light',
+      e2e: false,
+      // Maquette dans un navigateur : la langue suit celle du navigateur.
+      lang: langFromLocale(navigator.language),
+      systemLang: langFromLocale(navigator.language),
+    },
   }
 }

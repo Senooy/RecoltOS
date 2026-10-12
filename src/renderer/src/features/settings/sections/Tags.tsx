@@ -6,13 +6,13 @@ import { Ellipsis, GitMerge, Pencil, Plus, Trash } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { TagInfo } from '../../../../../shared/dto/collections'
 import { Button, Menu, toast } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { RpcError, rpc, subscribe } from '../../../lib/rpc'
 import { askConfirm, askName } from '../../../state/dialogs'
 import { SettingsTitle } from '../SettingsDialog'
 
 function fail(err: unknown) {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 function TagRow({
@@ -45,7 +45,7 @@ function TagRow({
   const merge = async (target: TagInfo) => {
     try {
       await rpc('tags.merge', { sourceUuids: [tag.uuid], targetUuid: target.uuid })
-      toast(fr.settingsMoreUi.tagMergeDone(target.name))
+      toast(tr.settingsMoreUi.tagMergeDone(target.name))
       onChanged()
     } catch (err) {
       fail(err)
@@ -53,9 +53,9 @@ function TagRow({
   }
   const remove = async () => {
     const ok = await askConfirm({
-      title: fr.settingsMoreUi.tagDeleteTitle(tag.name),
-      body: fr.settingsMoreUi.tagDeleteBody,
-      confirmLabel: fr.confirm.delete,
+      title: tr.settingsMoreUi.tagDeleteTitle(tag.name),
+      body: tr.settingsMoreUi.tagDeleteBody,
+      confirmLabel: tr.confirm.delete,
       danger: true,
     })
     if (!ok) return
@@ -99,13 +99,13 @@ function TagRow({
         </button>
       )}
       <span className="text-[11px] text-[var(--set-help)] tnum">
-        {fr.settingsMoreUi.tagCount(tag.count)}
+        {tr.settingsMoreUi.tagCount(tag.count)}
       </span>
       <Menu.Dropdown.Root>
         <Menu.Dropdown.Trigger asChild>
           <button
             type="button"
-            aria-label={fr.settingsMoreUi.tagActions(tag.name)}
+            aria-label={tr.settingsMoreUi.tagActions(tag.name)}
             className="flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle hover:bg-[var(--hover)]"
           >
             <Ellipsis size={16} />
@@ -113,12 +113,12 @@ function TagRow({
         </Menu.Dropdown.Trigger>
         <Menu.Dropdown.Content align="end">
           <Menu.Dropdown.Item icon={<Pencil />} onSelect={() => setEditing(true)}>
-            {fr.settings.tags.rename}
+            {tr.settings.tags.rename}
           </Menu.Dropdown.Item>
           {others.length > 0 ? (
             <Menu.Dropdown.Sub>
               <Menu.Dropdown.SubTrigger icon={<GitMerge />}>
-                {fr.settings.tags.merge}
+                {tr.settings.tags.merge}
               </Menu.Dropdown.SubTrigger>
               <Menu.Dropdown.SubContent className="max-h-[300px] overflow-y-auto">
                 {others.map((o) => (
@@ -130,7 +130,7 @@ function TagRow({
             </Menu.Dropdown.Sub>
           ) : null}
           <Menu.Dropdown.Item tone="danger" icon={<Trash />} onSelect={() => void remove()}>
-            {fr.settings.tags.delete}
+            {tr.settings.tags.delete}
           </Menu.Dropdown.Item>
         </Menu.Dropdown.Content>
       </Menu.Dropdown.Root>
@@ -158,14 +158,14 @@ export function TagsSection() {
   )
   const create = async () => {
     const name = await askName({
-      title: fr.settingsMoreUi.tagNewTitle,
+      title: tr.settingsMoreUi.tagNewTitle,
       initial: '',
-      confirmLabel: fr.shell.create,
+      confirmLabel: tr.shell.create,
     })
     if (!name) return
     try {
       const t = await rpc('tags.create', { name })
-      toast(fr.settingsMoreUi.tagCreated(t.name))
+      toast(tr.settingsMoreUi.tagCreated(t.name))
       load()
     } catch (err) {
       fail(err)
@@ -173,12 +173,12 @@ export function TagsSection() {
   }
   return (
     <>
-      <SettingsTitle description={fr.settingsMoreUi.tagsDesc}>{fr.settings.nav.tags}</SettingsTitle>
+      <SettingsTitle description={tr.settingsMoreUi.tagsDesc}>{tr.settings.nav.tags}</SettingsTitle>
       <div className="mt-5 flex items-center gap-2">
         <input
           data-testid="settings-tags-filter"
           className="h-[34px] min-w-0 flex-1 rounded-[10px] border border-[var(--set-field-border)] bg-[var(--set-field-bg)] px-3 text-[12.5px] outline-none focus:border-border-strong"
-          placeholder={fr.settings.tags.filter}
+          placeholder={tr.settings.tags.filter}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
@@ -188,7 +188,7 @@ export function TagsSection() {
           data-testid="settings-tag-new"
           onClick={() => void create()}
         >
-          {fr.settings.tags.new}
+          {tr.settings.tags.new}
         </Button>
       </div>
       <div className="mt-3">
@@ -202,7 +202,7 @@ export function TagsSection() {
         ))}
         {shown.length === 0 ? (
           <p className="py-6 text-center text-[11.5px] text-fg-faint">
-            {tags.length === 0 ? fr.settingsMoreUi.tagsEmpty : fr.settingsMoreUi.tagsNoMatch}
+            {tags.length === 0 ? tr.settingsMoreUi.tagsEmpty : tr.settingsMoreUi.tagsNoMatch}
           </p>
         ) : null}
       </div>

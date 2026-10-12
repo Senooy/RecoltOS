@@ -8,27 +8,19 @@ import { useCallback, useEffect, useState } from 'react'
 import { EXTENSION_VERSION } from '../../../../shared/bridge/constants'
 import type { SyncSourceStatus, SyncStatus } from '../../../../shared/dto/sync'
 import { Menu, Popover, Switch, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import type { SyncPlatformKey } from '../../i18n/fr/sync'
 import { cn } from '../../lib/cn'
-import { relative } from '../../lib/format'
+import { hourMinute, relative } from '../../lib/format'
 import { RpcError, rpc, subscribe } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
 import { SettingsTitle } from '../settings/SettingsDialog'
 import { ActivationSheet, InstallSheet, JournalSheet } from './SyncDialogs'
 import './sync.css'
 
-const T = fr.syncUi
-const LABELS: Record<SyncPlatformKey, string> = {
-  x: fr.settings.sync.x,
-  instagram: fr.settings.sync.instagram,
-  cosmos: fr.settings.sync.cosmos,
-}
+const label = (p: SyncPlatformKey): string => tr.settings.sync[p]
 
-function hhmm(ts: number): string {
-  const d = new Date(ts)
-  return `${d.getHours()}\u202fh\u202f${String(d.getMinutes()).padStart(2, '0')}`
-}
+const hhmm = (ts: number): string => hourMinute(ts)
 
 /** Ligne d'état et sa tonalité (gris, ambre, rouge). */
 export function statusLine(
@@ -38,45 +30,52 @@ export function statusLine(
   const p = s.source
   if (!s.enabled) {
     return s.importedFlag
-      ? { text: T.line.imported, tone: 'warn' }
-      : { text: T.line.disabled, tone: 'muted' }
+      ? { text: tr.syncUi.line.imported, tone: 'warn' }
+      : { text: tr.syncUi.line.disabled, tone: 'muted' }
   }
   if (s.running) {
     const n = s.running.newItems
     return {
-      text: s.running.mode === 'backfill' ? T.line.backfill(n) : T.line.running(n),
+      text: s.running.mode === 'backfill' ? tr.syncUi.line.backfill(n) : tr.syncUi.line.running(n),
       tone: 'muted',
     }
   }
-  if (s.detail === 'browser_closed') return { text: T.line.browserClosed, tone: 'muted' }
-  if (s.detail === 'permissions') return { text: T.line.permissions(p), tone: 'warn' }
-  if (s.detail === 'blocked') return { text: T.line.blocked(p), tone: 'err' }
-  if (s.detail === 'not_logged_in') return { text: T.line.notLoggedIn(p, s.browser), tone: 'warn' }
+  if (s.detail === 'browser_closed') return { text: tr.syncUi.line.browserClosed, tone: 'muted' }
+  if (s.detail === 'permissions') return { text: tr.syncUi.line.permissions(p), tone: 'warn' }
+  if (s.detail === 'blocked') return { text: tr.syncUi.line.blocked(p), tone: 'err' }
+  if (s.detail === 'not_logged_in')
+    return { text: tr.syncUi.line.notLoggedIn(p, s.browser), tone: 'warn' }
   switch (s.status) {
     case 'auth_required':
-      return { text: T.line.authRequired(p, s.browser), tone: 'warn' }
+      return { text: tr.syncUi.line.authRequired(p, s.browser), tone: 'warn' }
     case 'rate_limited':
       return s.detail === 'budget'
-        ? { text: T.line.budget, tone: 'warn' }
-        : { text: T.line.rateLimited(s.cooldownUntil ? hhmm(s.cooldownUntil) : null), tone: 'warn' }
+        ? { text: tr.syncUi.line.budget, tone: 'warn' }
+        : {
+            text: tr.syncUi.line.rateLimited(s.cooldownUntil ? hhmm(s.cooldownUntil) : null),
+            tone: 'warn',
+          }
     case 'api_changed':
-      return { text: T.line.apiChanged(p), tone: 'err' }
+      return { text: tr.syncUi.line.apiChanged(p), tone: 'err' }
     case 'error':
-      return { text: T.line.network, tone: 'warn' }
+      return { text: tr.syncUi.line.network, tone: 'warn' }
     case 'waiting_for_tab':
-      return { text: T.line.waiting(p), tone: 'muted' }
+      return { text: tr.syncUi.line.waiting(p), tone: 'muted' }
     case 'no_browser':
-      return { text: T.line.browserClosed, tone: 'muted' }
+      return { text: tr.syncUi.line.browserClosed, tone: 'muted' }
     default:
       break
   }
   if (s.lastSuccessAt)
-    return { text: T.line.ok(relative(s.lastSuccessAt, now), s.lastNewCount), tone: 'muted' }
-  return { text: T.line.never, tone: 'muted' }
+    return {
+      text: tr.syncUi.line.ok(relative(s.lastSuccessAt, now), s.lastNewCount),
+      tone: 'muted',
+    }
+  return { text: tr.syncUi.line.never, tone: 'muted' }
 }
 
 function fail(err: unknown) {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 export function useSyncStatus(): [SyncStatus | null, () => void] {
@@ -116,14 +115,14 @@ function SourceRow({
     <div className="sync-row" data-testid={`sync-row-${p}`}>
       <div className="min-w-0 flex-1">
         <div id={id} className="sync-row-label">
-          {LABELS[p]}
+          {label(p)}
         </div>
         <div
           className={cn('sync-row-line', `sync-tone-${line.tone}`)}
           data-testid={`sync-line-${p}`}
         >
           {line.text}
-          {p === 'cosmos' && s.enabled ? ` · ${T.experimental}` : ''}
+          {p === 'cosmos' && s.enabled ? ` · ${tr.syncUi.experimental}` : ''}
         </div>
       </div>
       <Menu.Dropdown.Root>
@@ -131,7 +130,7 @@ function SourceRow({
           <button
             type="button"
             className="sync-more"
-            aria-label={T.menu.open(p)}
+            aria-label={tr.syncUi.menu.open(p)}
             data-testid={`sync-more-${p}`}
           >
             <MoreHorizontal size={16} strokeWidth={1.75} />
@@ -142,7 +141,7 @@ function SourceRow({
             disabled={!s.enabled}
             onSelect={() => void rpc('sync.runNow', { source: s.source }).then(refresh).catch(fail)}
           >
-            {T.menu.now}
+            {tr.syncUi.menu.now}
           </Menu.Dropdown.Item>
           <Menu.Dropdown.Item
             disabled={!s.enabled}
@@ -150,7 +149,7 @@ function SourceRow({
               void rpc('sync.resyncAll', { source: s.source }).then(refresh).catch(fail)
             }
           >
-            {T.menu.resync}
+            {tr.syncUi.menu.resync}
           </Menu.Dropdown.Item>
           <Menu.Dropdown.CheckboxItem
             checked={s.allowBackgroundTab}
@@ -160,9 +159,9 @@ function SourceRow({
                 .catch(fail)
             }
           >
-            {T.menu.backgroundTab}
+            {tr.syncUi.menu.backgroundTab}
           </Menu.Dropdown.CheckboxItem>
-          <Menu.Dropdown.Item onSelect={onJournal}>{T.menu.journal}</Menu.Dropdown.Item>
+          <Menu.Dropdown.Item onSelect={onJournal}>{tr.syncUi.menu.journal}</Menu.Dropdown.Item>
         </Menu.Dropdown.Content>
       </Menu.Dropdown.Root>
       <Switch
@@ -183,29 +182,33 @@ function ExtensionCard({ status, onInstall }: { status: SyncStatus; onInstall: (
     <div className="sync-ext" data-testid="sync-extension">
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <div className="sync-ext-title">{T.extension.title}</div>
+          <div className="sync-ext-title">{tr.syncUi.extension.title}</div>
           <div
             className={cn('sync-ext-state', connected ? 'sync-ext-on' : 'sync-ext-off')}
             data-testid="sync-ext-state"
           >
             <i aria-hidden="true" />
-            {connected ? T.extension.connected(browsers.join(', ')) : T.extension.missing}
+            {connected
+              ? tr.syncUi.extension.connected(browsers.join(', '))
+              : tr.syncUi.extension.missing}
           </div>
         </div>
         <button type="button" className="sync-pill" data-testid="sync-install" onClick={onInstall}>
-          {connected ? T.menu.now : T.extension.install}
+          {connected ? tr.syncUi.menu.now : tr.syncUi.extension.install}
         </button>
       </div>
       <p className="sync-ext-help">
-        {connected ? T.extension.background : T.extension.browserClosed}
+        {connected ? tr.syncUi.extension.background : tr.syncUi.extension.browserClosed}
       </p>
-      <p className="sync-ext-help">{T.extension.supported}</p>
+      <p className="sync-ext-help">{tr.syncUi.extension.supported}</p>
       {stale?.extVersion ? (
-        <p className="sync-ext-warn">{T.extension.stale(stale.extVersion, EXTENSION_VERSION)}</p>
+        <p className="sync-ext-warn">
+          {tr.syncUi.extension.stale(stale.extVersion, EXTENSION_VERSION)}
+        </p>
       ) : null}
       {status.gatherosConflict ? (
         <p className="sync-ext-warn" data-testid="sync-gatheros">
-          {T.extension.gatheros}
+          {tr.syncUi.extension.gatheros}
         </p>
       ) : null}
     </div>
@@ -232,8 +235,8 @@ export function SyncSettings() {
 
   return (
     <div data-testid="sync-settings">
-      <SettingsTitle description={fr.settings.sync.desc}>{fr.settings.nav.sync}</SettingsTitle>
-      <div className="sync-group">{fr.settings.sync.group}</div>
+      <SettingsTitle description={tr.settings.sync.desc}>{tr.settings.nav.sync}</SettingsTitle>
+      <div className="sync-group">{tr.settings.sync.group}</div>
       <div>
         {(status?.sources ?? []).map((s) => (
           <SourceRow
@@ -245,17 +248,17 @@ export function SyncSettings() {
           />
         ))}
       </div>
-      <p className="sync-foot">{fr.settings.sync.footnote}</p>
+      <p className="sync-foot">{tr.settings.sync.footnote}</p>
       <p className="sync-foot sync-foot-tight">
-        {T.unofficial}{' '}
+        {tr.syncUi.unofficial}{' '}
         <Popover.Root>
           <Popover.Trigger asChild>
             <button type="button" className="sync-link" data-testid="sync-learn-more">
-              {T.learnMore}
+              {tr.syncUi.learnMore}
             </button>
           </Popover.Trigger>
           <Popover.Content className="w-[360px] text-[13px] leading-[18px]">
-            {T.learnMoreText}
+            {tr.syncUi.learnMoreText}
           </Popover.Content>
         </Popover.Root>
       </p>
@@ -275,7 +278,7 @@ export function SyncSettings() {
           className="sync-link mt-2 text-[11px]"
           onClick={() => setInstall(true)}
         >
-          {T.extension.install}
+          {tr.syncUi.extension.install}
         </button>
       )}
       {activating ? (

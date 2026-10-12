@@ -4,7 +4,7 @@
  */
 import { useState } from 'react'
 import { Button, Popover } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { importUrl, reportImport } from './import-actions'
 
 export function isWebUrl(v: string): boolean {
@@ -63,14 +63,14 @@ export function UrlPopoverContent({
         }}
       >
         <label className="mb-1.5 block text-[12px] text-fg-muted" htmlFor="url-input">
-          {fr.importUiMore.urlLabel}
+          {tr.importUiMore.urlLabel}
         </label>
         <div className="flex gap-2">
           <input
             id="url-input"
             data-testid="url-input"
             className="h-[34px] min-w-0 flex-1 rounded-[10px] border border-border bg-bg px-2.5 text-[13.5px] outline-none focus:border-border-strong"
-            placeholder={fr.importUiMore.urlPlaceholder}
+            placeholder={tr.importUiMore.urlPlaceholder}
             value={value}
             spellCheck={false}
             onChange={(e) => {
@@ -84,12 +84,12 @@ export function UrlPopoverContent({
             loading={state === 'loading'}
             className="h-[34px]"
           >
-            {fr.importUiMore.urlAdd}
+            {tr.importUiMore.urlAdd}
           </Button>
         </div>
         {state === 'invalid' || state === 'failed' ? (
           <p className="mt-1.5 text-[12px] text-danger" role="alert" data-testid="url-error">
-            {state === 'invalid' ? fr.importUiMore.urlInvalid : fr.importUiMore.urlFailed}
+            {state === 'invalid' ? tr.importUiMore.urlInvalid : tr.importUiMore.urlFailed}
           </p>
         ) : null}
       </form>

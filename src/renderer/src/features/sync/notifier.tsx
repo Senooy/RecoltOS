@@ -6,7 +6,7 @@
 import { createRoot, type Root } from 'react-dom/client'
 import type { SyncStatus } from '../../../../shared/dto/sync'
 import { toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { subscribe } from '../../lib/rpc'
 import { RecoveredDialog } from './SyncDialogs'
 
@@ -40,7 +40,7 @@ export function syncNotices(
     if (!before) continue
     if (s.lastSuccessAt && s.lastSuccessAt !== before.lastSuccessAt && s.lastNewCount > 0) {
       out.push({
-        text: fr.syncUi.toast.newItems(s.lastNewCount, s.source),
+        text: tr.syncUi.toast.newItems(s.lastNewCount, s.source),
         review: false,
       })
     }
@@ -48,7 +48,7 @@ export function syncNotices(
   const rec = (st: SyncStatus) => st.sources.reduce((n, s) => n + s.recovered, 0)
   const r = rec(next)
   if (r > rec(prev) && next.sources.every((s) => !s.running)) {
-    out.push({ text: fr.syncUi.toast.recovered(r), review: true })
+    out.push({ text: tr.syncUi.toast.recovered(r), review: true })
   }
   return out
 }
@@ -58,7 +58,7 @@ export function installSyncNotifier(): () => void {
   return subscribe('sync.status', (next) => {
     for (const n of syncNotices(prev, next)) {
       if (n.review) {
-        toast(n.text, { action: { label: fr.syncUi.toast.review, onClick: openRecoveredReview } })
+        toast(n.text, { action: { label: tr.syncUi.toast.review, onClick: openRecoveredReview } })
       } else toast(n.text)
     }
     prev = next

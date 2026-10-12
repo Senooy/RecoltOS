@@ -7,7 +7,7 @@ import { Download, FileUp } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { LibraryTab, SortMode } from '../../../../shared/enums'
 import { Button, EmptyState, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { RpcError, rpc } from '../../lib/rpc'
 import { importFiles } from '../../shell/commands'
 import { useCollections } from '../../state/collections'
@@ -51,8 +51,8 @@ function EmptyTab({ tab, libraryEmpty }: { tab: LibraryTab; libraryEmpty: boolea
     return (
       <EmptyState
         className="pt-24"
-        title={fr.empty.libraryTitle}
-        description={fr.empty.libraryBody}
+        title={tr.empty.libraryTitle}
+        description={tr.empty.libraryBody}
         action={
           <div className="mt-4 flex gap-2">
             <Button
@@ -61,14 +61,14 @@ function EmptyTab({ tab, libraryEmpty }: { tab: LibraryTab; libraryEmpty: boolea
               data-testid="empty-import-gatheros"
               onClick={() => openOverlay({ type: 'settings', section: 'libraries' })}
             >
-              {fr.empty.importGatheros}
+              {tr.empty.importGatheros}
             </Button>
             <Button
               variant="secondary"
               icon={<FileUp size={15} />}
               onClick={() => void importFiles()}
             >
-              {fr.empty.importFiles}
+              {tr.empty.importFiles}
             </Button>
           </div>
         }
@@ -77,14 +77,14 @@ function EmptyTab({ tab, libraryEmpty }: { tab: LibraryTab; libraryEmpty: boolea
   }
   const title =
     tab === 'trash'
-      ? fr.empty.trash
+      ? tr.empty.trash
       : tab === 'hidden'
-        ? fr.empty.hidden
+        ? tr.empty.hidden
         : tab === 'unsorted'
-          ? fr.empty.unsorted
+          ? tr.empty.unsorted
           : tab === 'saved'
-            ? fr.libraryUi.emptySaved
-            : fr.empty.libraryTitle
+            ? tr.libraryUi.emptySaved
+            : tr.empty.libraryTitle
   return <EmptyState className="pt-24" title={title} />
 }
 
@@ -105,16 +105,16 @@ export default function LibraryPage() {
 
   const emptyTrash = async () => {
     const ok = await askConfirm({
-      title: fr.confirm.emptyTrashTitle,
-      body: fr.confirm.emptyTrashBody(total),
-      confirmLabel: fr.tabs.emptyTrash,
+      title: tr.confirm.emptyTrashTitle,
+      body: tr.confirm.emptyTrashBody(total),
+      confirmLabel: tr.tabs.emptyTrash,
       danger: true,
     })
     if (!ok) return
     try {
       await rpc('items.emptyTrash')
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
     }
   }
 
@@ -134,7 +134,7 @@ export default function LibraryPage() {
               data-testid="empty-trash"
               onClick={() => void emptyTrash()}
             >
-              {fr.tabs.emptyTrash}
+              {tr.tabs.emptyTrash}
             </Button>
           ) : null}
           <ColumnSlider columns={columns} onChange={(n) => setColumns('library', n)} />
@@ -145,7 +145,7 @@ export default function LibraryPage() {
         ref={scrollRef}
         data-testid="library-scroll"
         className="relative min-h-0 flex-1 overflow-y-auto pb-[100px]"
-        aria-label={fr.nav.library}
+        aria-label={tr.nav.library}
       >
         {showCollections && (tree.length > 0 || items.length > 0) ? (
           <CollectionsRow collections={tree} />

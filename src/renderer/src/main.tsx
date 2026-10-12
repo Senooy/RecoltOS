@@ -8,6 +8,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import { initApi } from './api/client'
+import { setUiLang } from './i18n'
 import { installVideoGuard } from './lib/video-guard'
 import './styles/tokens.css'
 import './styles/globals.css'
@@ -24,6 +25,9 @@ const el = document.getElementById('root')
 if (!el) throw new Error('#root introuvable')
 // La maquette (dev) est chargée avant le premier rendu : `getApi()` reste synchrone.
 void initApi().then(() => {
+  // Langue résolue par main (réglage ou langue du Mac) : premier rendu dans la bonne langue.
+  const lang = window.recolt?.flags.lang
+  if (lang) setUiLang(lang)
   createRoot(el).render(
     <StrictMode>
       <App />

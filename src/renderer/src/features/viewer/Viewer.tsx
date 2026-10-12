@@ -28,7 +28,7 @@ import {
 } from 'react'
 import type { ItemCard, ItemDetail } from '../../../../shared/dto/items'
 import { FormatBadge, Slider, isReducedMotion, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { emit, on } from '../../lib/bus'
 import { cn } from '../../lib/cn'
 import { SHEET_EASING } from '../../lib/flip'
@@ -274,7 +274,7 @@ export default function Viewer() {
         })
         .catch((err: unknown) => {
           if (!alive) return
-          if (err instanceof RpcError && err.code === 'not_found') toast(fr.viewerUi.notFound)
+          if (err instanceof RpcError && err.code === 'not_found') toast(tr.viewerUi.notFound)
         })
     void load()
     void rpc('items.markViewed', { uuid }).catch(() => undefined)
@@ -494,9 +494,9 @@ export default function Viewer() {
     if (!uuid) return
     void rpc('system.saveAs', { itemUuid: uuid })
       .then((r) => {
-        if (r) toast(fr.viewerUi.downloaded)
+        if (r) toast(tr.viewerUi.downloaded)
       })
-      .catch((err: unknown) => toast(err instanceof RpcError ? err.message : fr.errors.generic))
+      .catch((err: unknown) => toast(err instanceof RpcError ? err.message : tr.errors.generic))
   }, [uuid])
 
   // Commandes du menu natif (⌘I, ⌘+, ⌘−, ⌘0, Aperçu rapide).
@@ -614,18 +614,18 @@ export default function Viewer() {
     (x: number, y: number) => {
       const hex = sampleAt(x, y)
       if (!hex) {
-        toast(fr.viewerUi.pickFailed)
+        toast(tr.viewerUi.pickFailed)
         return
       }
       setPicking(false)
       void rpc('system.copyText', { text: hex })
-        .then(() => toast(fr.viewer.colorCopied(hex)))
-        .catch(() => toast(fr.errors.generic))
+        .then(() => toast(tr.viewer.colorCopied(hex)))
+        .catch(() => toast(tr.errors.generic))
     },
     [sampleAt],
   )
 
-  const counter = list.length > 0 ? fr.viewerUi.counter(index + 1, list.length) : ''
+  const counter = list.length > 0 ? tr.viewerUi.counter(index + 1, list.length) : ''
   const tweetFull = currentDetail?.post ?? null
 
   const mediaStyle: CSSProperties = useMemo(
@@ -649,7 +649,7 @@ export default function Viewer() {
       data-uuid={uuid}
       role="dialog"
       aria-modal="true"
-      aria-label={fr.viewerUi.label}
+      aria-label={tr.viewerUi.label}
       tabIndex={-1}
       data-picking={picking ? '' : undefined}
       className={cn('viewer-root', layoutAnim && 'viewer-layout-anim', still && 'viewer-still')}
@@ -739,7 +739,7 @@ export default function Viewer() {
                 {slide > 0 ? (
                   <button
                     type="button"
-                    aria-label={fr.viewerUi.prevSlide}
+                    aria-label={tr.viewerUi.prevSlide}
                     className="viewer-slide-arrow left-3"
                     onClick={() => goSlide(-1)}
                   >
@@ -749,7 +749,7 @@ export default function Viewer() {
                 {slide < slideCount - 1 ? (
                   <button
                     type="button"
-                    aria-label={fr.viewerUi.nextSlide}
+                    aria-label={tr.viewerUi.nextSlide}
                     className="viewer-slide-arrow right-3"
                     onClick={() => goSlide(1)}
                   >
@@ -783,13 +783,13 @@ export default function Viewer() {
             data-testid="slide-indicator"
             className="viewer-dots"
             role="status"
-            aria-label={fr.viewerUi.slide(slide + 1, slideCount)}
+            aria-label={tr.viewerUi.slide(slide + 1, slideCount)}
             style={{ left: fit.x, width: fit.w, top: fit.y + fit.h + 10 }}
           >
             {Array.from({ length: slideCount }, (_, i) => (
               <span key={i} className={cn('viewer-dot', i === slide && 'is-active')} />
             ))}
-            <span className="viewer-dots-text">{fr.viewerUi.counter(slide + 1, slideCount)}</span>
+            <span className="viewer-dots-text">{tr.viewerUi.counter(slide + 1, slideCount)}</span>
           </div>
         ) : null}
         {hoverStage && list.length > 1 ? (
@@ -797,7 +797,7 @@ export default function Viewer() {
             {index > 0 ? (
               <button
                 type="button"
-                aria-label={fr.viewer.previous}
+                aria-label={tr.viewer.previous}
                 className="viewer-nav"
                 style={{ left: stage.x + 16, top: stage.y + stage.h / 2 - 20 }}
                 onMouseEnter={() => setHoverStage(true)}
@@ -809,7 +809,7 @@ export default function Viewer() {
             {index < list.length - 1 ? (
               <button
                 type="button"
-                aria-label={fr.viewer.next}
+                aria-label={tr.viewer.next}
                 className="viewer-nav"
                 style={{ left: stage.x + stage.w - 56, top: stage.y + stage.h / 2 - 20 }}
                 onMouseEnter={() => setHoverStage(true)}
@@ -825,7 +825,7 @@ export default function Viewer() {
           <button
             type="button"
             data-testid="viewer-back"
-            aria-label={fr.viewer.back}
+            aria-label={tr.viewer.back}
             className="viewer-back"
             onClick={close}
           >
@@ -842,7 +842,7 @@ export default function Viewer() {
                 </span>
                 <Slider
                   variant="zoom"
-                  label={fr.viewerUi.zoom}
+                  label={tr.viewerUi.zoom}
                   min={25}
                   max={300}
                   step={1}
@@ -854,7 +854,7 @@ export default function Viewer() {
                 <span className="viewer-sep ml-[15px]" />
                 <button
                   type="button"
-                  aria-label={fr.viewerUi.pick}
+                  aria-label={tr.viewerUi.pick}
                   aria-pressed={picking}
                   data-testid="viewer-pipette"
                   className={cn('viewer-icon-btn ml-[13px]', picking && 'is-active')}
@@ -866,7 +866,7 @@ export default function Viewer() {
             ) : null}
             <button
               type="button"
-              aria-label={fr.viewer.download}
+              aria-label={tr.viewer.download}
               data-testid="viewer-download"
               className={cn('viewer-icon-btn', media.kind === 'tweet' ? 'ml-[13px]' : 'ml-[10px]')}
               onClick={download}
@@ -875,7 +875,7 @@ export default function Viewer() {
             </button>
             <button
               type="button"
-              aria-label={fr.viewer.delete}
+              aria-label={tr.viewer.delete}
               data-testid="viewer-delete"
               className="viewer-icon-btn ml-[10px]"
               onClick={() => void remove()}
@@ -885,7 +885,7 @@ export default function Viewer() {
             <span className="viewer-sep ml-[14px]" />
             <button
               type="button"
-              aria-label={fr.viewer.close}
+              aria-label={tr.viewer.close}
               data-testid="viewer-close"
               className="viewer-icon-btn ml-[12px]"
               onClick={close}

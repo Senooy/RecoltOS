@@ -30,7 +30,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { ItemCard } from '../../../../shared/dto/items'
 import type { NamedRef } from '../../../../shared/dto/items'
 import { isReducedMotion, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { cardLargeSrc, mediaSrc } from '../../lib/media-url'
 import { RpcError, rpc } from '../../lib/rpc'
@@ -265,7 +265,7 @@ export default function Rediscover() {
   useEffect(() => {
     setIndex(0)
     void load(0).catch((err: unknown) => {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
       setLoaded(true)
     })
   }, [load])
@@ -344,7 +344,7 @@ export default function Rediscover() {
         })
       } catch (err) {
         busy.current = false
-        toast(err instanceof RpcError ? err.message : fr.errors.generic)
+        toast(err instanceof RpcError ? err.message : tr.errors.generic)
         springBack()
         return
       }
@@ -354,10 +354,10 @@ export default function Rediscover() {
         undo: async () => {
           const r = await rpc('rediscover.undo')
           if (!r) {
-            toast(fr.rediscoverUi.nothingToUndo)
+            toast(tr.rediscoverUi.nothingToUndo)
             return
           }
-          toast(fr.rediscoverUi.undone)
+          toast(tr.rediscoverUi.undone)
           setIndex((i) => (i > restore ? restore : i))
         },
       })
@@ -401,7 +401,7 @@ export default function Rediscover() {
     (c: { uuid: string; name: string } | null) => {
       setPickerOpen(false)
       if (!c) return springBack()
-      toast(fr.rediscoverUi.addedTo(c.name))
+      toast(tr.rediscoverUi.addedTo(c.name))
       void commit('collection', c)
     },
     [commit, springBack],
@@ -409,16 +409,16 @@ export default function Rediscover() {
 
   const createAndPick = useCallback(async () => {
     const name = await askName({
-      title: fr.collection.new,
+      title: tr.collection.new,
       initial: '',
-      confirmLabel: fr.shell.create,
+      confirmLabel: tr.shell.create,
     })
     if (!name) return springBack()
     try {
       const node = await rpc('collections.create', { name })
       pick({ uuid: node.uuid, name: node.name })
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
       springBack()
     }
   }, [pick, springBack])
@@ -479,7 +479,7 @@ export default function Rediscover() {
       data-testid="rediscover"
       role="dialog"
       aria-modal="true"
-      aria-label={fr.rediscoverUi.label}
+      aria-label={tr.rediscoverUi.label}
       tabIndex={-1}
       className="rd-root"
     >
@@ -494,7 +494,7 @@ export default function Rediscover() {
       <button
         type="button"
         className="rd-close"
-        aria-label={fr.rediscoverUi.close}
+        aria-label={tr.rediscoverUi.close}
         data-testid="rd-close"
         onClick={close}
       >
@@ -505,7 +505,7 @@ export default function Rediscover() {
         <>
           <Target
             kind="collection"
-            label={fr.rediscover.collection}
+            label={tr.rediscover.collection}
             icon={<FolderPlus size={20} strokeWidth={1.5} />}
             arrow={<ArrowUp size={10} strokeWidth={2.5} />}
             active={aim === 'collection' || pickerOpen}
@@ -524,7 +524,7 @@ export default function Rediscover() {
             >
               <button
                 type="button"
-                aria-label={fr.rediscover.collection}
+                aria-label={tr.rediscover.collection}
                 className={cn('rd-target', (aim === 'collection' || pickerOpen) && 'is-active')}
                 onClick={() => {
                   if (!current) return
@@ -537,7 +537,7 @@ export default function Rediscover() {
           </Target>
           <Target
             kind="trash"
-            label={fr.rediscover.trash}
+            label={tr.rediscover.trash}
             icon={<Trash2 size={20} strokeWidth={1.5} />}
             arrow={<ArrowLeft size={10} strokeWidth={2.5} />}
             active={aim === 'trash'}
@@ -545,7 +545,7 @@ export default function Rediscover() {
           >
             <button
               type="button"
-              aria-label={fr.rediscover.trash}
+              aria-label={tr.rediscover.trash}
               className={cn('rd-target is-danger', aim === 'trash' && 'is-active')}
               onClick={() => void commit('trash')}
             >
@@ -554,7 +554,7 @@ export default function Rediscover() {
           </Target>
           <Target
             kind="keep"
-            label={fr.rediscover.keep}
+            label={tr.rediscover.keep}
             icon={<Check size={20} strokeWidth={1.5} />}
             arrow={<ArrowRight size={10} strokeWidth={2.5} />}
             active={aim === 'keep'}
@@ -562,7 +562,7 @@ export default function Rediscover() {
           >
             <button
               type="button"
-              aria-label={fr.rediscover.keep}
+              aria-label={tr.rediscover.keep}
               className={cn('rd-target', aim === 'keep' && 'is-active')}
               onClick={() => void commit('keep')}
             >
@@ -585,11 +585,11 @@ export default function Rediscover() {
                 />
               )
             })}
-            {loaded && total === 0 ? <p className="rd-empty">{fr.rediscoverUi.empty}</p> : null}
+            {loaded && total === 0 ? <p className="rd-empty">{tr.rediscoverUi.empty}</p> : null}
           </div>
 
           <div className="rd-pill" data-testid="rd-hint">
-            <span>{fr.rediscover.hintA}</span>
+            <span>{tr.rediscover.hintA}</span>
             <span className="rd-pill-kbd">
               <ArrowLeft size={10} strokeWidth={2.5} />
             </span>
@@ -601,7 +601,7 @@ export default function Rediscover() {
             </span>
             <span className="mx-0.5">·</span>
             <span className="rd-pill-kbd rd-pill-esc">esc</span>
-            <span>{fr.rediscover.hintExit}</span>
+            <span>{tr.rediscover.hintExit}</span>
             <span className="sr-only">
               <ArrowDown size={10} />
             </span>
@@ -609,14 +609,14 @@ export default function Rediscover() {
         </>
       ) : (
         <div className="rd-done" data-testid="rd-done">
-          <div className="rd-done-title">{fr.rediscover.doneTitle}</div>
-          <p className="rd-done-body">{fr.rediscover.doneBody}</p>
+          <div className="rd-done-title">{tr.rediscover.doneTitle}</div>
+          <p className="rd-done-body">{tr.rediscover.doneBody}</p>
           <div className="mt-5 flex gap-2">
             <button type="button" className="rd-btn" onClick={restart}>
-              {fr.rediscover.restart}
+              {tr.rediscover.restart}
             </button>
             <button type="button" className="rd-btn" onClick={close}>
-              {fr.rediscover.close}
+              {tr.rediscover.close}
             </button>
           </div>
         </div>

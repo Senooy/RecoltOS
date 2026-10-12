@@ -4,7 +4,7 @@
  * copié ») ; infobulle avec l'hex en mono.
  */
 import { Tooltip, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { rpc } from '../../lib/rpc'
 import { useUi } from '../../state/ui'
 
@@ -16,13 +16,13 @@ export function PaletteSwatches({ palette }: { palette: readonly string[] }) {
           <button
             type="button"
             data-hex={hex}
-            aria-label={fr.searchUi.colorChip(hex)}
+            aria-label={tr.searchUi.colorChip(hex)}
             className="viewer-swatch"
             style={{ background: hex }}
             onClick={(e) => {
               if (e.altKey) {
                 void rpc('system.copyText', { text: hex })
-                  .then(() => toast(fr.viewer.colorCopied(hex)))
+                  .then(() => toast(tr.viewer.colorCopied(hex)))
                   .catch(() => undefined)
                 return
               }

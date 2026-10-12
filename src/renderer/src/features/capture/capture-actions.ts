@@ -4,7 +4,7 @@
  */
 import { create } from 'zustand'
 import { toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { RpcError, rpc } from '../../lib/rpc'
 import { useUi } from '../../state/ui'
 
@@ -20,9 +20,9 @@ export async function runCapture(): Promise<void> {
       'capture.run',
       route.name === 'collection' ? { collectionUuid: route.uuid } : {},
     )
-    if (r.status === 'busy') toast(fr.capture.busy)
-    else if (r.status === 'error') toast(r.message || fr.capture.failed)
+    if (r.status === 'busy') toast(tr.capture.busy)
+    else if (r.status === 'error') toast(r.message || tr.capture.failed)
   } catch (err) {
-    toast(err instanceof RpcError ? err.message : fr.capture.failed)
+    toast(err instanceof RpcError ? err.message : tr.capture.failed)
   }
 }

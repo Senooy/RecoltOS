@@ -18,3 +18,22 @@ export function count(
 ): string {
   return `${format(n)} ${plural(n, one, many)}`
 }
+
+/** Pluriel anglais : seul 1 est au singulier (« 0 items », « 1 item », « 2 items »). */
+export function isPluralEn(n: number): boolean {
+  return Math.abs(n) !== 1
+}
+
+export function pluralEn(n: number, one: string, many: string): string {
+  return isPluralEn(n) ? many : one
+}
+
+/** « 3 items » (anglais). */
+export function countEn(
+  n: number,
+  one: string,
+  many: string,
+  format: (n: number) => string = String,
+): string {
+  return `${format(n)} ${pluralEn(n, one, many)}`
+}

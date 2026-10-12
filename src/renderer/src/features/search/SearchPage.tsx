@@ -12,7 +12,7 @@ import type { CollectionNode, SourceChip, TagInfo } from '../../../../shared/dto
 import type { ItemCard } from '../../../../shared/dto/items'
 import { toFtsQuery } from '../../../../shared/search-query'
 import { EmptyState, Kbd } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { cardThumbSrc } from '../../lib/media-url'
 import { isNotImplemented, rpc, subscribe } from '../../lib/rpc'
@@ -118,12 +118,12 @@ function CollectionsCarousel({ tree }: { tree: readonly CollectionNode[] }) {
     <section data-testid="search-collections">
       <div className="mt-[18px] flex h-6 items-center justify-between">
         <h2 className="text-micro font-medium uppercase text-fg-faint">
-          {fr.search.yourCollections}
+          {tr.search.yourCollections}
         </h2>
         <div className="flex gap-1.5">
           <button
             type="button"
-            aria-label={fr.searchUi.prev}
+            aria-label={tr.searchUi.prev}
             className={arrow}
             style={{ opacity: edges.start ? 0.4 : 1 }}
             disabled={edges.start}
@@ -133,7 +133,7 @@ function CollectionsCarousel({ tree }: { tree: readonly CollectionNode[] }) {
           </button>
           <button
             type="button"
-            aria-label={fr.searchUi.next}
+            aria-label={tr.searchUi.next}
             className={arrow}
             style={{ opacity: edges.end ? 0.4 : 1 }}
             disabled={edges.end}
@@ -179,7 +179,7 @@ function CollectionTile({ node: n, onOpen }: { node: CollectionNode; onOpen: () 
         {n.name}
       </span>
       <span className="absolute bottom-[14px] left-3 text-[11px] leading-[14px] text-fg-faint">
-        {fr.count.items(n.count)}
+        {tr.count.items(n.count)}
       </span>
     </button>
   )
@@ -323,25 +323,25 @@ export default function SearchPage() {
     for (const k of filters.kinds)
       out.push({
         key: `k:${k}`,
-        label: fr.searchUi.kinds[k]!,
+        label: tr.searchUi.kinds[k]!,
         remove: () => setFilters((f) => ({ ...f, kinds: toggle(f.kinds, k) })),
       })
     for (const s of filters.sources)
       out.push({
         key: `s:${s}`,
-        label: fr.searchUi.sources[s]!,
+        label: tr.searchUi.sources[s]!,
         remove: () => setFilters((f) => ({ ...f, sources: toggle(f.sources, s) })),
       })
     for (const hex of filters.colors)
       out.push({
         key: `c:${hex}`,
-        label: fr.searchUi.colorChip(colorLabel(hex)),
+        label: tr.searchUi.colorChip(colorLabel(hex)),
         remove: () => setFilters((f) => ({ ...f, colors: f.colors.filter((c) => c !== hex) })),
       })
     if (filters.period !== 'all')
       out.push({
         key: 'period',
-        label: fr.searchUi.periodChip[filters.period]!,
+        label: tr.searchUi.periodChip[filters.period]!,
         remove: () => setFilters((f) => ({ ...f, period: 'all' })),
       })
     if (filters.collectionUuid) {
@@ -354,7 +354,7 @@ export default function SearchPage() {
             if (c) return c
           }
           return null
-        })(tree) ?? fr.search.inCollection
+        })(tree) ?? tr.search.inCollection
       out.push({
         key: 'col',
         label: name,
@@ -398,7 +398,7 @@ export default function SearchPage() {
       ref={scrollRef}
       data-testid="search-page"
       className="relative min-h-0 flex-1 overflow-y-auto pb-[100px]"
-      aria-label={fr.nav.search}
+      aria-label={tr.nav.search}
     >
       <div className="mx-auto w-full max-w-[700px] px-0 pt-7">
         <div className="search-field relative flex h-14 items-center rounded-xl border border-border bg-surface shadow-[var(--shadow-field)] transition-[border-color,box-shadow] focus-within:border-border-strong focus-within:shadow-[0_0_0_3px_rgba(0,0,0,.04)]">
@@ -413,9 +413,9 @@ export default function SearchPage() {
             type="text"
             autoFocus
             spellCheck={false}
-            aria-label={fr.searchUi.inputLabel}
+            aria-label={tr.searchUi.inputLabel}
             className="h-full min-w-0 flex-1 bg-transparent pl-12 pr-2 text-[16px] text-fg outline-none placeholder:text-fg-faint focus-visible:outline-none"
-            placeholder={fr.search.placeholder}
+            placeholder={tr.search.placeholder}
             style={{ outline: 'none' }}
             value={text}
             onChange={(e) => {
@@ -443,7 +443,7 @@ export default function SearchPage() {
             <button
               type="button"
               data-testid="search-filters"
-              aria-label={nFilters > 0 ? fr.searchUi.filtersActive(nFilters) : fr.search.filters}
+              aria-label={nFilters > 0 ? tr.searchUi.filtersActive(nFilters) : tr.search.filters}
               className="relative mr-3 flex h-8 w-8 items-center justify-center rounded-md text-fg-subtle hover:bg-[var(--hover)]"
             >
               <SlidersHorizontal size={18} strokeWidth={1.75} />
@@ -459,10 +459,10 @@ export default function SearchPage() {
           <span data-testid="search-count">
             {searching
               ? result
-                ? fr.search.results(result.total)
+                ? tr.search.results(result.total)
                 : ' '
               : libraryTotal !== null
-                ? fr.search.inLibrary(libraryTotal)
+                ? tr.search.inLibrary(libraryTotal)
                 : ' '}
           </span>
           {searching
@@ -475,7 +475,7 @@ export default function SearchPage() {
                   {c.label}
                   <button
                     type="button"
-                    aria-label={fr.searchUi.removeFilter(c.label)}
+                    aria-label={tr.searchUi.removeFilter(c.label)}
                     className="flex h-4 w-4 items-center justify-center rounded-full hover:bg-[var(--hover)]"
                     onClick={c.remove}
                   >
@@ -497,7 +497,7 @@ export default function SearchPage() {
           {history.length > 0 ? (
             <section data-testid="search-recent">
               <div className="mt-[33px] flex h-[14px] items-center gap-1.5 text-micro font-medium uppercase text-fg-faint">
-                <h2>{fr.search.recent}</h2>
+                <h2>{tr.search.recent}</h2>
                 <span aria-hidden="true">·</span>
                 <button
                   type="button"
@@ -509,7 +509,7 @@ export default function SearchPage() {
                       .catch(() => undefined)
                   }
                 >
-                  {fr.search.clear}
+                  {tr.search.clear}
                 </button>
               </div>
               <div className="mt-[15px] flex flex-wrap gap-2">
@@ -518,7 +518,7 @@ export default function SearchPage() {
                     key={h.query}
                     type="button"
                     data-testid="search-recent-chip"
-                    aria-label={`${fr.searchUi.recentLabel} « ${h.query} »`}
+                    aria-label={tr.uiKit.recentSearch(tr.searchUi.recentLabel, h.query)}
                     className="flex h-[30px] items-center gap-1.5 rounded-full border border-border px-3 text-[12.5px] text-fg-muted hover:bg-[var(--hover)]"
                     onClick={() => setText(h.query)}
                   >
@@ -532,7 +532,7 @@ export default function SearchPage() {
           {tagChips.length > 0 ? (
             <section data-testid="search-tags">
               <h2 className="mt-[21px] text-micro font-medium uppercase text-fg-faint">
-                {fr.search.jumpToTag}
+                {tr.search.jumpToTag}
               </h2>
               <div className="mt-[13px] flex flex-wrap gap-2">
                 {shownTags.map((t) => (
@@ -553,7 +553,7 @@ export default function SearchPage() {
                     className="flex h-7 items-center rounded-full border border-border px-[11px] text-[12.5px] text-fg-muted hover:bg-[var(--hover)]"
                     onClick={() => setShowAllTags(true)}
                   >
-                    {fr.searchUi.moreTags(hiddenTags)}
+                    {tr.searchUi.moreTags(hiddenTags)}
                   </button>
                 ) : null}
               </div>
@@ -567,8 +567,8 @@ export default function SearchPage() {
           {result.items.length === 0 ? (
             <EmptyState
               className="pt-16"
-              title={fr.search.noResults(result.q || chips.map((c) => c.label).join(', '))}
-              description={fr.search.noResultsHint}
+              title={tr.search.noResults(result.q || chips.map((c) => c.label).join(', '))}
+              description={tr.search.noResultsHint}
             />
           ) : (
             <MasonryGrid

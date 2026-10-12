@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { ItemCard } from '../../../../shared/dto/items'
 import { aabb, unionRect, type Vec } from '../../../../shared/spaces-geometry'
 import { Menu, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { on } from '../../lib/bus'
 import { isEditableTarget } from '../../lib/shortcuts'
 import { RpcError, rpc } from '../../lib/rpc'
@@ -76,8 +76,8 @@ const ITEMS_MIME = 'application/x-recoltos-items'
 
 configureStore({
   send: (p) => rpc('spaces.applyBatch', p),
-  onInvalid: (n) => toast(fr.spaces.invalidNodes(n)),
-  onRetry: () => toast(fr.spaces.saveRetry, { id: 'space-save-retry' }),
+  onInvalid: (n) => toast(tr.spaces.invalidNodes(n)),
+  onRetry: () => toast(tr.spaces.saveRetry, { id: 'space-save-retry' }),
 })
 
 // Tests de bout en bout seulement : accès au store de l'éditeur (jamais hors `RECOLTOS_E2E`).
@@ -215,7 +215,7 @@ function EditorView({ uuid }: { uuid: string }) {
       } catch (err) {
         if (!alive) return
         if (err instanceof RpcError && err.code === 'not_found') {
-          toast(fr.spacesUi.notFound)
+          toast(tr.spacesUi.notFound)
           back()
         } else fail(err)
       }
@@ -518,7 +518,7 @@ function EditorView({ uuid }: { uuid: string }) {
           <button
             type="button"
             data-testid="space-back"
-            aria-label={fr.spacesUi.back}
+            aria-label={tr.spacesUi.back}
             className="ml-px flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-border text-fg-subtle transition-colors hover:bg-surface"
             onClick={back}
           >
@@ -527,8 +527,8 @@ function EditorView({ uuid }: { uuid: string }) {
           <div className="ml-[11px] min-w-0" data-testid="space-title">
             <InlineEditableTitle
               ref={titleRef}
-              value={name || fr.spaces.untitled}
-              label={fr.spacesUi.titleLabel}
+              value={name || tr.spaces.untitled}
+              label={tr.spacesUi.titleLabel}
               onCommit={rename}
             />
           </div>
@@ -537,7 +537,7 @@ function EditorView({ uuid }: { uuid: string }) {
               <button
                 type="button"
                 data-testid="space-more"
-                aria-label={fr.spacesUi.moreActions}
+                aria-label={tr.spacesUi.moreActions}
                 className="ml-3 flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle hover:bg-[var(--hover)]"
               >
                 <Ellipsis size={18} strokeWidth={1.75} />
@@ -545,11 +545,11 @@ function EditorView({ uuid }: { uuid: string }) {
             </Menu.Dropdown.Trigger>
             <Menu.Dropdown.Content align="start" data-testid="space-menu">
               <Menu.Dropdown.Item icon={<Pencil />} onSelect={() => titleRef.current?.edit()}>
-                {fr.spaces.rename}
+                {tr.spaces.rename}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Sub>
                 <Menu.Dropdown.SubTrigger icon={<Grid3x3 />}>
-                  {fr.spacesUi.background}
+                  {tr.spacesUi.background}
                 </Menu.Dropdown.SubTrigger>
                 <Menu.Dropdown.SubContent>
                   {(['dots', 'grid', 'plain'] as const).map((b) => (
@@ -558,7 +558,7 @@ function EditorView({ uuid }: { uuid: string }) {
                       checked={background === b}
                       onSelect={() => setBackground(b)}
                     >
-                      {fr.spacesUi.backgrounds[b]}
+                      {tr.spacesUi.backgrounds[b]}
                     </Menu.Dropdown.CheckboxItem>
                   ))}
                 </Menu.Dropdown.SubContent>
@@ -568,7 +568,7 @@ function EditorView({ uuid }: { uuid: string }) {
                 data-testid="space-export"
                 onSelect={() => setTimeout(() => setExportOpen(true), 0)}
               >
-                {fr.spacesExtra.exportMenu}
+                {tr.spacesExtra.exportMenu}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item
                 icon={<Copy />}
@@ -576,7 +576,7 @@ function EditorView({ uuid }: { uuid: string }) {
                   void persistence.flush().then(() => duplicateSpace(uuid, name, true))
                 }
               >
-                {fr.spaces.duplicate}
+                {tr.spaces.duplicate}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item
                 tone="danger"
@@ -584,7 +584,7 @@ function EditorView({ uuid }: { uuid: string }) {
                 data-testid="space-delete"
                 onSelect={() => void deleteSpaceWithConfirm(uuid, name, back)}
               >
-                {fr.spaces.delete}
+                {tr.spaces.delete}
               </Menu.Dropdown.Item>
             </Menu.Dropdown.Content>
           </Menu.Dropdown.Root>

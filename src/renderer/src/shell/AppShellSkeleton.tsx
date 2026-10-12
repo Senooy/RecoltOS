@@ -21,7 +21,7 @@ import {
   Sun,
   Trash,
 } from 'lucide-react'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 
 const COLUMNS = 4
 /** Hauteurs relatives des cartes squelette (1,2 / 0,8 / 1,5…). */
@@ -47,26 +47,26 @@ function NavSegmentedStatic() {
     'flex h-[42px] w-[140px] items-center justify-center gap-2 rounded-full text-nav font-medium tracking-[-0.01em]'
   return (
     <nav
-      aria-label={fr.nav.library}
+      aria-label={tr.nav.library}
       className="absolute left-1/2 top-[29px] flex h-[52px] w-[480px] -translate-x-1/2 items-center gap-[2px] rounded-full border border-border bg-bg p-[5px]"
       style={{ boxShadow: 'var(--shadow-pill)' }}
     >
       <button
         type="button"
-        aria-label={fr.nav.search}
+        aria-label={tr.nav.search}
         className="flex h-[42px] w-[42px] items-center justify-center rounded-full text-fg"
       >
         <Search size={20} strokeWidth={1.75} />
       </button>
       <button type="button" aria-current="page" className={`${seg} bg-accent text-accent-fg`}>
         <Library size={18} strokeWidth={1.75} />
-        {fr.nav.library}
+        {tr.nav.library}
       </button>
       <button type="button" className={`${seg} text-fg`}>
-        {fr.nav.collections}
+        {tr.nav.collections}
       </button>
       <button type="button" className={`${seg} text-fg`}>
-        {fr.nav.spaces}
+        {tr.nav.spaces}
       </button>
     </nav>
   )
@@ -81,7 +81,7 @@ function HeaderActionsStatic({ dark }: { dark: boolean }) {
         className="mr-2 flex h-[30px] min-w-[112px] items-center whitespace-nowrap rounded-full border border-border pl-[10px] pr-[5px] text-ui text-fg-subtle"
       >
         <Search size={14} strokeWidth={1.75} />
-        <span className="ml-1.5 mr-2">{fr.nav.searchButton}</span>
+        <span className="ml-1.5 mr-2">{tr.nav.searchButton}</span>
         <kbd
           className="ml-auto rounded-[5px] px-[5px] py-px text-[11px] leading-[14px]"
           style={{ background: 'var(--kbd-bg)', color: 'var(--kbd-fg)' }}
@@ -89,17 +89,17 @@ function HeaderActionsStatic({ dark }: { dark: boolean }) {
           ⌘K
         </kbd>
       </button>
-      <button type="button" aria-label={fr.nav.rediscover} className={icon}>
+      <button type="button" aria-label={tr.nav.rediscover} className={icon}>
         <Compass size={18} strokeWidth={1.75} />
       </button>
       <button
         type="button"
-        aria-label={dark ? fr.nav.themeLight : fr.nav.themeDark}
+        aria-label={dark ? tr.nav.themeLight : tr.nav.themeDark}
         className={icon}
       >
         {dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
       </button>
-      <button type="button" aria-label={fr.nav.settings} className={icon}>
+      <button type="button" aria-label={tr.nav.settings} className={icon}>
         <Settings size={18} strokeWidth={1.75} />
       </button>
     </div>
@@ -108,11 +108,11 @@ function HeaderActionsStatic({ dark }: { dark: boolean }) {
 
 function LibraryTabsStatic() {
   const tabs = [
-    { key: 'all', label: fr.tabs.all, Icon: Images },
-    { key: 'saved', label: fr.tabs.saved, Icon: Folder },
-    { key: 'unsorted', label: fr.tabs.unsorted, Icon: Inbox },
-    { key: 'trash', label: fr.tabs.trash, Icon: Trash },
-    { key: 'hidden', label: fr.tabs.hidden, Icon: EyeOff },
+    { key: 'all', label: tr.tabs.all, Icon: Images },
+    { key: 'saved', label: tr.tabs.saved, Icon: Folder },
+    { key: 'unsorted', label: tr.tabs.unsorted, Icon: Inbox },
+    { key: 'trash', label: tr.tabs.trash, Icon: Trash },
+    { key: 'hidden', label: tr.tabs.hidden, Icon: EyeOff },
   ] as const
   return (
     <div role="tablist" className="flex h-full items-center gap-11 pl-[6px]">
@@ -138,7 +138,7 @@ function LibraryTabsStatic() {
 function SubbarRightStatic() {
   return (
     <div className="flex items-center gap-5">
-      <div className="flex items-center gap-2 text-fg-disabled" aria-label={fr.columns.label}>
+      <div className="flex items-center gap-2 text-fg-disabled" aria-label={tr.columns.label}>
         <Grid2x2 size={12} />
         <div
           className="relative h-[3px] w-[90px] rounded-full"
@@ -156,7 +156,7 @@ function SubbarRightStatic() {
         className="flex h-8 min-w-[138px] items-center gap-2 whitespace-nowrap rounded-[10px] border border-border pl-3 pr-2.5 text-ui font-medium text-fg"
       >
         <Clock size={15} strokeWidth={1.75} />
-        <span>{fr.sort.recent}</span>
+        <span>{tr.sort.recent}</span>
         <ChevronDown size={14} className="ml-auto text-fg-subtle" />
       </button>
     </div>
@@ -196,7 +196,7 @@ function CollectionsRowSkeleton() {
           className="absolute left-1/2 top-[calc(50%-10px)] -translate-x-1/2 -translate-y-1/2 text-fg-subtle"
         />
         <span className="absolute bottom-[22px] left-4 text-small text-fg-faint">
-          {fr.collection.new}
+          {tr.collection.new}
         </span>
       </div>
       {Array.from({ length: 6 }, (_, i) => (
@@ -218,7 +218,7 @@ export function AppShellSkeleton({ dark = false }: { dark?: boolean }) {
         <div className="absolute left-[18px] top-[41px] flex h-7 items-center gap-[14px]">
           <Logo />
           <span className="flex items-center gap-2 text-nav font-semibold tracking-[-0.01em]">
-            {fr.nav.library}
+            {tr.nav.library}
             <ChevronsUpDown size={14} className="text-fg-subtle" />
           </span>
         </div>
@@ -234,14 +234,14 @@ export function AppShellSkeleton({ dark = false }: { dark?: boolean }) {
       </div>
       <main
         className="relative min-h-0 flex-1 overflow-y-auto pb-[100px]"
-        aria-label={fr.app.loading}
+        aria-label={tr.app.loading}
       >
         <CollectionsRowSkeleton />
         <GridSkeleton />
       </main>
       <button
         type="button"
-        aria-label={fr.fab.label}
+        aria-label={tr.fab.label}
         className="fab-surface fixed bottom-6 right-6 flex h-[52px] w-[52px] items-center justify-center rounded-full text-fg"
         style={{ boxShadow: 'var(--shadow-fab)' }}
       >

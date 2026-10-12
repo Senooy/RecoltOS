@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { ItemCard, ItemDetail } from '../../../../shared/dto/items'
 import type { TagInfo } from '../../../../shared/dto/collections'
 import { FormatBadge, Popover, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { NBSP, bytes, count, dateShort } from '../../lib/format'
 import { mediaSrc } from '../../lib/media-url'
@@ -41,7 +41,7 @@ export function formatOf(card: Pick<ItemCard, 'kind' | 'mime'>): string {
 }
 
 function fail(err: unknown): void {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 function Section({ children, className }: { children: ReactNode; className?: string }) {
@@ -66,8 +66,8 @@ function NameField({ detail }: { detail: ItemDetail }) {
       data-testid="detail-name"
       className="viewer-input"
       value={value}
-      placeholder={fr.viewer.untitled}
-      aria-label={fr.viewer.name}
+      placeholder={tr.viewer.untitled}
+      aria-label={tr.viewer.name}
       spellCheck={false}
       onChange={(e) => setValue(e.target.value)}
       onBlur={save}
@@ -130,7 +130,7 @@ function NoteField({ detail }: { detail: ItemDetail }) {
           requestAnimationFrame(() => ref.current?.focus())
         }}
       >
-        {fr.viewer.addNote}
+        {tr.viewer.addNote}
       </button>
     )
   }
@@ -141,8 +141,8 @@ function NoteField({ detail }: { detail: ItemDetail }) {
       className="viewer-input viewer-note"
       rows={2}
       value={value}
-      placeholder={fr.viewer.notePlaceholder}
-      aria-label={fr.viewer.addNote}
+      placeholder={tr.viewer.notePlaceholder}
+      aria-label={tr.viewer.addNote}
       onChange={(e) => {
         const v = e.target.value
         setValue(v)
@@ -199,7 +199,7 @@ function CollectionsField({ detail }: { detail: ItemDetail }) {
         <Chip
           key={c.uuid}
           testId="detail-collection"
-          removeLabel={fr.viewerUi.removeCollection(c.name)}
+          removeLabel={tr.viewerUi.removeCollection(c.name)}
           onRemove={() => void removeFromCollection(c, [detail.uuid])}
         >
           {c.name}
@@ -218,7 +218,7 @@ function CollectionsField({ detail }: { detail: ItemDetail }) {
           data-testid="detail-add-collection"
           className="viewer-chip viewer-chip-add"
         >
-          {fr.viewer.add}
+          {tr.viewer.add}
         </button>
       </CollectionPickerPopover>
     </div>
@@ -260,7 +260,7 @@ function TagsField({ detail }: { detail: ItemDetail }) {
           <Chip
             key={t.uuid}
             testId="detail-tag"
-            removeLabel={fr.viewerUi.removeTag(t.name)}
+            removeLabel={tr.viewerUi.removeTag(t.name)}
             onRemove={() =>
               void rpc('tags.remove', { itemUuids: [detail.uuid], tagUuids: [t.uuid] }).catch(fail)
             }
@@ -272,8 +272,8 @@ function TagsField({ detail }: { detail: ItemDetail }) {
           data-testid="detail-tag-input"
           className="viewer-tag-input"
           value={text}
-          placeholder={fr.viewer.addTag}
-          aria-label={fr.viewer.addTag}
+          placeholder={tr.viewer.addTag}
+          aria-label={tr.viewer.addTag}
           spellCheck={false}
           onFocus={() => {
             setFocused(true)
@@ -309,7 +309,7 @@ function TagsField({ detail }: { detail: ItemDetail }) {
         />
       </div>
       {focused && suggestions.length > 0 && q !== '' ? (
-        <ul role="listbox" aria-label={fr.viewerUi.tagSuggestions} className="viewer-suggest">
+        <ul role="listbox" aria-label={tr.viewerUi.tagSuggestions} className="viewer-suggest">
           {suggestions.map((t, i) => (
             <li key={t.uuid}>
               <button
@@ -342,7 +342,7 @@ function AiSection({ detail }: { detail: ItemDetail }) {
   const promptBusy = job?.type === 'ai.prompt'
   const failed = detail.aiState === 'failed' && !job
   const via = detail.aiProvider && detail.aiProvider !== 'gatheros' ? detail.aiProvider : null
-  const t = fr.aiUi
+  const t = tr.aiUi
   return (
     <div data-testid="detail-ai" data-state={busy ? job.state : failed ? 'failed' : detail.aiState}>
       {busy ? (
@@ -357,12 +357,16 @@ function AiSection({ detail }: { detail: ItemDetail }) {
           {detail.aiDescription}
         </p>
       ) : (
-        <p className="text-[12.5px] text-[var(--viewer-fg-subtle)]">{fr.viewerUi.aiNone}</p>
+        <p className="text-[12.5px] text-[var(--viewer-fg-subtle)]">{tr.viewerUi.aiNone}</p>
       )}
       {failed || (job && detail.aiError) ? (
         <p className="mt-1.5 text-[12px] text-[#ff8a80]" data-testid="detail-ai-error">
           {failed ? `${t.failed} ` : ''}
-          <span className="text-[var(--viewer-fg-subtle)]">{detail.aiError?.message}</span>
+          <span className="text-[var(--viewer-fg-subtle)]">
+            {detail.aiError
+              ? (tr.aiUi.errorCodes[detail.aiError.code] ?? detail.aiError.message)
+              : null}
+          </span>
         </p>
       ) : null}
       {detail.aiExcluded ? (
@@ -382,14 +386,14 @@ function AiSection({ detail }: { detail: ItemDetail }) {
             type="button"
             data-testid="detail-ai-generate"
             disabled={busy}
-            title={ready ? undefined : fr.viewerUi.aiUnavailable}
+            title={ready ? undefined : tr.viewerUi.aiUnavailable}
             className="viewer-pill"
             onClick={() =>
               void analyzeItems([detail.uuid], { force: Boolean(detail.aiDescription) || failed })
             }
           >
             <Sparkles size={13} strokeWidth={1.75} />
-            {failed ? t.retry : detail.aiDescription ? fr.viewer.regenerate : fr.viewer.generate}
+            {failed ? t.retry : detail.aiDescription ? tr.viewer.regenerate : tr.viewer.generate}
           </button>
           {via ? (
             <span
@@ -404,10 +408,10 @@ function AiSection({ detail }: { detail: ItemDetail }) {
       {detail.aiPrompt ? (
         <div className="viewer-prompt mt-3">
           <div className="flex items-center justify-between text-[11px] text-[var(--viewer-fg-muted)]">
-            {fr.viewer.imagePrompt}
+            {tr.viewer.imagePrompt}
             <button
               type="button"
-              aria-label={fr.viewerUi.copyPrompt}
+              aria-label={tr.viewerUi.copyPrompt}
               className="text-[var(--viewer-fg-muted)] hover:text-white"
               onClick={() =>
                 void rpc('system.copyText', { text: detail.aiPrompt ?? '' })
@@ -445,14 +449,14 @@ function OcrSection({ text }: { text: string }) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <Label>{fr.viewer.ocr}</Label>
+        <Label>{tr.viewer.ocr}</Label>
         <button
           type="button"
           className="text-[11.5px] text-[var(--viewer-fg-muted)] hover:text-white"
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
         >
-          {open ? fr.viewerUi.ocrHide : fr.viewerUi.ocrShow}
+          {open ? tr.viewerUi.ocrHide : tr.viewerUi.ocrShow}
         </button>
       </div>
       <p
@@ -468,13 +472,13 @@ function OcrSection({ text }: { text: string }) {
 }
 
 function InfoGrid({ detail }: { detail: ItemDetail }) {
-  const rows: [string, string][] = [[fr.viewer.type, fr.viewerUi.kinds[detail.kind] ?? detail.kind]]
+  const rows: [string, string][] = [[tr.viewer.type, tr.viewerUi.kinds[detail.kind] ?? detail.kind]]
   if (detail.width && detail.height)
-    rows.push([fr.viewer.dimensions, `${detail.width}${NBSP}×${NBSP}${detail.height}`])
-  if (detail.fileSize) rows.push([fr.viewer.size, bytes(detail.fileSize)])
-  rows.push([fr.viewer.addedOn, dateShort(detail.addedAt)])
-  rows.push([fr.viewer.views, count(detail.viewCount)])
-  rows.push([fr.viewer.source, fr.viewerUi.sources[detail.source] ?? detail.source])
+    rows.push([tr.viewer.dimensions, `${detail.width}${NBSP}×${NBSP}${detail.height}`])
+  if (detail.fileSize) rows.push([tr.viewer.size, bytes(detail.fileSize)])
+  rows.push([tr.viewer.addedOn, dateShort(detail.addedAt)])
+  rows.push([tr.viewer.views, count(detail.viewCount)])
+  rows.push([tr.viewer.source, tr.viewerUi.sources[detail.source] ?? detail.source])
   return (
     <dl
       data-testid="detail-info"
@@ -507,17 +511,17 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
   return (
     <aside
       data-testid="details-panel"
-      aria-label={fr.viewer.details}
+      aria-label={tr.viewer.details}
       className={cn('viewer-panel', className)}
       style={style}
     >
       <div className="viewer-panel-head">
-        <span>{fr.viewer.details}</span>
+        <span>{tr.viewer.details}</span>
         <Popover.Root>
           <Popover.Trigger asChild>
             <button
               type="button"
-              aria-label={fr.viewerUi.techInfo}
+              aria-label={tr.viewerUi.techInfo}
               className="flex h-6 w-6 items-center justify-center rounded-full text-[#a9a9ab] hover:text-white"
             >
               <Info size={16} strokeWidth={1.75} />
@@ -525,9 +529,9 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
           </Popover.Trigger>
           <Popover.Content align="end" className="w-[240px] p-3 text-[12px]">
             <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-              <span className="text-fg-muted">{fr.viewerUi.format}</span>
+              <span className="text-fg-muted">{tr.viewerUi.format}</span>
               <span className="select-text truncate">{card.mime ?? formatOf(card)}</span>
-              <span className="text-fg-muted">{fr.viewerUi.identifier}</span>
+              <span className="text-fg-muted">{tr.viewerUi.identifier}</span>
               <span className="select-text truncate font-mono text-[11px]">{card.uuid}</span>
             </div>
             {detail ? (
@@ -540,14 +544,14 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
                   className="hover:underline"
                   onClick={() => void analyzeItems([card.uuid], { force: true })}
                 >
-                  {fr.ai.analyze}
+                  {tr.ai.analyze}
                 </button>
                 <button
                   type="button"
                   className="hover:underline"
                   onClick={() => void analyzeItems([card.uuid], { force: true, fields: ['title'] })}
                 >
-                  {fr.ai.regenerateTitle}
+                  {tr.ai.regenerateTitle}
                 </button>
                 <button
                   type="button"
@@ -556,14 +560,14 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
                     void analyzeItems([card.uuid], { force: true, fields: ['description'] })
                   }
                 >
-                  {fr.ai.regenerateDescription}
+                  {tr.ai.regenerateDescription}
                 </button>
                 <button
                   type="button"
                   className="hover:underline"
                   onClick={() => useAi.getState().openPreview(card.uuid)}
                 >
-                  {fr.ai.previewPayload}
+                  {tr.ai.previewPayload}
                 </button>
                 <label className="mt-1 flex items-center gap-1.5">
                   <input
@@ -572,7 +576,7 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
                     checked={detail.aiExcluded}
                     onChange={(e) => void setAiExcluded([card.uuid], e.target.checked)}
                   />
-                  {fr.ai.neverSend}
+                  {tr.ai.neverSend}
                 </label>
               </div>
             ) : null}
@@ -595,7 +599,7 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
             <FormatBadge format={formatOf(card)} className="absolute right-2 top-2" />
           </div>
           {detail?.palette && detail.palette.length > 0 ? (
-            <div className="mt-[14px]" aria-label={fr.viewer.colors} role="group">
+            <div className="mt-[14px]" aria-label={tr.viewer.colors} role="group">
               <PaletteSwatches palette={detail.palette} />
             </div>
           ) : null}
@@ -605,12 +609,12 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
         <>
           <Section className="viewer-fields space-y-[6px]">
             <div>
-              <Label>{fr.viewer.name}</Label>
+              <Label>{tr.viewer.name}</Label>
               <NameField detail={detail} />
             </div>
             {detail.sourceUrl ? (
               <div>
-                <Label>{fr.viewer.url}</Label>
+                <Label>{tr.viewer.url}</Label>
                 <div className="relative">
                   <input
                     data-testid="detail-url"
@@ -618,12 +622,12 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
                     style={{ paddingRight: 34 }}
                     value={detail.sourceUrl}
                     readOnly
-                    aria-label={fr.viewer.url}
+                    aria-label={tr.viewer.url}
                   />
                   {openSource ? (
                     <button
                       type="button"
-                      aria-label={fr.viewerUi.openSource}
+                      aria-label={tr.viewerUi.openSource}
                       className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-[#d0d0d2] hover:text-white"
                       onClick={openSource}
                     >
@@ -639,21 +643,21 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
             </div>
           </Section>
           <Section>
-            <Label>{fr.viewer.collections}</Label>
+            <Label>{tr.viewer.collections}</Label>
             <CollectionsField detail={detail} />
           </Section>
           <Section>
-            <Label>{fr.viewer.tags}</Label>
+            <Label>{tr.viewer.tags}</Label>
             <TagsField detail={detail} />
           </Section>
           {detail.palette && detail.palette.length > 0 && (card.kind === 'tweet' || !preview) ? (
             <Section>
-              <Label>{fr.viewer.colors}</Label>
+              <Label>{tr.viewer.colors}</Label>
               <PaletteSwatches palette={detail.palette} />
             </Section>
           ) : null}
           <Section>
-            <Label>{fr.viewer.aiDescription}</Label>
+            <Label>{tr.viewer.aiDescription}</Label>
             <AiSection detail={detail} />
           </Section>
           {detail.ocrText ? (
@@ -662,7 +666,7 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
             </Section>
           ) : null}
           <Section>
-            <Label>{fr.viewer.info}</Label>
+            <Label>{tr.viewer.info}</Label>
             <InfoGrid detail={detail} />
           </Section>
         </>

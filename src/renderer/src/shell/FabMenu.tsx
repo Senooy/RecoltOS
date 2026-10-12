@@ -7,7 +7,7 @@ import { Camera, FileUp, FolderUp, Link2, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Menu, Popover } from '../components/ui'
 import { keysOf } from '../features/palette/commands'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 import { cn } from '../lib/cn'
 import { UrlPopoverContent } from '../features/import/UrlPopover'
 import { useImportUi } from '../features/import/import-actions'
@@ -34,7 +34,7 @@ export function FabMenu({
             <button
               type="button"
               data-testid="fab"
-              aria-label={fr.fab.label}
+              aria-label={tr.fab.label}
               className="fab-surface fixed bottom-6 right-6 z-30 flex h-[52px] w-[52px] items-center justify-center rounded-full text-fg transition-transform duration-150 hover:scale-105 active:scale-[.96]"
               style={{ boxShadow: 'var(--shadow-fab)' }}
             >
@@ -51,23 +51,23 @@ export function FabMenu({
         </Popover.Anchor>
         <Menu.Dropdown.Content side="top" align="end" className="w-[220px]" data-testid="fab-menu">
           {collection ? (
-            <Menu.Dropdown.Label>{fr.importUiMore.addTo(collection.name)}</Menu.Dropdown.Label>
+            <Menu.Dropdown.Label>{tr.importUiMore.addTo(collection.name)}</Menu.Dropdown.Label>
           ) : null}
           <Menu.Dropdown.Item icon={<FileUp />} shortcut={['⌘', 'O']} onSelect={onImportFiles}>
-            {fr.fab.importFiles}
+            {tr.fab.importFiles}
           </Menu.Dropdown.Item>
           <Menu.Dropdown.Item icon={<FolderUp />} onSelect={onImportFolder}>
-            {fr.importUiMore.importFolder}
+            {tr.importUiMore.importFolder}
           </Menu.Dropdown.Item>
           <Menu.Dropdown.Item
             icon={<Link2 />}
             data-testid="fab-paste-url"
             onSelect={() => setTimeout(() => setUrlOpen(true), 0)}
           >
-            {fr.importUiMore.pasteUrl}
+            {tr.importUiMore.pasteUrl}
           </Menu.Dropdown.Item>
           <Menu.Dropdown.Item icon={<Camera />} shortcut={keysOf('capture')} onSelect={onCapture}>
-            {fr.fab.capture}
+            {tr.fab.capture}
           </Menu.Dropdown.Item>
         </Menu.Dropdown.Content>
       </Menu.Dropdown.Root>

@@ -7,7 +7,7 @@ import { Check, CornerDownRight, Folder, FolderPlus } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import type { CollectionNode } from '../../../../shared/dto/collections'
 import { Popover } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { flattenTree, useCollections } from '../../state/collections'
 
@@ -65,14 +65,14 @@ export function CollectionPickerPopover({
         align={align}
         side={side}
         data-testid="collection-picker"
-        aria-label={fr.collectionUi.pickerLabel}
+        aria-label={tr.collectionUi.pickerLabel}
         className="w-[260px] p-[5px]"
       >
         <input
           autoFocus
           data-testid="collection-picker-filter"
           className="mb-1 h-8 w-full rounded-sm border border-border bg-bg px-2.5 text-small outline-none focus:border-border-strong"
-          placeholder={fr.collectionUi.pickerFilter}
+          placeholder={tr.collectionUi.pickerFilter}
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         />
@@ -80,7 +80,7 @@ export function CollectionPickerPopover({
           {!q && suggested.length > 0 ? (
             <>
               <div className="px-2 pb-1 pt-1.5 text-micro font-medium uppercase text-fg-faint">
-                {fr.rediscoverUi.suggested}
+                {tr.rediscoverUi.suggested}
               </div>
               {suggested.map((c) => {
                 const node = flat.find((f) => f.node.uuid === c.uuid)?.node
@@ -99,14 +99,14 @@ export function CollectionPickerPopover({
                 )
               })}
               <div className="px-2 pb-1 pt-2 text-micro font-medium uppercase text-fg-faint">
-                {fr.rediscoverUi.all}
+                {tr.rediscoverUi.all}
               </div>
             </>
           ) : null}
           {allowRoot && !q ? (
             <PickerRow
               icon={<CornerDownRight size={15} strokeWidth={1.75} />}
-              label={fr.collectionUi.moveToRoot}
+              label={tr.collectionUi.moveToRoot}
               depth={0}
               onClick={() => {
                 onPick(null)
@@ -128,12 +128,12 @@ export function CollectionPickerPopover({
             />
           ))}
           {shown.length === 0 && !(allowRoot && !q) ? (
-            <div className="px-2 py-2 text-small text-fg-faint">{fr.collectionUi.pickerEmpty}</div>
+            <div className="px-2 py-2 text-small text-fg-faint">{tr.collectionUi.pickerEmpty}</div>
           ) : null}
           {onCreate ? (
             <PickerRow
               icon={<FolderPlus size={15} strokeWidth={1.75} />}
-              label={fr.rediscoverUi.newCollection}
+              label={tr.rediscoverUi.newCollection}
               depth={0}
               onClick={() => {
                 onOpenChange?.(false)

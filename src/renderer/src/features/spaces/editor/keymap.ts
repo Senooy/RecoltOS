@@ -9,6 +9,7 @@
  * table pour l'affichage et le repli clavier.
  */
 import {
+  displayShortcutLabel,
   SPACES_SHORTCUTS,
   type KeyMatch,
   type Modifiers,
@@ -97,5 +98,5 @@ export function resolveShortcut(e: KeyLike, l: Layout = layout): SpacesShortcutI
 
 /** Libellé affiché d'un raccourci (lettre imprimée sur ce clavier). */
 export function shortcutLabel(id: SpacesShortcutId): string {
-  return SPACES_SHORTCUTS.find((s) => s.id === id)?.label ?? ''
+  return displayShortcutLabel(SPACES_SHORTCUTS.find((s) => s.id === id)?.label ?? '')
 }

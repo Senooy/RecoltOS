@@ -7,8 +7,8 @@ import { Check, Ellipsis, FolderOpen, Pencil, Plus, Trash } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { ImportProgress, ImportReport } from '../../../../../shared/ipc/import'
 import { Button, Menu, toast } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
-import { bytes } from '../../../lib/format'
+import { libraryDisplayName, tr } from '../../../i18n'
+import { bytes, labelled } from '../../../lib/format'
 import { isNotImplemented, RpcError, rpc, subscribe } from '../../../lib/rpc'
 import { askConfirm, askName } from '../../../state/dialogs'
 import { usePrefs } from '../../../state/prefs'
@@ -20,24 +20,24 @@ import { useAi } from '../../ai/ai-store'
 type Detect = Awaited<ReturnType<typeof rpc<'import.gatheros.detect'>>>
 
 function err(e: unknown): void {
-  toast(e instanceof RpcError ? e.message : fr.errors.generic)
+  toast(e instanceof RpcError ? e.message : tr.errors.generic)
 }
 
 function LibrariesList() {
   const { active, libraries } = useLibraries()
   const rename = async (id: string, current: string) => {
     const name = await askName({
-      title: fr.shell.rename,
+      title: tr.shell.rename,
       initial: current,
-      confirmLabel: fr.shell.rename,
+      confirmLabel: tr.shell.rename,
     })
     if (name && name !== current) await rpc('libraries.rename', { id, name }).catch(err)
   }
   const remove = async (id: string, name: string) => {
     const ok = await askConfirm({
-      title: fr.settingsUi.removeTitle(name),
-      body: fr.settingsUi.removeBody,
-      confirmLabel: fr.settingsUi.remove,
+      title: tr.settingsUi.removeTitle(name),
+      body: tr.settingsUi.removeBody,
+      confirmLabel: tr.settingsUi.remove,
       danger: true,
     })
     if (ok) await rpc('libraries.remove', { id, deleteFiles: false }).catch(err)
@@ -52,13 +52,13 @@ function LibrariesList() {
         >
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 text-[13px] font-medium">
-              {l.name}
+              {libraryDisplayName(l)}
               {l.id === active ? (
-                <Check size={14} className="text-fg-subtle" aria-label={fr.settingsUi.active} />
+                <Check size={14} className="text-fg-subtle" aria-label={tr.settingsUi.active} />
               ) : null}
             </div>
             <div className="truncate font-mono text-[11px] text-fg-subtle">{l.path ?? l.id}</div>
-            <div className="text-[11px] text-[var(--set-help)]">{fr.count.items(l.itemCount)}</div>
+            <div className="text-[11px] text-[var(--set-help)]">{tr.count.items(l.itemCount)}</div>
           </div>
           {l.id !== active ? (
             <Button
@@ -66,14 +66,14 @@ function LibrariesList() {
               variant="secondary"
               onClick={() => void rpc('libraries.switch', { id: l.id }).catch(err)}
             >
-              {fr.settingsUi.switchTo}
+              {tr.settingsUi.switchTo}
             </Button>
           ) : null}
           <Menu.Dropdown.Root>
             <Menu.Dropdown.Trigger asChild>
               <button
                 type="button"
-                aria-label={fr.settingsUi.libraryMenu}
+                aria-label={tr.settingsUi.libraryMenu}
                 className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-[var(--hover)]"
               >
                 <Ellipsis size={16} />
@@ -81,13 +81,13 @@ function LibrariesList() {
             </Menu.Dropdown.Trigger>
             <Menu.Dropdown.Content align="end">
               <Menu.Dropdown.Item icon={<Pencil />} onSelect={() => void rename(l.id, l.name)}>
-                {fr.shell.rename}
+                {tr.shell.rename}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item
                 icon={<FolderOpen />}
                 onSelect={() => void rpc('libraries.reveal', { id: l.id }).catch(err)}
               >
-                {fr.settingsUi.reveal}
+                {tr.settingsUi.reveal}
               </Menu.Dropdown.Item>
               {l.id !== active ? (
                 <Menu.Dropdown.Item
@@ -95,7 +95,7 @@ function LibrariesList() {
                   icon={<Trash />}
                   onSelect={() => void remove(l.id, l.name)}
                 >
-                  {fr.settingsUi.remove}
+                  {tr.settingsUi.remove}
                 </Menu.Dropdown.Item>
               ) : null}
             </Menu.Dropdown.Content>
@@ -186,8 +186,8 @@ export function ImportPanel() {
         setRunning(false)
         void rpc('import.gatheros.lastReport').then((r) => {
           if (r && r.runId === p.runId) setReport(r)
-          if (r?.state === 'cancelled') toast(fr.importUi.cancelled)
-          else if (r?.state === 'failed') toast(r.error ?? fr.importUi.failed)
+          if (r?.state === 'cancelled') toast(tr.importUi.cancelled)
+          else if (r?.state === 'failed') toast(r.error ?? tr.importUi.failed)
         })
       }
     })
@@ -208,7 +208,7 @@ export function ImportPanel() {
   }
 
   const c = detect?.counts
-  const phaseLabel = progress ? (fr.importUi.phases[progress.phase] ?? progress.phase) : ''
+  const phaseLabel = progress ? (tr.importUi.phases[progress.phase] ?? progress.phase) : ''
   const pct =
     progress && progress.total > 0
       ? Math.min(100, (progress.done / progress.total) * 100)
@@ -225,16 +225,16 @@ export function ImportPanel() {
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-[13px] font-semibold">{fr.settings.libraries.importTitle}</div>
-          <p className="mt-0.5 text-[11px] text-fg-muted">{fr.settings.libraries.importBody}</p>
+          <div className="text-[13px] font-semibold">{tr.settings.libraries.importTitle}</div>
+          <p className="mt-0.5 text-[11px] text-fg-muted">{tr.settings.libraries.importBody}</p>
         </div>
       </div>
 
       {detecting && !detect ? (
-        <p className="mt-3 text-[11.5px] text-fg-muted">{fr.importUi.detecting}</p>
+        <p className="mt-3 text-[11.5px] text-fg-muted">{tr.importUi.detecting}</p>
       ) : null}
       {detect && !detect.found ? (
-        <p className="mt-3 text-[11.5px] text-fg-muted">{fr.importUi.notFound}</p>
+        <p className="mt-3 text-[11.5px] text-fg-muted">{tr.importUi.notFound}</p>
       ) : null}
 
       {detect?.found && c ? (
@@ -242,10 +242,10 @@ export function ImportPanel() {
           className="mt-3 rounded-lg border border-border bg-bg px-3 py-2.5 text-[11.5px]"
           data-testid="import-detect"
         >
-          <div className="font-medium">{fr.importUi.found(detect.libraryName ?? 'Library')}</div>
+          <div className="font-medium">{tr.importUi.found(detect.libraryName ?? 'Library')}</div>
           <div className="text-fg-muted">
-            {fr.importUi.summary(c.items, c.images, c.videos, c.posts, c.links)} —{' '}
-            {fr.importUi.collectionsAndSize(c.collections, bytes(c.bytes))}
+            {tr.importUi.summary(c.items, c.images, c.videos, c.posts, c.links)} —{' '}
+            {tr.importUi.collectionsAndSize(c.collections, bytes(c.bytes))}
           </div>
         </div>
       ) : null}
@@ -257,41 +257,41 @@ export function ImportPanel() {
               checked={opts.includeTrash}
               onChange={(v) => setOpts({ ...opts, includeTrash: v })}
             >
-              {fr.importUi.includeTrash(c?.trash ?? 0)}
+              {tr.importUi.includeTrash(c?.trash ?? 0)}
             </Check2>
             <Check2
               checked={opts.includeHidden}
               onChange={(v) => setOpts({ ...opts, includeHidden: v })}
             >
-              {fr.importUi.includeHidden(c?.hidden ?? 0)}
+              {tr.importUi.includeHidden(c?.hidden ?? 0)}
             </Check2>
             <Check2
               checked={opts.importAiFields}
               onChange={(v) => setOpts({ ...opts, importAiFields: v })}
             >
-              {fr.importUi.aiFields}
+              {tr.importUi.aiFields}
             </Check2>
             <Check2
               checked={opts.importPrefs}
               onChange={(v) => setOpts({ ...opts, importPrefs: v })}
             >
-              {fr.importUi.prefs}
+              {tr.importUi.prefs}
             </Check2>
             <Check2
               checked={opts.skipStarterContent}
               onChange={(v) => setOpts({ ...opts, skipStarterContent: v })}
             >
-              {fr.importUi.skipStarter(c?.starter ?? 0)}
+              {tr.importUi.skipStarter(c?.starter ?? 0)}
             </Check2>
             <Check2
               checked={opts.ignoreTombstones}
               onChange={(v) => setOpts({ ...opts, ignoreTombstones: v })}
             >
-              {`${fr.importUi.advanced} : ${fr.importUi.ignoreTombstones}`}
+              {labelled(tr.importUi.advanced, tr.importUi.ignoreTombstones)}
             </Check2>
           </div>
           <div className="mt-2 flex items-center gap-3 text-[12px]">
-            <span className="text-fg-muted">{fr.importUi.target}</span>
+            <span className="text-fg-muted">{tr.importUi.target}</span>
             <label className="flex items-center gap-1.5">
               <input
                 type="radio"
@@ -299,7 +299,7 @@ export function ImportPanel() {
                 checked={target === 'active'}
                 onChange={() => setTarget('active')}
               />
-              {fr.importUi.targetActive}
+              {tr.importUi.targetActive}
             </label>
             <label className="flex items-center gap-1.5">
               <input
@@ -308,7 +308,7 @@ export function ImportPanel() {
                 checked={target === 'new'}
                 onChange={() => setTarget('new')}
               />
-              {fr.importUi.targetNew}
+              {tr.importUi.targetNew}
             </label>
           </div>
           {detect.running ? (
@@ -316,9 +316,9 @@ export function ImportPanel() {
               className="mt-3 flex items-center gap-3 text-[11.5px]"
               data-testid="import-running"
             >
-              <span className="text-danger">{fr.importUi.running}</span>
+              <span className="text-danger">{tr.importUi.running}</span>
               <Button size="sm" variant="secondary" onClick={runDetect}>
-                {fr.importUi.retry}
+                {tr.importUi.retry}
               </Button>
             </div>
           ) : null}
@@ -329,7 +329,7 @@ export function ImportPanel() {
               disabled={detect.running}
               onClick={() => void start()}
             >
-              {fr.settings.libraries.importCta}
+              {tr.settings.libraries.importCta}
             </Button>
           </div>
         </>
@@ -346,7 +346,7 @@ export function ImportPanel() {
           <div className="mt-1.5 flex items-center justify-between text-[11.5px] text-fg-muted">
             <span className="tnum">
               {progress && progress.total > 0
-                ? fr.settings.libraries.importing(progress.done, progress.total, phaseLabel)
+                ? tr.settings.libraries.importing(progress.done, progress.total, phaseLabel)
                 : phaseLabel}
             </span>
             <Button
@@ -354,7 +354,7 @@ export function ImportPanel() {
               variant="ghost"
               onClick={() => void rpc('import.gatheros.cancel').catch(err)}
             >
-              {fr.importUi.cancel}
+              {tr.importUi.cancel}
             </Button>
           </div>
         </div>
@@ -362,9 +362,9 @@ export function ImportPanel() {
 
       {report && report.state === 'done' ? (
         <div className="mt-3 text-[11.5px]" data-testid="import-summary">
-          <div className="font-medium">{fr.importUi.doneTitle}</div>
+          <div className="font-medium">{tr.importUi.doneTitle}</div>
           <div className="text-fg-muted">
-            {fr.importUi.counts(
+            {tr.importUi.counts(
               report.counts.items ?? 0,
               report.counts.collections ?? 0,
               report.counts.skipped_existing ?? 0,
@@ -372,7 +372,7 @@ export function ImportPanel() {
           </div>
           {derivedTotal > 0 ? (
             <div className="mt-1 text-fg-muted tnum" data-testid="import-derived">
-              {fr.importUi.derived(derivedDone, derivedTotal)}
+              {tr.importUi.derived(derivedDone, derivedTotal)}
             </div>
           ) : null}
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
@@ -382,7 +382,7 @@ export function ImportPanel() {
                 className="underline-offset-2 hover:underline"
                 onClick={() => setDetails('missing')}
               >
-                {fr.importUi.missingFiles(report.missingFiles.length)}
+                {tr.importUi.missingFiles(report.missingFiles.length)}
               </button>
             ) : null}
             {report.urlDuplicates.length > 0 ? (
@@ -392,7 +392,7 @@ export function ImportPanel() {
                 className="underline-offset-2 hover:underline"
                 onClick={() => setDetails('duplicates')}
               >
-                {fr.importUi.urlDuplicates(report.urlDuplicates.length)}
+                {tr.importUi.urlDuplicates(report.urlDuplicates.length)}
               </button>
             ) : null}
             <button
@@ -400,7 +400,7 @@ export function ImportPanel() {
               className="underline-offset-2 hover:underline"
               onClick={() => void rpc('import.gatheros.revealReport').catch(err)}
             >
-              {fr.importUi.openReport}
+              {tr.importUi.openReport}
             </button>
           </div>
           {details === 'duplicates' ? (
@@ -429,7 +429,7 @@ export function ImportPanel() {
               disabled={report.missingDescription === 0}
               onClick={() => useAi.getState().openEnrich('import')}
             >
-              {fr.importUi.enrich(report.missingDescription)}
+              {tr.importUi.enrich(report.missingDescription)}
             </Button>
             {provider === 'off' ? (
               <button
@@ -437,7 +437,7 @@ export function ImportPanel() {
                 className="text-[11.5px] text-fg-muted underline-offset-2 hover:underline"
                 onClick={() => openOverlay({ type: 'settings', section: 'ai' })}
               >
-                {fr.importUi.enrichOff}
+                {tr.importUi.enrichOff}
               </button>
             ) : null}
           </div>
@@ -450,28 +450,28 @@ export function ImportPanel() {
 export function LibrariesSection() {
   const create = async () => {
     const name = await askName({
-      title: fr.shell.newLibraryTitle,
-      initial: fr.shell.newLibraryDefault,
-      confirmLabel: fr.shell.create,
+      title: tr.shell.newLibraryTitle,
+      initial: tr.shell.newLibraryDefault,
+      confirmLabel: tr.shell.create,
     })
     if (name) await rpc('libraries.create', { name }).catch(err)
   }
   return (
     <>
-      <SettingsTitle description={fr.settings.libraries.desc}>
-        {fr.settings.nav.libraries}
+      <SettingsTitle description={tr.settings.libraries.desc}>
+        {tr.settings.nav.libraries}
       </SettingsTitle>
       <LibrariesList />
       <div className="mt-3 flex gap-2">
         <Button variant="secondary" icon={<Plus size={15} />} onClick={() => void create()}>
-          {fr.settings.libraries.new}
+          {tr.settings.libraries.new}
         </Button>
         <Button
           variant="secondary"
           icon={<FolderOpen size={15} />}
           onClick={() => void rpc('libraries.openFolder').catch(err)}
         >
-          {fr.settings.libraries.openFolder}
+          {tr.settings.libraries.openFolder}
         </Button>
       </div>
       <ImportPanel />

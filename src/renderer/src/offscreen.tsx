@@ -1,6 +1,6 @@
 /**
  * Entrée des fenêtres hors écran (`offscreen.html?render=<route>`) : sans preload,
- * jamais `window.recolt`. Routes : `tweet-card`, `space-stage`. Stub.
+ * jamais `window.recolt`. Routes : `tweet-card`, `space-stage`. Langue : paramètre `lang`.
  */
 // Avant tout schéma zod : pas de `new Function` sous la CSP (voir le module).
 import './lib/zod-jitless'
@@ -9,10 +9,13 @@ import { createRoot } from 'react-dom/client'
 import './styles/tokens.css'
 import './styles/globals.css'
 import { TweetCardRender } from './features/sync/TweetCardRender'
+import { setUiLang } from './i18n'
 
 const params = new URLSearchParams(window.location.search)
 const route = params.get('render') ?? ''
 document.documentElement.dataset.theme = params.get('theme') === 'dark' ? 'dark' : 'light'
+// Langue de l'app passée par main (`offscreenUrl`) : textes des cartes et des exports.
+setUiLang(params.get('lang') === 'en' ? 'en' : 'fr')
 
 const StageRoot = lazy(() => import('./features/spaces/stage/StageRoot'))
 

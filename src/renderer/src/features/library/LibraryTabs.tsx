@@ -5,16 +5,18 @@
 import { EyeOff, Folder, Images, Inbox, Trash } from 'lucide-react'
 import { LayoutGroup, motion } from 'motion/react'
 import type { LibraryTab } from '../../../../shared/enums'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 
-const TABS = [
-  { key: 'all', label: fr.tabs.all, Icon: Images },
-  { key: 'saved', label: fr.tabs.saved, Icon: Folder },
-  { key: 'unsorted', label: fr.tabs.unsorted, Icon: Inbox },
-  { key: 'trash', label: fr.tabs.trash, Icon: Trash },
-  { key: 'hidden', label: fr.tabs.hidden, Icon: EyeOff },
-] as const
+/** Libellés lus au rendu : ils suivent la langue active. */
+const tabs = () =>
+  [
+    { key: 'all', label: tr.tabs.all, Icon: Images },
+    { key: 'saved', label: tr.tabs.saved, Icon: Folder },
+    { key: 'unsorted', label: tr.tabs.unsorted, Icon: Inbox },
+    { key: 'trash', label: tr.tabs.trash, Icon: Trash },
+    { key: 'hidden', label: tr.tabs.hidden, Icon: EyeOff },
+  ] as const
 
 export function LibraryTabs({
   value,
@@ -27,10 +29,10 @@ export function LibraryTabs({
     <LayoutGroup id="lib-tabs">
       <div
         role="tablist"
-        aria-label={fr.libraryUi.tabsLabel}
+        aria-label={tr.libraryUi.tabsLabel}
         className="flex h-full items-center gap-11 pl-[6px] pt-[6px]"
       >
-        {TABS.map(({ key, label, Icon }) => {
+        {tabs().map(({ key, label, Icon }) => {
           const active = value === key
           return (
             <button

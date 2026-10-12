@@ -8,7 +8,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import type { TagInfo } from '../../../../shared/dto/collections'
 import type { ItemKind, Source } from '../../../../shared/enums'
 import { Button, Popover, SegmentedSmall, Slider, Tooltip } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { flattenTree, useCollections } from '../../state/collections'
 import { EMPTY_FILTERS, SWATCHES, toggle, type Period, type SearchFilters } from './filters'
@@ -78,33 +78,33 @@ export function FiltersPopover({
         align="end"
         data-testid="filters-popover"
         className="w-[320px] p-[14px]"
-        aria-label={fr.search.filters}
+        aria-label={tr.search.filters}
       >
-        <Group label={fr.search.type}>
+        <Group label={tr.search.type}>
           <div className="flex flex-wrap gap-1.5">
             {KINDS.map((k) => (
               <Toggle
                 key={k}
                 on={value.kinds.includes(k)}
-                label={fr.searchUi.kinds[k]!}
+                label={tr.searchUi.kinds[k]!}
                 onClick={() => set({ kinds: toggle(value.kinds, k) })}
               />
             ))}
           </div>
         </Group>
-        <Group label={fr.search.source}>
+        <Group label={tr.search.source}>
           <div className="flex flex-wrap gap-1.5">
             {SOURCES.map((s) => (
               <Toggle
                 key={s}
                 on={value.sources.includes(s)}
-                label={fr.searchUi.sources[s]!}
+                label={tr.searchUi.sources[s]!}
                 onClick={() => set({ sources: toggle(value.sources, s) })}
               />
             ))}
           </div>
         </Group>
-        <Group label={fr.search.color}>
+        <Group label={tr.search.color}>
           <div className="flex flex-wrap items-center gap-[7px]" data-testid="color-filter">
             {SWATCHES.map((c) => {
               const on = value.colors.includes(c.hex)
@@ -113,7 +113,7 @@ export function FiltersPopover({
                   <button
                     type="button"
                     data-color={c.id}
-                    aria-label={fr.searchUi.colorChip(c.label)}
+                    aria-label={tr.searchUi.colorChip(c.label)}
                     aria-pressed={on}
                     className="flex h-[22px] w-[22px] items-center justify-center rounded-full border border-[rgba(128,128,128,.35)]"
                     style={{ background: c.hex }}
@@ -141,15 +141,15 @@ export function FiltersPopover({
                   set({ colors: [...rest, hex].slice(-5) })
                 }}
               />
-              {fr.search.custom}
+              {tr.search.custom}
             </label>
           </div>
           {value.colors.length > 0 ? (
             <div className="mt-2 flex items-center gap-3">
-              <span className="text-[12px] text-fg-muted">{fr.colorUi.tolerance}</span>
+              <span className="text-[12px] text-fg-muted">{tr.colorUi.tolerance}</span>
               <Slider
                 variant="settings"
-                label={fr.colorUi.tolerance}
+                label={tr.colorUi.tolerance}
                 min={6}
                 max={40}
                 step={1}
@@ -163,31 +163,31 @@ export function FiltersPopover({
           ) : null}
           {value.colors.length > 0 && noPalette > 0 ? (
             <p className="mt-1.5 text-[11px] text-fg-faint" data-testid="no-palette">
-              {fr.search.noPalette(noPalette)}
+              {tr.search.noPalette(noPalette)}
             </p>
           ) : null}
         </Group>
-        <Group label={fr.search.period}>
+        <Group label={tr.search.period}>
           <SegmentedSmall<Period>
-            label={fr.search.period}
+            label={tr.search.period}
             value={value.period}
             onChange={(period) => set({ period })}
             options={[
-              { value: 'all', label: fr.search.anytime },
-              { value: '7d', label: fr.search.d7 },
-              { value: '30d', label: fr.search.d30 },
-              { value: '1y', label: fr.search.y1 },
+              { value: 'all', label: tr.search.anytime },
+              { value: '7d', label: tr.search.d7 },
+              { value: '30d', label: tr.search.d30 },
+              { value: '1y', label: tr.search.y1 },
             ]}
           />
         </Group>
-        <Group label={fr.search.inCollection}>
+        <Group label={tr.search.inCollection}>
           <select
-            aria-label={fr.search.inCollection}
+            aria-label={tr.search.inCollection}
             className="h-8 w-full rounded-[10px] border border-border bg-bg px-2.5 text-small"
             value={value.collectionUuid ?? ''}
             onChange={(e) => set({ collectionUuid: e.target.value || null })}
           >
-            <option value="">{fr.searchUi.anyCollection}</option>
+            <option value="">{tr.searchUi.anyCollection}</option>
             {flat.map(({ node, depth }) => (
               <option key={node.uuid} value={node.uuid}>
                 {`${'  '.repeat(depth)}${node.name}`}
@@ -195,10 +195,10 @@ export function FiltersPopover({
             ))}
           </select>
         </Group>
-        <Group label={fr.search.tags}>
+        <Group label={tr.search.tags}>
           <input
             className="h-8 w-full rounded-[10px] border border-border bg-bg px-2.5 text-small outline-none focus:border-border-strong"
-            placeholder={fr.searchUi.tagsPlaceholder}
+            placeholder={tr.searchUi.tagsPlaceholder}
             value={tagText}
             onChange={(e) => setTagText(e.target.value)}
             onKeyDown={(e) => {
@@ -228,7 +228,7 @@ export function FiltersPopover({
         </Group>
         <div className="mt-3.5 flex justify-end">
           <Button variant="ghost" size="sm" onClick={() => onChange(EMPTY_FILTERS)}>
-            {fr.search.reset}
+            {tr.search.reset}
           </Button>
         </div>
       </Popover.Content>

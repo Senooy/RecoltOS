@@ -14,7 +14,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import type { CollectionNode } from '../../../../shared/dto/collections'
 import { motionSeconds, reduceMotionState, useReducedMotion } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { flattenTree, useCollections } from '../../state/collections'
 import { useUi, type RouteName } from '../../state/ui'
@@ -254,7 +254,7 @@ export function CollectionsDragPanel() {
           key="drag-collections"
           ref={panelRef}
           data-testid="drag-collections-panel"
-          aria-label={fr.gridUi.dragPanelLabel}
+          aria-label={tr.gridUi.dragPanelLabel}
           className="fixed bottom-[90px] right-0 top-[91px] z-[60] flex w-[230px] flex-col rounded-l-[14px] bg-[var(--drag-panel-bg)]"
           style={{
             boxShadow: 'var(--drag-panel-shadow)',
@@ -267,10 +267,10 @@ export function CollectionsDragPanel() {
           onDragLeave={onDragLeave}
         >
           <div className="shrink-0 px-4 pb-[6px] pt-[10px] text-micro font-medium uppercase tracking-[0.08em] text-fg-subtle">
-            {fr.gridUi.dragPanelTitle}
+            {tr.gridUi.dragPanelTitle}
           </div>
           {rows.length === 0 ? (
-            <div className="px-4 py-2 text-small text-fg-faint">{fr.collectionUi.pickerEmpty}</div>
+            <div className="px-4 py-2 text-small text-fg-faint">{tr.collectionUi.pickerEmpty}</div>
           ) : (
             <ul
               ref={listRef}

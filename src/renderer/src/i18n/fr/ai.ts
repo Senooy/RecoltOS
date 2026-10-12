@@ -174,6 +174,20 @@ export const ai = {
       const m = min % 60
       return m ? `${h}${NNBSP}h${NNBSP}${String(m).padStart(2, '0')}` : `${h}${NNBSP}h`
     },
+    /** Erreur IA enregistrée sur un élément, par code (`AiErrorCode`) ; sinon son message. */
+    errorCodes: {
+      NOT_INSTALLED: 'CLI introuvable',
+      NOT_AUTHENTICATED: 'non connecté',
+      RATE_LIMITED: 'limite atteinte',
+      TIMEOUT: 'délai dépassé',
+      CANCELLED: 'annulé',
+      FILE_MISSING: 'média illisible ou introuvable',
+      DISABLED: 'IA désactivée',
+      BAD_OUTPUT: 'réponse invalide',
+      PROCESS: 'erreur du CLI',
+      TOOL_VIOLATION: 'outil refusé',
+      UNSUPPORTED_CLI: 'CLI non prise en charge',
+    } as Record<string, string>,
     errors: {
       ai_disabled: 'Choisis d’abord un moteur dans Réglages › IA.',
       ai_consent_required: 'Accepte d’abord les conditions d’envoi dans Réglages › IA.',

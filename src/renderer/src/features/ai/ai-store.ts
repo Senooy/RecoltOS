@@ -5,7 +5,7 @@
 import { create } from 'zustand'
 import type { ProviderStatus } from '../../../../shared/ai-types'
 import type { QueueSnapshot } from '../../../../shared/dto/ai'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { RpcError, isNotImplemented, rpc, subscribe } from '../../lib/rpc'
 import { toast } from '../../components/ui'
 
@@ -78,7 +78,7 @@ export function followAiEvents(): () => void {
 
 export function aiFail(err: unknown): void {
   if (err instanceof RpcError) {
-    const known = fr.aiUi.errors[err.code]
+    const known = tr.aiUi.errors[err.code]
     if (known) {
       toast(known)
       return
@@ -86,7 +86,7 @@ export function aiFail(err: unknown): void {
     toast(err.message)
     return
   }
-  toast(fr.errors.generic)
+  toast(tr.errors.generic)
 }
 
 /** Vrai si un appel peut partir : fournisseur choisi et consentement donné. */

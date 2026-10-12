@@ -13,7 +13,7 @@ import type { ItemCard } from '../../../../../../shared/dto/items'
 import type { SpaceNode } from '../../../../../../shared/spaces-schema'
 import { useState, type SyntheticEvent } from 'react'
 import { MediaBadge } from '../../../../components/ui'
-import { fr } from '../../../../i18n/fr'
+import { tr } from '../../../../i18n'
 import { mediaSrc } from '../../../../lib/media-url'
 import { releaseOnUnmount } from '../../../../lib/video-guard'
 import { PageCard } from '../../../grid/cards/MediaCards'
@@ -86,7 +86,7 @@ type ItemN = Extract<SpaceNode, { type: 'item' }>
 type ImageN = Extract<SpaceNode, { type: 'image' }>
 
 export function MissingNode() {
-  return <div className="sp-missing">{fr.spaces.itemDeleted}</div>
+  return <div className="sp-missing">{tr.spaces.itemDeleted}</div>
 }
 
 export function ItemNodeView({

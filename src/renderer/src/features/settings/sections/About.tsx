@@ -1,7 +1,7 @@
 /** Réglages › À propos. */
 import { useEffect, useState } from 'react'
 import { RecoltLogo } from '../../../components/icons'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { rpc } from '../../../lib/rpc'
 
 export function AboutSection() {
@@ -18,11 +18,11 @@ export function AboutSection() {
       <div>
         <div className="text-[21px] leading-7 font-bold">RecoltOS</div>
         {version ? (
-          <div className="text-[11.5px] text-fg-muted">{fr.settings.about.version(version)}</div>
+          <div className="text-[11.5px] text-fg-muted">{tr.settings.about.version(version)}</div>
         ) : null}
       </div>
       <p className="select-text max-w-[470px] text-[12px] leading-[19.5px] text-fg-muted">
-        {fr.settings.about.body}
+        {tr.settings.about.body}
       </p>
       <div className="flex gap-4">
         <button
@@ -30,7 +30,7 @@ export function AboutSection() {
           className="text-[11.5px] text-fg underline-offset-2 hover:underline"
           onClick={() => void rpc('system.openLogs').catch(() => undefined)}
         >
-          {fr.settings.about.logs}
+          {tr.settings.about.logs}
         </button>
         <button
           type="button"
@@ -39,12 +39,12 @@ export function AboutSection() {
           className="text-[11.5px] text-fg underline-offset-2 hover:underline"
           onClick={() => setLicenses((v) => !v)}
         >
-          {fr.settings.about.licenses}
+          {tr.settings.about.licenses}
         </button>
       </div>
       {licenses ? (
         <p className="select-text max-w-[470px] rounded-[10px] border border-[var(--set-box-border)] bg-[var(--surface-info)] px-4 py-3 text-[11px] leading-[18px] text-fg-muted">
-          {fr.settingsMoreUi.licensesBody}
+          {tr.settingsMoreUi.licensesBody}
         </p>
       ) : null}
     </div>

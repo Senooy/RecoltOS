@@ -331,6 +331,10 @@ export const base = {
       hoverPlay: 'Lire les vidéos au survol',
       reduceMotion: 'Réduire les animations',
       always: 'Toujours',
+      language: 'Langue',
+      languageSystem: 'Automatique (langue du Mac)',
+      languageFr: 'Français',
+      languageEn: 'English',
     },
     libraries: {
       desc: 'Chaque bibliothèque est un dossier indépendant sur ton Mac.',

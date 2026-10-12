@@ -21,4 +21,13 @@ export const shell = {
     dropCollection: 'Déposer dans la collection',
     unavailable: 'Pas encore disponible dans cette version.',
   },
+  /** Libellés internes du kit UI (`components/ui/labels.ts`). */
+  uiKit: {
+    remove: (label: string) => `Retirer ${label}`,
+    slide: (current: number, total: number) => `Diapositive ${current} sur ${total}`,
+    notifications: 'Notifications',
+    dismiss: 'Ignorer la notification',
+    canvas: 'Toile',
+    recentSearch: (label: string, q: string) => `${label} « ${q} »`,
+  },
 } as const

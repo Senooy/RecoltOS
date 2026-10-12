@@ -15,6 +15,7 @@ import {
   type Vec,
 } from '../../../../../shared/spaces-geometry'
 import type { Camera, SpaceNode } from '../../../../../shared/spaces-schema'
+import { tr } from '../../../i18n'
 import { usePrefs } from '../../../state/prefs'
 import { createAt, duplicateInPlace } from './actions'
 import { contains, inflate, screenToWorld, viewRect, wheelAction, zoomAt } from './geometry/camera'
@@ -508,7 +509,7 @@ export function Viewport({
       data-pan={spaceHeld ? '1' : undefined}
       data-panning={panning ? '1' : undefined}
       tabIndex={-1}
-      aria-label="Toile"
+      aria-label={tr.uiKit.canvas}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endGesture}

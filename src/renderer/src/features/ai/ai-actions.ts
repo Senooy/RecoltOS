@@ -4,7 +4,7 @@
  */
 import type { AiField } from '../../../../shared/ai-types'
 import { toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { rpc } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
 import { aiFail, aiReady, useAi } from './ai-store'
@@ -25,7 +25,7 @@ export async function analyzeItems(
       ...(opts.force ? { force: true } : {}),
       ...(opts.fields ? { fields: opts.fields } : {}),
     })
-    toast(fr.aiUi.enqueued)
+    toast(tr.aiUi.enqueued)
   } catch (err) {
     aiFail(err)
   }

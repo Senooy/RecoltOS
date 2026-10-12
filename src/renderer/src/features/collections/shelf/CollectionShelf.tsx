@@ -22,7 +22,7 @@ import {
 import type { CollectionNode } from '../../../../../shared/dto/collections'
 import type { ItemCard } from '../../../../../shared/dto/items'
 import { toast, useReducedMotion } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { mediaSrc } from '../../../lib/media-url'
 import { RpcError, rpc } from '../../../lib/rpc'
 import { isEditableTarget } from '../../../lib/shortcuts'
@@ -173,15 +173,15 @@ export default function CollectionShelf() {
 
   const createCollection = async () => {
     const name = await askName({
-      title: fr.collection.new,
+      title: tr.collection.new,
       initial: '',
-      confirmLabel: fr.shell.create,
+      confirmLabel: tr.shell.create,
     })
     if (!name) return
     try {
       await rpc('collections.create', { name })
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
     }
   }
 
@@ -253,14 +253,14 @@ export default function CollectionShelf() {
             }
           >
             <div className="shelf-label-name">{node.name}</div>
-            <div className="shelf-label-count">{fr.count.items(node.count)}</div>
+            <div className="shelf-label-count">{tr.count.items(node.count)}</div>
           </div>
         ))}
       </div>
       <div
         className="shelf-track"
         role="list"
-        aria-label={fr.nav.collections}
+        aria-label={tr.nav.collections}
         style={{ transform: `translate3d(${-scroll}px, 0, 0)` }}
       >
         {tree.map((node: CollectionNode, i) => (
@@ -275,7 +275,7 @@ export default function CollectionShelf() {
             data-name={node.name}
             data-uuid={node.uuid}
             data-active={active === i ? '1' : undefined}
-            aria-label={`${node.name}, ${fr.count.items(node.count)}`}
+            aria-label={`${node.name}, ${tr.count.items(node.count)}`}
             className="shelf-cover"
             style={{ '--i': i } as CSSProperties}
             onMouseEnter={() => setActive(i)}
@@ -295,7 +295,7 @@ export default function CollectionShelf() {
           type="button"
           role="listitem"
           data-testid="shelf-new"
-          aria-label={fr.collection.new}
+          aria-label={tr.collection.new}
           data-active={active === tree.length ? '1' : undefined}
           className="shelf-cover"
           style={{ '--i': tree.length } as CSSProperties}
@@ -307,7 +307,7 @@ export default function CollectionShelf() {
           {/* Libellé à plat sur le créneau visible (le texte d'une face 3D vide n'est pas peint). */}
           <span className="shelf-new-label pointer-events-none absolute inset-y-0 left-0 right-0 flex flex-col items-center justify-center gap-2 px-2 text-center text-[13px] font-medium leading-4 text-[rgba(255,255,255,.55)]">
             <Plus size={24} strokeWidth={1.5} />
-            {fr.collection.new}
+            {tr.collection.new}
           </span>
         </button>
       </div>

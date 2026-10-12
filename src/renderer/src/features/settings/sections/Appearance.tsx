@@ -1,20 +1,15 @@
-/** Réglages › Apparence : thème, colonnes et tri par défaut, vidéos au survol, animations. */
+/**
+ * Réglages › Apparence : thème, langue, colonnes et tri par défaut, vidéos au survol, animations.
+ * La langue s'applique tout de suite (renderer remonté, menu natif reconstruit par main).
+ */
 import type { SortMode } from '../../../../../shared/enums'
+import type { LanguagePref } from '../../../../../shared/i18n/lang'
 import { SegmentedSmall, Slider, Switch } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { usePrefs } from '../../../state/prefs'
 import { useUi } from '../../../state/ui'
+import { sortOptions } from '../../library/SortMenu'
 import { SettingsRow, SettingsTitle } from '../SettingsDialog'
-
-const SORTS: { value: SortMode; label: string }[] = [
-  { value: 'recent', label: fr.sort.recent },
-  { value: 'oldest', label: fr.sort.oldest },
-  { value: 'viewed', label: fr.sort.recentlyViewed },
-  { value: 'mostViewed', label: fr.sort.mostViewed },
-  { value: 'name', label: fr.sort.name },
-  { value: 'color', label: fr.sort.color },
-  { value: 'random', label: fr.sort.random },
-]
 
 export function AppearanceSection() {
   const prefs = usePrefs((s) => s.prefs)
@@ -25,29 +20,49 @@ export function AppearanceSection() {
       .catch(() => undefined)
   return (
     <>
-      <SettingsTitle>{fr.settings.nav.appearance}</SettingsTitle>
+      <SettingsTitle>{tr.settings.nav.appearance}</SettingsTitle>
       <div className="mt-4">
         <SettingsRow
-          label={fr.settings.appearance.theme}
+          label={tr.settings.appearance.theme}
           control={
             <SegmentedSmall
-              label={fr.settings.appearance.theme}
+              label={tr.settings.appearance.theme}
               value={prefs.theme}
               onChange={(theme) => update({ theme })}
               options={[
-                { value: 'light', label: fr.settings.appearance.light },
-                { value: 'dark', label: fr.settings.appearance.dark },
-                { value: 'system', label: fr.settings.appearance.system },
+                { value: 'light', label: tr.settings.appearance.light },
+                { value: 'dark', label: tr.settings.appearance.dark },
+                { value: 'system', label: tr.settings.appearance.system },
               ]}
             />
           }
         />
         <SettingsRow
-          label={fr.settings.appearance.defaultColumns}
+          label={tr.settings.appearance.language}
+          control={
+            <select
+              aria-label={tr.settings.appearance.language}
+              data-testid="settings-language"
+              className="h-[34px] rounded-[10px] border border-[var(--set-field-border)] bg-[var(--set-field-bg)] px-3 text-[12.5px]"
+              value={prefs.ui.language}
+              onChange={(e) => update({ ui: { language: e.target.value as LanguagePref } })}
+            >
+              <option value="system">{tr.settings.appearance.languageSystem}</option>
+              <option value="fr" lang="fr">
+                {tr.settings.appearance.languageFr}
+              </option>
+              <option value="en" lang="en">
+                {tr.settings.appearance.languageEn}
+              </option>
+            </select>
+          }
+        />
+        <SettingsRow
+          label={tr.settings.appearance.defaultColumns}
           control={
             <div className="flex items-center gap-3">
               <Slider
-                label={fr.settings.appearance.defaultColumns}
+                label={tr.settings.appearance.defaultColumns}
                 min={2}
                 max={8}
                 value={prefs.defaultColumns}
@@ -61,15 +76,15 @@ export function AppearanceSection() {
           }
         />
         <SettingsRow
-          label={fr.settings.appearance.defaultSort}
+          label={tr.settings.appearance.defaultSort}
           control={
             <select
-              aria-label={fr.settings.appearance.defaultSort}
+              aria-label={tr.settings.appearance.defaultSort}
               className="h-[34px] rounded-[10px] border border-[var(--set-field-border)] bg-[var(--set-field-bg)] px-3 text-[12.5px]"
               value={prefs.defaultSort}
               onChange={(e) => update({ defaultSort: e.target.value as SortMode })}
             >
-              {SORTS.map((s) => (
+              {sortOptions().map((s) => (
                 <option key={s.value} value={s.value}>
                   {s.label}
                 </option>
@@ -78,25 +93,25 @@ export function AppearanceSection() {
           }
         />
         <SettingsRow
-          label={fr.settings.appearance.hoverPlay}
+          label={tr.settings.appearance.hoverPlay}
           control={
             <Switch
-              aria-label={fr.settings.appearance.hoverPlay}
+              aria-label={tr.settings.appearance.hoverPlay}
               checked={prefs.hoverPlay}
               onCheckedChange={(hoverPlay) => update({ hoverPlay })}
             />
           }
         />
         <SettingsRow
-          label={fr.settings.appearance.reduceMotion}
+          label={tr.settings.appearance.reduceMotion}
           control={
             <SegmentedSmall
-              label={fr.settings.appearance.reduceMotion}
+              label={tr.settings.appearance.reduceMotion}
               value={prefs.reduceMotion}
               onChange={(reduceMotion) => update({ reduceMotion })}
               options={[
-                { value: 'system', label: fr.settings.appearance.system },
-                { value: 'always', label: fr.settings.appearance.always },
+                { value: 'system', label: tr.settings.appearance.system },
+                { value: 'always', label: tr.settings.appearance.always },
               ]}
             />
           }

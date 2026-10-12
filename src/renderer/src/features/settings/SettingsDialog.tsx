@@ -19,7 +19,7 @@ import { Dialog as DialogPrimitive, VisuallyHidden } from 'radix-ui'
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { usePortalContainer } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { useUi, type SettingsSection } from '../../state/ui'
 import { AboutSection } from './sections/About'
@@ -33,16 +33,17 @@ import { AiSettings } from '../ai/AiSettings'
 import { SyncSettings } from '../sync/SyncSettings'
 import './settings.css'
 
-const NAV: { key: SettingsSection; label: string; Icon: typeof Palette }[] = [
-  { key: 'appearance', label: fr.settings.nav.appearance, Icon: Palette },
-  { key: 'libraries', label: fr.settings.nav.libraries, Icon: Library },
-  { key: 'ai', label: fr.settings.nav.ai, Icon: Sparkles },
-  { key: 'tags', label: fr.settings.nav.tags, Icon: Hash },
-  { key: 'capture', label: fr.settings.nav.capture, Icon: Camera },
-  { key: 'sync', label: fr.settings.nav.sync, Icon: RefreshCw },
-  { key: 'storage', label: fr.settings.nav.storage, Icon: HardDrive },
-  { key: 'data', label: fr.settings.nav.data, Icon: Database },
-  { key: 'about', label: fr.settings.nav.about, Icon: Info },
+/** Libellés lus au rendu : ils suivent la langue active. */
+const nav = (): { key: SettingsSection; label: string; Icon: typeof Palette }[] => [
+  { key: 'appearance', label: tr.settings.nav.appearance, Icon: Palette },
+  { key: 'libraries', label: tr.settings.nav.libraries, Icon: Library },
+  { key: 'ai', label: tr.settings.nav.ai, Icon: Sparkles },
+  { key: 'tags', label: tr.settings.nav.tags, Icon: Hash },
+  { key: 'capture', label: tr.settings.nav.capture, Icon: Camera },
+  { key: 'sync', label: tr.settings.nav.sync, Icon: RefreshCw },
+  { key: 'storage', label: tr.settings.nav.storage, Icon: HardDrive },
+  { key: 'data', label: tr.settings.nav.data, Icon: Database },
+  { key: 'about', label: tr.settings.nav.about, Icon: Info },
 ]
 
 export function SettingsTitle({
@@ -87,7 +88,7 @@ export function SettingsRow({
 function Placeholder({ title }: { title: string }) {
   return (
     <>
-      <SettingsTitle description={fr.settingsUi.placeholder}>{title}</SettingsTitle>
+      <SettingsTitle description={tr.settingsUi.placeholder}>{title}</SettingsTitle>
     </>
   )
 }
@@ -99,6 +100,7 @@ export default function SettingsDialog() {
   const container = usePortalContainer()
   const section: SettingsSection = (overlay?.type === 'settings' && overlay.section) || 'appearance'
   const setSection = (s: SettingsSection) => openOverlay({ type: 'settings', section: s })
+  const NAV = nav()
   const current = NAV.find((n) => n.key === section)!
   return (
     <DialogPrimitive.Root open onOpenChange={(o) => !o && close()}>
@@ -110,14 +112,14 @@ export default function SettingsDialog() {
           className="ui-dialog app-no-drag fixed left-1/2 top-1/2 z-50 flex h-[570px] max-h-[calc(100vh-80px)] w-[750px] max-w-[calc(100vw-48px)] overflow-hidden rounded-2xl bg-bg text-fg shadow-[var(--shadow-modal)]"
         >
           <VisuallyHidden.Root asChild>
-            <DialogPrimitive.Title>{fr.settings.title}</DialogPrimitive.Title>
+            <DialogPrimitive.Title>{tr.settings.title}</DialogPrimitive.Title>
           </VisuallyHidden.Root>
           <nav
-            aria-label={fr.settings.title}
+            aria-label={tr.settings.title}
             className="absolute bottom-[11px] left-[11px] top-[11px] flex w-[196px] flex-col rounded-xl border border-[var(--set-nav-border)] px-2 py-3"
           >
             <div className="px-2.5 pb-3 pt-px text-[11px] text-[var(--set-nav-title)]">
-              {fr.settings.title}
+              {tr.settings.title}
             </div>
             {NAV.map(({ key, label, Icon }) => (
               <button
@@ -165,7 +167,7 @@ export default function SettingsDialog() {
             )}
           </div>
           <DialogPrimitive.Close
-            aria-label={fr.settings.close}
+            aria-label={tr.settings.close}
             className="absolute right-[18px] top-4 inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--set-close)] hover:bg-[var(--hover)]"
           >
             <X size={14} strokeWidth={2} />

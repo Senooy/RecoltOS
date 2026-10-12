@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { SpaceSummary } from '../../../../shared/dto/spaces'
 import { aabb, unionRect } from '../../../../shared/spaces-geometry'
 import { Menu } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { relative } from '../../lib/format'
 import { rpc, subscribe } from '../../lib/rpc'
 import { askName } from '../../state/dialogs'
@@ -80,19 +80,19 @@ function CardMenuItems({
 }) {
   const rename = async () => {
     const name = await askName({
-      title: fr.spacesUi.renameTitle,
+      title: tr.spacesUi.renameTitle,
       initial: space.name,
-      confirmLabel: fr.spaces.rename,
+      confirmLabel: tr.spaces.rename,
     })
     if (name) await renameSpace(space.uuid, name)
   }
   return (
     <>
       <Item icon={<Pencil />} onSelect={() => void rename()}>
-        {fr.spaces.rename}
+        {tr.spaces.rename}
       </Item>
       <Item icon={<Copy />} onSelect={() => void duplicateSpace(space.uuid, space.name)}>
-        {fr.spaces.duplicate}
+        {tr.spaces.duplicate}
       </Item>
       <Item
         tone="danger"
@@ -100,7 +100,7 @@ function CardMenuItems({
         data-testid="space-card-delete"
         onSelect={() => void deleteSpaceWithConfirm(space.uuid, space.name)}
       >
-        {fr.spaces.delete}
+        {tr.spaces.delete}
       </Item>
     </>
   )
@@ -135,18 +135,18 @@ function SpaceCard({ space }: { space: SpaceSummary }) {
                 className="truncate text-[14px] font-semibold leading-5 text-fg"
                 data-testid="space-card-name"
               >
-                {space.name || fr.spaces.untitled}
+                {space.name || tr.spaces.untitled}
               </div>
               <div className="text-[12px] leading-4 text-fg-faint">
-                {fr.spaces.edited(relative(space.updatedAt))}
-                {space.nodeCount > 0 ? ` · ${fr.spacesUi.nodes(space.nodeCount)}` : ''}
+                {tr.spaces.edited(relative(space.updatedAt))}
+                {space.nodeCount > 0 ? ` · ${tr.spacesUi.nodes(space.nodeCount)}` : ''}
               </div>
             </div>
             <Menu.Dropdown.Root>
               <Menu.Dropdown.Trigger asChild>
                 <button
                   type="button"
-                  aria-label={fr.spacesUi.moreActions}
+                  aria-label={tr.spacesUi.moreActions}
                   data-testid="space-card-more"
                   className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-fg-subtle opacity-0 transition-opacity hover:bg-[var(--hover)] group-hover:opacity-100 data-[state=open]:opacity-100"
                   onClick={(e) => e.stopPropagation()}
@@ -183,7 +183,7 @@ function NewSpaceCard() {
         <Plus size={20} strokeWidth={1.5} />
       </span>
       <span className="mt-2.5 text-[14px] font-semibold leading-5 text-fg-muted">
-        {fr.spacesUi.newCard}
+        {tr.spacesUi.newCard}
       </span>
     </button>
   )
@@ -194,10 +194,10 @@ function Empty() {
     <div className="flex flex-1 flex-col items-center justify-center" data-testid="spaces-empty">
       <ChartPie size={32} strokeWidth={1.5} className="text-fg-faint" aria-hidden="true" />
       <h2 className="mt-3.5 text-[17px] font-medium leading-[22px] text-fg">
-        {fr.spaces.emptyTitle}
+        {tr.spaces.emptyTitle}
       </h2>
       <p className="mt-2 max-w-[360px] text-center text-[13px] leading-[18px] text-fg-subtle">
-        {fr.spaces.emptyBody}
+        {tr.spaces.emptyBody}
       </p>
       <button
         type="button"
@@ -205,7 +205,7 @@ function Empty() {
         className="mt-5 h-9 rounded-full bg-accent px-4 text-[13px] font-medium text-accent-fg transition-opacity hover:opacity-90"
         onClick={() => void newSpace()}
       >
-        {fr.spaces.createFirst}
+        {tr.spaces.createFirst}
       </button>
     </div>
   )
@@ -240,7 +240,7 @@ export default function SpacesHome() {
   return (
     <main
       data-testid="spaces-list"
-      aria-label={fr.spacesUi.listLabel}
+      aria-label={tr.spacesUi.listLabel}
       className="relative min-h-0 flex-1 overflow-y-auto"
     >
       <div role="list" className="flex flex-wrap gap-x-5 gap-y-7 px-8 pb-16 pt-6">

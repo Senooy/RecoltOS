@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CollectionNode } from '../../../../shared/dto/collections'
 import type { ItemCard } from '../../../../shared/dto/items'
 import { Button, Dialog, EmptyState, Menu, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { internalDropTarget } from '../../lib/dnd'
 import { cardThumbSrc } from '../../lib/media-url'
@@ -40,7 +40,7 @@ import { CollectionPickerPopover } from './CollectionPicker'
 import { InlineEditableTitle, type InlineEditableTitleHandle } from './InlineEditableTitle'
 
 function fail(err: unknown): void {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 /** Pilule d'une sous-collection (mini-vignette Ø22, nom, compteur) ; cible de dépôt interne. */
@@ -110,7 +110,7 @@ function NewSubPill({ parentUuid }: { parentUuid: string }) {
         ref={ref}
         data-testid="new-subcollection-input"
         className="h-9 w-[200px] shrink-0 rounded-full border border-border-strong bg-bg px-3.5 text-small outline-none"
-        placeholder={fr.collectionUi.subPlaceholder}
+        placeholder={tr.collectionUi.subPlaceholder}
         value={name}
         onChange={(e) => setName(e.target.value)}
         onBlur={() => void commit()}
@@ -133,7 +133,7 @@ function NewSubPill({ parentUuid }: { parentUuid: string }) {
       onClick={() => setEditing(true)}
     >
       <Plus size={13} strokeWidth={1.75} className="text-fg-disabled" />
-      {fr.collection.new}
+      {tr.collection.new}
     </button>
   )
 }
@@ -161,8 +161,8 @@ function CoverPicker({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content
-        title={fr.collectionUi.coverTitle}
-        description={fr.collectionUi.coverHint}
+        title={tr.collectionUi.coverTitle}
+        description={tr.collectionUi.coverHint}
         className="w-[min(640px,calc(100vw-48px))]"
         data-testid="cover-picker"
       >
@@ -201,7 +201,7 @@ function CoverPicker({
         </div>
         <div className="flex justify-end px-5 pb-5">
           <Button variant="secondary" onClick={() => void pick(null)}>
-            {fr.collectionUi.coverAuto}
+            {tr.collectionUi.coverAuto}
           </Button>
         </div>
       </Dialog.Content>
@@ -239,7 +239,7 @@ function CollectionView({ uuid }: { uuid: string }) {
   // Collection supprimée ailleurs : retour à l'étagère.
   useEffect(() => {
     if (loaded && !node) {
-      toast(fr.collectionUi.notFound)
+      toast(tr.collectionUi.notFound)
       navigate({ name: 'shelf' })
     }
   }, [loaded, node, navigate])
@@ -256,9 +256,9 @@ function CollectionView({ uuid }: { uuid: string }) {
   }
   const newSub = async () => {
     const name = await askName({
-      title: fr.collection.newSub,
+      title: tr.collection.newSub,
       initial: '',
-      confirmLabel: fr.shell.create,
+      confirmLabel: tr.shell.create,
     })
     if (!name) return
     try {
@@ -277,12 +277,12 @@ function CollectionView({ uuid }: { uuid: string }) {
   const remove = async () => {
     const descendants = flattenTree(node.children).length
     const ok = await askConfirm({
-      title: fr.collection.deleteConfirmTitle(node.name),
+      title: tr.collection.deleteConfirmTitle(node.name),
       body:
         descendants > 0
-          ? `${fr.collection.deleteChildren(descendants)} ${fr.collection.deleteConfirmBody}`
-          : fr.collection.deleteConfirmBody,
-      confirmLabel: fr.confirm.delete,
+          ? `${tr.collection.deleteChildren(descendants)} ${tr.collection.deleteConfirmBody}`
+          : tr.collection.deleteConfirmBody,
+      confirmLabel: tr.confirm.delete,
       danger: true,
     })
     if (!ok) return
@@ -304,7 +304,7 @@ function CollectionView({ uuid }: { uuid: string }) {
           <button
             type="button"
             data-testid="collection-back"
-            aria-label={fr.collection.back}
+            aria-label={tr.collection.back}
             className="ml-px flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-border text-fg-subtle transition-colors hover:bg-surface"
             onClick={() =>
               node.parentUuid ? navigate({ name: 'collection', uuid: node.parentUuid }) : back()
@@ -316,7 +316,7 @@ function CollectionView({ uuid }: { uuid: string }) {
             <InlineEditableTitle
               ref={titleRef}
               value={node.name}
-              label={fr.collectionUi.titleLabel}
+              label={tr.collectionUi.titleLabel}
               onCommit={rename}
             />
           </div>
@@ -334,7 +334,7 @@ function CollectionView({ uuid }: { uuid: string }) {
               <button
                 type="button"
                 data-testid="collection-more"
-                aria-label={fr.collectionUi.moreActions}
+                aria-label={tr.collectionUi.moreActions}
                 className="flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle hover:bg-[var(--hover)]"
               >
                 <Ellipsis size={18} strokeWidth={1.75} />
@@ -342,26 +342,26 @@ function CollectionView({ uuid }: { uuid: string }) {
             </Menu.Dropdown.Trigger>
             <Menu.Dropdown.Content align="start" data-testid="collection-menu">
               <Menu.Dropdown.Item icon={<Pencil />} onSelect={() => titleRef.current?.edit()}>
-                {fr.collection.rename}
+                {tr.collection.rename}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item icon={<ImageIcon />} onSelect={() => setCoverOpen(true)}>
-                {fr.collection.changeCover}
+                {tr.collection.changeCover}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item icon={<FolderPlus />} onSelect={() => void newSub()}>
-                {fr.collection.newSub}
+                {tr.collection.newSub}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item
                 icon={<FolderInput />}
                 data-testid="collection-move"
                 onSelect={() => setTimeout(() => setMoveOpen(true), 0)}
               >
-                {fr.collectionUi.moveTo}
+                {tr.collectionUi.moveTo}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item icon={<Compass />} onSelect={soon}>
-                {fr.collection.rediscoverThis}
+                {tr.collection.rediscoverThis}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item icon={<Download />} onSelect={() => void exportZip(uuid)}>
-                {fr.collection.exportZip}
+                {tr.collection.exportZip}
               </Menu.Dropdown.Item>
               <Menu.Dropdown.Item
                 tone="danger"
@@ -369,7 +369,7 @@ function CollectionView({ uuid }: { uuid: string }) {
                 data-testid="collection-delete"
                 onSelect={() => void remove()}
               >
-                {fr.collection.delete}
+                {tr.collection.delete}
               </Menu.Dropdown.Item>
             </Menu.Dropdown.Content>
           </Menu.Dropdown.Root>
@@ -390,11 +390,11 @@ function CollectionView({ uuid }: { uuid: string }) {
             data-testid="collection-inside-label"
             className="text-micro font-medium uppercase text-fg-faint"
           >
-            {fr.collection.inside}
+            {tr.collection.inside}
           </div>
           <div
             className="no-scrollbar mt-[11px] flex gap-2 overflow-x-auto"
-            aria-label={fr.collectionUi.pillsLabel}
+            aria-label={tr.collectionUi.pillsLabel}
             data-testid="subcollection-pills"
           >
             {node.children.map((c) => (
@@ -407,8 +407,8 @@ function CollectionView({ uuid }: { uuid: string }) {
           {!itemsLoaded ? null : items.length === 0 ? (
             <EmptyState
               className="pt-20"
-              title={fr.collection.empty}
-              description={fr.collection.emptyHint}
+              title={tr.collection.empty}
+              description={tr.collection.emptyHint}
             />
           ) : (
             <MasonryGrid

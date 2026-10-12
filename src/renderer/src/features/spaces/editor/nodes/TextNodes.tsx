@@ -15,7 +15,7 @@ import {
 } from 'react'
 import type { SpaceNode } from '../../../../../../shared/spaces-schema'
 import { NOTE_COLOR_HEX } from '../../../../../../shared/spaces-schema'
-import { fr } from '../../../../i18n/fr'
+import { tr } from '../../../../i18n'
 import { setContent } from '../actions'
 import { commit, registerEditingCommit, useSpace } from '../store/spaceStore'
 
@@ -92,9 +92,9 @@ export function NoteNodeView({ node, editing }: { node: NoteN; editing: boolean 
         <textarea
           ref={ta}
           data-testid="note-editor"
-          aria-label={fr.spaces.tools.note}
+          aria-label={tr.spaces.tools.note}
           value={draft}
-          placeholder={fr.spacesUi.notePlaceholder}
+          placeholder={tr.spacesUi.notePlaceholder}
           spellCheck={false}
           onChange={(e) => update(e.target.value)}
           onBlur={stopEditing}
@@ -110,7 +110,7 @@ export function NoteNodeView({ node, editing }: { node: NoteN; editing: boolean 
       ) : (
         <div className="sp-note-text">
           {node.content || (
-            <span className="sp-note-placeholder">{fr.spacesUi.notePlaceholder}</span>
+            <span className="sp-note-placeholder">{tr.spacesUi.notePlaceholder}</span>
           )}
         </div>
       )}
@@ -268,7 +268,7 @@ export function TextNodeView({ node, editing }: { node: TextN; editing: boolean 
   const { draft, update } = useEditing(node.uuid, node.content, editing, (v) => {
     // Texte vide à la fin de l'édition : le nœud disparaît (comme une zone de texte vide).
     if (!v.trim()) {
-      commit(fr.spacesUi.delete, (d) => {
+      commit(tr.spacesUi.delete, (d) => {
         delete d[node.uuid]
       })
       return

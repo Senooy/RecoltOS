@@ -6,7 +6,7 @@
 import { ChartPie, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Menu } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { rpc } from '../../lib/rpc'
 import { addItemsToNewSpace, addItemsToSpace } from './space-actions'
 
@@ -24,7 +24,7 @@ function SpacesList({ uuids }: { uuids: string[] }) {
   return (
     <Menu.Context.SubContent className="max-h-[360px] overflow-y-auto" data-testid="menu-spaces">
       {spaces && spaces.length === 0 ? (
-        <Menu.Context.Label>{fr.spacesUi.noSpaces}</Menu.Context.Label>
+        <Menu.Context.Label>{tr.spacesUi.noSpaces}</Menu.Context.Label>
       ) : null}
       {(spaces ?? []).map((s) => (
         <Menu.Context.Item
@@ -33,11 +33,11 @@ function SpacesList({ uuids }: { uuids: string[] }) {
           data-uuid={s.uuid}
           onSelect={() => void addItemsToSpace(s, uuids)}
         >
-          {s.name || fr.spaces.untitled}
+          {s.name || tr.spaces.untitled}
         </Menu.Context.Item>
       ))}
       <Menu.Context.Item icon={<Plus />} onSelect={() => void addItemsToNewSpace(uuids)}>
-        {fr.spacesUi.newSpaceEllipsis}
+        {tr.spacesUi.newSpaceEllipsis}
       </Menu.Context.Item>
     </Menu.Context.SubContent>
   )
@@ -47,7 +47,7 @@ export function AddToSpaceSub({ uuids }: { uuids: string[] }) {
   return (
     <Menu.Context.Sub>
       <Menu.Context.SubTrigger icon={<ChartPie />} data-testid="menu-add-to-space">
-        {fr.spacesUi.addToSpace}
+        {tr.spacesUi.addToSpace}
       </Menu.Context.SubTrigger>
       <SpacesList uuids={uuids} />
     </Menu.Context.Sub>

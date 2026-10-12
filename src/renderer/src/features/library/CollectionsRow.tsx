@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CollectionNode } from '../../../../shared/dto/collections'
 import type { ItemCard } from '../../../../shared/dto/items'
 import { Menu, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { internalDropTarget } from '../../lib/dnd'
 import { mediaSrc } from '../../lib/media-url'
@@ -92,30 +92,30 @@ export function CollectionCard({ node, dragging }: { node: CollectionNode; dragg
   )
   const rename = async () => {
     const name = await askName({
-      title: fr.collection.rename,
+      title: tr.collection.rename,
       initial: node.name,
-      confirmLabel: fr.shell.rename,
+      confirmLabel: tr.shell.rename,
     })
     if (!name || name === node.name) return
     try {
       await rpc('collections.update', { uuid: node.uuid, name })
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
     }
   }
   const remove = async () => {
     const children = node.children.length
     const ok = await askConfirm({
-      title: fr.collection.deleteConfirmTitle(node.name),
-      body: children > 0 ? fr.collection.deleteChildren(children) : fr.collection.deleteConfirmBody,
-      confirmLabel: fr.confirm.delete,
+      title: tr.collection.deleteConfirmTitle(node.name),
+      body: children > 0 ? tr.collection.deleteChildren(children) : tr.collection.deleteConfirmBody,
+      confirmLabel: tr.confirm.delete,
       danger: true,
     })
     if (!ok) return
     try {
       await rpc('collections.delete', { uuid: node.uuid, keepChildren: false })
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
     }
   }
   return (
@@ -142,19 +142,19 @@ export function CollectionCard({ node, dragging }: { node: CollectionNode; dragg
             {node.name}
           </span>
           <span className="absolute bottom-[10px] left-4 text-caption text-fg-faint">
-            {fr.count.items(node.count)}
+            {tr.count.items(node.count)}
           </span>
         </button>
       </Menu.Context.Trigger>
       <Menu.Context.Content>
         <Menu.Context.Item icon={<Pencil />} onSelect={() => void rename()}>
-          {fr.collection.rename}
+          {tr.collection.rename}
         </Menu.Context.Item>
-        <Menu.Context.Item icon={<Compass />} onSelect={() => toast(fr.shell.unavailable)}>
-          {fr.collection.rediscoverThis}
+        <Menu.Context.Item icon={<Compass />} onSelect={() => toast(tr.shell.unavailable)}>
+          {tr.collection.rediscoverThis}
         </Menu.Context.Item>
         <Menu.Context.Item tone="danger" icon={<Trash />} onSelect={() => void remove()}>
-          {fr.collection.delete}
+          {tr.collection.delete}
         </Menu.Context.Item>
       </Menu.Context.Content>
     </Menu.Context.Root>
@@ -176,7 +176,7 @@ export function NewCollectionCard() {
     try {
       await rpc('collections.create', { name: n })
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
     }
   }
   return (
@@ -200,7 +200,7 @@ export function NewCollectionCard() {
           ref={inputRef}
           data-testid="new-collection-input"
           className="absolute bottom-[16px] left-3 right-3 h-7 rounded-sm border border-border bg-bg px-2 text-small outline-none"
-          placeholder={fr.libraryUi.newCollectionPlaceholder}
+          placeholder={tr.libraryUi.newCollectionPlaceholder}
           value={name}
           onChange={(e) => setName(e.target.value)}
           onClick={(e) => e.stopPropagation()}
@@ -216,7 +216,7 @@ export function NewCollectionCard() {
         />
       ) : (
         <span className="absolute bottom-[13px] left-4 text-small text-fg-faint">
-          {fr.collection.new}
+          {tr.collection.new}
         </span>
       )}
     </div>
@@ -236,7 +236,7 @@ export function CollectionsRow({ collections }: { collections: readonly Collecti
   return (
     <div
       data-testid="collections-row"
-      aria-label={fr.libraryUi.collectionsLabel}
+      aria-label={tr.libraryUi.collectionsLabel}
       className="no-scrollbar flex gap-3 overflow-x-auto px-[18px] pt-[18px]"
     >
       <NewCollectionCard />

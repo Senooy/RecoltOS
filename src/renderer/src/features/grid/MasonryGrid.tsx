@@ -21,7 +21,7 @@ import {
 import type { ItemCard } from '../../../../shared/dto/items'
 import { Menu, isReducedMotion } from '../../components/ui'
 import { on } from '../../lib/bus'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { lruSet } from '../../lib/lru'
 import { startCardDrag } from '../../lib/dnd'
 import { askConfirm } from '../../state/dialogs'
@@ -353,9 +353,9 @@ export function MasonryGrid({
   }
   const deleteForever = async (uuids: string[]) => {
     const ok = await askConfirm({
-      title: fr.confirm.deleteForeverTitle,
-      body: fr.confirm.irreversible,
-      confirmLabel: fr.confirm.delete,
+      title: tr.confirm.deleteForeverTitle,
+      body: tr.confirm.irreversible,
+      confirmLabel: tr.confirm.delete,
       danger: true,
     })
     if (ok) await purgeItems(uuids)
@@ -368,7 +368,7 @@ export function MasonryGrid({
           ref={rootRef}
           data-testid="grid"
           role="list"
-          aria-label={fr.gridUi.label}
+          aria-label={tr.gridUi.label}
           aria-busy={!tweets.ready}
           className={`masonry relative w-full${reflowing ? ' reflowing' : ''}`}
           style={{ height: tweets.ready ? layout.height : 0 }}

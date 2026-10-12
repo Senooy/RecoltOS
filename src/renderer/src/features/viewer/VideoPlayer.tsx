@@ -6,7 +6,7 @@
  */
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent, type RefObject } from 'react'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { clock } from '../../lib/format'
 
 export interface VideoPlayerProps {
@@ -86,7 +86,7 @@ export function VideoPlayer({ videoRef, muted, onToggleMute, style, className }:
       <button
         type="button"
         className="viewer-player-btn"
-        aria-label={paused ? fr.viewer.play : fr.viewer.pause}
+        aria-label={paused ? tr.viewer.play : tr.viewer.pause}
         onClick={toggle}
       >
         {paused ? (
@@ -103,7 +103,7 @@ export function VideoPlayer({ videoRef, muted, onToggleMute, style, className }:
         className="viewer-player-track"
         role="slider"
         tabIndex={0}
-        aria-label={fr.viewerUi.seek}
+        aria-label={tr.viewerUi.seek}
         aria-valuemin={0}
         aria-valuemax={Math.round(duration)}
         aria-valuenow={Math.round(time)}
@@ -126,7 +126,7 @@ export function VideoPlayer({ videoRef, muted, onToggleMute, style, className }:
       <button
         type="button"
         className="viewer-player-btn"
-        aria-label={muted ? fr.viewer.unmute : fr.viewer.mute}
+        aria-label={muted ? tr.viewer.unmute : tr.viewer.mute}
         onClick={onToggleMute}
       >
         {muted ? (

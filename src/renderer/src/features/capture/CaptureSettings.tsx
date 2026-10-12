@@ -9,7 +9,8 @@ import { useCallback, useEffect, useState } from 'react'
 import type { CaptureStatus } from '../../../../shared/dto/capture'
 import type { CaptureMode } from '../../../../shared/prefs'
 import { Button, SegmentedSmall, Switch, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
+import { labelled } from '../../lib/format'
 import { RpcError, rpc } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
 import { SettingsRow, SettingsTitle } from '../settings/SettingsDialog'
@@ -17,7 +18,7 @@ import { ShortcutRecorder } from './ShortcutRecorder'
 import './capture.css'
 
 function fail(err: unknown) {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 export function CaptureSettings() {
@@ -34,16 +35,16 @@ export function CaptureSettings() {
 
   return (
     <div data-testid="capture-settings">
-      <SettingsTitle description={fr.captureUi.desc}>{fr.settings.nav.capture}</SettingsTitle>
+      <SettingsTitle description={tr.captureUi.desc}>{tr.settings.nav.capture}</SettingsTitle>
       <div className="mt-[9px] text-[11px] text-[var(--set-label)]">
-        {fr.settings.capture.shortcut}
+        {tr.settings.capture.shortcut}
       </div>
       <div className="mt-[2px]">
         <ShortcutRecorder />
       </div>
       <div className="capture-rule mt-[18px]" />
       <div className="mt-[18px] text-[11px] text-[var(--set-label)]">
-        {fr.settings.capture.dropFolder}
+        {tr.settings.capture.dropFolder}
       </div>
       <div className="mt-[5px] flex items-center gap-2.5">
         <input
@@ -51,8 +52,8 @@ export function CaptureSettings() {
           data-testid="drop-folder"
           className="capture-field"
           value={cap.dropFolder ?? ''}
-          placeholder={fr.captureUi.dropFolderEmpty}
-          aria-label={fr.settings.capture.dropFolder}
+          placeholder={tr.captureUi.dropFolderEmpty}
+          aria-label={tr.settings.capture.dropFolder}
         />
         <Button
           className="h-[33px] px-[14px]"
@@ -63,7 +64,7 @@ export function CaptureSettings() {
               .catch(fail)
           }
         >
-          {fr.settings.capture.choose}
+          {tr.settings.capture.choose}
         </Button>
         <Button
           className="h-[33px] px-[14px]"
@@ -71,58 +72,58 @@ export function CaptureSettings() {
           disabled={!cap.dropFolder}
           onClick={() => update({ dropFolder: null, dropFolderInit: true })}
         >
-          {fr.settings.capture.clear}
+          {tr.settings.capture.clear}
         </Button>
       </div>
       <p className="mt-[10px] max-w-[480px] text-[11px] text-[var(--set-help)]">
-        {fr.settings.capture.dropHint}
+        {tr.settings.capture.dropHint}
       </p>
       {status?.lastDropError ? (
         <p className="mt-1 text-[11px] text-danger">
-          {fr.captureUi.dropError(status.lastDropError)}
+          {tr.captureUi.dropError(status.lastDropError)}
         </p>
       ) : null}
 
       <div className="capture-rule mt-6" />
       <SettingsRow
-        label={fr.captureUi.mode}
+        label={tr.captureUi.mode}
         control={
           <SegmentedSmall<CaptureMode>
-            label={fr.captureUi.mode}
+            label={tr.captureUi.mode}
             value={cap.mode}
             onChange={(mode) => update({ mode })}
             options={(['region', 'window', 'screen'] as const).map((m) => ({
               value: m,
-              label: fr.captureUi.modes[m]!,
+              label: tr.captureUi.modes[m]!,
             }))}
           />
         }
       />
       <SettingsRow
-        label={fr.captureUi.notify}
+        label={tr.captureUi.notify}
         control={
           <Switch
-            aria-label={fr.captureUi.notify}
+            aria-label={tr.captureUi.notify}
             checked={cap.notify}
             onCheckedChange={(notify) => update({ notify })}
           />
         }
       />
       <SettingsRow
-        label={fr.captureUi.hideApp}
+        label={tr.captureUi.hideApp}
         control={
           <Switch
-            aria-label={fr.captureUi.hideApp}
+            aria-label={tr.captureUi.hideApp}
             checked={cap.hideApp}
             onCheckedChange={(hideApp) => update({ hideApp })}
           />
         }
       />
       <SettingsRow
-        label={fr.captureUi.copy}
+        label={tr.captureUi.copy}
         control={
           <Switch
-            aria-label={fr.captureUi.copy}
+            aria-label={tr.captureUi.copy}
             checked={cap.copyToClipboard}
             onCheckedChange={(copyToClipboard) => update({ copyToClipboard })}
           />
@@ -136,20 +137,22 @@ export function CaptureSettings() {
             ) : (
               <CircleAlert size={15} className="text-[var(--tone-caution)]" />
             )}
-            {fr.captureUi.permission} :{' '}
-            {status?.access === 'granted' ? fr.captureUi.granted : fr.captureUi.denied}
+            {labelled(
+              tr.captureUi.permission,
+              status?.access === 'granted' ? tr.captureUi.granted : tr.captureUi.denied,
+            )}
           </span>
         }
-        description={status?.access === 'granted' ? fr.captureUi.staleHint : undefined}
+        description={status?.access === 'granted' ? tr.captureUi.staleHint : undefined}
         control={
           <div className="flex gap-2">
             {status?.access !== 'granted' ? (
               <Button size="sm" onClick={() => void rpc('capture.openPermissionPane').catch(fail)}>
-                {fr.captureUi.openPane}
+                {tr.captureUi.openPane}
               </Button>
             ) : null}
             <Button size="sm" variant="ghost" onClick={refresh}>
-              {fr.captureUi.recheck}
+              {tr.captureUi.recheck}
             </Button>
           </div>
         }

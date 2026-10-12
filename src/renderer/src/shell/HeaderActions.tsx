@@ -4,7 +4,7 @@
  */
 import { Compass, Moon, Search, Settings, Sun } from 'lucide-react'
 import { IconButton, Kbd } from '../components/ui'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 import { cn } from '../lib/cn'
 import { AiStatusPill } from '../features/ai/AiStatusPill'
 
@@ -29,7 +29,7 @@ export function HeaderActions({
       {compact ? (
         <IconButton
           icon={<Search size={14} strokeWidth={1.75} />}
-          label={`${fr.nav.searchButton} ⌘K`}
+          label={`${tr.nav.searchButton} ⌘K`}
           tone="outline"
           className="mr-2 h-[30px] w-[30px] rounded-full"
           onClick={onSearch}
@@ -45,28 +45,28 @@ export function HeaderActions({
           onClick={onSearch}
         >
           <Search size={14} strokeWidth={1.75} />
-          <span className="ml-1.5 mr-2">{fr.nav.searchButton}</span>
+          <span className="ml-1.5 mr-2">{tr.nav.searchButton}</span>
           <Kbd keys={['⌘', 'K']} size="xs" tone="light" className="ml-auto" />
         </button>
       )}
       <IconButton
         data-testid="btn-rediscover"
         icon={<Compass size={18} strokeWidth={1.75} />}
-        label={fr.nav.rediscover}
+        label={tr.nav.rediscover}
         shortcut={['⇧', '⌘', 'R']}
         onClick={onRediscover}
       />
       <IconButton
         data-testid="btn-theme"
         icon={dark ? <Sun size={18} strokeWidth={1.75} /> : <Moon size={18} strokeWidth={1.75} />}
-        label={dark ? fr.nav.themeLight : fr.nav.themeDark}
+        label={dark ? tr.nav.themeLight : tr.nav.themeDark}
         shortcut={['⇧', '⌘', 'L']}
         onClick={onToggleTheme}
       />
       <IconButton
         data-testid="btn-settings"
         icon={<Settings size={18} strokeWidth={1.75} />}
-        label={fr.nav.settings}
+        label={tr.nav.settings}
         shortcut={['⌘', ',']}
         onClick={onSettings}
       />

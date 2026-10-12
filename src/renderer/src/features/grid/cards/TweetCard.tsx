@@ -11,7 +11,7 @@ import type { CSSProperties } from 'react'
 import type { ItemCard, PostDetailView } from '../../../../../shared/dto/items'
 import { CosmosGlyph, InstagramGlyph, XGlyph } from '../../../components/icons'
 import { Avatar } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { cn } from '../../../lib/cn'
 import { mediaSrc } from '../../../lib/media-url'
 import { QuotedTweet } from './QuotedTweet'
@@ -112,7 +112,7 @@ export function TweetCard({
       {post && post.threadCount > 0 && !detail ? (
         <footer className="mt-3 flex items-center gap-1.5 text-caption text-fg-subtle">
           <MessageSquareText size={13} strokeWidth={1.75} />
-          {fr.card.thread(post.threadCount + 1)}
+          {tr.card.thread(post.threadCount + 1)}
         </footer>
       ) : null}
     </article>

@@ -7,7 +7,7 @@ import { Check, ChevronsUpDown, FolderCog, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { RecoltLogo } from '../components/icons'
 import { Menu, toast } from '../components/ui'
-import { fr } from '../i18n/fr'
+import { libraryDisplayName, tr } from '../i18n'
 import { isNotImplemented, rpc, RpcError, subscribe } from '../lib/rpc'
 import { askName } from '../state/dialogs'
 import { useUi } from '../state/ui'
@@ -49,15 +49,15 @@ export function LibraryPicker() {
   const openOverlay = useUi((s) => s.openOverlay)
   const create = async () => {
     const name = await askName({
-      title: fr.shell.newLibraryTitle,
-      initial: fr.shell.newLibraryDefault,
-      confirmLabel: fr.shell.create,
+      title: tr.shell.newLibraryTitle,
+      initial: tr.shell.newLibraryDefault,
+      confirmLabel: tr.shell.create,
     })
     if (!name?.trim()) return
     try {
       await rpc('libraries.create', { name: name.trim() })
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
     }
   }
   return (
@@ -70,7 +70,9 @@ export function LibraryPicker() {
         >
           <RecoltLogo size={28} />
           <span className="flex items-center gap-2 text-nav font-semibold tracking-[-0.01em]">
-            <span className="max-w-[160px] truncate">{current?.name ?? fr.nav.library}</span>
+            <span className="max-w-[160px] truncate">
+              {current ? libraryDisplayName(current) : tr.nav.library}
+            </span>
             <ChevronsUpDown size={14} className="text-fg-subtle" />
           </span>
         </button>
@@ -83,12 +85,12 @@ export function LibraryPicker() {
             onSelect={() => {
               if (l.id !== active)
                 void rpc('libraries.switch', { id: l.id }).catch((e: unknown) =>
-                  toast(e instanceof RpcError ? e.message : fr.errors.generic),
+                  toast(e instanceof RpcError ? e.message : tr.errors.generic),
                 )
             }}
           >
             <span className="flex w-full items-center gap-2">
-              <span className="min-w-0 flex-1 truncate">{l.name}</span>
+              <span className="min-w-0 flex-1 truncate">{libraryDisplayName(l)}</span>
               <span className="text-caption text-fg-faint tnum">{l.itemCount}</span>
               {l.id === active ? (
                 <Check size={14} className="text-fg" />
@@ -100,13 +102,13 @@ export function LibraryPicker() {
         ))}
         <Menu.Dropdown.Separator />
         <Menu.Dropdown.Item icon={<Plus />} onSelect={() => void create()}>
-          {fr.libraryPicker.newLibrary}
+          {tr.libraryPicker.newLibrary}
         </Menu.Dropdown.Item>
         <Menu.Dropdown.Item
           icon={<FolderCog />}
           onSelect={() => openOverlay({ type: 'settings', section: 'libraries' })}
         >
-          {fr.libraryPicker.manage}
+          {tr.libraryPicker.manage}
         </Menu.Dropdown.Item>
       </Menu.Dropdown.Content>
     </Menu.Dropdown.Root>

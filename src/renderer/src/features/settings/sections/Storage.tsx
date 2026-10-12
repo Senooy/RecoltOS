@@ -8,8 +8,8 @@ import { useCallback, useEffect, useState } from 'react'
 import type { z } from 'zod'
 import type { StorageBreakdown } from '../../../../../shared/ipc/data'
 import { Button, Switch, toast } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
-import { bytes } from '../../../lib/format'
+import { tr } from '../../../i18n'
+import { bytes, labelled } from '../../../lib/format'
 import { RpcError, rpc, subscribe } from '../../../lib/rpc'
 import { askConfirm } from '../../../state/dialogs'
 import { usePrefs } from '../../../state/prefs'
@@ -26,7 +26,7 @@ const GREYS = [
 ]
 
 function fail(err: unknown) {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 export function StorageSection() {
@@ -51,13 +51,13 @@ export function StorageSection() {
 
   const parts = sizes
     ? [
-        { label: fr.settings.storage.images, value: sizes.images },
-        { label: fr.settings.storage.videos, value: sizes.videos },
+        { label: tr.settings.storage.images, value: sizes.images },
+        { label: tr.settings.storage.videos, value: sizes.videos },
         {
-          label: fr.settings.storage.derived,
+          label: tr.settings.storage.derived,
           value: sizes.thumbs + sizes.large + sizes.posters + sizes.previews + sizes.display,
         },
-        { label: fr.settings.storage.snapshots, value: sizes.snapshots },
+        { label: tr.settings.storage.snapshots, value: sizes.snapshots },
       ]
     : []
   const sum = Math.max(1, sizes?.total ?? 1)
@@ -65,16 +65,16 @@ export function StorageSection() {
   const regenerate = async () => {
     try {
       const r = await rpc('data.regenerateDerived')
-      toast(fr.settingsMoreUi.regenStarted(r.count))
+      toast(tr.settingsMoreUi.regenStarted(r.count))
     } catch (err) {
       fail(err)
     }
   }
   const emptyTrash = async () => {
     const ok = await askConfirm({
-      title: fr.confirm.emptyTrashTitle,
-      body: fr.confirm.emptyTrashBody(trash),
-      confirmLabel: fr.tabs.emptyTrash,
+      title: tr.confirm.emptyTrashTitle,
+      body: tr.confirm.emptyTrashBody(trash),
+      confirmLabel: tr.tabs.emptyTrash,
       danger: true,
     })
     if (!ok) return
@@ -88,8 +88,8 @@ export function StorageSection() {
 
   return (
     <>
-      <SettingsTitle description={fr.settingsMoreUi.storageDesc}>
-        {fr.settings.nav.storage}
+      <SettingsTitle description={tr.settingsMoreUi.storageDesc}>
+        {tr.settings.nav.storage}
       </SettingsTitle>
       <div className="mt-5" data-testid="storage-bar">
         <div className="flex h-2 w-full overflow-hidden rounded-full bg-[var(--surface-muted)]">
@@ -97,7 +97,7 @@ export function StorageSection() {
             <div
               key={p.label}
               style={{ width: `${(p.value / sum) * 100}%`, background: GREYS[i] }}
-              title={`${p.label} : ${bytes(p.value)}`}
+              title={labelled(p.label, bytes(p.value))}
             />
           ))}
         </div>
@@ -111,18 +111,18 @@ export function StorageSection() {
           ))}
           {sizes ? (
             <span className="ml-auto text-[var(--set-help)] tnum">
-              {fr.settingsMoreUi.storageTotal(bytes(sizes.total))}
+              {tr.settingsMoreUi.storageTotal(bytes(sizes.total))}
             </span>
           ) : null}
         </div>
       </div>
       <div className="mt-3">
         <SettingsRow
-          label={fr.settings.storage.downloadRemote}
-          description={fr.settingsMoreUi.downloadRemoteDesc}
+          label={tr.settings.storage.downloadRemote}
+          description={tr.settingsMoreUi.downloadRemoteDesc}
           control={
             <Switch
-              aria-label={fr.settings.storage.downloadRemote}
+              aria-label={tr.settings.storage.downloadRemote}
               data-testid="pref-download-remote"
               checked={prefs.storage.downloadRemoteMedia}
               onCheckedChange={(downloadRemoteMedia) =>
@@ -132,41 +132,41 @@ export function StorageSection() {
           }
         />
         <SettingsRow
-          label={fr.settings.storage.autoEmpty}
-          description={fr.settingsMoreUi.autoEmptyDesc}
+          label={tr.settings.storage.autoEmpty}
+          description={tr.settingsMoreUi.autoEmptyDesc}
           control={
             <select
-              aria-label={fr.settings.storage.autoEmpty}
+              aria-label={tr.settings.storage.autoEmpty}
               className="h-[34px] rounded-[10px] border border-[var(--set-field-border)] bg-[var(--set-field-bg)] px-3 text-[12.5px]"
               value={prefs.trashAutoEmptyDays}
               onChange={(e) =>
                 update({ trashAutoEmptyDays: Number(e.target.value) as 0 | 7 | 30 | 90 })
               }
             >
-              <option value={0}>{fr.settings.storage.never}</option>
+              <option value={0}>{tr.settings.storage.never}</option>
               {[7, 30, 90].map((d) => (
                 <option key={d} value={d}>
-                  {fr.settings.storage.days(d)}
+                  {tr.settings.storage.days(d)}
                 </option>
               ))}
             </select>
           }
         />
         <SettingsRow
-          label={fr.settings.storage.regenDerived}
-          description={fr.settingsMoreUi.regenDesc}
+          label={tr.settings.storage.regenDerived}
+          description={tr.settingsMoreUi.regenDesc}
           control={
             <Button variant="secondary" onClick={() => void regenerate()}>
-              {fr.settingsMoreUi.regenAction}
+              {tr.settingsMoreUi.regenAction}
             </Button>
           }
         />
         <SettingsRow
-          label={fr.settings.storage.emptyNow}
-          description={fr.settingsMoreUi.emptyNowDesc(trash)}
+          label={tr.settings.storage.emptyNow}
+          description={tr.settingsMoreUi.emptyNowDesc(trash)}
           control={
             <Button variant="danger" disabled={trash === 0} onClick={() => void emptyTrash()}>
-              {fr.settingsMoreUi.emptyAction}
+              {tr.settingsMoreUi.emptyAction}
             </Button>
           }
         />

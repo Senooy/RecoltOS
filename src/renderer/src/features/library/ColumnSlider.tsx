@@ -4,7 +4,7 @@
  */
 import { Grid2x2, Square } from 'lucide-react'
 import { Slider } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 
 export function ColumnSlider({
   columns,
@@ -22,8 +22,8 @@ export function ColumnSlider({
         max={6}
         step={1}
         value={8 - columns}
-        label={fr.columns.label}
-        valueText={fr.libraryUi.columns(columns)}
+        label={tr.columns.label}
+        valueText={tr.libraryUi.columns(columns)}
         onValueChange={(v) => onChange(8 - v)}
       />
       <Square size={11} />

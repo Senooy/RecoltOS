@@ -1,7 +1,7 @@
 /** Rendu des dialogues `askConfirm` / `askName` (`state/dialogs.ts`). */
 import { useEffect, useState } from 'react'
 import { Button, Dialog, Input } from '../components/ui'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 import { useDialogs } from '../state/dialogs'
 
 export function Dialogs() {
@@ -35,14 +35,14 @@ export function Dialogs() {
           {current.kind === 'name' ? (
             <Input
               autoFocus
-              aria-label={fr.shell.name}
+              aria-label={tr.shell.name}
               value={value}
               onChange={(e) => setValue(e.target.value)}
             />
           ) : null}
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => close(false)}>
-              {fr.confirm.cancel}
+              {tr.confirm.cancel}
             </Button>
             <Button
               type="submit"

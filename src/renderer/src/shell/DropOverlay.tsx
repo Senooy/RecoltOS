@@ -7,7 +7,7 @@
 import { Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from '../components/ui'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 import { RpcError } from '../lib/rpc'
 import { useUi } from '../state/ui'
 import { importPaths, importUrl, reportImport } from '../features/import/import-actions'
@@ -53,7 +53,7 @@ export function DropOverlay({ collection }: { collection: { uuid: string; name: 
       else if (drop.url)
         void importUrl(drop.url, col?.uuid)
           .then(reportImport)
-          .catch((err: unknown) => toast(err instanceof RpcError ? err.message : fr.errors.generic))
+          .catch((err: unknown) => toast(err instanceof RpcError ? err.message : tr.errors.generic))
     }
     window.addEventListener('dragenter', onEnter)
     window.addEventListener('dragleave', onLeave)
@@ -76,9 +76,9 @@ export function DropOverlay({ collection }: { collection: { uuid: string; name: 
       <div className="absolute inset-3 rounded-2xl border-2 border-dashed border-[var(--fg-subtle)]" />
       <div className="relative flex flex-col items-center gap-2 text-center">
         <Upload size={28} strokeWidth={1.75} />
-        <div className="text-[16px] font-medium">{fr.drop.title}</div>
+        <div className="text-[16px] font-medium">{tr.drop.title}</div>
         {collection ? (
-          <div className="text-small text-fg-muted">{fr.drop.alsoIn(collection.name)}</div>
+          <div className="text-small text-fg-muted">{tr.drop.alsoIn(collection.name)}</div>
         ) : null}
       </div>
     </div>

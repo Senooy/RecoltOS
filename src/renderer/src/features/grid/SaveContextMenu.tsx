@@ -20,7 +20,7 @@ import {
 import { useMemo, useState } from 'react'
 import type { ItemCard } from '../../../../shared/dto/items'
 import { Menu } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { rpc } from '../../lib/rpc'
 import { flattenTree, useCollections } from '../../state/collections'
 import { askName } from '../../state/dialogs'
@@ -56,7 +56,7 @@ function CollectionsSub({ uuids, onNew }: { uuids: string[]; onNew: () => void }
       {flat.length > 8 ? (
         <input
           className="mb-1 h-7 w-full rounded-sm border border-border bg-bg px-2 text-small outline-none"
-          placeholder={fr.menu.filter}
+          placeholder={tr.menu.filter}
           value={filter}
           autoFocus
           onChange={(e) => setFilter(e.target.value)}
@@ -73,7 +73,7 @@ function CollectionsSub({ uuids, onNew }: { uuids: string[]; onNew: () => void }
         </Menu.Context.Item>
       ))}
       <Menu.Context.Item icon={<FolderPlus />} onSelect={onNew}>
-        {fr.menu.newCollectionEllipsis}
+        {tr.menu.newCollectionEllipsis}
       </Menu.Context.Item>
     </Menu.Context.SubContent>
   )
@@ -97,9 +97,9 @@ export function SaveContextMenuContent({
   const aiOn = usePrefs((st) => st.prefs.ai.provider) !== 'off'
   const newCollection = async () => {
     const name = await askName({
-      title: fr.collection.new,
+      title: tr.collection.new,
       initial: '',
-      confirmLabel: fr.shell.create,
+      confirmLabel: tr.shell.create,
     })
     if (!name?.trim()) return
     try {
@@ -114,15 +114,15 @@ export function SaveContextMenuContent({
     return (
       <Menu.Context.Content data-testid="ctx-menu">
         <Menu.Context.Item icon={<ArchiveRestore />} onSelect={() => void restoreItems(uuids)}>
-          {fr.menu.restore}
+          {tr.menu.restore}
         </Menu.Context.Item>
         {one ? (
           <Menu.Context.Item icon={<FolderOpen />} onSelect={() => void reveal(one)}>
-            {fr.menu.revealInFinder}
+            {tr.menu.revealInFinder}
           </Menu.Context.Item>
         ) : null}
         <Menu.Context.Item tone="danger" icon={<Trash />} onSelect={() => onDeleteForever(uuids)}>
-          {fr.menu.deleteForever}
+          {tr.menu.deleteForever}
         </Menu.Context.Item>
       </Menu.Context.Content>
     )
@@ -130,15 +130,15 @@ export function SaveContextMenuContent({
 
   const copyLabel =
     one?.kind === 'tweet'
-      ? fr.menu.copyText
+      ? tr.menu.copyText
       : one?.kind === 'url'
-        ? fr.menu.copyLink
-        : fr.menu.copyImage
+        ? tr.menu.copyLink
+        : tr.menu.copyImage
   const openLabel =
     one?.kind === 'url'
-      ? fr.menu.openPage
+      ? tr.menu.openPage
       : one && SOURCE_NAMES[one.source]
-        ? fr.menu.openOn(SOURCE_NAMES[one.source]!)
+        ? tr.menu.openOn(SOURCE_NAMES[one.source]!)
         : null
   const canOpen =
     one !== null && openLabel !== null && (one.sourceHost !== null || one.kind !== 'url')
@@ -146,7 +146,7 @@ export function SaveContextMenuContent({
     <Menu.Context.Content data-testid="ctx-menu">
       <Menu.Context.Sub>
         <Menu.Context.SubTrigger icon={<FolderPlus />}>
-          {n > 1 ? fr.menu.plural.add(n) : fr.menu.addToCollection}
+          {n > 1 ? tr.menu.plural.add(n) : tr.menu.addToCollection}
         </Menu.Context.SubTrigger>
         <CollectionsSub uuids={uuids} onNew={() => void newCollection()} />
       </Menu.Context.Sub>
@@ -157,25 +157,25 @@ export function SaveContextMenuContent({
             icon={<FolderMinus />}
             onSelect={() => void removeFromCollection(collection, uuids)}
           >
-            {fr.menu.removeFrom(collection.name)}
+            {tr.menu.removeFrom(collection.name)}
           </Menu.Context.Item>
           {one ? (
             <Menu.Context.Item
               icon={<ImageIcon />}
               onSelect={() => void setCover(collection.uuid, one.uuid)}
             >
-              {fr.menu.setCover}
+              {tr.menu.setCover}
             </Menu.Context.Item>
           ) : null}
         </>
       ) : null}
       {context === 'hidden' ? (
         <Menu.Context.Item icon={<Eye />} onSelect={() => void setHidden(uuids, false)}>
-          {fr.menu.unhide}
+          {tr.menu.unhide}
         </Menu.Context.Item>
       ) : (
         <Menu.Context.Item icon={<EyeOff />} onSelect={() => void setHidden(uuids, true)}>
-          {n > 1 ? fr.menu.plural.hide(n) : fr.menu.hide}
+          {n > 1 ? tr.menu.plural.hide(n) : tr.menu.hide}
         </Menu.Context.Item>
       )}
       {one ? (
@@ -190,7 +190,7 @@ export function SaveContextMenuContent({
       ) : null}
       {one ? (
         <Menu.Context.Item icon={<FolderOpen />} onSelect={() => void reveal(one)}>
-          {fr.menu.revealInFinder}
+          {tr.menu.revealInFinder}
         </Menu.Context.Item>
       ) : null}
       {aiOn ? (
@@ -199,14 +199,14 @@ export function SaveContextMenuContent({
           data-testid="ctx-ai-analyze"
           onSelect={() => void analyzeItems(uuids, { force: true })}
         >
-          {fr.ai.analyze}
+          {tr.ai.analyze}
         </Menu.Context.Item>
       ) : null}
       <Menu.Context.Item icon={<Download />} onSelect={() => void download(uuids)}>
-        {n > 1 ? fr.menu.plural.download(n) : fr.menu.download}
+        {n > 1 ? tr.menu.plural.download(n) : tr.menu.download}
       </Menu.Context.Item>
       <Menu.Context.Item tone="danger" icon={<Trash />} onSelect={() => void trashItems(uuids)}>
-        {n > 1 ? fr.menu.plural.delete(n) : fr.menu.delete}
+        {n > 1 ? tr.menu.plural.delete(n) : tr.menu.delete}
       </Menu.Context.Item>
     </Menu.Context.Content>
   )

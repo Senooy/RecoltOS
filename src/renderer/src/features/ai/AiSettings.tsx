@@ -10,22 +10,18 @@ import type { AiCliId } from '../../../../shared/ai-types'
 import type { AiCallEntry } from '../../../../shared/dto/ai'
 import type { Prefs } from '../../../../shared/prefs'
 import { Button, Switch, toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
-import { bytes, dateShort } from '../../lib/format'
+import { tr } from '../../i18n'
+import { bytes, dateShort, hourMinute } from '../../lib/format'
 import { rpc } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
 import { SettingsTitle } from '../settings/SettingsDialog'
 import { aiFail, aiReady, useAi } from './ai-store'
 import './ai.css'
 
-const NNBSP = '\u202f'
 const MODELS = ['auto', 'sonnet', 'haiku', 'opus', 'fable'] as const
 const PRESETS = { soft: 30, normal: 120, fast: 300 } as const
 
-function hhmm(ts: number): string {
-  const d = new Date(ts)
-  return `${d.getHours()}${NNBSP}h${NNBSP}${String(d.getMinutes()).padStart(2, '0')}`
-}
+const hhmm = (ts: number): string => hourMinute(ts)
 
 export function useEngineLine(): {
   title: string
@@ -36,7 +32,7 @@ export function useEngineLine(): {
   const consent = useAi((s) => s.consentVersion)
   const detect = useAi((s) => s.detect)
   const queue = useAi((s) => s.queue)
-  const t = fr.aiUi
+  const t = tr.aiUi
   if (ai.provider === 'off')
     return { title: t.engineTitle(t.engineNone), help: t.state.off, tone: 'off' }
   const title = t.engineTitle(t.providerNames[ai.provider] ?? ai.provider)
@@ -107,7 +103,7 @@ function ModelField({
     <div className="flex items-center gap-2">
       <select
         className="ai-select"
-        aria-label={fr.aiUi.model}
+        aria-label={tr.aiUi.model}
         data-testid="ai-model"
         value={known ? ai.claude.model : '__custom'}
         onChange={(e) => {
@@ -118,16 +114,16 @@ function ModelField({
       >
         {MODELS.map((m) => (
           <option key={m} value={m}>
-            {m === 'auto' ? fr.aiUi.modelAuto : m}
+            {m === 'auto' ? tr.aiUi.modelAuto : m}
           </option>
         ))}
-        <option value="__custom">{fr.aiUi.modelCustom}</option>
+        <option value="__custom">{tr.aiUi.modelCustom}</option>
       </select>
       {!known || custom ? (
         <input
           className="ai-select w-[170px]"
-          aria-label={fr.aiUi.modelPlaceholder}
-          placeholder={fr.aiUi.modelPlaceholder}
+          aria-label={tr.aiUi.modelPlaceholder}
+          placeholder={tr.aiUi.modelPlaceholder}
           value={custom}
           spellCheck={false}
           onChange={(e) => setCustom(e.target.value)}
@@ -160,44 +156,44 @@ function QueueBlock() {
   const startScope = (scope: 'unanalyzed' | 'regenerate-fr') =>
     void rpc('ai.batch.create', { scope })
       .then((p) => rpc('ai.batch.start', { planId: p.planId }).then(() => p.estimate.count))
-      .then((n) => toast(fr.aiUi.enrichStarted(n)))
+      .then((n) => toast(tr.aiUi.enrichStarted(n)))
       .catch(aiFail)
   const paused = queue && provider !== 'off' ? queue.cli.providers[provider].paused : undefined
   return (
     <div data-testid="ai-queue">
-      <Sub label={fr.aiUi.queue}>
+      <Sub label={tr.aiUi.queue}>
         <span className="text-[11px] text-fg-muted">
-          {queue ? fr.aiUi.queueStats(queue.cli.queued, queue.cli.running, queue.cli.failed) : '…'}
+          {queue ? tr.aiUi.queueStats(queue.cli.queued, queue.cli.running, queue.cli.failed) : '…'}
         </span>
       </Sub>
       {queue ? (
         <p className="-mt-1 mb-2 text-[11px] text-fg-subtle">
-          {fr.aiUi.budgetUsed(
+          {tr.aiUi.budgetUsed(
             queue.budget.hourUsed,
             queue.budget.hourLimit,
             queue.budget.dayUsed,
             queue.budget.dayLimit,
           )}
           {queue.batch
-            ? ` · ${queue.batch.label} ${queue.batch.done}/${queue.batch.total} (${fr.aiUi.eta(queue.batch.etaSec)})`
+            ? ` · ${queue.batch.label} ${queue.batch.done}/${queue.batch.total} (${tr.aiUi.eta(queue.batch.etaSec)})`
             : ''}
         </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
         {paused?.reason === 'USER' ? (
           <Button size="sm" onClick={() => control('resume')}>
-            {fr.aiUi.resume}
+            {tr.aiUi.resume}
           </Button>
         ) : (
           <Button size="sm" onClick={() => control('pause')}>
-            {fr.aiUi.pause}
+            {tr.aiUi.pause}
           </Button>
         )}
         <Button size="sm" onClick={() => control('cancel')}>
-          {fr.aiUi.cancelAll}
+          {tr.aiUi.cancelAll}
         </Button>
         <Button size="sm" onClick={() => control('retryFailed')} disabled={!queue?.cli.failed}>
-          {fr.aiUi.retryFailed}
+          {tr.aiUi.retryFailed}
         </Button>
         {paused?.reason === 'HARD_CAP' ? (
           <Button
@@ -206,7 +202,7 @@ function QueueBlock() {
               void rpc('ai.budget.override', { until: Date.now() + 86_400_000 }).catch(aiFail)
             }
           >
-            {fr.aiUi.overrideCap}
+            {tr.aiUi.overrideCap}
           </Button>
         ) : null}
       </div>
@@ -217,10 +213,10 @@ function QueueBlock() {
           disabled={!missing}
           onClick={() => startScope('unanalyzed')}
         >
-          {fr.aiUi.analyzeRest(missing ?? 0)}
+          {tr.aiUi.analyzeRest(missing ?? 0)}
         </Button>
         <Button size="sm" disabled={!regen} onClick={() => startScope('regenerate-fr')}>
-          {fr.aiUi.regenerateFr(regen ?? 0)}
+          {tr.aiUi.regenerateFr(regen ?? 0)}
         </Button>
       </div>
     </div>
@@ -237,7 +233,7 @@ function CallsLog() {
   return (
     <div data-testid="ai-calls">
       <div className="mb-1 flex items-center justify-between">
-        <div className="text-[12px] font-medium">{fr.aiUi.log}</div>
+        <div className="text-[12px] font-medium">{tr.aiUi.log}</div>
         <Button
           size="sm"
           variant="ghost"
@@ -245,17 +241,17 @@ function CallsLog() {
           onClick={() =>
             void rpc('ai.calls.clear')
               .then((r) => {
-                toast(fr.aiUi.logCleared(r.count))
+                toast(tr.aiUi.logCleared(r.count))
                 load()
               })
               .catch(aiFail)
           }
         >
-          {fr.aiUi.logClear}
+          {tr.aiUi.logClear}
         </Button>
       </div>
       {calls && calls.length === 0 ? (
-        <p className="text-[11px] text-fg-muted">{fr.aiUi.logEmpty}</p>
+        <p className="text-[11px] text-fg-muted">{tr.aiUi.logEmpty}</p>
       ) : (
         <div className="max-h-[220px] overflow-y-auto">
           <table className="ai-table">
@@ -266,18 +262,18 @@ function CallsLog() {
                     {dateShort(c.ts)} {hhmm(c.ts)}
                   </td>
                   <td>
-                    {fr.aiUi.shortNames[c.provider] ?? c.provider}
+                    {tr.aiUi.shortNames[c.provider] ?? c.provider}
                     {c.model ? ` · ${c.model}` : ''}
                   </td>
                   <td>
-                    {fr.aiUi.logFiles(
+                    {tr.aiUi.logFiles(
                       c.sentFiles.length,
                       bytes(c.sentFiles.reduce((s, f) => s + f.bytes, 0)),
                     )}
                     {` · ${c.sentTextChars} car.`}
                   </td>
                   <td className={c.outcome === 'ok' ? '' : 'text-danger'}>
-                    {fr.aiUi.outcomes[c.outcome] ?? c.outcome}
+                    {tr.aiUi.outcomes[c.outcome] ?? c.outcome}
                   </td>
                 </tr>
               ))}
@@ -310,7 +306,7 @@ export function AiSettings() {
     keyof typeof PRESETS | ''
   return (
     <div data-testid="ai-settings">
-      <SettingsTitle description={fr.settings.ai.desc}>{fr.settings.nav.ai}</SettingsTitle>
+      <SettingsTitle description={tr.settings.ai.desc}>{tr.settings.nav.ai}</SettingsTitle>
       <div className="ai-card mt-4" data-testid="ai-engine-card" data-tone={line.tone}>
         <div className="min-w-0 flex-1">
           <div className="ai-card-title" data-testid="ai-engine-title">
@@ -321,7 +317,7 @@ export function AiSettings() {
           </div>
         </div>
         <button type="button" className="ai-pill-black" data-testid="ai-change" onClick={openSheet}>
-          {fr.aiUi.change}
+          {tr.aiUi.change}
         </button>
       </div>
       <div className="ai-rule mt-4" />
@@ -329,9 +325,9 @@ export function AiSettings() {
         <div className="ai-row">
           <div className="min-w-0 flex-1">
             <div className="ai-row-label" id="ai-autoname">
-              {fr.aiUi.autoName}
+              {tr.aiUi.autoName}
             </div>
-            <div className="ai-row-help">{fr.aiUi.autoNameDesc}</div>
+            <div className="ai-row-help">{tr.aiUi.autoNameDesc}</div>
           </div>
           <Switch
             aria-labelledby="ai-autoname"
@@ -343,9 +339,9 @@ export function AiSettings() {
         <div className="ai-row">
           <div className="min-w-0 flex-1">
             <div className="ai-row-label" id="ai-autoanalyze">
-              {fr.aiUi.autoAnalyze}
+              {tr.aiUi.autoAnalyze}
             </div>
-            <div className="ai-row-help">{fr.aiUi.autoAnalyzeDesc}</div>
+            <div className="ai-row-help">{tr.aiUi.autoAnalyzeDesc}</div>
           </div>
           <Switch
             aria-labelledby="ai-autoanalyze"
@@ -356,14 +352,14 @@ export function AiSettings() {
         </div>
       </div>
       <div className="ai-rule mt-3" />
-      <Fold label={fr.aiUi.advanced} testId="ai-advanced">
-        <Sub label={fr.aiUi.model}>
+      <Fold label={tr.aiUi.advanced} testId="ai-advanced">
+        <Sub label={tr.aiUi.model}>
           <ModelField ai={ai} update={update} />
         </Sub>
-        <Sub label={fr.aiUi.effort}>
+        <Sub label={tr.aiUi.effort}>
           <select
             className="ai-select"
-            aria-label={fr.aiUi.effort}
+            aria-label={tr.aiUi.effort}
             value={ai.claude.effort}
             onChange={(e) => {
               const effort = e.target.value as 'low' | 'medium'
@@ -372,7 +368,7 @@ export function AiSettings() {
           >
             {(['low', 'medium'] as const).map((v) => (
               <option key={v} value={v}>
-                {fr.aiUi.efforts[v]}
+                {tr.aiUi.efforts[v]}
               </option>
             ))}
           </select>
@@ -380,14 +376,14 @@ export function AiSettings() {
         <Sub
           label={
             <>
-              {fr.aiUi.fallback}
-              <div className="text-[11px] text-fg-subtle">{fr.aiUi.fallbackHelp}</div>
+              {tr.aiUi.fallback}
+              <div className="text-[11px] text-fg-subtle">{tr.aiUi.fallbackHelp}</div>
             </>
           }
         >
           <select
             className="ai-select"
-            aria-label={fr.aiUi.fallback}
+            aria-label={tr.aiUi.fallback}
             value={ai.fallback}
             onChange={(e) => update({ fallback: e.target.value as Prefs['ai']['fallback'] })}
           >
@@ -395,21 +391,21 @@ export function AiSettings() {
               .filter((v) => v === 'none' || v !== ai.provider)
               .map((v) => (
                 <option key={v} value={v}>
-                  {v === 'none' ? fr.aiUi.providerNames.off : fr.aiUi.providerNames[v]}
+                  {v === 'none' ? tr.aiUi.providerNames.off : tr.aiUi.providerNames[v]}
                 </option>
               ))}
           </select>
         </Sub>
-        <Sub label={fr.aiUi.titlePolicy}>
+        <Sub label={tr.aiUi.titlePolicy}>
           <select
             className="ai-select"
-            aria-label={fr.aiUi.titlePolicy}
+            aria-label={tr.aiUi.titlePolicy}
             value={ai.titlePolicy}
             onChange={(e) => update({ titlePolicy: e.target.value as 'empty' | 'always' })}
           >
             {(['empty', 'always'] as const).map((v) => (
               <option key={v} value={v}>
-                {fr.aiUi.titlePolicies[v]}
+                {tr.aiUi.titlePolicies[v]}
               </option>
             ))}
           </select>
@@ -417,16 +413,16 @@ export function AiSettings() {
         <Sub
           label={
             <>
-              {fr.aiUi.rate}
+              {tr.aiUi.rate}
               <div className="text-[11px] text-fg-subtle">
-                {fr.aiUi.rateHelp(ai.perHour, ai.perDay, ai.hardPerDay)}
+                {tr.aiUi.rateHelp(ai.perHour, ai.perDay, ai.hardPerDay)}
               </div>
             </>
           }
         >
           <select
             className="ai-select"
-            aria-label={fr.aiUi.rate}
+            aria-label={tr.aiUi.rate}
             value={preset}
             onChange={(e) => {
               const k = e.target.value as keyof typeof PRESETS
@@ -436,15 +432,15 @@ export function AiSettings() {
             {preset === '' ? <option value="">{ai.perHour} / h</option> : null}
             {(Object.keys(PRESETS) as (keyof typeof PRESETS)[]).map((k) => (
               <option key={k} value={k}>
-                {fr.aiUi.presets[k]} ({PRESETS[k]} / h)
+                {tr.aiUi.presets[k]} ({PRESETS[k]} / h)
               </option>
             ))}
           </select>
         </Sub>
-        <Sub label={fr.aiUi.concurrency}>
+        <Sub label={tr.aiUi.concurrency}>
           <select
             className="ai-select"
-            aria-label={fr.aiUi.concurrency}
+            aria-label={tr.aiUi.concurrency}
             value={ai.concurrency}
             onChange={(e) => update({ concurrency: Number(e.target.value) === 2 ? 2 : 1 })}
           >
@@ -455,11 +451,11 @@ export function AiSettings() {
         <div className="ai-rule my-2" />
         <QueueBlock />
       </Fold>
-      <Fold label={fr.aiUi.privacy} testId="ai-privacy">
-        <div className="mb-1 text-[12px] font-medium">{fr.aiUi.sentTitle}</div>
+      <Fold label={tr.aiUi.privacy} testId="ai-privacy">
+        <div className="mb-1 text-[12px] font-medium">{tr.aiUi.sentTitle}</div>
         <table className="ai-table" data-testid="ai-sent-table">
           <tbody>
-            {fr.aiUi.sentRows.map(([k, v]) => (
+            {tr.aiUi.sentRows.map(([k, v]) => (
               <tr key={k}>
                 <th scope="row">{k}</th>
                 <td>{v}</td>
@@ -467,10 +463,10 @@ export function AiSettings() {
             ))}
           </tbody>
         </table>
-        <p className="mt-2 text-[11px] text-fg-subtle">{fr.aiUi.neverSent}</p>
+        <p className="mt-2 text-[11px] text-fg-subtle">{tr.aiUi.neverSent}</p>
         <div className="mb-4 mt-3">
           <Button size="sm" data-testid="ai-preview" onClick={() => openPreview(null)}>
-            {fr.aiUi.preview}
+            {tr.aiUi.preview}
           </Button>
         </div>
         <CallsLog />

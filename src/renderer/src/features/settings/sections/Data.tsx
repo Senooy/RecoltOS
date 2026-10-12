@@ -5,8 +5,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { SnapshotInfo } from '../../../../../shared/ipc/data'
 import { Button, Spinner, toast } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
-import { bytes, dateShort } from '../../../lib/format'
+import { tr } from '../../../i18n'
+import { bytes, dateShort, intlLocale, labelled } from '../../../lib/format'
 import { RpcError, rpc, subscribe } from '../../../lib/rpc'
 import { createSnapshot, exportZip } from '../../../shell/commands'
 import { askConfirm } from '../../../state/dialogs'
@@ -14,18 +14,18 @@ import { useUi } from '../../../state/ui'
 import { SettingsRow, SettingsTitle } from '../SettingsDialog'
 
 function fail(err: unknown) {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 function reasonLabel(reason: string | null): string {
-  if (!reason || reason === 'manual') return fr.settingsMoreUi.reasons.manual!
+  if (!reason || reason === 'manual') return tr.settingsMoreUi.reasons.manual!
   const v = /^pre-v(\d+)$/.exec(reason)
-  if (v) return fr.settingsMoreUi.reasonPreMigration(v[1]!)
-  return fr.settingsMoreUi.reasons[reason] ?? reason
+  if (v) return tr.settingsMoreUi.reasonPreMigration(v[1]!)
+  return tr.settingsMoreUi.reasons[reason] ?? reason
 }
 
 function time(at: number): string {
-  return new Date(at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(at).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
 }
 
 export function DataSection() {
@@ -57,16 +57,16 @@ export function DataSection() {
   }
   const restore = async (s: SnapshotInfo) => {
     const ok = await askConfirm({
-      title: fr.settingsMoreUi.restoreTitle,
-      body: `${dateShort(s.createdAt)} ${time(s.createdAt)} — ${fr.settingsMoreUi.restoreBody}`,
-      confirmLabel: fr.settingsMoreUi.restoreConfirm,
+      title: tr.settingsMoreUi.restoreTitle,
+      body: `${dateShort(s.createdAt)} ${time(s.createdAt)} — ${tr.settingsMoreUi.restoreBody}`,
+      confirmLabel: tr.settingsMoreUi.restoreConfirm,
       danger: true,
     })
     if (!ok) return
     await run(s.name, async () => {
       try {
         await rpc('data.snapshot.restore', { name: s.name })
-        toast(fr.settingsMoreUi.restoreDone)
+        toast(tr.settingsMoreUi.restoreDone)
         load()
       } catch (err) {
         fail(err)
@@ -86,10 +86,11 @@ export function DataSection() {
       const r = await rpc('data.verify')
       toast(
         r.ok
-          ? fr.settingsMoreUi.verifyOk
-          : `${fr.settingsMoreUi.verifyIssues(r.issues.length)} : ${r.issues
-              .map((i) => `${i.message} (${i.count})`)
-              .join(', ')}`,
+          ? tr.settingsMoreUi.verifyOk
+          : labelled(
+              tr.settingsMoreUi.verifyIssues(r.issues.length),
+              r.issues.map((i) => `${i.message} (${i.count})`).join(', '),
+            ),
       )
     } catch (err) {
       fail(err)
@@ -98,17 +99,17 @@ export function DataSection() {
 
   return (
     <>
-      <SettingsTitle description={fr.settingsMoreUi.dataDesc}>{fr.settings.nav.data}</SettingsTitle>
+      <SettingsTitle description={tr.settingsMoreUi.dataDesc}>{tr.settings.nav.data}</SettingsTitle>
       <div className="mt-4">
         <SettingsRow
-          label={fr.settings.data.export}
+          label={tr.settings.data.export}
           description={
             progress
-              ? fr.settingsMoreUi.exportProgress(
+              ? tr.settingsMoreUi.exportProgress(
                   bytes(progress.bytesDone),
                   bytes(progress.bytesTotal),
                 )
-              : fr.settingsMoreUi.exportDesc
+              : tr.settingsMoreUi.exportDesc
           }
           control={
             <Button
@@ -117,13 +118,13 @@ export function DataSection() {
               disabled={busy === 'export'}
               onClick={() => void run('export', () => exportZip())}
             >
-              {busy === 'export' ? <Spinner size={14} /> : fr.settingsMoreUi.exportAction}
+              {busy === 'export' ? <Spinner size={14} /> : tr.settingsMoreUi.exportAction}
             </Button>
           }
         />
         <SettingsRow
-          label={fr.settings.data.snapshot}
-          description={fr.settingsMoreUi.snapshotDesc}
+          label={tr.settings.data.snapshot}
+          description={tr.settingsMoreUi.snapshotDesc}
           control={
             <Button
               variant="secondary"
@@ -135,17 +136,17 @@ export function DataSection() {
                 })
               }
             >
-              {fr.settingsMoreUi.snapshotAction}
+              {tr.settingsMoreUi.snapshotAction}
             </Button>
           }
         />
         <div className="mt-[18px] text-[11px] text-[var(--set-label)]">
-          {fr.settingsMoreUi.snapshotsGroup}
+          {tr.settingsMoreUi.snapshotsGroup}
         </div>
         <div className="mt-1.5 overflow-hidden rounded-[10px] border border-[var(--set-rule)]">
           {snapshots.length === 0 ? (
             <p className="px-4 py-3 text-[11.5px] text-fg-faint">
-              {fr.settingsMoreUi.snapshotsEmpty}
+              {tr.settingsMoreUi.snapshotsEmpty}
             </p>
           ) : (
             snapshots.slice(0, 50).map((s) => (
@@ -169,38 +170,38 @@ export function DataSection() {
                   disabled={busy !== null}
                   onClick={() => void restore(s)}
                 >
-                  {busy === s.name ? <Spinner size={14} /> : fr.settings.data.restore}
+                  {busy === s.name ? <Spinner size={14} /> : tr.settings.data.restore}
                 </Button>
               </div>
             ))
           )}
         </div>
         <SettingsRow
-          label={fr.settings.data.import}
-          description={fr.settingsMoreUi.importDesc}
+          label={tr.settings.data.import}
+          description={tr.settingsMoreUi.importDesc}
           control={
             <Button
               variant="secondary"
               onClick={() => openOverlay({ type: 'settings', section: 'libraries' })}
             >
-              {fr.settingsMoreUi.importAction}
+              {tr.settingsMoreUi.importAction}
             </Button>
           }
         />
         <SettingsRow
-          label={fr.settings.data.openFolder}
-          description={fr.settingsMoreUi.openFolderDesc}
+          label={tr.settings.data.openFolder}
+          description={tr.settingsMoreUi.openFolderDesc}
           control={
             <Button variant="secondary" onClick={() => void reveal()}>
-              {fr.settingsMoreUi.openFolderAction}
+              {tr.settingsMoreUi.openFolderAction}
             </Button>
           }
         />
         <SettingsRow
-          label={fr.settingsMoreUi.verifyAction}
+          label={tr.settingsMoreUi.verifyAction}
           control={
             <Button variant="secondary" onClick={() => void verify()}>
-              {fr.settings.ai.check}
+              {tr.settings.ai.check}
             </Button>
           }
         />

@@ -13,7 +13,7 @@ import {
   type MouseEvent,
 } from 'react'
 import type { ItemCard } from '../../../../../shared/dto/items'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { cn } from '../../../lib/cn'
 import { CarouselCard, ImageCard, PageCard, VideoCard } from './MediaCards'
 import { TweetCard } from './TweetCard'
@@ -30,7 +30,7 @@ export function cardKind(c: Pick<ItemCard, 'kind' | 'mediaCount'>): CardKind {
 export function cardLabel(c: ItemCard): string {
   if (c.title) return c.title
   const h = c.post?.author.handle
-  return h ? fr.card.imageOf(h) : c.kind === 'video' ? fr.card.video : fr.nav.library
+  return h ? tr.card.imageOf(h) : c.kind === 'video' ? tr.card.video : tr.nav.library
 }
 
 export interface SaveCardProps {
@@ -102,7 +102,7 @@ function SaveCardInner({
         )}
         <button
           type="button"
-          aria-label={fr.card.select}
+          aria-label={tr.card.select}
           aria-pressed={selected}
           className={cn(
             'select-dot absolute left-2 top-2 flex h-5 w-5 items-center justify-center rounded-full border-[1.5px]',

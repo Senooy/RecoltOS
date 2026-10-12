@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from 'react'
 import { Button, Dialog, SegmentedSmall, toast } from '../../../../components/ui'
-import { fr } from '../../../../i18n/fr'
+import { tr } from '../../../../i18n'
 import { RpcError, rpc, subscribe } from '../../../../lib/rpc'
 import { persistence, useSpace } from '../store/spaceStore'
 
@@ -21,9 +21,9 @@ function ExportProgress({ onCancel }: { onCancel: () => void }) {
       data-testid="export-progress"
       className="sp-float fixed bottom-6 left-1/2 z-[60] flex h-10 -translate-x-1/2 items-center gap-3 pl-4 pr-1.5 text-small text-fg"
     >
-      {fr.spacesExtra.exporting(p.done, p.total)}
+      {tr.spacesExtra.exporting(p.done, p.total)}
       <Button variant="secondary" size="sm" onClick={onCancel}>
-        {fr.spacesExtra.cancel}
+        {tr.spacesExtra.cancel}
       </Button>
     </div>
   )
@@ -49,7 +49,7 @@ export function ExportPopover({
   const run = async () => {
     onOpenChange(false)
     if (Object.keys(useSpace.getState().nodes).length === 0) {
-      toast(fr.spacesExtra.exportEmpty)
+      toast(tr.spacesExtra.exportEmpty)
       return
     }
     setRunning(true)
@@ -62,18 +62,18 @@ export function ExportPopover({
         ...(scope === 'selection' && sel.length > 0 ? { nodeUuids: sel } : {}),
         scale: Number(scale) as 1 | 2 | 3,
         background: bg,
-        name: name || fr.spaces.untitled,
+        name: name || tr.spaces.untitled,
       })
       if ('path' in r) {
-        toast(fr.spacesExtra.exportDone, {
+        toast(tr.spacesExtra.exportDone, {
           action: {
-            label: fr.spacesExtra.revealInFinder,
+            label: tr.spacesExtra.revealInFinder,
             onClick: () => void rpc('spaces.revealExport').catch(() => undefined),
           },
         })
-      } else toast(fr.spacesExtra.exportCancelled)
+      } else toast(tr.spacesExtra.exportCancelled)
     } catch (err) {
-      toast(err instanceof RpcError ? err.message : fr.errors.generic)
+      toast(err instanceof RpcError ? err.message : tr.errors.generic)
     } finally {
       setRunning(false)
     }
@@ -83,29 +83,29 @@ export function ExportPopover({
     <>
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
         <Dialog.Content
-          title={fr.spacesExtra.exportTitle}
+          title={tr.spacesExtra.exportTitle}
           className="w-[min(380px,calc(100vw-48px))]"
           data-testid="export-dialog"
         >
           <div className="flex flex-col gap-4 px-5 pb-5 pt-4">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-small text-fg-muted">{fr.spacesExtra.scope}</span>
+              <span className="text-small text-fg-muted">{tr.spacesExtra.scope}</span>
               <SegmentedSmall
-                label={fr.spacesExtra.scope}
+                label={tr.spacesExtra.scope}
                 value={hasSelection ? scope : 'all'}
                 onChange={setScope}
                 options={[
-                  { value: 'all', label: fr.spacesExtra.scopeAll },
+                  { value: 'all', label: tr.spacesExtra.scopeAll },
                   ...(hasSelection
-                    ? [{ value: 'selection' as const, label: fr.spacesExtra.scopeSelection }]
+                    ? [{ value: 'selection' as const, label: tr.spacesExtra.scopeSelection }]
                     : []),
                 ]}
               />
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-small text-fg-muted">{fr.spacesExtra.scale}</span>
+              <span className="text-small text-fg-muted">{tr.spacesExtra.scale}</span>
               <SegmentedSmall
-                label={fr.spacesExtra.scale}
+                label={tr.spacesExtra.scale}
                 value={scale}
                 onChange={setScale}
                 options={[
@@ -116,24 +116,24 @@ export function ExportPopover({
               />
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-small text-fg-muted">{fr.spacesExtra.background}</span>
+              <span className="text-small text-fg-muted">{tr.spacesExtra.background}</span>
               <SegmentedSmall
-                label={fr.spacesExtra.background}
+                label={tr.spacesExtra.background}
                 value={bg}
                 onChange={setBg}
                 options={[
-                  { value: 'light', label: fr.spacesExtra.bgLight },
-                  { value: 'dark', label: fr.spacesExtra.bgDark },
-                  { value: 'theme', label: fr.spacesExtra.bgTheme },
+                  { value: 'light', label: tr.spacesExtra.bgLight },
+                  { value: 'dark', label: tr.spacesExtra.bgDark },
+                  { value: 'theme', label: tr.spacesExtra.bgTheme },
                 ]}
               />
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                {fr.spacesExtra.cancel}
+                {tr.spacesExtra.cancel}
               </Button>
               <Button data-testid="export-run" onClick={() => void run()}>
-                {fr.spacesExtra.export}
+                {tr.spacesExtra.export}
               </Button>
             </div>
           </div>

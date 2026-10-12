@@ -29,7 +29,7 @@ import {
   type SpaceNode,
 } from '../../../../../../shared/spaces-schema'
 import { Popover, Tooltip } from '../../../../components/ui'
-import { fr } from '../../../../i18n/fr'
+import { tr } from '../../../../i18n'
 import { cn } from '../../../../lib/cn'
 import {
   alignSelection,
@@ -102,7 +102,7 @@ function Swatches({
       {allowNone ? (
         <button
           type="button"
-          aria-label={fr.spacesUi.noFill}
+          aria-label={tr.spacesUi.noFill}
           aria-pressed={current === null}
           data-testid={`${testPrefix}-none`}
           className="sp-swatch relative overflow-hidden bg-bg"
@@ -173,7 +173,7 @@ function SizeButtons({
   labels: readonly string[]
 }) {
   return (
-    <div className="flex items-center" role="group" aria-label={fr.spacesUi.size}>
+    <div className="flex items-center" role="group" aria-label={tr.spacesUi.size}>
       {sizes.map((s, i) => (
         <button
           key={s}
@@ -199,7 +199,7 @@ function Opacity({ value }: { value: number }) {
       <Popover.Trigger asChild>
         <button
           type="button"
-          aria-label={fr.spacesUi.opacity}
+          aria-label={tr.spacesUi.opacity}
           data-testid="style-opacity"
           className="h-7 rounded-full px-2 text-caption text-fg-muted tnum hover:bg-[var(--hover)] hover:text-fg"
         >
@@ -208,7 +208,7 @@ function Opacity({ value }: { value: number }) {
       </Popover.Trigger>
       <Popover.Content side="top" className="w-[180px] p-3">
         <label className="flex flex-col gap-2 text-caption text-fg-muted">
-          {fr.spacesUi.opacity}
+          {tr.spacesUi.opacity}
           <input
             type="range"
             min={10}
@@ -219,14 +219,14 @@ function Opacity({ value }: { value: number }) {
               setStyle(
                 ['item', 'image', 'note', 'shape', 'text'],
                 { opacity: Number(e.currentTarget.value) / 100 },
-                fr.spacesUi.opacity,
+                tr.spacesUi.opacity,
               )
             }
             onKeyUp={(e) =>
               setStyle(
                 ['item', 'image', 'note', 'shape', 'text'],
                 { opacity: Number(e.currentTarget.value) / 100 },
-                fr.spacesUi.opacity,
+                tr.spacesUi.opacity,
               )
             }
           />
@@ -253,7 +253,7 @@ function TypeControls({ n }: { n: SpaceNode }) {
             sizes={FONT_SIZES}
             current={n.style.fontSize}
             labels={['S', 'M', 'L', 'XL']}
-            onPick={(s) => setStyle(['note'], { fontSize: s }, fr.spacesUi.size)}
+            onPick={(s) => setStyle(['note'], { fontSize: s }, tr.spacesUi.size)}
           />
         </>
       )
@@ -261,7 +261,7 @@ function TypeControls({ n }: { n: SpaceNode }) {
       return (
         <>
           <ColorPopover
-            label={fr.spacesUi.fill}
+            label={tr.spacesUi.fill}
             swatch={n.style.fill ? colorVar(n.style.fill) : 'transparent'}
             testId="style-fill"
           >
@@ -271,13 +271,13 @@ function TypeControls({ n }: { n: SpaceNode }) {
               colorOf={colorVar}
               allowNone
               onPick={(v) =>
-                setStyle(['shape'], { fill: v, fillAlpha: v ? 0.9 : 1 }, fr.spacesUi.fill)
+                setStyle(['shape'], { fill: v, fillAlpha: v ? 0.9 : 1 }, tr.spacesUi.fill)
               }
               testPrefix="fill"
             />
           </ColorPopover>
           <ColorPopover
-            label={fr.spacesUi.stroke}
+            label={tr.spacesUi.stroke}
             swatch={n.style.stroke ? colorVar(n.style.stroke) : 'transparent'}
             testId="style-stroke"
           >
@@ -286,7 +286,7 @@ function TypeControls({ n }: { n: SpaceNode }) {
               current={n.style.stroke}
               colorOf={colorVar}
               allowNone
-              onPick={(v) => setStyle(['shape'], { stroke: v }, fr.spacesUi.stroke)}
+              onPick={(v) => setStyle(['shape'], { stroke: v }, tr.spacesUi.stroke)}
               testPrefix="stroke"
             />
           </ColorPopover>
@@ -294,10 +294,10 @@ function TypeControls({ n }: { n: SpaceNode }) {
             sizes={[1, 2, 4]}
             current={n.style.strokeWidth}
             labels={['1', '2', '4']}
-            onPick={(s) => setStyle(['shape'], { strokeWidth: s }, fr.spacesExtra.strokeWidth)}
+            onPick={(s) => setStyle(['shape'], { strokeWidth: s }, tr.spacesExtra.strokeWidth)}
           />
           <BarButton
-            label={fr.spacesExtra.dashed}
+            label={tr.spacesExtra.dashed}
             active={n.style.dash === 'dashed'}
             onClick={() =>
               setStyle(['shape'], { dash: n.style.dash === 'dashed' ? 'solid' : 'dashed' })
@@ -311,7 +311,7 @@ function TypeControls({ n }: { n: SpaceNode }) {
       return (
         <>
           <ColorPopover
-            label={fr.spacesUi.color}
+            label={tr.spacesUi.color}
             swatch={colorVar(n.style.color)}
             testId="style-text-color"
           >
@@ -327,10 +327,10 @@ function TypeControls({ n }: { n: SpaceNode }) {
             sizes={TEXT_SIZES}
             current={n.style.fontSize}
             labels={['S', 'M', 'L', 'XL']}
-            onPick={(s) => setStyle(['text'], { fontSize: s }, fr.spacesExtra.textSize)}
+            onPick={(s) => setStyle(['text'], { fontSize: s }, tr.spacesExtra.textSize)}
           />
           <BarButton
-            label={fr.spacesExtra.bold}
+            label={tr.spacesExtra.bold}
             active={n.style.weight === 600}
             onClick={() => setStyle(['text'], { weight: n.style.weight === 600 ? 400 : 600 })}
           >
@@ -375,7 +375,7 @@ export function StyleBar() {
   return (
     <div
       role="toolbar"
-      aria-label={fr.spacesUi.color}
+      aria-label={tr.spacesUi.color}
       data-testid="space-stylebar"
       className="sp-float absolute z-20 flex h-9 -translate-x-1/2 items-center gap-1 px-1.5"
       ref={ref}
@@ -386,41 +386,41 @@ export function StyleBar() {
       {sel.length >= 2 ? (
         <>
           <BarButton
-            label={fr.spacesExtra.alignLeft}
+            label={tr.spacesExtra.alignLeft}
             onClick={() => alignSelection('left')}
             testId="align-left"
           >
             <AlignStartVertical {...ICON} />
           </BarButton>
-          <BarButton label={fr.spacesExtra.alignHCenter} onClick={() => alignSelection('hcenter')}>
+          <BarButton label={tr.spacesExtra.alignHCenter} onClick={() => alignSelection('hcenter')}>
             <AlignCenterVertical {...ICON} />
           </BarButton>
-          <BarButton label={fr.spacesExtra.alignRight} onClick={() => alignSelection('right')}>
+          <BarButton label={tr.spacesExtra.alignRight} onClick={() => alignSelection('right')}>
             <AlignEndVertical {...ICON} />
           </BarButton>
           <BarButton
-            label={fr.spacesExtra.alignTop}
+            label={tr.spacesExtra.alignTop}
             onClick={() => alignSelection('top')}
             testId="align-top"
           >
             <AlignStartHorizontal {...ICON} />
           </BarButton>
-          <BarButton label={fr.spacesExtra.alignVCenter} onClick={() => alignSelection('vcenter')}>
+          <BarButton label={tr.spacesExtra.alignVCenter} onClick={() => alignSelection('vcenter')}>
             <AlignCenterHorizontal {...ICON} />
           </BarButton>
-          <BarButton label={fr.spacesExtra.alignBottom} onClick={() => alignSelection('bottom')}>
+          <BarButton label={tr.spacesExtra.alignBottom} onClick={() => alignSelection('bottom')}>
             <AlignEndHorizontal {...ICON} />
           </BarButton>
           {sel.length >= 3 ? (
             <>
               <BarButton
-                label={fr.spacesExtra.distributeH}
+                label={tr.spacesExtra.distributeH}
                 onClick={() => distributeSelection('h')}
               >
                 <AlignHorizontalDistributeCenter {...ICON} />
               </BarButton>
               <BarButton
-                label={fr.spacesExtra.distributeV}
+                label={tr.spacesExtra.distributeV}
                 onClick={() => distributeSelection('v')}
               >
                 <AlignVerticalDistributeCenter {...ICON} />
@@ -436,7 +436,7 @@ export function StyleBar() {
       ) : null}
       <Opacity value={opacity} />
       <BarButton
-        label={locked ? fr.spacesUi.unlock : fr.spacesUi.lock}
+        label={locked ? tr.spacesUi.unlock : tr.spacesUi.lock}
         active={locked}
         onClick={toggleLock}
         testId="style-lock"
@@ -444,13 +444,13 @@ export function StyleBar() {
         {locked ? <Lock {...ICON} /> : <LockOpen {...ICON} />}
       </BarButton>
       <BarButton
-        label={fr.spacesUi.duplicate}
+        label={tr.spacesUi.duplicate}
         onClick={() => void duplicateSelection()}
         testId="style-duplicate"
       >
         <Copy {...ICON} />
       </BarButton>
-      <BarButton label={fr.spacesUi.delete} onClick={deleteSelection} testId="style-delete">
+      <BarButton label={tr.spacesUi.delete} onClick={deleteSelection} testId="style-delete">
         <Trash2 {...ICON} />
       </BarButton>
     </div>

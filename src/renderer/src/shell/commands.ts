@@ -3,7 +3,7 @@
  */
 import type { MenuCommand } from '../../../shared/shortcuts'
 import { toast } from '../components/ui'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 import { RpcError, rpc } from '../lib/rpc'
 import { runCapture } from '../features/capture/capture-actions'
 import { importFolder, reportImport, useImportUi } from '../features/import/import-actions'
@@ -27,28 +27,28 @@ export function openRediscover(): void {
 }
 
 export function soon(): void {
-  toast(fr.shell.unavailable)
+  toast(tr.shell.unavailable)
 }
 
 export async function importFiles(collectionUuid?: string): Promise<void> {
   try {
     reportImport(await rpc('ingest.pickFiles', collectionUuid ? { collectionUuid } : {}))
   } catch (err) {
-    toast(err instanceof RpcError ? err.message : fr.errors.generic)
+    toast(err instanceof RpcError ? err.message : tr.errors.generic)
   }
 }
 
 export async function newCollection(): Promise<void> {
   const name = await askName({
-    title: fr.collection.new,
+    title: tr.collection.new,
     initial: '',
-    confirmLabel: fr.shell.create,
+    confirmLabel: tr.shell.create,
   })
   if (!name) return
   try {
     await rpc('collections.create', { name })
   } catch (err) {
-    toast(err instanceof RpcError ? err.message : fr.errors.generic)
+    toast(err instanceof RpcError ? err.message : tr.errors.generic)
   }
 }
 
@@ -59,18 +59,18 @@ export async function exportZip(collectionUuid?: string): Promise<void> {
       includeDerived: false,
       ...(collectionUuid ? { collectionUuid } : {}),
     })
-    if ('path' in r) toast(fr.toast.exportDone)
+    if ('path' in r) toast(tr.toast.exportDone)
   } catch (err) {
-    toast(err instanceof RpcError ? err.message : fr.errors.generic)
+    toast(err instanceof RpcError ? err.message : tr.errors.generic)
   }
 }
 
 export async function createSnapshot(): Promise<void> {
   try {
     await rpc('data.snapshot.create', { reason: 'manual' })
-    toast(fr.settingsMoreUi.snapshotDone)
+    toast(tr.settingsMoreUi.snapshotDone)
   } catch (err) {
-    toast(err instanceof RpcError ? err.message : fr.errors.generic)
+    toast(err instanceof RpcError ? err.message : tr.errors.generic)
   }
 }
 

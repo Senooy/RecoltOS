@@ -6,7 +6,7 @@
  */
 import { Suspense, useEffect, useState } from 'react'
 import { EmptyState, Toaster, TooltipProvider, toast } from '../components/ui'
-import { fr } from '../i18n/fr'
+import { tr } from '../i18n'
 import { cn } from '../lib/cn'
 import { isDigit } from '../lib/shortcuts'
 import { isNotImplemented, rpc, subscribe } from '../lib/rpc'
@@ -31,6 +31,9 @@ import { runCapture } from '../features/capture/capture-actions'
 import { importFolder } from '../features/import/import-actions'
 import { IngestProgress } from '../features/import/IngestProgress'
 import { usePaste } from '../features/import/usePaste'
+
+/** La reprise d'import n'est proposée qu'une fois par lancement (la coque se remonte au changement de langue). */
+let resumeOffered = false
 
 const navOf = (r: Route): NavValue =>
   r.name === 'search'
@@ -118,12 +121,14 @@ export function AppShell({ dark }: { dark: boolean }) {
 
   // Import interrompu : reprise proposée au lancement.
   useEffect(() => {
+    if (resumeOffered) return
+    resumeOffered = true
     void rpc('import.gatheros.pending')
       .then((p) => {
         if (p) {
-          toast(fr.importUi.resumeTitle, {
+          toast(tr.importUi.resumeTitle, {
             action: {
-              label: fr.importUi.resume,
+              label: tr.importUi.resume,
               onClick: () => openOverlay({ type: 'settings', section: 'libraries' }),
             },
             duration: 15_000,
@@ -184,7 +189,7 @@ export function AppShell({ dark }: { dark: boolean }) {
             </Suspense>
           ) : (
             <div className="flex flex-1 items-center justify-center border-t border-border-subtle">
-              <EmptyState title={fr.shell.unavailable} />
+              <EmptyState title={tr.shell.unavailable} />
             </div>
           )}
         </div>

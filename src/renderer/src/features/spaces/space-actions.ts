@@ -3,12 +3,12 @@
  * dupliquer, supprimer avec confirmation, « Ajouter à un space › » depuis une carte.
  */
 import { toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { RpcError, rpc } from '../../lib/rpc'
 import { askConfirm } from '../../state/dialogs'
 import { useUi } from '../../state/ui'
 
-const fail = (err: unknown) => toast(err instanceof RpcError ? err.message : fr.errors.generic)
+const fail = (err: unknown) => toast(err instanceof RpcError ? err.message : tr.errors.generic)
 
 const pendingRename = new Set<string>()
 
@@ -54,9 +54,9 @@ export async function deleteSpaceWithConfirm(
   after?: () => void,
 ): Promise<void> {
   const ok = await askConfirm({
-    title: fr.spacesUi.deleteTitle(name || fr.spaces.untitled),
-    body: fr.spacesUi.deleteBody,
-    confirmLabel: fr.confirm.delete,
+    title: tr.spacesUi.deleteTitle(name || tr.spaces.untitled),
+    body: tr.spacesUi.deleteBody,
+    confirmLabel: tr.confirm.delete,
     danger: true,
   })
   if (!ok) return
@@ -76,9 +76,9 @@ export async function addItemsToSpace(
   if (itemUuids.length === 0) return
   try {
     const r = await rpc('spaces.addItems', { spaceUuid: space.uuid, itemUuids: [...itemUuids] })
-    toast(fr.spacesUi.itemsAdded(r.added, space.name || fr.spaces.untitled), {
+    toast(tr.spacesUi.itemsAdded(r.added, space.name || tr.spaces.untitled), {
       action: {
-        label: fr.spacesUi.open,
+        label: tr.spacesUi.open,
         onClick: () => useUi.getState().navigate({ name: 'space', uuid: space.uuid }),
       },
     })

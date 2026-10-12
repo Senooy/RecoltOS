@@ -1,10 +1,12 @@
 /**
  * Préférences côté renderer : copie de `prefs.json` (main fait foi), mises à jour optimistes,
- * application du thème (`<html data-theme>`) et du mouvement réduit.
+ * application du thème (`<html data-theme>`), du mouvement réduit et de la langue (`ui.language`).
  */
 import { create } from 'zustand'
 import type { UserPrefsPatch } from '../../../shared/ipc/prefs'
 import { DEFAULT_PREFS, mergePrefs, type Prefs } from '../../../shared/prefs'
+import { resolveLang, type Lang } from '../../../shared/i18n/lang'
+import { getUiLang, setUiLang } from '../i18n'
 import { isNotImplemented, rpc, subscribe } from '../lib/rpc'
 
 export interface PrefsState {
@@ -40,10 +42,26 @@ export function setDocumentTheme(
   raf(() => raf(() => delete root.dataset.themeSwitching))
 }
 
+/**
+ * Langue du système vue par le renderer : passée par main au lancement (`flags.systemLang`).
+ * Sans drapeaux (tests), la langue courante : `ui.language: 'system'` ne la change alors pas.
+ */
+export function systemLang(): Lang {
+  return (
+    (typeof window !== 'undefined' ? window.recolt?.flags.systemLang : undefined) ?? getUiLang()
+  )
+}
+
+/** Langue effective des prefs, appliquée tout de suite (la coque se remonte dans la langue). */
+export function applyPrefsLanguage(prefs: Prefs): void {
+  setUiLang(resolveLang(prefs.ui.language, systemLang()))
+}
+
 export function applyPrefsToDocument(
   prefs: Prefs,
   root: HTMLElement = document.documentElement,
 ): void {
+  applyPrefsLanguage(prefs)
   setDocumentTheme(effectiveTheme(prefs.theme), root)
   if (prefs.reduceMotion === 'always') root.dataset.reduceMotion = '1'
   else delete root.dataset.reduceMotion

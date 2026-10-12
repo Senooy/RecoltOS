@@ -11,7 +11,8 @@ import {
   type ProviderTestResult,
 } from '../../../../shared/ai-types'
 import { Button, Dialog } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
+import { labelled, listSep } from '../../lib/format'
 import { cn } from '../../lib/cn'
 import { rpc } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
@@ -28,11 +29,11 @@ function tone(st: ProviderStatus | undefined): 'ok' | 'warn' | 'err' | '' {
 }
 
 function statusText(st: ProviderStatus | undefined, detecting: boolean): string {
-  const t = fr.aiUi.state
+  const t = tr.aiUi.state
   if (!st) return detecting ? t.checking : ''
   if (!st.installed) return t.notFound
   if (st.loggedIn === false) return t.notLogged
-  return `${t.connected(st.plan)}${st.version ? ` · ${fr.aiUi.version(st.version)}` : ''}`
+  return `${t.connected(st.plan)}${st.version ? ` · ${tr.aiUi.version(st.version)}` : ''}`
 }
 
 export function ProviderSheet() {
@@ -65,19 +66,19 @@ export function ProviderSheet() {
     })().catch(aiFail)
 
   const st = choice !== 'off' ? detect?.[choice] : undefined
-  const name = choice !== 'off' ? (fr.aiUi.shortNames[choice] ?? choice) : ''
+  const name = choice !== 'off' ? (tr.aiUi.shortNames[choice] ?? choice) : ''
   return (
     <Dialog.Root open={open} onOpenChange={(o) => !o && close()}>
       <Dialog.Content
-        title={fr.aiUi.sheetTitle}
-        description={fr.aiUi.sheetDesc}
+        title={tr.aiUi.sheetTitle}
+        description={tr.aiUi.sheetDesc}
         className="w-[min(500px,calc(100vw-48px))]"
         data-testid="ai-sheet"
       >
         <div
           className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto px-5 pb-5 pt-4"
           role="radiogroup"
-          aria-label={fr.aiUi.sheetTitle}
+          aria-label={tr.aiUi.sheetTitle}
         >
           {(['claude', 'codex', 'off'] as const).map((c) => {
             const s = c !== 'off' ? detect?.[c] : undefined
@@ -102,8 +103,8 @@ export function ProviderSheet() {
                 <span className="flex-1">
                   <span className="block text-[14px] font-medium">
                     {c === 'off'
-                      ? fr.aiUi.providerNames.off
-                      : `${fr.aiUi.providerNames[c]} (abonnement)`}
+                      ? tr.aiUi.providerNames.off
+                      : `${tr.aiUi.providerNames[c]} (abonnement)`}
                   </span>
                   {c !== 'off' ? (
                     <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-fg-muted">
@@ -123,7 +124,7 @@ export function ProviderSheet() {
             >
               {st.path ? (
                 <div className="flex gap-2">
-                  <span className="text-fg-muted">{fr.aiUi.path}</span>
+                  <span className="text-fg-muted">{tr.aiUi.path}</span>
                   <span className="min-w-0 truncate font-mono text-[11.5px]" title={st.path}>
                     {st.path}
                   </span>
@@ -131,10 +132,12 @@ export function ProviderSheet() {
               ) : null}
               {st.candidates && st.candidates.length > 1 ? (
                 <div className="mt-1 text-fg-muted">
-                  {fr.aiUi.copies(st.candidates.length)} :{' '}
-                  {st.candidates
-                    .map((c) => `${c.path}${c.version ? ` (${c.version})` : ''}`)
-                    .join(' ; ')}
+                  {labelled(
+                    tr.aiUi.copies(st.candidates.length),
+                    st.candidates
+                      .map((c) => `${c.path}${c.version ? ` (${c.version})` : ''}`)
+                      .join(listSep()),
+                  )}
                 </div>
               ) : null}
               {st.warnings.map((w) => (
@@ -143,7 +146,7 @@ export function ProviderSheet() {
                 </div>
               ))}
               {choice === 'claude' ? (
-                <div className="mt-1 text-fg-subtle">{fr.aiUi.keychainHint}</div>
+                <div className="mt-1 text-fg-subtle">{tr.aiUi.keychainHint}</div>
               ) : null}
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Button
@@ -151,13 +154,13 @@ export function ProviderSheet() {
                   loading={detecting}
                   onClick={() => void useAi.getState().runDetect()}
                 >
-                  {fr.aiUi.verify}
+                  {tr.aiUi.verify}
                 </Button>
                 <Button
                   size="sm"
                   data-testid="ai-live-test"
                   disabled={needsConsent || choice !== provider || test?.r === null}
-                  title={fr.aiUi.liveTestHint}
+                  title={tr.aiUi.liveTestHint}
                   onClick={() => {
                     setTest({ p: choice, r: null })
                     void rpc('ai.test', { provider: choice, live: true })
@@ -168,16 +171,16 @@ export function ProviderSheet() {
                       })
                   }}
                 >
-                  {fr.aiUi.liveTest}
+                  {tr.aiUi.liveTest}
                 </Button>
               </div>
               {test?.p === choice ? (
                 <div className="mt-1.5" data-testid="ai-live-result">
                   {test.r === null
-                    ? fr.aiUi.state.checking
+                    ? tr.aiUi.state.checking
                     : test.r.ok
-                      ? fr.aiUi.liveOk(test.r.latencyMs ?? 0, test.r.model)
-                      : fr.aiUi.liveFail(test.r.error ?? '')}
+                      ? tr.aiUi.liveOk(test.r.latencyMs ?? 0, test.r.model)
+                      : tr.aiUi.liveFail(test.r.error ?? '')}
                 </div>
               ) : null}
             </div>
@@ -188,11 +191,11 @@ export function ProviderSheet() {
               className="mt-2 rounded-[10px] border border-border px-3 py-3 text-[12.5px] leading-[18px]"
               data-testid="ai-consent"
             >
-              <div className="mb-1.5 text-[13.5px] font-semibold">{fr.aiUi.consentTitle}</div>
-              <p>{fr.aiUi.consentIntro(name)}</p>
+              <div className="mb-1.5 text-[13.5px] font-semibold">{tr.aiUi.consentTitle}</div>
+              <p>{tr.aiUi.consentIntro(name)}</p>
               <table className="ai-table mt-2">
                 <tbody>
-                  {fr.aiUi.sentRows.map(([k, v]) => (
+                  {tr.aiUi.sentRows.map(([k, v]) => (
                     <tr key={k}>
                       <th scope="row">{k}</th>
                       <td>{v}</td>
@@ -200,15 +203,15 @@ export function ProviderSheet() {
                   ))}
                 </tbody>
               </table>
-              <p className="mt-2 text-fg-muted">{fr.aiUi.neverSent}</p>
-              <p className="mt-1.5 text-fg-muted">{fr.aiUi.consentThirdParty}</p>
-              <p className="mt-1.5 text-fg-muted">{fr.aiUi.consentUsage}</p>
+              <p className="mt-2 text-fg-muted">{tr.aiUi.neverSent}</p>
+              <p className="mt-1.5 text-fg-muted">{tr.aiUi.consentThirdParty}</p>
+              <p className="mt-1.5 text-fg-muted">{tr.aiUi.consentUsage}</p>
             </div>
           ) : null}
 
           <div className="mt-3 flex justify-end gap-2">
             <Button variant="primary" data-testid="ai-sheet-confirm" onClick={confirm}>
-              {needsConsent ? fr.aiUi.consentOk : fr.aiUi.done}
+              {needsConsent ? tr.aiUi.consentOk : tr.aiUi.done}
             </Button>
           </div>
         </div>

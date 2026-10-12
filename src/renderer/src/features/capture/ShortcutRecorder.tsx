@@ -4,7 +4,7 @@
  * touche imprimée (`getLayoutMap()`) ; application immédiate (`capture.setShortcut`), erreur inline.
  */
 import { useEffect, useRef, useState } from 'react'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { RpcError, rpc } from '../../lib/rpc'
 import { usePrefs } from '../../state/prefs'
@@ -54,7 +54,7 @@ export function ShortcutRecorder() {
       }
       const r = eventToAccelerator(e, layout.current)
       if ('error' in r) {
-        if (r.error === 'unsupported') setError(fr.captureUi.errors.unsupported!)
+        if (r.error === 'unsupported') setError(tr.captureUi.errors.unsupported!)
         return
       }
       setRecording(false)
@@ -63,10 +63,10 @@ export function ShortcutRecorder() {
           if (res.ok) {
             setError(null)
             await usePrefs.getState().load()
-          } else setError(fr.captureUi.errors[res.error ?? 'invalid'] ?? fr.errors.generic)
+          } else setError(tr.captureUi.errors[res.error ?? 'invalid'] ?? tr.errors.generic)
         })
         .catch((err: unknown) =>
-          setError(err instanceof RpcError ? err.message : fr.errors.generic),
+          setError(err instanceof RpcError ? err.message : tr.errors.generic),
         )
     }
     window.addEventListener('keydown', onKey, true)
@@ -80,7 +80,7 @@ export function ShortcutRecorder() {
         ref={btn}
         type="button"
         data-testid="shortcut-recorder"
-        aria-label={fr.captureUi.record}
+        aria-label={tr.captureUi.record}
         aria-pressed={recording}
         className={cn(
           'flex items-center gap-[5px] rounded-md outline-none',
@@ -93,7 +93,7 @@ export function ShortcutRecorder() {
       >
         {recording ? (
           <span className="flex h-[22px] items-center rounded-md border border-dashed border-[var(--accent-blue)] px-2 text-[11px] text-fg-muted">
-            {fr.captureUi.recording}
+            {tr.captureUi.recording}
           </span>
         ) : (
           caps.map((c, i) => (
@@ -104,7 +104,7 @@ export function ShortcutRecorder() {
         )}
       </button>
       <p className="mt-[6px] text-[11px] text-[var(--set-help)]">
-        {recording ? fr.settings.capture.recordHint : fr.captureUi.recordHelp}
+        {recording ? tr.settings.capture.recordHint : tr.captureUi.recordHelp}
       </p>
       {error ? (
         <p className="mt-1 text-[11px] text-danger" data-testid="shortcut-error" role="alert">

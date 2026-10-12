@@ -19,7 +19,7 @@ function disconnectedApi(): RecoltApi {
     onFlushRequest: () => () => undefined,
     flushDone: () => undefined,
     applyBatchSync: () => null,
-    flags: { theme: 'light', e2e: false },
+    flags: { theme: 'light', e2e: false, lang: 'fr', systemLang: 'fr' },
   }
 }
 

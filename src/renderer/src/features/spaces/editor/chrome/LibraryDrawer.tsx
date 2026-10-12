@@ -7,7 +7,7 @@
 import { Check, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
 import type { ItemCard } from '../../../../../../shared/dto/items'
-import { fr } from '../../../../i18n/fr'
+import { tr } from '../../../../i18n'
 import { cn } from '../../../../lib/cn'
 import { lruSet } from '../../../../lib/lru'
 import { cardThumbSrc } from '../../../../lib/media-url'
@@ -88,7 +88,7 @@ function DrawerCard({
       )}
       {present ? (
         <span
-          aria-label={fr.spacesUi.inSpace}
+          aria-label={tr.spacesUi.inSpace}
           className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--sp-select)] text-white"
         >
           <Check size={12} strokeWidth={3} />
@@ -162,7 +162,7 @@ export function LibraryDrawer({ spaceUuid }: { spaceUuid: string }) {
   return (
     <aside
       data-testid="library-drawer"
-      aria-label={fr.spacesUi.drawer}
+      aria-label={tr.spacesUi.drawer}
       className="sp-drawer absolute bottom-3 right-3 top-3 z-30 flex w-[340px] flex-col overflow-hidden"
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
@@ -172,8 +172,8 @@ export function LibraryDrawer({ spaceUuid }: { spaceUuid: string }) {
           <Search size={14} strokeWidth={1.75} className="text-fg-faint" />
           <input
             data-testid="drawer-search"
-            aria-label={fr.spacesUi.drawerSearch}
-            placeholder={fr.spacesUi.drawerSearch}
+            aria-label={tr.spacesUi.drawerSearch}
+            placeholder={tr.spacesUi.drawerSearch}
             className="min-w-0 flex-1 bg-transparent text-small outline-none placeholder:text-fg-faint"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -182,7 +182,7 @@ export function LibraryDrawer({ spaceUuid }: { spaceUuid: string }) {
         </div>
         <button
           type="button"
-          aria-label={fr.spacesUi.drawerClose}
+          aria-label={tr.spacesUi.drawerClose}
           data-testid="drawer-close"
           className="flex h-8 w-8 items-center justify-center rounded-full text-fg-subtle hover:bg-[var(--hover)]"
           onClick={() => useSpace.setState({ drawerOpen: false })}
@@ -193,12 +193,12 @@ export function LibraryDrawer({ spaceUuid }: { spaceUuid: string }) {
       <div className="px-3 pb-2">
         <select
           data-testid="drawer-collection"
-          aria-label={fr.nav.collections}
+          aria-label={tr.nav.collections}
           className="h-8 w-full rounded-full border border-border bg-bg px-3 text-small text-fg outline-none"
           value={collection}
           onChange={(e) => setCollection(e.target.value)}
         >
-          <option value="">{fr.spacesUi.drawerAll}</option>
+          <option value="">{tr.spacesUi.drawerAll}</option>
           {flat.map((f) => (
             <option key={f.node.uuid} value={f.node.uuid}>
               {'  '.repeat(f.depth)}
@@ -210,7 +210,7 @@ export function LibraryDrawer({ spaceUuid }: { spaceUuid: string }) {
       <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-3" role="list">
         {items.length === 0 ? (
           <div className="pt-10 text-center text-small text-fg-faint">
-            {fr.spacesUi.drawerEmpty}
+            {tr.spacesUi.drawerEmpty}
           </div>
         ) : (
           <div className="flex gap-2">

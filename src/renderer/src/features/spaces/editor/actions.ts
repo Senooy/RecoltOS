@@ -32,7 +32,7 @@ import {
   type SpaceNode,
 } from '../../../../../shared/spaces-schema'
 import { toast } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { RpcError, rpc } from '../../../lib/rpc'
 import { align, distribute, reorder, type AlignKind } from './geometry/align'
 import { clampZoom, fitBox, screenToWorld, stepZoom, zoomAt } from './geometry/camera'
@@ -47,10 +47,10 @@ import {
   type Tool,
 } from './store/spaceStore'
 
-const t = () => fr.spacesUi
+const t = () => tr.spacesUi
 
 export function fail(err: unknown): void {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 function base(at: Vec, w: number, h: number, centered = true) {
@@ -97,10 +97,10 @@ export function createAt(tool: Tool, at: Vec): string | null {
   if (!guardCap(1)) return null
   commit(
     tool === 'note'
-      ? fr.spaces.tools.note
+      ? tr.spaces.tools.note
       : tool === 'text'
-        ? fr.spaces.tools.text
-        : fr.spaces.tools.rect,
+        ? tr.spaces.tools.text
+        : tr.spaces.tools.rect,
     (d) => {
       d[node.uuid] = node
     },
@@ -115,7 +115,7 @@ export function createAt(tool: Tool, at: Vec): string | null {
 
 function guardCap(n: number): boolean {
   if (Object.keys(useSpace.getState().nodes).length + n > MAX_NODES_PER_SPACE) {
-    toast(fr.spaces.maxSize)
+    toast(tr.spaces.maxSize)
     return false
   }
   return true
@@ -130,7 +130,7 @@ export function deleteSelection(): void {
   const ids = selected().map((n) => n.uuid)
   if (ids.length === 0) return
   commit(
-    fr.spacesUi.delete,
+    tr.spacesUi.delete,
     (d) => {
       for (const id of ids) delete d[id]
     },

@@ -3,7 +3,7 @@
  * ou est en pause. Ouvre Réglages › IA.
  */
 import { Sparkles } from 'lucide-react'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { usePrefs } from '../../state/prefs'
 import { useUi } from '../../state/ui'
@@ -20,7 +20,7 @@ export function AiStatusPill() {
     <button
       type="button"
       data-testid="ai-pill"
-      title={fr.aiUi.pillTitle}
+      title={tr.aiUi.pillTitle}
       className={cn(
         'mr-1 flex h-[26px] items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] text-fg-muted',
         'transition-colors hover:border-border-strong hover:text-fg',
@@ -32,7 +32,7 @@ export function AiStatusPill() {
         strokeWidth={1.75}
         className={cn(queue.cli.running > 0 && !paused && 'animate-pulse')}
       />
-      {paused ? fr.aiUi.pillPaused : fr.aiUi.pill(pending)}
+      {paused ? tr.aiUi.pillPaused : tr.aiUi.pill(pending)}
     </button>
   )
 }

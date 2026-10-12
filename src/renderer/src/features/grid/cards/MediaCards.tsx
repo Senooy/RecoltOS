@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Globe } from 'lucide-react'
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import type { ItemCard, Slide } from '../../../../../shared/dto/items'
 import { MediaBadge } from '../../../components/ui'
-import { fr } from '../../../i18n/fr'
+import { tr } from '../../../i18n'
 import { lruSet } from '../../../lib/lru'
 import { mediaSrc } from '../../../lib/media-url'
 import { releaseDetached } from '../../../lib/video-guard'
@@ -184,7 +184,7 @@ export function CarouselCard({ card, width }: { card: ItemCard; width: number })
       />
       <button
         type="button"
-        aria-label={fr.viewer.previous}
+        aria-label={tr.viewer.previous}
         className="carousel-nav glass absolute left-2 top-1/2 flex h-[26px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full"
         onClick={(e) => void go(e, -1)}
       >
@@ -192,7 +192,7 @@ export function CarouselCard({ card, width }: { card: ItemCard; width: number })
       </button>
       <button
         type="button"
-        aria-label={fr.viewer.next}
+        aria-label={tr.viewer.next}
         className="carousel-nav glass absolute right-2 top-1/2 flex h-[26px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full"
         onClick={(e) => void go(e, 1)}
       >

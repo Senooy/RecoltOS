@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react'
 import { PILL_CLASS } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { subscribe } from '../../lib/rpc'
 
@@ -25,7 +25,7 @@ export function IngestProgress() {
       role="status"
       className={cn(PILL_CLASS, 'fixed bottom-6 left-1/2 z-40 -translate-x-1/2 px-4 text-[13px]')}
     >
-      {fr.importUiMore.progress(p.done, p.total)}
+      {tr.importUiMore.progress(p.done, p.total)}
     </div>
   )
 }

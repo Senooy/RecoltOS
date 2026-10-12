@@ -12,7 +12,7 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import type { TagInfo } from '../../../../shared/dto/collections'
 import type { ItemCard } from '../../../../shared/dto/items'
 import { usePortalContainer } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { cardThumbSrc } from '../../lib/media-url'
 import { rpc } from '../../lib/rpc'
 import { runMenuCommand, soon } from '../../shell/commands'
@@ -182,10 +182,10 @@ export default function CommandPalette() {
           className="palette palette-surface app-no-drag fixed left-1/2 top-[146px] z-50 flex max-h-[413px] w-[520px] -translate-x-1/2 flex-col overflow-hidden rounded-[14px] text-fg shadow-[var(--shadow-palette)]"
         >
           <VisuallyHidden.Root asChild>
-            <DialogPrimitive.Title>{fr.paletteUi.label}</DialogPrimitive.Title>
+            <DialogPrimitive.Title>{tr.paletteUi.label}</DialogPrimitive.Title>
           </VisuallyHidden.Root>
           <Command
-            label={fr.paletteUi.label}
+            label={tr.paletteUi.label}
             shouldFilter={false}
             value={value}
             onValueChange={setValue}
@@ -199,18 +199,18 @@ export default function CommandPalette() {
                 data-testid="palette-input"
                 value={search}
                 onValueChange={setSearch}
-                placeholder={fr.palette.placeholder}
+                placeholder={tr.palette.placeholder}
                 className="h-full min-w-0 flex-1 bg-transparent text-[18px] leading-6 text-fg outline-none placeholder:text-[var(--palette-placeholder)] focus-visible:outline-none"
               />
-              <span className="palette-kbd">{fr.paletteUi.escape}</span>
+              <span className="palette-kbd">{tr.paletteUi.escape}</span>
             </div>
             <Command.List className="min-h-0 flex-1 overflow-y-auto pb-1.5">
               <Command.Empty className="px-[18px] py-6 text-center text-small text-fg-faint">
-                {fr.paletteUi.noResults}
+                {tr.paletteUi.noResults}
               </Command.Empty>
               {recentShown.length > 0 ? (
                 <Command.Group
-                  heading={fr.palette.recentlyViewed}
+                  heading={tr.palette.recentlyViewed}
                   className="palette-recent-row"
                   data-testid="palette-recent"
                 >
@@ -229,7 +229,7 @@ export default function CommandPalette() {
                 </Command.Group>
               ) : null}
               {mode === 'text' && items.length > 0 ? (
-                <Command.Group heading={fr.palette.items}>
+                <Command.Group heading={tr.palette.items}>
                   {items.map((card) => (
                     <Command.Item
                       key={card.uuid}
@@ -239,17 +239,17 @@ export default function CommandPalette() {
                     >
                       <Thumb card={card} size={28} />
                       <span className="min-w-0 flex-1 truncate">
-                        {card.title ?? card.post?.text ?? fr.paletteUi.untitled}
+                        {card.title ?? card.post?.text ?? tr.paletteUi.untitled}
                       </span>
                       <span className="ml-2 shrink-0 text-[12px] text-fg-faint">
-                        {fr.paletteUi.sourceNames[card.source] ?? card.source}
+                        {tr.paletteUi.sourceNames[card.source] ?? card.source}
                       </span>
                     </Command.Item>
                   ))}
                 </Command.Group>
               ) : null}
               {collections.length > 0 ? (
-                <Command.Group heading={fr.palette.collections}>
+                <Command.Group heading={tr.palette.collections}>
                   {collections.map((n) => (
                     <Command.Item
                       key={n.uuid}
@@ -267,7 +267,7 @@ export default function CommandPalette() {
                 </Command.Group>
               ) : null}
               {(mode === 'text' || mode === 'tags') && tags.length > 0 ? (
-                <Command.Group heading={fr.palette.tags}>
+                <Command.Group heading={tr.palette.tags}>
                   {tags.map((tag) => (
                     <Command.Item
                       key={tag.uuid}
@@ -285,7 +285,7 @@ export default function CommandPalette() {
                 </Command.Group>
               ) : null}
               {commands.length > 0 ? (
-                <Command.Group heading={fr.palette.commands} data-testid="palette-commands">
+                <Command.Group heading={tr.palette.commands} data-testid="palette-commands">
                   {commands.map((c) => (
                     <Command.Item
                       key={c.id}
@@ -308,15 +308,15 @@ export default function CommandPalette() {
             >
               <span className="flex items-center gap-1.5">
                 <span className="palette-kbd">↑↓</span>
-                {fr.palette.navigate}
+                {tr.palette.navigate}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="palette-kbd">↵</span>
-                {fr.palette.select}
+                {tr.palette.select}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="palette-kbd">&gt;</span>
-                {fr.palette.commandsOnly}
+                {tr.palette.commandsOnly}
               </span>
             </div>
           </Command>

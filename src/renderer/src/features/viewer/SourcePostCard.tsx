@@ -6,7 +6,7 @@
 import { ExternalLink } from 'lucide-react'
 import type { ItemDetail } from '../../../../shared/dto/items'
 import { CosmosGlyph, InstagramGlyph, XGlyph } from '../../components/icons'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { dateShort } from '../../lib/format'
 import { mediaSrc } from '../../lib/media-url'
 
@@ -126,7 +126,7 @@ export function SourcePostCard({
             className="ml-auto flex items-center gap-1 text-[12.5px] text-[#c0c0c0] hover:text-white"
             onClick={onOpen}
           >
-            {fr.viewer.open}
+            {tr.viewer.open}
             <ExternalLink size={13} strokeWidth={1.75} />
           </button>
         ) : null}

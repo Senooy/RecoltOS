@@ -6,7 +6,7 @@
 import { create } from 'zustand'
 import type { IngestReport } from '../../../../shared/dto/items'
 import { toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { RpcError, rpc } from '../../lib/rpc'
 import { openViewerByUuid } from '../viewer/open'
 
@@ -20,14 +20,14 @@ export function reportImport(r: IngestReport | null): void {
   const total = r.added.length + r.duplicates.length + r.failed.length
   if (total === 0) return
   const single = r.added.length === 1 && total === 1 ? r.added[0]!.itemUuid : null
-  const msg = fr.importUiMore.report(r.added.length, r.duplicates.length, r.failed.length)
+  const msg = tr.importUiMore.report(r.added.length, r.duplicates.length, r.failed.length)
   if (single)
-    toast(msg, { action: { label: fr.captureUi.view, onClick: () => openViewerByUuid(single) } })
+    toast(msg, { action: { label: tr.captureUi.view, onClick: () => openViewerByUuid(single) } })
   else toast(msg)
 }
 
 function fail(err: unknown): void {
-  toast(err instanceof RpcError ? err.message : fr.errors.generic)
+  toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
 const target = (collectionUuid?: string) => (collectionUuid ? { collectionUuid } : {})
@@ -55,7 +55,7 @@ export async function importUrl(url: string, collectionUuid?: string): Promise<I
 export async function pasteFromClipboard(collectionUuid?: string): Promise<void> {
   try {
     const r = await rpc('ingest.clipboard', target(collectionUuid))
-    if (!r) toast(fr.importUiMore.nothingToPaste)
+    if (!r) toast(tr.importUiMore.nothingToPaste)
     else reportImport(r)
   } catch (err) {
     fail(err)

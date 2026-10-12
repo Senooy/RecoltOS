@@ -4,12 +4,12 @@
  */
 import type { ItemCard } from '../../../../shared/dto/items'
 import { toast } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 import { RpcError, rpc } from '../../lib/rpc'
 import { useUndo } from '../../state/undo'
 
 function fail(err: unknown): void {
-  const message = err instanceof RpcError ? err.message : fr.errors.generic
+  const message = err instanceof RpcError ? err.message : tr.errors.generic
   toast(message)
 }
 
@@ -29,7 +29,7 @@ function undoable(
   useUndo.getState().push(entry)
   toast(message, {
     action: {
-      label: fr.toast.undo,
+      label: tr.toast.undo,
       onClick: () => {
         void useUndo.getState().undo().catch(fail)
       },
@@ -41,7 +41,7 @@ export async function trashItems(uuids: string[]): Promise<void> {
   try {
     await rpc('items.trash', { uuids })
     undoable(
-      fr.toast.trashed(uuids.length),
+      tr.toast.trashed(uuids.length),
       'trash',
       () => rpc('items.restore', { uuids }),
       () => rpc('items.trash', { uuids }),
@@ -72,7 +72,7 @@ export async function setHidden(uuids: string[], hidden: boolean): Promise<void>
     await rpc('items.setHidden', { uuids, hidden })
     if (hidden) {
       undoable(
-        fr.toast.hidden,
+        tr.toast.hidden,
         'hide',
         () => rpc('items.setHidden', { uuids, hidden: false }),
         () => rpc('items.setHidden', { uuids, hidden: true }),
@@ -115,13 +115,13 @@ export async function addToCollection(
       itemUuids: uuids,
     })
     if (count === 0) {
-      toast(fr.gridUi.alreadyIn(collection.name))
+      toast(tr.gridUi.alreadyIn(collection.name))
       return 0
     }
     const kept = count < uuids.length ? uuids.filter((u) => !before.has(u)) : uuids
     const fresh = kept.length > 0 ? kept : uuids
     undoable(
-      fr.toast.addedTo(collection.name),
+      tr.toast.addedTo(collection.name),
       'collection.add',
       () => rpc('collections.removeItems', { collectionUuid: collection.uuid, itemUuids: fresh }),
       () => rpc('collections.addItems', { collectionUuid: collection.uuid, itemUuids: fresh }),
@@ -139,7 +139,7 @@ export async function removeFromCollection(
 ): Promise<void> {
   try {
     await rpc('collections.removeItems', { collectionUuid: collection.uuid, itemUuids: uuids })
-    undoable(fr.menu.removeFrom(collection.name), 'collection.remove', () =>
+    undoable(tr.menu.removeFrom(collection.name), 'collection.remove', () =>
       rpc('collections.addItems', { collectionUuid: collection.uuid, itemUuids: uuids }),
     )
   } catch (err) {
@@ -166,7 +166,7 @@ export async function copyFor(card: ItemCard): Promise<void> {
     } else {
       await rpc('system.copyImage', { itemUuid: card.uuid })
     }
-    toast(fr.toast.copied)
+    toast(tr.toast.copied)
   } catch (err) {
     fail(err)
   }

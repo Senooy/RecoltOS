@@ -4,16 +4,17 @@
 import { Check, ChevronDown, Clock } from 'lucide-react'
 import type { SortMode } from '../../../../shared/enums'
 import { Menu } from '../../components/ui'
-import { fr } from '../../i18n/fr'
+import { tr } from '../../i18n'
 
-const OPTIONS: { value: SortMode; label: string }[] = [
-  { value: 'recent', label: fr.sort.recent },
-  { value: 'oldest', label: fr.sort.oldest },
-  { value: 'viewed', label: fr.sort.recentlyViewed },
-  { value: 'mostViewed', label: fr.sort.mostViewed },
-  { value: 'name', label: fr.sort.name },
-  { value: 'color', label: fr.sort.color },
-  { value: 'random', label: fr.sort.random },
+/** Libellés lus au rendu : ils suivent la langue active. */
+export const sortOptions = (): { value: SortMode; label: string }[] => [
+  { value: 'recent', label: tr.sort.recent },
+  { value: 'oldest', label: tr.sort.oldest },
+  { value: 'viewed', label: tr.sort.recentlyViewed },
+  { value: 'mostViewed', label: tr.sort.mostViewed },
+  { value: 'name', label: tr.sort.name },
+  { value: 'color', label: tr.sort.color },
+  { value: 'random', label: tr.sort.random },
 ]
 
 export function SortMenu({
@@ -23,6 +24,7 @@ export function SortMenu({
   value: SortMode
   onChange: (v: SortMode) => void
 }) {
+  const OPTIONS = sortOptions()
   const current = OPTIONS.find((o) => o.value === value) ?? OPTIONS[0]!
   return (
     <Menu.Dropdown.Root>
@@ -30,7 +32,7 @@ export function SortMenu({
         <button
           type="button"
           data-testid="sort-menu"
-          aria-label={fr.libraryUi.sortLabel}
+          aria-label={tr.libraryUi.sortLabel}
           className="flex h-8 min-w-[138px] items-center gap-2 whitespace-nowrap rounded-[10px] border border-border pl-3 pr-2.5 text-ui font-medium text-fg hover:bg-[var(--hover)]"
         >
           <Clock size={15} strokeWidth={1.75} />

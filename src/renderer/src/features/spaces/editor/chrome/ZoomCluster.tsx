@@ -5,7 +5,7 @@
  */
 import { Maximize, Minus, Plus } from 'lucide-react'
 import { Menu, Tooltip } from '../../../../components/ui'
-import { fr } from '../../../../i18n/fr'
+import { tr } from '../../../../i18n'
 import { pct } from '../../../../lib/format'
 import { usePrefs } from '../../../../state/prefs'
 import { fitAll, fitSelection, zoomStep, zoomTo } from '../actions'
@@ -26,10 +26,10 @@ export function ZoomCluster() {
       onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="sp-float flex h-8 items-center px-0.5">
-        <Tooltip content={fr.spacesUi.zoomOut} shortcut={['⌘', '−']} side="top">
+        <Tooltip content={tr.spacesUi.zoomOut} shortcut={['⌘', '−']} side="top">
           <button
             type="button"
-            aria-label={fr.spacesUi.zoomOut}
+            aria-label={tr.spacesUi.zoomOut}
             data-testid="zoom-out"
             className="flex h-7 w-7 items-center justify-center rounded-full text-fg-muted hover:bg-[var(--hover)] hover:text-fg"
             onClick={() => zoomStep(-1)}
@@ -42,7 +42,7 @@ export function ZoomCluster() {
             <button
               type="button"
               data-testid="zoom-value"
-              aria-label={fr.spacesUi.zoomMenu}
+              aria-label={tr.spacesUi.zoomMenu}
               className="h-7 min-w-[52px] rounded-full px-1 text-center text-caption font-medium text-fg tnum hover:bg-[var(--hover)]"
             >
               {pct(zoom)}
@@ -50,45 +50,45 @@ export function ZoomCluster() {
           </Menu.Dropdown.Trigger>
           <Menu.Dropdown.Content side="top" align="start" data-testid="zoom-menu">
             <Menu.Dropdown.Item onSelect={() => zoomStep(1)}>
-              {fr.spacesUi.zoomIn}
+              {tr.spacesUi.zoomIn}
               <span className="ml-auto pl-6 text-fg-faint">⌘+</span>
             </Menu.Dropdown.Item>
             <Menu.Dropdown.Item onSelect={() => zoomStep(-1)}>
-              {fr.spacesUi.zoomOut}
+              {tr.spacesUi.zoomOut}
               <span className="ml-auto pl-6 text-fg-faint">⌘−</span>
             </Menu.Dropdown.Item>
             <Menu.Dropdown.Item onSelect={() => zoomTo(1)}>
-              {fr.spacesUi.zoom100}
+              {tr.spacesUi.zoom100}
               <span className="ml-auto pl-6 text-fg-faint">⌘0</span>
             </Menu.Dropdown.Item>
             <Menu.Dropdown.Item onSelect={fitAll}>
-              {fr.spacesUi.fitAll}
+              {tr.spacesUi.fitAll}
               <span className="ml-auto pl-6 text-fg-faint">⇧1</span>
             </Menu.Dropdown.Item>
             <Menu.Dropdown.Item onSelect={fitSelection}>
-              {fr.spacesUi.fitSelection}
+              {tr.spacesUi.fitSelection}
               <span className="ml-auto pl-6 text-fg-faint">⇧2</span>
             </Menu.Dropdown.Item>
             <Menu.Dropdown.Separator />
-            <Menu.Dropdown.Label>{fr.spacesUi.wheel}</Menu.Dropdown.Label>
+            <Menu.Dropdown.Label>{tr.spacesUi.wheel}</Menu.Dropdown.Label>
             <Menu.Dropdown.CheckboxItem
               checked={wheel === 'scroll'}
               onSelect={() => setWheel('scroll')}
             >
-              {fr.spacesUi.wheelScroll}
+              {tr.spacesUi.wheelScroll}
             </Menu.Dropdown.CheckboxItem>
             <Menu.Dropdown.CheckboxItem
               checked={wheel === 'zoom'}
               onSelect={() => setWheel('zoom')}
             >
-              {fr.spacesUi.wheelZoom}
+              {tr.spacesUi.wheelZoom}
             </Menu.Dropdown.CheckboxItem>
           </Menu.Dropdown.Content>
         </Menu.Dropdown.Root>
-        <Tooltip content={fr.spacesUi.zoomIn} shortcut={['⌘', '+']} side="top">
+        <Tooltip content={tr.spacesUi.zoomIn} shortcut={['⌘', '+']} side="top">
           <button
             type="button"
-            aria-label={fr.spacesUi.zoomIn}
+            aria-label={tr.spacesUi.zoomIn}
             data-testid="zoom-in"
             className="flex h-7 w-7 items-center justify-center rounded-full text-fg-muted hover:bg-[var(--hover)] hover:text-fg"
             onClick={() => zoomStep(1)}
@@ -97,7 +97,7 @@ export function ZoomCluster() {
           </button>
         </Tooltip>
       </div>
-      <Tooltip content={fr.spacesUi.fitAll} shortcut={['⇧', '1']} side="top">
+      <Tooltip content={tr.spacesUi.fitAll} shortcut={['⇧', '1']} side="top">
         <button
           type="button"
           data-testid="zoom-fit"
@@ -105,7 +105,7 @@ export function ZoomCluster() {
           onClick={fitAll}
         >
           <Maximize size={13} strokeWidth={1.75} />
-          {fr.spaces.fit}
+          {tr.spaces.fit}
         </button>
       </Tooltip>
     </div>
