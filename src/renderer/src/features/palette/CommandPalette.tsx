@@ -179,7 +179,7 @@ export default function CommandPalette() {
         <DialogPrimitive.Content
           data-testid="palette"
           aria-describedby={undefined}
-          className="palette palette-surface app-no-drag fixed left-1/2 top-[146px] z-50 flex max-h-[420px] w-[520px] -translate-x-1/2 flex-col overflow-hidden rounded-[14px] text-fg shadow-[var(--shadow-palette)]"
+          className="palette palette-surface app-no-drag fixed left-1/2 top-[146px] z-50 flex max-h-[413px] w-[520px] -translate-x-1/2 flex-col overflow-hidden rounded-[14px] text-fg shadow-[var(--shadow-palette)]"
         >
           <VisuallyHidden.Root asChild>
             <DialogPrimitive.Title>{fr.paletteUi.label}</DialogPrimitive.Title>
@@ -304,7 +304,7 @@ export default function CommandPalette() {
             </Command.List>
             <div
               data-testid="palette-footer"
-              className="flex h-8 shrink-0 items-center gap-4 border-t border-[var(--palette-rule)] px-[14px] text-[11.5px] text-[var(--palette-hint)]"
+              className="flex h-[30px] shrink-0 items-center gap-4 border-t border-[var(--palette-rule)] px-[14px] text-[11.5px] text-[var(--palette-hint)]"
             >
               <span className="flex items-center gap-1.5">
                 <span className="palette-kbd">↑↓</span>
