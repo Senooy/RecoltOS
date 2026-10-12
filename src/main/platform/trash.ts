@@ -1,7 +1,7 @@
 /**
- * Envoi de fichiers dans la Corbeille macOS (`shell.trashItem`) : purge automatique,
- * récupérable. Seul « Vider la corbeille » explicite fait un `fs.rm` (ailleurs).
- * `trashItem` est injectable ; par défaut, celui d'Electron (chargé à l'appel).
+ * Sending files to the macOS Trash (`shell.trashItem`): automatic purge,
+ * recoverable. Only an explicit « Vider la corbeille » does an `fs.rm` (elsewhere).
+ * `trashItem` is injectable; by default, Electron's (loaded at call time).
  */
 import { lstat } from 'node:fs/promises'
 import { isAbsolute } from 'node:path'
@@ -10,9 +10,9 @@ export type TrashItemFn = (abs: string) => Promise<void>
 
 export interface TrashReport {
   trashed: string[]
-  /** Déjà absents : rien à faire (purge idempotente). */
+  /** Already absent: nothing to do (idempotent purge). */
   missing: string[]
-  /** `message` est en français ; `details` (message Node brut) sert au journal seulement. */
+  /** `message` is in French; `details` (raw Node message) is for the log only. */
   failed: { path: string; message: string; details?: string }[]
 }
 
@@ -43,7 +43,7 @@ export async function moveToTrash(
       if (code === 'ENOENT' || code === 'ENOTDIR') {
         report.missing.push(p)
       } else {
-        // EACCES, EPERM, EIO… : le fichier existe peut-être, il n'est pas « déjà absent ».
+        // EACCES, EPERM, EIO…: the file may still exist, it is not "already absent".
         const denied = code === 'EACCES' || code === 'EPERM'
         report.failed.push({
           path: p,

@@ -1,4 +1,4 @@
-/* Grille masonry et cartes. */
+/* Masonry grid and cards. */
 .masonry-card {
   position: absolute;
   left: 0;
@@ -20,7 +20,7 @@
 [data-e2e='1'] .masonry.reflowing .masonry-card {
   transition: none;
 }
-/* Retour de la vue détail : les cartes visibles réapparaissent en fondu échelonné. */
+/* Back from the detail view: visible cards reappear with a staggered fade. */
 .masonry-card.cascade-in {
   animation-name: card-cascade-in;
   animation-timing-function: var(--ease-out);
@@ -31,7 +31,7 @@
     opacity: 0;
   }
 }
-/* Texte des posts : Geist ≈ 14,3 px, pas de 20,5 pt. */
+/* Post text: Geist ≈ 14.3 px, not the 20.5 pt step. */
 .tweet-text {
   font-size: 14.3px;
   line-height: 20.5px;

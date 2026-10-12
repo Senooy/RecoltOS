@@ -7,14 +7,14 @@ const U = '0decd148-5f3c-4d7a-9b1e-2a3b4c5d6e7f'
 const counts = { all: 3, saved: 1, unsorted: 2, trash: 0, hidden: 0 }
 
 describe('dispatch', () => {
-  it('canal inconnu', async () => {
+  it('unknown channel', async () => {
     const r = await dispatch('nope.nope', {}, {}, { handlers: {}, validateOutput: true })
     expect(r).toMatchObject({ ok: false, error: { code: 'unknown_channel' } })
     const r2 = await dispatch(42, {}, {}, { handlers: {}, validateOutput: true })
     expect(r2).toMatchObject({ ok: false, error: { code: 'unknown_channel' } })
   })
 
-  it('valide l’entrée avant le handler et passe les défauts appliqués', async () => {
+  it('validates the input before the handler and passes the applied defaults', async () => {
     const list = vi.fn(() => ({ items: [], nextCursor: null, total: 0 }))
     const handlers: Partial<AllHandlers> = { 'items.list': list }
     const bad = await dispatch(
@@ -38,7 +38,7 @@ describe('dispatch', () => {
     )
   })
 
-  it('valide la sortie en dev', async () => {
+  it('validates the output in dev', async () => {
     const handlers = {
       'items.counts': () => ({ ...counts, all: 'trois' }),
     } as unknown as Partial<AllHandlers>
@@ -58,7 +58,7 @@ describe('dispatch', () => {
     expect(ok).toEqual({ ok: true, data: counts })
   })
 
-  it('convertit AppError et erreurs inconnues en { code, message }', async () => {
+  it('converts AppError and unknown errors into { code, message }', async () => {
     const onError = vi.fn()
     const r = await dispatch(
       'items.get',
@@ -95,7 +95,7 @@ describe('dispatch', () => {
 })
 
 describe('makeSenderCheck', () => {
-  it('dev : même origine que le serveur Vite', () => {
+  it('dev: same origin as the Vite server', () => {
     const check = makeSenderCheck({
       rendererUrl: 'http://localhost:5173',
       rendererIndexPath: '/x/index.html',
@@ -106,7 +106,7 @@ describe('makeSenderCheck', () => {
     expect(check('https://evil.example/')).toBe(false)
     expect(check(undefined)).toBe(false)
   })
-  it('prod : uniquement index.html du renderer', () => {
+  it('prod: only the renderer index.html', () => {
     const check = makeSenderCheck({
       rendererUrl: null,
       rendererIndexPath: '/app/out/renderer/index.html',
@@ -118,11 +118,11 @@ describe('makeSenderCheck', () => {
     expect(check('https://app/out/renderer/index.html')).toBe(false)
     expect(check('file:///app/out/renderer/index.html/../offscreen.html')).toBe(false)
   })
-  it('prod : chemins contenant ~, [, ], espace ou accents (Node encode, Chromium non)', () => {
+  it('prod: paths containing ~, [, ], space or accents (Node encodes, Chromium does not)', () => {
     for (const dir of ['/rv/proj~old/out', "/Mes Projets é'[x]/out", '/a/[b]/~c']) {
       const indexPath = `${dir}/renderer/index.html`
       const check = makeSenderCheck({ rendererUrl: null, rendererIndexPath: indexPath })
-      // Forme Node (encodée) et forme Chromium (caractères laissés tels quels).
+      // Node form (encoded) and Chromium form (characters left as they are).
       expect(check(pathToFileURL(indexPath).toString())).toBe(true)
       expect(check(`file://${indexPath}`)).toBe(true)
       expect(check(`file://${indexPath}?x=1#/y`)).toBe(true)
@@ -131,8 +131,8 @@ describe('makeSenderCheck', () => {
   })
 })
 
-describe('messages d’erreur en français', () => {
-  it('aucun « at » anglais dans error.message, ni pour l’entrée ni pour la sortie', async () => {
+describe('error messages in French', () => {
+  it('no English "at" in error.message, neither for the input nor for the output', async () => {
     const bad = await dispatch(
       'items.list',
       { scope: 'nope' },

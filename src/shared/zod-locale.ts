@@ -1,7 +1,8 @@
 /**
- * Messages d'erreur zod dans la langue de l'interface : les toasts affichent `error.message`.
- * Effet de bord volontaire et unique : importé par `enums.ts` et `ipc/define.ts`, donc par
- * main et renderer. Le preload n'importe ni zod ni ce module. Suit `setLang` (changement à chaud).
+ * Zod error messages in the interface language: toasts display `error.message`.
+ * Deliberate and sole side effect: imported by `enums.ts` and `ipc/define.ts`, hence by
+ * main and renderer. The preload imports neither zod nor this module. Follows `setLang`
+ * (hot change).
  */
 import { z } from 'zod'
 import { getLang, onLangChange, type Lang } from './i18n/lang'

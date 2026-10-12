@@ -1,5 +1,5 @@
 /**
- * Régression visuelle : état vide des Spaces, liste avec un space, éditeur (notes, formes, texte, sélection, dock, zoom).
+ * Visual regression: empty Spaces state, list with one space, editor (notes, shapes, text, selection, dock, zoom).
  */
 import type { Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -28,7 +28,7 @@ const invoke = (page: Page, channel: string, input?: unknown) =>
 test('spaces-empty-light', async ({ page }) => {
   await page.locator(t('seg-spaces')).click()
   await expect(page.locator(t('space-empty-cta'))).toBeVisible()
-  // Disposition attendue : titre centré vers y ≈ 434, bouton vers y ≈ 524.
+  // Expected layout: title centered around y ≈ 434, button around y ≈ 524.
   const title = (await page.getByText('Aucun space pour l’instant').boundingBox())!
   const cta = (await page.locator(t('space-empty-cta')).boundingBox())!
   expect(Math.abs(title.x + title.width / 2 - 640)).toBeLessThanOrEqual(13)

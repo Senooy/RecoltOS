@@ -1,13 +1,13 @@
 /**
- * Nœuds média : `ItemNode` réutilise les cartes de la bibliothèque
- * (post via `TweetCard` rendu à 360 px puis mis à l'échelle, page via `PageCard`), image via
- * `SpaceImage` : variante choisie EXPLICITEMENT (pas de `srcset`) selon la largeur en pixels
- * physiques (`node.width × palier(zoom × DPR)`) : vignette 800w tant qu'elle suffit, `large`
- * 1440w au-delà, jamais l'original. Un `srcset` gardait la 1440w en cache une fois
- * chargée, même revenu en vue d'ensemble. `ImageNode` pour les assets (vignette, original
- * seulement quand la vignette ne suffit plus : les assets n'ont pas de variante 1440w).
- * Vidéos : affiche ; lecteur muet seulement pour les ≤ 2 vidéos actives (survolées,
- * sélectionnées ou grandes à l'écran), libéré au démontage. Contenu inerte (`pointer-events: none`).
+ * Media nodes: `ItemNode` reuses the library cards
+ * (post via `TweetCard` rendered at 360 px then scaled, page via `PageCard`), image via
+ * `SpaceImage`: variant chosen EXPLICITLY (no `srcset`) according to the width in physical pixels
+ * (`node.width × palier(zoom × DPR)`): 800w thumbnail as long as it suffices, `large`
+ * 1440w beyond that, never the original. A `srcset` kept the 1440w in cache once
+ * loaded, even when back in the overview. `ImageNode` for assets (thumbnail, original
+ * only when the thumbnail no longer suffices: assets have no 1440w variant).
+ * Videos: poster shown; muted player only for ≤ 2 active videos (hovered,
+ * selected or large on screen), released on unmount. Inert content (`pointer-events: none`).
  */
 import type { ItemCard } from '../../../../../../shared/dto/items'
 import type { SpaceNode } from '../../../../../../shared/spaces-schema'
@@ -20,23 +20,23 @@ import { PageCard } from '../../../grid/cards/MediaCards'
 import { cardKind } from '../../../grid/cards/SaveCard'
 import { TweetCard } from '../../../grid/cards/TweetCard'
 
-/** Largeur de rendu d'une carte de post avant mise à l'échelle. */
+/** Render width of a post card before scaling. */
 export const POST_RENDER_WIDTH = 360
-/** Côté des vignettes d'assets (`makeThumb` 800 px). */
+/** Edge of asset thumbnails (`makeThumb` 800 px). */
 export const THUMB_MAX_EDGE = 800
-/** Largeur des vignettes dérivées (`thumbs/` 800w). */
+/** Width of derived thumbnails (`thumbs/` 800w). */
 export const THUMB_W = 800
 /**
- * Agrandissement toléré de la vignette avant de passer à `large` (1440w) : 1,2 × 800 = 960 px
- * physiques, soit un nœud de 320 px jusqu'à 150 % en Retina. Invisible sur une photo, et c'est le
- * palier du niveau de détail juste au-dessus de 100 % (zoom × DPR = 3 → 960 px).
+ * Tolerated enlargement of the thumbnail before switching to `large` (1440w): 1.2 × 800 = 960 px
+ * physical, i.e. a 320 px node up to 150 % on Retina. Invisible on a photo, and it is the
+ * level-of-detail step just above 100 % (zoom × DPR = 3 → 960 px).
  */
 export const THUMB_UPSCALE = 1.2
 
 /**
- * Variante d'image d'un nœud de la toile pour `devicePx` pixels physiques de large. La vignette
- * n'est une vraie 800w que si elle est dérivée (`thumbs/….webp`) ; sinon (repli `legacyThumb`,
- * `display`…) on prend `large` s'il existe.
+ * Image variant of a canvas node for `devicePx` physical pixels wide. The thumbnail
+ * is a real 800w only if it is derived (`thumbs/….webp`); otherwise (fallback `legacyThumb`,
+ * `display`…) we take `large` if it exists.
  */
 export function pickSpaceVariant(
   thumb: string | undefined,
@@ -49,7 +49,7 @@ export function pickSpaceVariant(
   return devicePx <= THUMB_W * THUMB_UPSCALE + 0.5 ? thumb : large
 }
 
-/** Image d'un nœud `item` : `src` explicite (voir `pickSpaceVariant`), décodage asynchrone. */
+/** Image of an `item` node: explicit `src` (see `pickSpaceVariant`), asynchronous decoding. */
 function SpaceImage({
   thumbUrl,
   largeUrl,
@@ -97,7 +97,7 @@ export function ItemNodeView({
 }: {
   node: ItemN
   card: ItemCard | undefined
-  /** zoom × devicePixelRatio (niveau de détail). */
+  /** zoom × devicePixelRatio (level of detail). */
   screenScale: number
   videoActive: boolean
 }) {

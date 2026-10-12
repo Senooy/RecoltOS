@@ -1,6 +1,6 @@
 /**
- * Régression visuelle sur la bibliothèque de démo déterministe : étagère, vue Collection,
- * Recherche, palette ⌘K, Réglages › Données.
+ * Visual regression on the deterministic demo library: shelf, Collection view,
+ * Search, ⌘K palette, Settings › Data.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

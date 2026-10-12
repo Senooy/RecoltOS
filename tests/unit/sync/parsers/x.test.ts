@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- fixtures JSON mutées en place (copie `structuredClone` typée `any`) */
 /**
- * Parseur X sur les fixtures synthétiques et leurs variantes corrompues.
+ * X parser on the synthetic fixtures and their corrupted variants.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -23,7 +23,7 @@ const xExtra = (e: unknown) => e as XPostExtra
 const OCT_8 = Date.UTC(2026, 9, 8, 12, 0, 0)
 
 describe('parseXBookmarksPage — fixtures', () => {
-  it('tweet simple : clé, URL canonique, auteur sans @, avatar 400x400, t.co développé', () => {
+  it('simple tweet: key, canonical URL, author without @, 400x400 avatar, t.co expanded', () => {
     const r = parse('simple.json')
     expect(r.posts).toHaveLength(1)
     const p = r.posts[0]!
@@ -56,7 +56,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(r.nextCursor).toBe('Q1VSU09SLWZpbg')
   })
 
-  it('médias multiples : photos ordonnées en name=orig, t.co du média retiré du texte', () => {
+  it('multiple media: photos ordered as name=orig, media t.co removed from the text', () => {
     const p = parse('medias-multiples.json').posts[0]!
     expect(p.kind).toBe('image')
     expect(p.text).toBe('Trois essais de lettrage')
@@ -74,7 +74,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(p.postMeta.media.every((m) => m.mediaUuid === null && m.type === 'image')).toBe(true)
   })
 
-  it('tweet cité (enveloppé de visibilité) : auteur, texte, URL et médias du cité ; permalien retiré', () => {
+  it('quoted tweet (wrapped in visibility): author, text, URL and media of the quoted one; permalink removed', () => {
     const p = parse('cite.json').posts[0]!
     expect(p.text).toBe('Exactement ce que je cherchais')
     expect(p.postMeta.quoted).toEqual({
@@ -98,7 +98,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(xExtra(p.extra).quotedUnavailable).toBe(false)
   })
 
-  it('fil (réponse à soi-même) : lien de réponse exposé, thread vide', () => {
+  it('thread (reply to self): reply link exposed, thread empty', () => {
     const p = parse('fil.json').posts[0]!
     expect(xExtra(p.extra)).toMatchObject({
       selfReply: true,
@@ -110,7 +110,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(p.text).toBe('Suite du fil : la version finale du logo.')
   })
 
-  it('note_tweet : le texte long remplace full_text tronqué', () => {
+  it('note_tweet: the long text replaces the truncated full_text', () => {
     const p = parse('note-tweet.json').posts[0]!
     expect(p.text?.endsWith('Fin.')).toBe(true)
     expect(p.text!.length).toBeGreaterThan(280)
@@ -118,13 +118,13 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(xExtra(p.extra).noteTweet).toBe(true)
   })
 
-  it('TweetWithVisibilityResults : déballé', () => {
+  it('TweetWithVisibilityResults: unwrapped', () => {
     const p = parse('visibilite.json').posts[0]!
     expect(p.sourceKey).toBe('x:1870000000000000006')
     expect(p.text).toBe('Publication avec limite de visibilité.')
   })
 
-  it('tombstone et TweetUnavailable : isolés et comptés, la page continue et garde son curseur', () => {
+  it('tombstone and TweetUnavailable: isolated and counted, the page continues and keeps its cursor', () => {
     const r = parse('tombstone.json')
     expect(r.posts.map((p) => p.sourceKey)).toEqual(['x:1870000000000000001'])
     expect(r.stats).toMatchObject({ entries: 3, parsed: 1, unavailable: 2, malformed: 0 })
@@ -133,7 +133,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(r.posts[0]!.position).toBe(0)
   })
 
-  it('vidéo : meilleur mp4 (variantes non triées), GIF sans durée, HLS seul signalé', () => {
+  it('video: best mp4 (unsorted variants), GIF without duration, HLS-only reported', () => {
     const [video, gif, hls] = parse('video.json').posts
     expect(video!.kind).toBe('video')
     expect(video!.media[0]).toEqual({
@@ -157,7 +157,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(hls!.postMeta.media[0]!.posterUrl).toMatch(/poster\.jpg$/)
   })
 
-  it('repost en favori : contenu et clé de l’original, reposteur conservé', () => {
+  it('liked repost: content and key of the original, reposter kept', () => {
     const p = parse('retweet.json').posts[0]!
     expect(p.sourceKey).toBe('x:1870000000000000100')
     expect(p.sourceUrl).toBe('https://x.com/typoatelier/status/1870000000000000100')
@@ -169,7 +169,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(p.authors.map((a) => a.handle)).toEqual(['typoatelier', 'studiolumen'])
   })
 
-  it('pagination : 20 publications dans l’ordre, positions et sortIndex décroissants, curseur', () => {
+  it('pagination: 20 posts in order, positions and decreasing sortIndex, cursor', () => {
     const r = parse('curseur-page1.json')
     expect(r.posts).toHaveLength(20)
     expect(r.nextCursor).toBe('Q1VSU09SLXBhZ2Uy')
@@ -179,20 +179,20 @@ describe('parseXBookmarksPage — fixtures', () => {
     expect(r.posts.filter((p) => p.kind === 'image')).toHaveLength(15)
   })
 
-  it('dernière page (curseurs seuls, aucun tweet) : nextCursor = null', () => {
+  it('last page (cursors only, no tweet): nextCursor = null', () => {
     const r = parse('curseur-fin.json')
     expect(r.posts).toEqual([])
     expect(r.nextCursor).toBeNull()
     expect(r.stats.entries).toBe(0)
   })
 
-  it('dossier (bookmark_collection_timeline)', () => {
+  it('folder (bookmark_collection_timeline)', () => {
     const r = parse('dossier.json')
     expect(r.posts.map((p) => p.sourceKey)).toEqual(['x:1870000000000000001'])
     expect(r.nextCursor).toBe('Q1VSU09SLWRvc3M')
   })
 
-  it('erreur features (336) : api_changed et liste des features manquantes', () => {
+  it('features error (336): api_changed and list of missing features', () => {
     const r = parseXBookmarksPage(fixture('x', 'erreur-features.json'))
     expect(r).toMatchObject({
       ok: false,
@@ -207,7 +207,7 @@ describe('parseXBookmarksPage — fixtures', () => {
     })
   })
 
-  it('erreur 88 : rate_limited', () => {
+  it('error 88: rate_limited', () => {
     expect(parseXBookmarksPage(fixture('x', 'erreur-limite.json'))).toMatchObject({
       ok: false,
       error: { code: 'rate_limited' },
@@ -215,8 +215,8 @@ describe('parseXBookmarksPage — fixtures', () => {
   })
 })
 
-describe('parseXBookmarksPage — robustesse', () => {
-  it('une entrée corrompue est isolée, les 19 autres et le curseur restent', () => {
+describe('parseXBookmarksPage — robustness', () => {
+  it('a corrupted entry is isolated, the other 19 and the cursor remain', () => {
     const j = mutable('x', 'curseur-page1.json')
     const entries = j.data.bookmark_timeline_v2.timeline.instructions[0].entries
     entries[3].content.itemContent.tweet_results.result = 42
@@ -231,7 +231,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect(r.nextCursor).toBe('Q1VSU09SLXBhZ2Uy')
   })
 
-  it('média sans URL : écarté et compté, la publication reste', () => {
+  it('media without URL: dropped and counted, the post remains', () => {
     const j = mutable('x', 'medias-multiples.json')
     const t =
       j.data.bookmark_timeline_v2.timeline.instructions[0].entries[0].content.itemContent
@@ -244,7 +244,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect(r.stats.mediaDropped).toBe(2)
   })
 
-  it('structure auteur ancienne (legacy seul) et date absente (repli snowflake)', () => {
+  it('legacy author structure (legacy only) and missing date (snowflake fallback)', () => {
     const j = mutable('x', 'simple.json')
     const t =
       j.data.bookmark_timeline_v2.timeline.instructions[0].entries[0].content.itemContent
@@ -262,7 +262,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect(p.sourceKey).toBe('x:1849000000000000000')
   })
 
-  it('auteur indisponible : URL canonique en /i/status/', () => {
+  it('unavailable author: canonical URL under /i/status/', () => {
     const j = mutable('x', 'simple.json')
     const t =
       j.data.bookmark_timeline_v2.timeline.instructions[0].entries[0].content.itemContent
@@ -274,7 +274,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect(p.sourceUrl).toBe('https://x.com/i/status/1870000000000000001')
   })
 
-  it('mentions de réponse en tête retirées, entités HTML décodées', () => {
+  it('leading reply mentions removed, HTML entities decoded', () => {
     const j = mutable('x', 'simple.json')
     const t =
       j.data.bookmark_timeline_v2.timeline.instructions[0].entries[0].content.itemContent
@@ -284,7 +284,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect(expectOk(parseXBookmarksPage(j)).posts[0]!.text).toBe('Oui & non <3')
   })
 
-  it('tweet cité supprimé : quoted = null, signalé', () => {
+  it('deleted quoted tweet: quoted = null, reported', () => {
     const j = mutable('x', 'cite.json')
     const t =
       j.data.bookmark_timeline_v2.timeline.instructions[0].entries[0].content.itemContent
@@ -295,7 +295,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect((p.extra as XPostExtra).quotedUnavailable).toBe(true)
   })
 
-  it('curseur porté par TimelineReplaceEntry (pages suivantes) et module de conversation', () => {
+  it('cursor carried by TimelineReplaceEntry (next pages) and conversation module', () => {
     const page = mutable('x', 'simple.json')
     const entry = page.data.bookmark_timeline_v2.timeline.instructions[0].entries[0]
     const moduleEntry = {
@@ -339,7 +339,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect(r.nextCursor).toBe('UkVQTEFDRQ')
   })
 
-  it('curseur identique à celui demandé : fin de pagination (pas de boucle)', () => {
+  it('cursor identical to the requested one: end of pagination (no loop)', () => {
     const j = fixture('x', 'curseur-page1.json')
     expect(
       expectOk(parseXBookmarksPage(j, { requestCursor: 'Q1VSU09SLXBhZ2Uy' })).nextCursor,
@@ -349,7 +349,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     )
   })
 
-  it('doublon dans la page : gardé une fois', () => {
+  it('duplicate in the page: kept once', () => {
     const j = mutable('x', 'simple.json')
     const ins = j.data.bookmark_timeline_v2.timeline.instructions[0]
     ins.entries.unshift(structuredClone(ins.entries[0]))
@@ -359,7 +359,7 @@ describe('parseXBookmarksPage — robustesse', () => {
     expect(r.stats.ignored).toBe(1)
   })
 
-  it('chaîne JSON acceptée ; formes inconnues → erreur api_changed, sans exception', () => {
+  it('JSON string accepted; unknown shapes → api_changed error, without exception', () => {
     expect(
       expectOk(parseXBookmarksPage(JSON.stringify(fixture('x', 'simple.json')))).posts,
     ).toHaveLength(1)
@@ -382,7 +382,7 @@ describe('parseXBookmarksPage — robustesse', () => {
   })
 })
 
-describe('outils X', () => {
+describe('X utilities', () => {
   it('parseXDate', () => {
     expect(parseXDate('Wed Oct 08 12:00:00 +0000 2026')).toBe(OCT_8)
     expect(parseXDate('Wed Oct 08 14:00:00 +0200 2026')).toBe(OCT_8)
@@ -408,7 +408,7 @@ describe('outils X', () => {
     )
   })
 
-  it('bestMp4 : débit puis résolution, ignore HLS et URL non https', () => {
+  it('bestMp4: bitrate then resolution, ignores HLS and non-https URLs', () => {
     expect(
       bestMp4([
         { content_type: 'video/mp4', url: 'https://v.example/vid/avc1/320x180/a.mp4' },
@@ -421,11 +421,11 @@ describe('outils X', () => {
   })
 })
 
-describe('parseXBookmarksPage — client x-web (bookmarksQuery)', () => {
-  // Fixture SYNTHÉTIQUE dont la forme suit l'AST Relay public de `bookmarksQuery` (relevé du
-  // 2026-10-12 : `entry_id`, `sort_index`, `content.content.tweet_results`, `details`,
+describe('parseXBookmarksPage — x-web client (bookmarksQuery)', () => {
+  // SYNTHETIC fixture whose shape follows the public Relay AST of `bookmarksQuery` (checked on
+  // 2026-10-12: `entry_id`, `sort_index`, `content.content.tweet_results`, `details`,
   // `media_entities2`, `url_entities`, `quoted_tweet_results`, `legacy.retweeted_status_results`).
-  it('entrées, curseur, texte, médias, réponse, citation, repost, note et tombstone', () => {
+  it('entries, cursor, text, media, reply, quote, repost, note and tombstone', () => {
     const r = parse('xweb-page-1.json')
     expect(r.nextCursor).toBe('WEVXRUItc3VpdGU')
     expect(r.stats).toMatchObject({ entries: 6, parsed: 5, unavailable: 1 })
@@ -471,7 +471,7 @@ describe('parseXBookmarksPage — client x-web (bookmarksQuery)', () => {
     expect(xExtra(note!.extra).noteTweet).toBe(true)
   })
 
-  it('page sans tweet → curseur nul ; sponsorisé et module de conversation x-web', () => {
+  it('page without tweet → null cursor; sponsored and x-web conversation module', () => {
     expect(parse('xweb-page-fin.json')).toMatchObject({ posts: [], nextCursor: null })
     const page = mutable('x', 'xweb-page-1.json')
     const entries = page.data.bookmark_timeline_v2.timeline.instructions[0].entries

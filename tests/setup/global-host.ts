@@ -1,13 +1,13 @@
 /**
- * `globalSetup` du projet `unit` : construit l'hôte natif de test dans `.tmp/host-test/host.js`
- * (quelques ms) quand `src/host/index.ts` existe. Sans hôte : no-op.
+ * `globalSetup` of the `unit` project: builds the native test host into `.tmp/host-test/host.js`
+ * (a few ms) when `src/host/index.ts` exists. Without a host: no-op.
  */
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { purgeStaleTmpDirs } from '../helpers/tmpdir'
 
 export default async function setup(): Promise<void> {
-  // Restes d'exécutions précédentes interrompues (`.tmp/tests/`, > 10 min).
+  // Leftovers from previous interrupted runs (`.tmp/tests/`, > 10 min).
   purgeStaleTmpDirs()
   const root = resolve(import.meta.dirname, '../..')
   const entry = resolve(root, 'src/host/index.ts')

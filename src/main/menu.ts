@@ -1,10 +1,10 @@
 /**
- * Menu natif (français ou anglais, `src/main/i18n`) construit depuis `src/shared/shortcuts.ts`.
- * Reconstruit quand la langue change (`initMenu` suit `onLangChange`). Chaque item porte
- * l'`id` de son raccourci (les scènes visuelles le déclenchent par `getMenuItemById`). Annuler,
- * Rétablir, Tout sélectionner et Zoom sont des items PERSONNALISÉS (pas de `role`) qui relaient
- * `evt:menu.command` : le renderer décide (champ texte → `system.edit`, sinon pile de l'app).
- * Zoom avant : `CmdOrCtrl+Plus` + item caché `CmdOrCtrl+=`. Couper/Copier/Coller gardent leur rôle.
+ * Native menu (French or English, `src/main/i18n`) built from `src/shared/shortcuts.ts`.
+ * Rebuilt when the language changes (`initMenu` follows `onLangChange`). Each item carries
+ * the `id` of its shortcut (visual scenes trigger it via `getMenuItemById`). Undo,
+ * Redo, Select All and Zoom are CUSTOM items (no `role`) that relay
+ * `evt:menu.command`: the renderer decides (text field → `system.edit`, otherwise the app stack).
+ * Zoom in: `CmdOrCtrl+Plus` + hidden item `CmdOrCtrl+=`. Cut/Copy/Paste keep their role.
  */
 import { Menu, app, type MenuItemConstructorOptions } from 'electron'
 import { getLang, onLangChange, type Lang } from '../shared/i18n/lang'
@@ -19,8 +19,8 @@ const accelOf = (id: string): string | undefined => {
 
 export interface MenuOverrides {
   /**
-   * Accélérateur de « Capturer l'écran » : celui du réglage si la touche imprimée
-   * correspond, `null` = aucun (le raccourci global reste actif).
+   * Accelerator of the screen-capture item: the setting's one if the printed key
+   * matches, `null` = none (the global shortcut stays active).
    */
   capture?: string | null
 }
@@ -111,7 +111,7 @@ export function buildMenuTemplate(
         cmd('toggleTheme', m.toggleTheme),
         { type: 'separator' },
         cmd('zoomIn', m.zoomIn),
-        // Item caché : `⌘=` (sans Maj) zoome aussi.
+        // Hidden item: `⌘=` (without Shift) also zooms.
         {
           id: 'zoomInAlt',
           label: m.zoomIn,
@@ -154,7 +154,7 @@ let menuOverrides: MenuOverrides = {}
 export function initMenu(ctx: ServiceContext): () => void {
   menuCtx = ctx
   rebuildMenu()
-  // Langue changée (réglage ou langue du système) : menu reconstruit aussitôt.
+  // Language changed (setting or system language): menu rebuilt immediately.
   const offLang = onLangChange(() => rebuildMenu())
   return () => {
     offLang()
@@ -162,7 +162,7 @@ export function initMenu(ctx: ServiceContext): () => void {
   }
 }
 
-/** Reconstruit le menu natif (raccourci de capture modifié, langue changée). */
+/** Rebuilds the native menu (capture shortcut changed, language changed). */
 export function rebuildMenu(overrides?: MenuOverrides): void {
   if (overrides) menuOverrides = { ...menuOverrides, ...overrides }
   const ctx = menuCtx

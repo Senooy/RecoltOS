@@ -1,6 +1,6 @@
 /**
- * Fenêtre principale et poignée de fermeture
- * (vidage du renderer avant ⌘W/⌘Q, 2 s max).
+ * Main window and close handle
+ * (flush of the renderer before ⌘W/⌘Q, 2 s max).
  */
 import { BrowserWindow, app, ipcMain, nativeTheme, screen } from 'electron'
 import { randomUUID } from 'node:crypto'
@@ -46,9 +46,9 @@ export function isDarkNow(): boolean {
 export const backgroundFor = (dark: boolean): string => (dark ? BG_DARK : BG_LIGHT)
 
 /**
- * Garde `backgroundColor` aligné sur l'apparence effective (bascule automatique de macOS,
- * `themeSource` modifié) : sans cela le fond reste dans l'ancien thème jusqu'au redémarrage.
- * Renvoie la fonction de retrait de l'écouteur.
+ * Guard `backgroundColor` aligned with the effective appearance (automatic macOS switch,
+ * `themeSource` changed): without this the background stays in the old theme until restart.
+ * Returns the listener removal function.
  */
 export function followNativeTheme(
   w: Pick<BrowserWindow, 'isDestroyed' | 'setBackgroundColor'>,
@@ -77,7 +77,7 @@ function saveState(w: BrowserWindow, userData: string): void {
   try {
     writeWindowState(userData, state)
   } catch {
-    // Non bloquant : la fenêtre s'ouvrira à la taille par défaut.
+    // Non-blocking: the window will open at the default size.
   }
 }
 
@@ -163,7 +163,7 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
   return w
 }
 
-/** Crée la fenêtre si absente et attend son chargement (open-file, notification, navigation). */
+/** Creates the window if absent and waits for its loading (open-file, notification, navigation). */
 export async function ensureMainWindow(): Promise<BrowserWindow> {
   if (!options) throw new Error('createMainWindow() doit être appelé une première fois')
   const w = getMainWindow() ?? createMainWindow(options)
@@ -173,7 +173,7 @@ export async function ensureMainWindow(): Promise<BrowserWindow> {
 
 let flushing: Promise<void> | null = null
 
-/** Demande au renderer de vider ses écritures différées (idempotent, 2 s max, ne lève jamais). */
+/** Asks the renderer to flush its deferred writes (idempotent, 2 s max, never throws). */
 export function flushRenderer(w: BrowserWindow | null = getMainWindow()): Promise<void> {
   if (!w || w.isDestroyed() || w.webContents.isDestroyed()) return Promise.resolve()
   if (flushing) return flushing
@@ -213,7 +213,7 @@ function attachCloseHandshake(w: BrowserWindow): void {
   })
 }
 
-/** `before-quit` : vide le renderer puis quitte (⌘Q depuis le Dock fonctionne même sans fenêtre). */
+/** `before-quit`: flushes the renderer then quits (⌘Q from the Dock works even without a window). */
 export function installQuitHandshake(beforeExit: () => Promise<void>): void {
   app.on('before-quit', (e) => {
     if (quitApproved) return

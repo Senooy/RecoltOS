@@ -1,9 +1,9 @@
 /**
- * Fenêtre « stage » : `offscreen.html?render=space-stage`, sans preload, jamais
- * `window.recolt`. Le main y pousse le document (`__stage.load(spec)`, données JSON) puis place la
- * caméra tuile par tuile (`__stage.show(camera)`) avant chaque `capturePage`. Rendu = les mêmes
- * composants de nœuds que l'éditeur (cartes de post, notes, formes, texte), sans chrome, sans
- * animation, vidéos par leur vignette, fond uni.
+ * « stage » window: `offscreen.html?render=space-stage`, without preload, never `window.recolt`.
+ * Main pushes the document into it (`__stage.load(spec)`, JSON data), then places the camera
+ * tile by tile (`__stage.show(camera)`) before each `capturePage`. Rendering = the same node
+ * components as the editor (post cards, notes, shapes, text), without chrome, without animation,
+ * videos via their thumbnail, plain background.
  */
 import { useEffect, useState } from 'react'
 import type { ItemCard } from '../../../../../shared/dto/items'
@@ -16,7 +16,7 @@ export interface StageSpec {
   nodes: SpaceNode[]
   items: Record<string, ItemCard>
   theme: 'light' | 'dark'
-  /** Pixels de sortie par unité monde (niveau de détail des médias). */
+  /** Output pixels per world unit (media level of detail). */
   outScale: number
   tile: { w: number; h: number }
 }
@@ -38,7 +38,7 @@ let committed: (() => void) | null = null
 
 const frame = () =>
   new Promise<void>((resolve) => {
-    // Un rAF seul peut ne jamais tirer dans une page cachée : course avec un délai.
+    // A lone rAF may never fire in a hidden page: race it against a timeout.
     let done = false
     const fin = () => {
       if (done) return
@@ -65,7 +65,7 @@ async function settle(): Promise<void> {
     }),
   )
   await document.fonts.ready
-  // « Settle » seulement si de nouvelles images viennent d'être décodées (peinture à venir).
+  // Wait only if new images have just been decoded (paint still to come).
   if (fresh.length > 0) await new Promise((r) => setTimeout(r, 120))
   await frame()
 }
@@ -105,7 +105,7 @@ export default function StageRoot() {
     c?.()
   }, [spec, camera])
   if (!spec) return <div data-stage="empty" />
-  // Culling : la tuile + une marge.
+  // Culling: the tile + a margin.
   const view = {
     x: -camera.x / camera.zoom - 200,
     y: -camera.y / camera.zoom - 200,

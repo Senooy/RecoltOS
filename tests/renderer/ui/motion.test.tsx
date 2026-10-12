@@ -26,18 +26,18 @@ function stubMatchMedia(reduce: boolean): void {
 }
 
 describe('motionDuration (prefers-reduced-motion)', () => {
-  it('mouvement normal : durée inchangée', () => {
+  it('normal motion: duration unchanged', () => {
     expect(motionDuration(340, false)).toBe(340)
     expect(motionDuration(DURATION.menuIn, false)).toBe(140)
   })
-  it('mouvement réduit : plafonné à 80 ms', () => {
+  it('reduced motion: capped at 80 ms', () => {
     expect(motionDuration(340, true)).toBe(REDUCED_MAX_MS)
     expect(motionDuration(240, true)).toBe(80)
     expect(motionDuration(60, true)).toBe(60)
     expect(motionDuration(-5, true)).toBe(0)
     expect(motionSeconds(340, true)).toBeCloseTo(0.08)
   })
-  it('suit prefers-reduced-motion du système', () => {
+  it('follows the system prefers-reduced-motion', () => {
     stubMatchMedia(true)
     expect(isReducedMotion()).toBe(true)
     expect(motionDuration(340)).toBe(80)
@@ -45,7 +45,7 @@ describe('motionDuration (prefers-reduced-motion)', () => {
     expect(isReducedMotion()).toBe(false)
     expect(motionDuration(340)).toBe(340)
   })
-  it('suit le réglage « Toujours » (<html data-reduce-motion="1">)', () => {
+  it('follows the « Toujours » ("Always") setting (<html data-reduce-motion="1">)', () => {
     stubMatchMedia(false)
     document.documentElement.dataset.reduceMotion = '1'
     expect(isReducedMotion()).toBe(true)
@@ -53,7 +53,7 @@ describe('motionDuration (prefers-reduced-motion)', () => {
   })
 })
 
-describe('reduceMotionState : ni translation, ni rotation, ni échelle', () => {
+describe('reduceMotionState: no translation, no rotation, no scale', () => {
   const state = {
     opacity: 1,
     x: 12,
@@ -63,16 +63,16 @@ describe('reduceMotionState : ni translation, ni rotation, ni échelle', () => {
     transform: 'none',
     filter: 'none',
   }
-  it('réduit : il ne reste que l’opacité et les propriétés non géométriques', () => {
+  it('reduced: only opacity and non-geometric properties remain', () => {
     expect(reduceMotionState(state, true)).toEqual({ opacity: 1, filter: 'none' })
   })
-  it('normal : état inchangé', () => {
+  it('normal: state unchanged', () => {
     expect(reduceMotionState(state, false)).toBe(state)
   })
 })
 
 describe('useReducedMotion', () => {
-  it('réagit au changement de l’attribut', async () => {
+  it('reacts to a change of the attribute', async () => {
     stubMatchMedia(false)
     const { result } = renderHook(() => useReducedMotion())
     expect(result.current).toBe(false)
@@ -84,8 +84,8 @@ describe('useReducedMotion', () => {
   })
 })
 
-describe('ui.css : miroir CSS du mouvement réduit', () => {
-  it('annule échelle et translation sous prefers-reduced-motion ET data-reduce-motion', () => {
+describe('ui.css: CSS mirror of reduced motion', () => {
+  it('cancels scale and translation under prefers-reduced-motion AND data-reduce-motion', () => {
     for (const marker of [
       '@media (prefers-reduced-motion: reduce)',
       ":root[data-reduce-motion='1']",
@@ -100,7 +100,7 @@ describe('ui.css : miroir CSS du mouvement réduit', () => {
       expect(block).toMatch(/--ui-dialog-in:\s*80ms/)
     }
   })
-  it('les keyframes ne translatent qu’à travers des variables remises à 0', () => {
+  it('keyframes only translate through variables reset to 0', () => {
     const keyframes = uiCss.match(/@keyframes ui-(pop|dialog)-(in|out)[^}]*}[^}]*}[^}]*}/g) ?? []
     expect(keyframes.length).toBe(4)
     for (const k of keyframes) {
@@ -108,7 +108,7 @@ describe('ui.css : miroir CSS du mouvement réduit', () => {
       expect(k).not.toMatch(/rotate\(/)
     }
   })
-  it('le spinner n’a plus d’animation en mouvement réduit', () => {
+  it('the spinner has no animation in reduced motion', () => {
     expect(uiCss).toMatch(/\.ui-spinner > svg \{\s*animation: none !important/)
   })
 })

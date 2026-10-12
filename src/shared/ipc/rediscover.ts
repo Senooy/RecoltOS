@@ -1,6 +1,6 @@
 /**
- * Contrat `rediscover.*` : tirage pondéré + `rediscover_log` + cooldowns.
- * Collections proposées = 3 plus récemment utilisées.
+ * `rediscover.*` contract: weighted draw + `rediscover_log` + cooldowns.
+ * Suggested collections = the 3 most recently used.
  */
 import { z } from 'zod'
 import { ItemCard, NamedRef } from '../dto/items'
@@ -19,7 +19,7 @@ export const rediscoverContract = {
     }),
     output: z.object({
       sessionId: z.string(),
-      /** N = nombre d'éligibles (compteur « 1 / N »). */
+      /** N = number of eligible items ("1 / N" counter). */
       total: z.number().int(),
       items: z.array(ItemCard),
       suggestedCollections: z.array(NamedRef).max(3),
@@ -34,7 +34,7 @@ export const rediscoverContract = {
     }),
     output: Void,
   },
-  /** Annule la dernière action (≤ 10 s) ; `null` si rien à annuler. */
+  /** Undoes the last action (≤ 10 s); `null` if nothing to undo. */
   'rediscover.undo': {
     input: z.object({}).default({}),
     output: z.object({ itemUuid: Uuid }).nullable(),

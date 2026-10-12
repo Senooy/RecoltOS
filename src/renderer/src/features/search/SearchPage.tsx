@@ -1,10 +1,10 @@
 /**
- * Page Recherche : colonne de 700 px, champ de 56 px à y=124, compteur
- * « N éléments dans ta bibliothèque » ; sans saisie : « Tes collections » (carrousel 130×160 à
- * défilement magnétique), « Récents · Effacer » (8 chips), « Aller à un tag » (chips de source en
- * tête, puis tags par usage, 24 au plus puis « +N ») ; avec saisie (debounce 120 ms) : « N
- * résultats », chips des filtres actifs (retirables), masonry pleine largeur. La syntaxe
- * `type:` `source:` `couleur:` `#source` `#tag connu` devient une chip à la frappe d'une espace.
+ * Search page: 700 px column, 56 px field at y=124, counter
+ * "N items in your library"; without input: "Your collections" (130×160 carousel with
+ * magnetic scrolling), "Recent · Clear" (8 chips), "Go to a tag" (source chips at the
+ * top, then tags by usage, 24 at most then "+N"); with input (debounce 120 ms): "N
+ * results", chips of the active filters (removable), full-width masonry. The syntax
+ * `type:` `source:` `couleur:` `#source` `#tag connu` becomes a chip when a space is typed.
  */
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -43,7 +43,7 @@ interface History {
   uses: number
 }
 
-/** Éventail au survol, même geste que la rangée de la Bibliothèque (FAN_HOVER), à l'échelle 68/84. */
+/** Fan on hover, same gesture as the Library row (FAN_HOVER), at scale 68/84. */
 const MINI_FAN_OPEN = [
   'translateX(-5px) translateY(-3px) rotate(-3deg)',
   'translateX(10px) rotate(7deg)',
@@ -210,7 +210,7 @@ export default function SearchPage() {
   const nFilters = activeCount(filters)
   const searching = q !== '' || nFilters > 0
 
-  // Données de l'état vide.
+  // Empty-state data.
   const loadIdle = useCallback(() => {
     void rpc('items.counts')
       .then((c) => setLibraryTotal(c.all))
@@ -218,7 +218,7 @@ export default function SearchPage() {
     void rpc('search.history.list')
       .then(setHistory)
       .catch((e: unknown) => {
-        if (!isNotImplemented(e)) console.warn('[search] historique', e)
+        if (!isNotImplemented(e)) console.warn('[search] history', e)
       })
     void rpc('tags.list')
       .then((r) => {
@@ -233,7 +233,7 @@ export default function SearchPage() {
     return () => offs.forEach((o) => o())
   }, [loadIdle])
 
-  // Graine `ui.openSearch({ query, tag, color })`.
+  // Seed `ui.openSearch({ query, tag, color })`.
   useEffect(() => {
     const next = { ...EMPTY_FILTERS }
     if (seed.color) next.colors = [seed.color.toLowerCase()]
@@ -242,11 +242,11 @@ export default function SearchPage() {
     inputRef.current?.focus()
   }, [seed])
 
-  // Rafraîchit les résultats quand la bibliothèque change.
+  // Refreshes results when the library changes.
   const [version, bump] = useState(0)
   useEffect(() => subscribe('items.changed', () => bump((n) => n + 1)), [])
 
-  // Requête (debounce 120 ms).
+  // Query (debounce 120 ms).
   useEffect(() => {
     if (!searching) {
       setResult(null)
@@ -268,7 +268,7 @@ export default function SearchPage() {
     }
   }, [q, filters, searching, version])
 
-  // Historique : recherche gardée après un moment sans frappe (ou ↵).
+  // History: search kept after a moment without typing (or ↵).
   const addHistory = useCallback((query: string) => {
     if (!query) return
     void rpc('search.history.add', { query })
@@ -282,7 +282,7 @@ export default function SearchPage() {
     return () => clearTimeout(timer)
   }, [q, result, addHistory])
 
-  /** Convertit la syntaxe reconnue en chips (à la frappe d'une espace ou de ↵). */
+  /** Converts the recognized syntax into chips (when typing a space or ↵). */
   const absorbSyntax = (raw: string): string => {
     const words = raw.split(/(\s+)/)
     let next = { ...filters }

@@ -1,15 +1,15 @@
 /**
- * Clients de sync par plateforme, exécutés depuis l'ARRIÈRE-PLAN :
- * - X : client web « x-web » (requêtes Relay persistées) : `GET x.com/i/api/graphql/<id>/bookmarksQuery
- *   ?variables=…` (cookie `ct0` → `x-csrf-token`, jeton public du client web). Configuration résolue
- *   dans l'ordre : gabarit capturé par le hook → cache `storage.local` (revalidé par la version du
- *   client) → découverte dans le code public (`x-discovery.ts`). Réparation des variables manquantes
- *   (422), UNE redécouverte par run sur 404 « Query not found » / 400 / 422. Le client historique
- *   (`responsive-web` `main.<hash>.js`, opération `Bookmarks` + `features`) reste un repli ;
- * - Instagram : `feed/saved/posts` (cookie `csrftoken` → `x-csrftoken`), `x-ig-app-id` public ;
- * - Cosmos : jeton d'accès (JWT) obtenu par `GET www.cosmos.so/api/refresh-token` (cookie httpOnly du
- *   site), puis GraphQL `GetAllElements` sur `api.cosmos.so/graphql` (`authorization: Bearer`).
- * Chaque client rend une page brute (le parsing est fait par l'app) ou une issue classée.
+ * Per-platform sync clients, run from the BACKGROUND:
+ * - X: web client "x-web" (persisted Relay queries): `GET x.com/i/api/graphql/<id>/bookmarksQuery
+ *   ?variables=…` (cookie `ct0` → `x-csrf-token`, public token of the web client). Configuration resolved
+ *   in order: template captured by the hook → `storage.local` cache (revalidated by the version of the
+ *   client) → discovery in the public code (`x-discovery.ts`). Repair of missing variables
+ *   (422), ONE rediscovery per run on 404 "Query not found" / 400 / 422. The legacy client
+ *   (`responsive-web` `main.<hash>.js`, operation `Bookmarks` + `features`) remains a fallback;
+ * - Instagram: `feed/saved/posts` (cookie `csrftoken` → `x-csrftoken`), public `x-ig-app-id`;
+ * - Cosmos: access token (JWT) obtained via `GET www.cosmos.so/api/refresh-token` (httpOnly cookie of the
+ *   site), then GraphQL `GetAllElements` on `api.cosmos.so/graphql` (`authorization: Bearer`).
+ * Each client returns a raw page (parsing is done by the app) or a classified issue.
  */
 import type { BridgePlatform } from '../../../../src/shared/bridge/constants'
 import type { SyncOutcome } from '../../../../src/shared/bridge/sync'
@@ -37,7 +37,7 @@ const err = (outcome: SyncOutcome, error: string, resetAt?: number): ErrorOutcom
   ...(resetAt ? { resetAt } : {}),
 })
 
-/** Classement commun d'une réponse HTTP (sans le corps propre à la plateforme). */
+/** Common classification of an HTTP response (without the platform-specific body). */
 export function classifyHttp(r: FetchResult): PageOutcome | null {
   if (r.status === 0)
     return err('network', r.text === 'timeout' ? xt().syncErrors.timeout : xt().syncErrors.network)
@@ -56,28 +56,28 @@ export function classifyHttp(r: FetchResult): PageOutcome | null {
 // ---------------------------------------------------------------------------------------- X
 
 export interface XConfig {
-  /** `xweb` : requête persistée Relay ; `legacy` : ancien client (`Bookmarks` + `features`). */
+  /** `xweb`: persisted Relay query; `legacy`: old client (`Bookmarks` + `features`). */
   api: 'xweb' | 'legacy'
   queryId: string
   operationName: string
   bearer: string
-  /** x-web : « provided variables » Relay ajoutées aux variables. */
+  /** x-web: Relay "provided variables" added to the variables. */
   providedVariables: Record<string, boolean>
-  /** legacy : `features` / `fieldToggles` de l'opération. */
+  /** legacy: `features` / `fieldToggles` of the operation. */
   features: Record<string, boolean>
   fieldToggles: Record<string, boolean>
   source: 'capture' | 'bundle'
-  /** Version du client web (`data-app-version`) au moment de la découverte. */
+  /** Version of the web client (`data-app-version`) at the time of discovery. */
   appVersion: string | null
   bundleUrl: string | null
   at: number
 }
 
 export const X_CONFIG_KEY = 'x.config'
-/** Au-delà, la version du client web est revérifiée (une requête) avant d'utiliser le cache. */
+/** Beyond that, the web client version is re-checked (one request) before using the cache. */
 export const X_CONFIG_REVALIDATE_MS = 6 * 3_600_000
 
-/** Ancien client : repère le bundle `main.<hash>.js` dans le HTML de x.com. */
+/** Old client: locates the `main.<hash>.js` bundle in the x.com HTML. */
 export function findMainBundle(html: string, base: string): string | null {
   const m = /(?:src|href)=["']([^"']*\/main\.[a-z0-9]+\.js)["']/i.exec(html)
   if (!m?.[1]) return null
@@ -88,7 +88,7 @@ export function findMainBundle(html: string, base: string): string | null {
   }
 }
 
-/** Ancien client : `queryId`, jeton public et `featureSwitches` de l'opération `Bookmarks`. */
+/** Old client: `queryId`, public token and `featureSwitches` of the `Bookmarks` operation. */
 export function parseBundle(
   js: string,
 ): Pick<XConfig, 'queryId' | 'bearer' | 'features' | 'fieldToggles'> | null {
@@ -112,7 +112,7 @@ export function parseBundle(
   }
 }
 
-/** Ancien client : noms tirés de « The following features cannot be null: a, b ». */
+/** Old client: names taken from "The following features cannot be null: a, b". */
 export function missingFeatures(json: unknown): string[] {
   const errors = (json as { errors?: { message?: string }[] } | null)?.errors ?? []
   for (const e of errors) {
@@ -126,7 +126,7 @@ export function missingFeatures(json: unknown): string[] {
   return []
 }
 
-/** Cache utilisable : forme actuelle (champ `api`), identifiant et jeton présents. */
+/** Usable cache: current shape (`api` field), with id and token present. */
 function validConfig(c: Partial<XConfig> | undefined): c is XConfig {
   return (
     !!c &&
@@ -137,7 +137,7 @@ function validConfig(c: Partial<XConfig> | undefined): c is XConfig {
   )
 }
 
-/** Signature de requête capturée (valable pour un chemin donné seulement). */
+/** Captured request signature (valid for a given path only). */
 interface CapturedTid {
   path: string
   tid: string
@@ -146,10 +146,10 @@ interface CapturedTid {
 export class XClient implements PlatformClient {
   readonly platform = 'x' as const
   private rediscovered = false
-  /** Dernière erreur de découverte (message précis remonté à l'app). */
+  /** Last discovery error (precise message passed up to the app). */
   lastDiscoveryError: string | null = null
 
-  /** Configuration en cache, revalidée par la version du client web, sinon découverte. */
+  /** Cached configuration, revalidated by the web client version, otherwise discovery. */
   async config(fetch: FetchFn, force = false): Promise<XConfig | null> {
     if (!force) {
       const cached = await getLocal<Partial<XConfig>>(X_CONFIG_KEY)
@@ -211,7 +211,7 @@ export class XClient implements PlatformClient {
     }
   }
 
-  /** Repli : ancien client `responsive-web` (`main.<hash>.js`), si x.com le sert encore. */
+  /** Fallback: old `responsive-web` client (`main.<hash>.js`), if x.com still serves it. */
   private async discoverLegacy(fetch: FetchFn): Promise<XConfig | null> {
     const home = await fetch(endpoint('x', 'home'), {
       method: 'GET',
@@ -235,7 +235,7 @@ export class XClient implements PlatformClient {
     }
   }
 
-  /** Gabarit capturé par le hook lors d'une visite de /i/bookmarks (prioritaire). */
+  /** Template captured by the hook during a visit to /i/bookmarks (takes priority). */
   static async storeTemplate(t: Partial<XConfig>): Promise<void> {
     if (typeof t.queryId !== 'string' || !/^[\w-]{6,64}$/.test(t.queryId)) return
     const op = typeof t.operationName === 'string' ? t.operationName : 'Bookmarks'
@@ -276,7 +276,7 @@ export class XClient implements PlatformClient {
     return `${base}?${q.toString()}`
   }
 
-  /** Variables (x-web) ou `features` (ancien client) manquantes, ajoutées au gabarit. */
+  /** Missing variables (x-web) or `features` (old client), added to the template. */
   private repair(cfg: XConfig, json: unknown): XConfig | null {
     if (cfg.api === 'xweb') {
       const names = missingVariables(json).filter((n) => n.startsWith('__relay_internal__pv__'))
@@ -346,8 +346,8 @@ export class XClient implements PlatformClient {
           continue
         }
         if (r.status === 404 && !notFound) {
-          // Identifiant reconnu mais requête refusée sans corps : X exige peut-être désormais la
-          // signature `x-client-transaction-id` (non reproduite). Repli : capture passive.
+          // Identifier recognized but request refused without a body: X may now require the
+          // `x-client-transaction-id` signature (not reproduced). Fallback: passive capture.
           return err('blocked', xt().syncErrors.xBlocked)
         }
         return err(
@@ -368,7 +368,7 @@ export class XClient implements PlatformClient {
 export const IG_APP_ID = '936619743392459'
 const IG_DEFAULT_ASBD = '129477'
 
-/** Messages d'Instagram qui imposent une action de l'utilisateur (aucune relance). */
+/** Instagram messages that require a user action (no retry). */
 export function igAuthProblem(json: unknown): boolean {
   const m = (json as { message?: unknown } | null)?.message
   return typeof m === 'string' && /checkpoint_required|challenge_required|login_required/.test(m)
@@ -381,7 +381,7 @@ export function igRateLimited(json: unknown): boolean {
   )
 }
 
-/** Code court → `pk` numérique (base 64, alphabet `A–Z a–z 0–9 - _`, 11 premiers caractères). */
+/** Short code → numeric `pk` (base 64, alphabet `A–Z a–z 0–9 - _`, first 11 characters). */
 export function shortcodeToPk(code: string): string {
   const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
   let n = 0n
@@ -441,9 +441,9 @@ export class InstagramClient implements PlatformClient {
 // ---------------------------------------------------------------------------------- Cosmos
 
 /**
- * Requête des éléments enregistrés, validée contre le schéma public de `api.cosmos.so` le 2026-10-12
- * (le serveur valide le document avant l'authentification). Médias sous fragments (`ElementTile` est
- * une interface : `MediaElementTile`, `WebsiteElementTile`, `ProductElementTile`, `TextElementTile`).
+ * Query for saved elements, validated against the public schema of `api.cosmos.so` on 2026-10-12
+ * (the server validates the document before authentication). Media under fragments (`ElementTile` is
+ * an interface: `MediaElementTile`, `WebsiteElementTile`, `ProductElementTile`, `TextElementTile`).
  */
 export const COSMOS_ELEMENTS_QUERY = `query GetAllElements($userId: UserId!, $pageCursor: String, $pageSize: Int = 40) {
   allElementsV2(userId: $userId, meta: { pageSize: $pageSize, pageCursor: $pageCursor }) {
@@ -469,17 +469,17 @@ export const COSMOS_ME_QUERY = 'query Me { me { id username } }'
 
 export const COSMOS_TOKEN_KEY = 'cosmos.token'
 
-/** Jeton d'accès Cosmos (JWT) gardé dans `storage.local`, avec son expiration décodée. */
+/** Cosmos access token (JWT) kept in `storage.local`, with its decoded expiry. */
 export interface CosmosToken {
   token: string
-  /** Expiration (s, epoch) lue dans le JWT ; `null` si illisible. */
+  /** Expiry (s, epoch) read from the JWT; `null` if unreadable. */
   exp: number | null
-  /** Identifiant d'utilisateur (`eid` du JWT) ; `null` si absent. */
+  /** User identifier (`eid` of the JWT); `null` if absent. */
   userId: string | number | null
   at: number
 }
 
-/** Charge utile d'un JWT, SANS vérification (lecture de `exp` / `eid`). */
+/** Payload of a JWT, WITHOUT verification (reads `exp` / `eid`). */
 export function jwtPayload(token: string): Record<string, unknown> | null {
   const part = token.split('.')[1]
   if (!part) return null
@@ -505,13 +505,13 @@ export function toCosmosToken(token: string, now = Date.now()): CosmosToken {
   }
 }
 
-/** Jeton encore valable au moins 60 s (même marge que le site). */
+/** Token still valid for at least 60 s (same margin as the site). */
 export function cosmosTokenUsable(t: CosmosToken | null | undefined, now = Date.now()): boolean {
   if (!t?.token) return false
   return t.exp === null || t.exp - now / 1000 > 60
 }
 
-/** Jeton stocké (forme actuelle, ou chaîne brute d'une version précédente). */
+/** Stored token (current shape, or raw string from a previous version). */
 export async function storedCosmosToken(): Promise<CosmosToken | null> {
   const v = await getLocal<CosmosToken | string>(COSMOS_TOKEN_KEY)
   if (typeof v === 'string') return v ? toCosmosToken(v, 0) : null
@@ -532,8 +532,8 @@ export class CosmosClient implements PlatformClient {
   readonly platform = 'cosmos' as const
 
   /**
-   * Jeton d'accès : celui du stockage s'il est encore valable, sinon `GET /api/refresh-token` sur
-   * www.cosmos.so (le navigateur envoie le cookie httpOnly de la session ; réponse `{accessToken}`).
+   * Access token: the stored one if still valid, otherwise `GET /api/refresh-token` on
+   * www.cosmos.so (the browser sends the session's httpOnly cookie; response `{accessToken}`).
    */
   async token(fetch: FetchFn, force = false): Promise<CosmosToken | ErrorOutcome> {
     const stored = await storedCosmosToken()
@@ -580,7 +580,7 @@ export class CosmosClient implements PlatformClient {
     })
   }
 
-  /** `me` (identifiant numérique ou chaîne, transmis tel quel à `userId`). */
+  /** `me` (numeric identifier or string, passed as-is to `userId`). */
   async me(
     t: CosmosToken,
     fetch: FetchFn,
@@ -619,7 +619,7 @@ export class CosmosClient implements PlatformClient {
       const errors = gqlErrors(r.json)
       if (isAuthError(errors)) {
         if (attempt === 0) {
-          // Jeton expiré ou révoqué : un rafraîchissement, puis une seule nouvelle tentative.
+          // Token expired or revoked: one refresh, then a single retry.
           const again = await this.token(fetch, true)
           if ('kind' in again) return again
           t = again

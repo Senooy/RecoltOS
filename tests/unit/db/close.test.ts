@@ -42,7 +42,7 @@ function setup() {
     if (lib.db.open) lib.db.close()
     fs.rmSync(root, { recursive: true, force: true })
   })
-  // Écritures : le -wal n'est pas vide.
+  // Writes: the -wal is not empty.
   for (let i = 0; i < 20; i++) {
     db.prepare(
       "INSERT INTO items (uuid, kind, created_at, updated_at) VALUES (?, 'image', 1, 1)",
@@ -53,7 +53,7 @@ function setup() {
 }
 
 describe('closeLibrary', () => {
-  it('pause des jobs → arrêt des workers → checkpoint TRUNCATE → fermeture ; -wal vide', async () => {
+  it('jobs paused → workers stopped → TRUNCATE checkpoint → close; -wal empty', async () => {
     const { lib, file, order, reopen } = setup()
     const res = await closeLibrary(lib, { forReplace: true, jobsDrainTimeoutMs: 1234 })
     expect(order).toEqual(['pause:1234', 'stop'])
@@ -61,15 +61,15 @@ describe('closeLibrary', () => {
     expect(lib.db.open).toBe(false)
     expect(fs.existsSync(walFile(file)) ? fs.statSync(walFile(file)).size : 0).toBe(0)
     expect(reopen).not.toHaveBeenCalled()
-    // La base remplacée peut être relue sans perte.
+    // The replaced database can be read again without loss.
     const check = new Database(file, { readonly: true })
     expect(check.prepare('SELECT count(*) AS n FROM items').get()).toEqual({ n: 20 })
     check.close()
   })
 
-  it('forReplace : un lecteur qui bloque le checkpoint → wal_not_empty, base rouverte, file relancée', async () => {
+  it('forReplace: a reader blocking the checkpoint → wal_not_empty, database reopened, queue restarted', async () => {
     const { lib, file, order, reopen, warn } = setup()
-    // Lecteur simulé : transaction de lecture ouverte sur une seconde connexion.
+    // Simulated reader: read transaction opened on a second connection.
     const reader = new Database(file)
     cleanups.push(() => reader.close())
     reader.exec('BEGIN')
@@ -89,13 +89,13 @@ describe('closeLibrary', () => {
     expect(warn).toHaveBeenCalled()
     expect(fs.statSync(walFile(file)).size).toBeGreaterThan(0)
     reader.exec('COMMIT')
-    // Lecteur libéré : la fermeture aboutit.
+    // Reader released: the close succeeds.
     await expect(closeLibrary(lib, { forReplace: true })).resolves.toMatchObject({
       checkpoint: { busy: 0 },
     })
   })
 
-  it('forReplace : réouverture impossible → workers et file non relancés, wal_not_empty levée', async () => {
+  it('forReplace: reopening impossible → workers and queue not restarted, wal_not_empty thrown', async () => {
     const { lib, file, order, hooks, warn } = setup()
     lib.reopen = () => {
       throw new Error('base illisible')
@@ -115,7 +115,7 @@ describe('closeLibrary', () => {
     reader.exec('COMMIT')
   })
 
-  it('sans forReplace : un checkpoint bloqué est seulement journalisé', async () => {
+  it('without forReplace: a blocked checkpoint is only logged', async () => {
     const { lib, file } = setup()
     const reader = new Database(file)
     cleanups.push(() => reader.close())
@@ -127,7 +127,7 @@ describe('closeLibrary', () => {
     reader.exec('COMMIT')
   })
 
-  it('sans hooks ni reopen ; base déjà fermée ; checkpointTruncate', async () => {
+  it('no hooks or reopen; database already closed; checkpointTruncate', async () => {
     const root = tmpDir()
     const { db, file } = openLibraryDb(root)
     cleanups.push(() => fs.rmSync(root, { recursive: true, force: true }))
@@ -136,7 +136,7 @@ describe('closeLibrary', () => {
     await expect(closeLibrary({ db, dbFile: file }, { forReplace: true })).resolves.toEqual({
       checkpoint: null,
     })
-    // -wal artificiellement non vide et aucune réouverture possible : l'erreur est levée quand même.
+    // -wal artificially non-empty and no reopen possible: the error is thrown anyway.
     fs.writeFileSync(walFile(file), 'x')
     await expect(closeLibrary({ db, dbFile: file }, { forReplace: true })).rejects.toMatchObject({
       code: 'wal_not_empty',

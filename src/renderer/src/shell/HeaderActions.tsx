@@ -1,6 +1,6 @@
 /**
- * `HeaderActions` : « Rechercher ⌘K » 112×30 (icône seule sous 1100 px), Redécouvrir,
- * bascule clair / sombre, Réglages ; centres espacés de 36 px, marge droite 28.
+ * `HeaderActions`: "Search ⌘K" 112×30 (icon only under 1100 px), Rediscover,
+ * light / dark toggle, Settings; centers spaced 36 px apart, right margin 28.
  */
 import { Compass, Moon, Search, Settings, Sun } from 'lucide-react'
 import { IconButton, Kbd } from '../components/ui'

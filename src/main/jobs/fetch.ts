@@ -1,8 +1,8 @@
 /**
- * Téléchargement en flux vers un fichier `.part` : délai de 60 s, plafond de
- * 2 Go, sha256 calculé pendant l'écriture. Les erreurs HTTP 4xx sont définitives (`http_4xx`), les
- * 5xx et erreurs réseau réessayables. Politiques par CDN (en-têtes, réaction à un refus) via
- * `registerFetchPolicy` (la sync y enregistre les siennes).
+ * Streaming download to a `.part` file: 60 s timeout, 2 GB cap, sha256 computed
+ * while writing. HTTP 4xx errors are final (`http_4xx`), 5xx and network errors are retryable.
+ * Per-CDN policies (headers, reaction to a refusal) via `registerFetchPolicy` (sync registers
+ * its own there).
  */
 import { createHash } from 'node:crypto'
 import { createWriteStream } from 'node:fs'
@@ -16,11 +16,11 @@ export const FETCH_MAX_BYTES = 2 * 1024 ** 3
 
 export interface FetchPolicy {
   headers?: Record<string, string>
-  /** Appelé sur 401/403/410 (session expirée, URL signée périmée…). */
+  /** Called on 401/403/410 (expired session, expired signed URL…). */
   onAuthError?: (status: number, url: string) => void
   /**
-   * Téléchargement spécifique (ex. liste de lecture HLS → mp4 par ffmpeg `-c copy`) : remplace
-   * le flux HTTP direct. Doit écrire `dst` et rendre le même résultat que `fetchToFile`.
+   * Specific download (e.g. HLS playlist → mp4 via ffmpeg `-c copy`): replaces
+   * the direct HTTP stream. Must write `dst` and return the same result as `fetchToFile`.
    */
   download?: (url: string, dst: string, opts: FetchToFileOptions) => Promise<FetchedFile>
 }
@@ -28,7 +28,7 @@ export interface FetchPolicy {
 type PolicyEntry = { match: (url: URL) => boolean; resolve: (url: URL) => FetchPolicy }
 const policies: PolicyEntry[] = []
 
-/** Enregistre une politique ; la dernière enregistrée qui correspond gagne. */
+/** Registers a policy; the last registered one that matches wins. */
 export function registerFetchPolicy(
   match: (url: URL) => boolean,
   resolve: (url: URL) => FetchPolicy,
@@ -55,7 +55,7 @@ export function policyFor(url: string): FetchPolicy {
   return {}
 }
 
-/** URL http(s) valide, sinon `validation`. */
+/** Valid http(s) URL, otherwise `validation`. */
 export function assertWebUrl(url: string): URL {
   let u: URL
   try {
@@ -72,10 +72,10 @@ export function assertWebUrl(url: string): URL {
 export interface FetchedFile {
   bytes: number
   sha256: string
-  /** `Content-Type` sans paramètres, en minuscules. */
+  /** `Content-Type` without parameters, lowercased. */
   contentType: string | null
   status: number
-  /** Premiers octets (typage `file-type`). */
+  /** First bytes (`file-type` typing). */
   head: Buffer
 }
 
@@ -87,8 +87,8 @@ export interface FetchToFileOptions {
 }
 
 /**
- * Télécharge `url` dans `dst` (créé, écrasé). En cas d'échec, `dst` est supprimé.
- * Lève `http_4xx` (définitif, `details.status`), `http_error` (5xx), `network`, `timeout`,
+ * Downloads `url` into `dst` (created, overwritten). On failure, `dst` is deleted.
+ * Throws `http_4xx` (final, `details.status`), `http_error` (5xx), `network`, `timeout`,
  * `limit_exceeded`, `cancelled`.
  */
 export async function fetchToFile(
@@ -181,7 +181,7 @@ export async function fetchToFile(
   }
 }
 
-/** Extension plausible d'après l'URL (`.jpg` de `…/x.jpg?name=small`). */
+/** Plausible extension from the URL (`.jpg` from `…/x.jpg?name=small`). */
 export function extFromUrl(url: string): string | null {
   try {
     const m = /\.([a-z0-9]{2,5})$/i.exec(new URL(url).pathname)

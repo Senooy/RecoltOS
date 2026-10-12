@@ -1,12 +1,12 @@
 /**
- * Raccourcis de l'éditeur : table `SPACES_SHORTCUTS` (src/shared/shortcuts.ts).
- * Lettres = touche IMPRIMÉE (`getLayoutMap()`, insensible à ⌥/⇧ : ⌥A ne donne pas « å »),
- * chiffres = position (`e.code` Digit0/1/2, valable AZERTY et QWERTY), flèches = `e.key`.
- * La carte de disposition est injectable pour les tests (AZERTY / QWERTY simulés).
+ * Editor shortcuts: `SPACES_SHORTCUTS` table (src/shared/shortcuts.ts).
+ * Letters = PRINTED key (`getLayoutMap()`, unaffected by ⌥/⇧: ⌥A does not give "å"),
+ * digits = position (`e.code` Digit0/1/2, valid for AZERTY and QWERTY), arrows = `e.key`.
+ * The layout map can be injected for tests (simulated AZERTY / QWERTY).
  *
- * Les commandes du menu natif (⌘Z, ⇧⌘Z, ⌘A, ⌘0, ⌘+, ⌘−) arrivent par `menu.command` ; ⌘C/⌘X/⌘V
- * par les événements DOM `copy` / `cut` / `paste` (rôles du menu Édition). Elles restent dans la
- * table pour l'affichage et le repli clavier.
+ * Native menu commands (⌘Z, ⇧⌘Z, ⌘A, ⌘0, ⌘+, ⌘−) arrive via `menu.command`; ⌘C/⌘X/⌘V
+ * via the DOM `copy` / `cut` / `paste` events (Edit menu roles). They stay in the
+ * table for display and keyboard fallback.
  */
 import {
   displayShortcutLabel,
@@ -29,7 +29,7 @@ export type Layout = ReadonlyMap<string, string> | null
 
 let layout: Layout = null
 
-/** `navigator.keyboard.getLayoutMap()` (relu au focus de la fenêtre). */
+/** `navigator.keyboard.getLayoutMap()` (re-read on window focus). */
 export async function initKeymap(): Promise<void> {
   const kb = (
     navigator as Navigator & { keyboard?: { getLayoutMap(): Promise<Map<string, string>> } }
@@ -46,9 +46,9 @@ export function setLayoutForTests(l: Layout): void {
   layout = l
 }
 
-/** Caractère imprimé (minuscule) de la touche, insensible à ⌥ et ⇧. */
+/** Printed character (lowercase) of the key, unaffected by ⌥ and ⇧. */
 export function baseChar(e: KeyLike, l: Layout = layout): string {
-  // Sans ⌥ ni ⌃, `e.key` EST la touche imprimée (⌘ et ⇧ ne la transforment pas, hors casse).
+  // Without ⌥ or ⌃, `e.key` IS the printed key (⌘ and ⇧ do not change it, apart from case).
   if (!e.altKey && !e.ctrlKey && /^\p{L}$/u.test(e.key)) return e.key.toLowerCase()
   const fromMap = l?.get(e.code)
   if (fromMap) return fromMap.toLowerCase()
@@ -83,12 +83,12 @@ export function matches(e: KeyLike, m: KeyMatch & Modifiers, l: Layout = layout)
   }
 }
 
-/** Action de l'éditeur pour cet événement, ou `null`. */
+/** Editor action for this event, or `null`. */
 export function resolveShortcut(e: KeyLike, l: Layout = layout): SpacesShortcutId | null {
   for (const s of SPACES_SHORTCUTS) {
     if (matches(e, s.match, l)) return s.id
   }
-  // Alias QWERTY non affichés de ⌥⌘↑/↓.
+  // QWERTY aliases of ⌥⌘↑/↓, not displayed.
   if (e.metaKey && !e.altKey && !e.ctrlKey) {
     if (e.code === 'BracketRight') return e.shiftKey ? 'bringToFront' : 'bringForward'
     if (e.code === 'BracketLeft') return e.shiftKey ? 'sendToBack' : 'sendBackward'
@@ -96,7 +96,7 @@ export function resolveShortcut(e: KeyLike, l: Layout = layout): SpacesShortcutI
   return null
 }
 
-/** Libellé affiché d'un raccourci (lettre imprimée sur ce clavier). */
+/** Displayed label of a shortcut (printed letter on this keyboard). */
 export function shortcutLabel(id: SpacesShortcutId): string {
   return displayShortcutLabel(SPACES_SHORTCUTS.find((s) => s.id === id)?.label ?? '')
 }

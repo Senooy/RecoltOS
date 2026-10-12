@@ -1,16 +1,12 @@
 /**
- * Fumée du socle (réduit au squelette) : l'app se lance par `_electron` sur le
- * build automatique, ouvre une fenêtre 1280×820 visible, expose `window.recolt` (preload isolé) et
- * n'émet aucune erreur console (CSP comprise). Les scénarios vivent sous `tests/e2e/`.
+ * Foundation smoke test (reduced to the skeleton): the app launches via `_electron` on the
+ * automatic build, opens a visible 1280×820 window, exposes `window.recolt` (isolated preload) and
+ * emits no console error (CSP included). Scenarios live under `tests/e2e/`.
  */
 import { expect, test } from '../helpers/e2e-fixtures'
 
-test('lancement : fenêtre, window.recolt, 0 erreur console', async ({
-  app,
-  page,
-  collectErrors,
-}) => {
-  // Fenêtre visible à la taille imposée par RECOLTOS_WINDOW.
+test('launch: window, window.recolt, 0 console errors', async ({ app, page, collectErrors }) => {
+  // Window visible at the size set by RECOLTOS_WINDOW.
   await expect(page.locator('#root > *').first()).toBeVisible()
   const win = await app.evaluate(({ BrowserWindow }) => {
     const w = BrowserWindow.getAllWindows()[0]
@@ -20,7 +16,7 @@ test('lancement : fenêtre, window.recolt, 0 erreur console', async ({
   expect(win?.visible).toBe(true)
   expect([win?.bounds.width, win?.bounds.height]).toEqual([1280, 820])
 
-  // Le preload expose le pont typé, et lui seul (pas de Node dans le renderer).
+  // The preload exposes the typed bridge, and only it (no Node in the renderer).
   const bridge = await page.evaluate(() => {
     const w = window as unknown as { recolt?: Record<string, unknown>; require?: unknown }
     return {
@@ -33,8 +29,8 @@ test('lancement : fenêtre, window.recolt, 0 erreur console', async ({
   expect(bridge.keys).toEqual(expect.arrayContaining(['invoke', 'on', 'perfMark', 'startDrag']))
   expect(bridge.node).toBe('undefined')
 
-  // Mode e2e : animations coupées et aucune erreur console jusque-là.
+  // e2e mode: animations disabled and no console error up to that point.
   await expect(page.locator('html')).toHaveAttribute('data-e2e', '1')
-  // `collectErrors()` relit aussi les erreurs du chargement initial (écouteurs posés trop tard).
+  // `collectErrors()` also re-reads the errors from the initial load (listeners attached too late).
   expect(await collectErrors()).toEqual([])
 })

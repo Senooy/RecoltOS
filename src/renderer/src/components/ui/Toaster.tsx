@@ -1,7 +1,7 @@
 /**
- * `Toaster` : sonner en pilule (centrée, `bottom: 24`, 40 px, fond `--surface`).
- * `unstyled` : tout vient des tokens (clair et sombre), l'action « Annuler » est une pilule noire.
- * Mouvement réduit : fondu seul (`ui.css`). Monter UNE fois à la racine de l'app.
+ * `Toaster`: sonner as a pill (centred, `bottom: 24`, 40 px, `--surface` background).
+ * `unstyled`: everything comes from the tokens (light and dark), the "Cancel" action is a black pill.
+ * Reduced motion: fade only (`ui.css`). Mount ONCE at the app root.
  *
  *   import { toast } from './Toaster'
  *   toast('Ajouté à Gaming', { action: { label: 'Annuler', onClick: undo } })

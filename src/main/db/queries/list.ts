@@ -1,7 +1,7 @@
 /**
- * Lectures de liste : portées `library` (onglets) et `collection`
- * (membres directs, masqués compris), tris keyset sans `OFFSET` (sauf `random`, par graine),
- * filtres. Les écritures passent par les repos.
+ * List reads: scopes `library` (tabs) and `collection`
+ * (direct members, hidden ones included), keyset sorts without `OFFSET` (except `random`, by seed),
+ * filters. Writes go through the repos.
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
@@ -10,7 +10,7 @@ import type { ItemFilters } from '../../../shared/ipc/items'
 import type { LibraryTab, SortMode } from '../../../shared/enums'
 import { mt } from '../../i18n'
 
-/** Colonnes d'une carte : item + média de couverture + auteur (jointures sur clé primaire). */
+/** Columns of a card: item + cover media + author (joins on primary key). */
 export const CARD_SELECT = `
   i.id, i.uuid, i.kind, i.source, i.source_url, i.title, i.ai_title, i.notes, i.palette, i.post_meta,
   i.created_at, i.view_count, i.viewed_at, i.deleted_at, i.hidden_at, i.color_key, i.name_key,
@@ -66,26 +66,26 @@ export interface CardRow {
   a_avatar_rel: string | null
   a_avatar_status: string | null
   a_updated_at: number | null
-  /** Clé de tri exposée pour le curseur. */
+  /** Sort key exposed for the cursor. */
   sort_key?: number | string
   added_at?: number
 }
 
 interface SortSpec {
-  /** Expression SQL sans NULL. */
+  /** SQL expression without NULL. */
   key: string
   dir: 'ASC' | 'DESC'
 }
 
-/** Tri d'une portée ; la corbeille trie « récents » par date de suppression. */
+/** Sort of a scope; the trash sorts "recent" by deletion date. */
 export function sortSpec(
   sort: SortMode,
   _scope: 'library' | 'collection',
   tab: LibraryTab,
 ): SortSpec | null {
   switch (sort) {
-    // En collection aussi, « Plus récents » suit la date d'ajout de l'élément à la bibliothèque, et
-    // non sa date d'entrée dans la collection. Les couvertures, elles, restent sur
+    // In a collection too, "Most recent" follows the date the item was added to the library, and
+    // not its date of entry into the collection. Covers, however, stay on
     // `collection_items.added_at`.
     case 'recent':
       return { key: tab === 'trash' ? 'i.deleted_at' : 'i.created_at', dir: 'DESC' }
@@ -113,7 +113,7 @@ export function decodeCursor(c: string): unknown[] {
     const v: unknown = JSON.parse(Buffer.from(c, 'base64url').toString('utf8'))
     if (Array.isArray(v)) return v
   } catch {
-    // ci-dessous
+    // see below
   }
   throw new AppError('validation', 'curseur invalide')
 }
@@ -198,8 +198,8 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
   const params: Record<string, unknown> = {}
   const where: string[] = []
   let from = CARD_FROM
-  // Total : sans les LEFT JOIN de la carte (une ligne par élément quoi qu'il arrive ; les filtres ne
-  // portent que sur `i`). Le compte à travers CARD_FROM coûtait ~2,5 ms sur 10 000 éléments.
+  // Total: without the card's LEFT JOINs (one row per item no matter what; the filters only
+  // touch `i`). Counting through CARD_FROM cost ~2.5 ms on 10,000 items.
   let countFrom = 'items i'
   if (scope === 'collection') {
     const col = db.prepare('SELECT id FROM collections WHERE uuid = ?').get(inp.collectionUuid) as
@@ -222,7 +222,7 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
 
   const spec = sortSpec(sort, scope, tab)
   if (!spec) {
-    // Aléatoire stable par graine (bouton « Mélanger ») ; curseur = décalage.
+    // Stable random by seed ("Shuffle" button); cursor = offset.
     params.seed = inp.seed ?? 0
     const offset = inp.cursor ? Number(decodeCursor(inp.cursor)[0]) || 0 : 0
     params.lim = limit
@@ -261,7 +261,7 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
   return { rows, nextCursor, total }
 }
 
-/** Carte(s) par uuid (ordre de la liste fournie). */
+/** Card(s) by uuid (order of the list provided). */
 export function cardRowsByUuid(db: Database.Database, uuids: readonly string[]): CardRow[] {
   if (uuids.length === 0) return []
   const rows = db
@@ -273,7 +273,7 @@ export function cardRowsByUuid(db: Database.Database, uuids: readonly string[]):
   return uuids.map((u) => by.get(u)).filter((r): r is CardRow => r !== undefined)
 }
 
-/** Carte(s) par id interne (ordre de la liste fournie). */
+/** Card(s) by internal id (order of the list provided). */
 export function cardRowsByIds(db: Database.Database, ids: readonly number[]): CardRow[] {
   if (ids.length === 0) return []
   const rows = db
@@ -285,7 +285,7 @@ export function cardRowsByIds(db: Database.Database, ids: readonly number[]): Ca
   return ids.map((id) => by.get(id)).filter((r): r is CardRow => r !== undefined)
 }
 
-/** « Récemment vus » (palette ⌘K) : `ix_items_viewed`, masqués exclus. */
+/** "Recently viewed" (⌘K palette): `ix_items_viewed`, hidden ones excluded. */
 export function recentlyViewed(db: Database.Database, limit: number): CardRow[] {
   return db
     .prepare(

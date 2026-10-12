@@ -1,8 +1,8 @@
 /**
- * Ingestion d'une liste de chemins (glisser-déposer, Fichier › Importer, « Ouvrir avec ») :
- * dossiers parcourus (`lstat` sans suivre les liens, fichiers cachés ignorés,
- * profondeur ≤ 12, ≤ 20 000 fichiers), confirmation au-delà de 200 fichiers, fichiers déjà dans la
- * bibliothèque ignorés, progression `ingest.progress`, rapport `{added, duplicates, failed}`.
+ * Ingestion of a list of paths (drag and drop, File › Import, "Open with"):
+ * folders walked (`lstat` without following links, hidden files skipped,
+ * depth ≤ 12, ≤ 20,000 files), confirmation beyond 200 files, files already in the
+ * library skipped, progress `ingest.progress`, report `{added, duplicates, failed}`.
  */
 import { lstat, readdir, realpath, stat } from 'node:fs/promises'
 import { basename, join, sep } from 'node:path'
@@ -13,10 +13,10 @@ import { mt } from '../i18n'
 
 export const MAX_FILES = 20_000
 export const MAX_DEPTH = 12
-/** Au-delà, l'utilisateur confirme (« Importer 1 243 fichiers ? »). */
+/** Beyond that, the user confirms ("Import 1,243 files?"). */
 export const CONFIRM_ABOVE = 200
 
-/** Extensions retenues DANS un dossier déposé (un fichier déposé seul est toujours essayé). */
+/** Extensions kept INSIDE a dropped folder (a single dropped file is always tried). */
 export const MEDIA_EXT = new Set([
   'jpg',
   'jpeg',
@@ -42,10 +42,10 @@ export async function expand(paths: readonly string[], depth = MAX_DEPTH): Promi
   const out: string[] = []
   const walk = async (p: string, d: number, top: boolean) => {
     if (out.length >= MAX_FILES) return
-    // Racines déposées : on suit un lien éventuel ; à l'intérieur d'un dossier, jamais.
+    // Dropped roots: a link is followed if any; inside a folder, never.
     const st = await (top ? stat(p) : lstat(p)).catch(() => null)
     if (!st) {
-      out.push(p) // signalé « introuvable » par l'ingestion
+      out.push(p) // reported as "not found" by the ingestion
       return
     }
     if (st.isFile()) {
@@ -80,7 +80,7 @@ export async function ingestPaths(
     try {
       const real = await realpath(path).catch(() => path)
       if (real.startsWith(root + sep)) {
-        // Déjà dans la bibliothèque (glisser d'une carte vers la fenêtre) : ni réimport ni doublon.
+        // Already in the library (dragging from a card to the window): no re-import, no duplicate.
         done++
         continue
       }
@@ -90,7 +90,7 @@ export async function ingestPaths(
     } catch (err) {
       const e = err instanceof AppError ? err : new AppError('io', mt().errors.importFailed)
       report.failed.push({ path, code: e.code, message: e.message })
-      deps.log.warn(`[ingest] ${basename(path)} : ${e.code}`, err)
+      deps.log.warn(`[ingest] ${basename(path)}: ${e.code}`, err)
     }
     done++
   }

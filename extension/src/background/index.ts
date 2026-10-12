@@ -1,7 +1,7 @@
 /**
- * Script d'arrière-plan (service worker Chromium, page d'événements Firefox),
- * Tous les écouteurs sont posés au niveau supérieur, de façon synchrone ; l'alarme
- * `watchdog` est vérifiée à chaque démarrage (reconnexion du port, reprise de la sync).
+ * Background script (Chromium service worker, Firefox event page).
+ * All listeners are registered at the top level, synchronously; the `watchdog` alarm
+ * is checked at every startup (port reconnection, resuming sync).
  */
 import type { BridgeCollection, SaveAck } from '../../../src/shared/bridge/save'
 import type { PayloadOf } from '../../../src/shared/bridge/messages'
@@ -30,7 +30,7 @@ let collections: BridgeCollection[] = []
 let stale: PopupState['stale'] = null
 let syncState: SyncStateMessage['sources'] | null = null
 
-// ---------------------------------------------------------------- enregistrement
+// ---------------------------------------------------------------- saving
 
 async function exec<A extends unknown[], R>(
   tabId: number,
@@ -208,7 +208,7 @@ async function onPopup(msg: PopupRequest): Promise<unknown> {
   }
 }
 
-// ---------------------------------------------------------------- état de session
+// ---------------------------------------------------------------- session state
 
 let statusTimer: ReturnType<typeof setTimeout> | null = null
 async function sendStatus(): Promise<void> {
@@ -216,11 +216,11 @@ async function sendStatus(): Promise<void> {
   try {
     bridge.post('ext.status', { platforms: await platformsState() })
   } catch {
-    // port fermé
+    // port closed
   }
 }
 
-// ---------------------------------------------------------------- écouteurs (niveau supérieur)
+// ---------------------------------------------------------------- listeners (top level)
 
 void a.alarms.get('watchdog').then((al) => {
   if (!al) void a.alarms.create('watchdog', { periodInMinutes: 1 })
@@ -228,7 +228,7 @@ void a.alarms.get('watchdog').then((al) => {
 a.runtime.onInstalled.addListener(() => {
   void loadExtLang().then(() => setupMenus(collections))
 })
-// Langue mémorisée (celle de l'app) avant les premiers menus et toasts.
+// Remembered language (the app's) applied before the first menus and toasts.
 void loadExtLang()
 a.runtime.onStartup.addListener(() => bridge.ensure())
 a.alarms.onAlarm.addListener((al) => {
@@ -265,7 +265,7 @@ a.runtime.onMessage.addListener((msg: unknown, sender, reply) => {
 
 bridge.on('hello.ack', (m) => {
   const p = m.payload as PayloadOf<'hello.ack'>
-  // Langue de l'app : popup, menus et toasts la suivent (menus reconstruits si elle change).
+  // App language: popup, menus and toasts follow it (menus rebuilt when it changes).
   if (p.lang && p.lang !== extLang()) {
     void rememberAppLang(p.lang).then(() => setupMenus(collections))
   }
@@ -275,7 +275,7 @@ bridge.on('hello.ack', (m) => {
       try {
         bridge.post('ext.stale', s)
       } catch {
-        // port fermé
+        // port closed
       }
     })
     return
@@ -306,14 +306,14 @@ bridge.connect()
 declare const __RECOLTOS_SELFTEST__: boolean
 
 /**
- * Build de test `--selftest` seulement (navigateur jetable, faux serveur) : pose des cookies factices
- * pour le faux serveur, fait une requête X depuis l'arrière-plan et rapporte le résultat.
+ * Test build `--selftest` only (throwaway browser, fake server): sets fake cookies
+ * for the fake server, makes an X request from the background and reports the result.
  */
 async function selfTest(base: string): Promise<void> {
   const report: Record<string, unknown> = { target: TARGET }
   try {
     report.permission = await a.permissions.contains({ origins: [`${base}/*`] })
-    // Cookies posés par le faux serveur (comme une connexion au site), puis relus par l'API `cookies`.
+    // Cookies set by the fake server (like a site login), then read back via the `cookies` API.
     report.plain = await fetch(`${base}/img.png`).then(
       (r) => r.status,
       (e: unknown) => String(e),
@@ -328,11 +328,11 @@ async function selfTest(base: string): Promise<void> {
   }
   console.warn(`[recoltos selftest] ${JSON.stringify(report)}`)
   await fetch(`${base}/selftest`, { method: 'POST', body: JSON.stringify(report) }).catch(
-    (e: unknown) => console.warn(`[recoltos selftest] rapport impossible : ${String(e)}`),
+    (e: unknown) => console.warn(`[recoltos selftest] could not send report: ${String(e)}`),
   )
 }
 
-// Build de test seulement : poignées pour Playwright (jamais dans le build livré).
+// Test build only: handles for Playwright (never in the shipped build).
 if (TEST_BASE) {
   if (typeof __RECOLTOS_SELFTEST__ === 'boolean' && __RECOLTOS_SELFTEST__) {
     const base = TEST_BASE

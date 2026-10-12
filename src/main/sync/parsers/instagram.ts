@@ -1,9 +1,9 @@
 /**
- * Parseur Instagram : `GET /api/v1/feed/saved/posts/` (REST) et `media/<pk>/info/` → publications
- * normalisées. Fonction pure, jamais d'exception.
+ * Instagram parser: `GET /api/v1/feed/saved/posts/` (REST) and `media/<pk>/info/` → normalized
+ * posts. Pure function, never throws.
  *
- * Un adaptateur GraphQL minimal (`data.<connexion>.edges[].node`, `page_info`) produit la même
- * sortie : forme NON VÉRIFIÉE sur un compte réel, gardée défensive.
+ * A minimal GraphQL adapter (`data.<connection>.edges[].node`, `page_info`) produces the same
+ * output: shape NOT VERIFIED against a real account, kept defensive.
  */
 import {
   arr,
@@ -44,7 +44,7 @@ import type {
 const DIGITS = /^\d+$/
 const SHORTCODE = /^[A-Za-z0-9_-]{1,64}$/
 
-// ------------------------------------------------------------------------------------ erreurs
+// ------------------------------------------------------------------------------------ errors
 
 function classifyFailure(root: Json): PageParseResult {
   const message = str(root.message) ?? str(root.error_type) ?? ''
@@ -68,7 +68,7 @@ function classifyFailure(root: Json): PageParseResult {
   return errorResult('instagram', 'api_changed', 'fail', message || 'Réponse en échec')
 }
 
-// ------------------------------------------------------------------------------------ médias
+// ------------------------------------------------------------------------------------ media
 
 function bestCandidate(
   candidates: unknown,
@@ -81,17 +81,17 @@ function bestCandidate(
     const w = posInt(o.width)
     const h = posInt(o.height)
     const area = (w ?? 0) * (h ?? 0)
-    // À surface égale, l'ordre de la plateforme gagne (`candidates[0]` = la plus grande en pratique).
+    // On equal area, the platform's order wins (`candidates[0]` = the largest one in practice).
     if (best === null || area > best.area) best = { url, w, h, area }
   }
   return best && { url: best.url, w: best.w, h: best.h }
 }
 
-/** Un média IG simple (type 1 ou 2), ou `null` s'il n'a aucune URL exploitable. */
+/** A simple IG media item (type 1 or 2), or `null` if it has no usable URL. */
 function igSingle(m: Json): NormalizedMedia | null {
   const image =
     bestCandidate(obj(m.image_versions2).candidates) ??
-    // GraphQL web : `display_url` / `display_resources`.
+    // Web GraphQL: `display_url` / `display_resources`.
     bestCandidate(m.display_resources) ??
     (webUrl(m.display_url) ? { url: webUrl(m.display_url)!, w: null, h: null } : null)
   const videos = arr(m.video_versions)
@@ -126,7 +126,7 @@ function igSingle(m: Json): NormalizedMedia | null {
   }
 }
 
-/** Expiration signée `oe=<hex secondes>` → ms. */
+/** Signed expiry `oe=<hex seconds>` → ms. */
 export function igExpiry(url: string | null): number | null {
   if (url === null) return null
   const oe = new URL(url).searchParams.get('oe')
@@ -225,7 +225,7 @@ function igPost(m: Json, position: number, onDrop: (reason: string) => void): No
 
 // ------------------------------------------------------------------------------------ page
 
-/** Connexion GraphQL `{ edges: [{ node }], page_info }` cherchée sous `data` (2 niveaux). */
+/** GraphQL connection `{ edges: [{ node }], page_info }` searched under `data` (2 levels). */
 function findConnection(data: Json): Json | null {
   const queue: [Json, number][] = [[data, 0]]
   while (queue.length > 0) {
@@ -268,7 +268,7 @@ function parseMediaList(
   return { posts, log }
 }
 
-/** `items[i]` est `{ media }` (saved/posts) ou directement le média (media/<pk>/info). */
+/** `items[i]` is `{ media }` (saved/posts) or directly the media (media/<pk>/info). */
 function restItem(raw: unknown): unknown {
   const o = obj(raw)
   if (isObj(o.media)) return o.media
@@ -313,8 +313,8 @@ function parsePage(json: unknown, opts: PageParseOptions, single: boolean): Page
 }
 
 /**
- * Page `feed/saved/posts` → publications normalisées + curseur (`next_max_id` si
- * `more_available`). Accepte l'objet JSON ou sa chaîne. Ne lève jamais.
+ * `feed/saved/posts` page → normalized posts + cursor (`next_max_id` if `more_available`).
+ * Accepts the JSON object or its string. Never throws.
  */
 export function parseInstagramSavedPage(
   json: unknown,
@@ -328,8 +328,8 @@ export function parseInstagramSavedPage(
 }
 
 /**
- * Réponse `media/<pk>/info/` (rafraîchissement `item.refresh`, URL signées fraîches et avatar) →
- * même sortie, `nextCursor` toujours `null`. Ne lève jamais.
+ * `media/<pk>/info/` response (`item.refresh` refresh, fresh signed URLs and avatar) →
+ * same output, `nextCursor` always `null`. Never throws.
  */
 export function parseInstagramMediaInfo(json: unknown): PageParseResult {
   try {

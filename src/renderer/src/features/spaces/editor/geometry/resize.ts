@@ -1,7 +1,7 @@
 /**
- * Redimensionnement et rotation : calcul dans le repère local du nœud, ancre
- * opposée fixe (testée à 1e-6 pour les 8 poignées et r ∈ {0, 30, 90, 137°}). ⇧ inverse le
- * verrouillage du ratio ; ⌥ redimensionne depuis le centre. Rotation : ⇧ = pas de 15°.
+ * Resize and rotation: computed in the node's local frame, with a fixed
+ * opposite anchor (tested to 1e-6 for the 8 handles and r ∈ {0, 30, 90, 137°}). ⇧ inverts the
+ * aspect-ratio lock; ⌥ resizes from the center. Rotation: ⇧ = 15° steps.
  */
 import type { OrientedBox, Vec } from '../../../../../../shared/spaces-geometry'
 import { MIN_NODE_SIZE, normalizeRotation } from '../../../../../../shared/spaces-schema'
@@ -10,7 +10,7 @@ export type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
 export const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
 
-/** Direction de la poignée depuis le centre. */
+/** Handle direction from the center. */
 export const HANDLE_DIR: Readonly<Record<Handle, readonly [number, number]>> = {
   nw: [-1, -1],
   n: [0, -1],
@@ -31,7 +31,7 @@ const sub = (a: Vec, b: Vec): Vec => ({ x: a.x - b.x, y: a.y - b.y })
 
 export const centerOf = (b: OrientedBox): Vec => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 })
 
-/** Point monde d'une poignée (ou d'un coin) de la boîte orientée. */
+/** World point of a handle (or corner) of the oriented box. */
 export function handlePoint(b: OrientedBox, sx: number, sy: number): Vec {
   const r = (b.rotation * Math.PI) / 180
   return add(centerOf(b), rot(r, { x: (sx * b.width) / 2, y: (sy * b.height) / 2 }))
@@ -39,9 +39,9 @@ export function handlePoint(b: OrientedBox, sx: number, sy: number): Vec {
 
 export interface ResizeOptions {
   lockAspect: boolean
-  /** ⌥ : depuis le centre. */
+  /** ⌥: from the center. */
   fromCenter?: boolean
-  /** Minimum du type (≥ MIN_NODE_SIZE). */
+  /** Minimum of the type (≥ MIN_NODE_SIZE). */
   min?: number
 }
 
@@ -77,12 +77,12 @@ export function resize(
     nw = w * k
     nh = h * k
   }
-  // Poignée latérale : l'axe libre reste centré sur l'ancre (sx ou sy = 0).
+  // Side handle: the free axis stays centered on the anchor (sx or sy = 0).
   const c2 = add(A, rot(r, { x: (sx * nw) / 2, y: (sy * nh) / 2 }))
   return { x: c2.x - nw / 2, y: c2.y - nh / 2, width: nw, height: nh }
 }
 
-/** Angle (degrés) d'une rotation commencée à `start` avec la rotation initiale `r0`. */
+/** Angle (degrees) of a rotation started at `start` with initial rotation `r0`. */
 export function rotateTo(b: OrientedBox, start: Vec, p: Vec, r0: number, snap15 = false): number {
   const c = centerOf(b)
   const a0 = Math.atan2(start.y - c.y, start.x - c.x)

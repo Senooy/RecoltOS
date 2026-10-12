@@ -1,8 +1,8 @@
 /**
- * Export PNG : dialogue Portée (Tout / Sélection), Échelle (1× 2×
- * 3×), Fond (Clair / Sombre / Thème) → vidage → `spaces.exportPng` (fenêtre stage côté main,
- * enregistrement choisi par l'utilisateur) → pilule de progression avec « Annuler » → toast
- * « Export terminé · Afficher dans le Finder ».
+ * PNG export: Scope dialog (All / Selection), Scale (1× 2×
+ * 3×), Background (Light / Dark / Theme) → flush → `spaces.exportPng` (stage window on the main side,
+ * save location chosen by the user) → progress pill with "Cancel" → toast
+ * "Export done · Show in Finder".
  */
 import { useEffect, useState } from 'react'
 import { Button, Dialog, SegmentedSmall, toast } from '../../../../components/ui'

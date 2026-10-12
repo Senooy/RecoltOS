@@ -1,11 +1,11 @@
 /**
- * Orchestration d'une capture (10 étapes) : (1) verrou `inFlight` ; (2) permission
- * (prompt une fois, sinon `permission-required` sans lancer `screencapture`) ; (3) masquer la
- * fenêtre si elle existe ; (4) `screencapture` ; (5) PNG valide, sinon branche ⌃ presse-papiers
- * (image différente de celle d'avant), sinon annulation ; (6) ingestion `source:'capture'` (doublon
- * → `duplicate`) ; (7) copie dans le dossier de dépôt (échec non bloquant) ; (8) presse-papiers ;
- * (9) notification ; (10) `finally` : fenêtre restaurée, verrou levé, temporaire supprimé.
- * Toutes les dépendances Electron sont injectées (tests sans Electron).
+ * Orchestration of a capture (10 steps): (1) `inFlight` lock; (2) permission
+ * (prompt once, otherwise `permission-required` without launching `screencapture`); (3) hide the
+ * window if it exists; (4) `screencapture`; (5) valid PNG, otherwise the ⌃ clipboard branch
+ * (image different from the previous one), otherwise cancel; (6) ingest `source:'capture'` (duplicate
+ * → `duplicate`); (7) copy to the drop folder (non-blocking failure); (8) clipboard;
+ * (9) notification; (10) `finally`: window restored, lock released, temp file deleted.
+ * All Electron dependencies are injected (tests run without Electron).
  */
 import { constants } from 'node:fs'
 import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises'
@@ -98,7 +98,7 @@ export function createCaptureService(deps: CaptureDeps) {
     const tmp = path.join(deps.tmpDir, `${now()}-${Math.random().toString(36).slice(2, 8)}.png`)
     let hidden: WindowLike | null = null
     try {
-      // (2) Permission : jamais de capture sans `granted` (sinon : fond d'écran seul).
+      // (2) Permission: never capture without `granted` (otherwise: wallpaper only).
       let { access } = deps.access()
       if (access !== 'granted' && !prefs.promptShown) {
         await deps.provokePrompt()
@@ -111,7 +111,7 @@ export function createCaptureService(deps: CaptureDeps) {
         if (!w || w.isDestroyed() || !w.isVisible()) deps.notify({ permission: true })
         return { status: 'permission-required', access }
       }
-      // (3) Masquer la fenêtre si elle existe et est visible.
+      // (3) Hide the window if it exists and is visible.
       const w = deps.getWindow()
       if (prefs.hideApp && w && !w.isDestroyed() && w.isVisible()) {
         w.hide()
@@ -122,7 +122,7 @@ export function createCaptureService(deps: CaptureDeps) {
       const before = mode === 'screen' ? null : await deps.clipboard.hash()
       // (4) screencapture
       const res = await deps.run(deps.bin, buildArgs(mode, tmp, deps.displayIndex()))
-      // (5) Fichier PNG valide, sinon branche ⌃ (presse-papiers), sinon annulation.
+      // (5) Valid PNG file, otherwise the ⌃ branch (clipboard), otherwise cancel.
       let file = tmp
       let viaClipboard = false
       if (!(await isPngFile(tmp))) {
@@ -141,9 +141,9 @@ export function createCaptureService(deps: CaptureDeps) {
         return { status: 'error', message: (err as Error).message || mt().capture.failed }
       }
       const duplicate = r.status === 'duplicate' || r.status === 'dismissed'
-      // (7) Dossier de dépôt (non bloquant).
+      // (7) Drop folder (non-blocking).
       const dropPath = prefs.dropFolder ? await copyToDropFolder(file, prefs.dropFolder) : undefined
-      // (8) Presse-papiers.
+      // (8) Clipboard.
       if (prefs.copyToClipboard && !viaClipboard) {
         try {
           await deps.clipboard.writeImage(file)
@@ -158,7 +158,7 @@ export function createCaptureService(deps: CaptureDeps) {
         ...(viaClipboard ? { viaClipboard: true } : {}),
         ...(dropPath ? { dropPath } : {}),
       }
-      // (9) Notification système si la fenêtre n'est pas visible (le toast in-app suffit sinon).
+      // (9) System notification if the window is not visible (the in-app toast is enough otherwise).
       const shown = deps.getWindow()
       const windowVisible =
         !!shown && !shown.isDestroyed() && (hidden !== null || shown.isVisible())

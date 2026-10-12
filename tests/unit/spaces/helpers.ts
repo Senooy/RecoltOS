@@ -1,4 +1,4 @@
-/** Bibliothèque de test pour le domaine Spaces (vraie base, horloge fixe). */
+/** Test library for the Spaces domain (real database, fixed clock). */
 import { libraryPaths } from '../../../src/main/library/paths'
 import type { LibraryContext } from '../../../src/main/library/library-context'
 import type { SpaceNode } from '../../../src/shared/spaces-schema'

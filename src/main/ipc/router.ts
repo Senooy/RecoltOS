@@ -1,7 +1,7 @@
 /**
- * Routeur IPC : un seul canal `rpc`, validation zod des entrées
- * (toujours) et des sorties (en dev), contrôle de l'expéditeur, erreurs `{ code, message }`.
- * Le cœur (`dispatch`) n'importe pas `electron` : testable sous Node.
+ * IPC router: a single `rpc` channel, zod validation of inputs
+ * (always) and of outputs (in dev), sender check, errors `{ code, message }`.
+ * The core (`dispatch`) does not import `electron`: testable under Node.
  */
 import type { IpcMain, IpcMainInvokeEvent, WebContents } from 'electron'
 import path from 'node:path'
@@ -32,7 +32,7 @@ import {
 } from '../../shared/ipc'
 
 export interface HandlerContext {
-  /** WebContents émetteur (absent dans les tests). */
+  /** Emitting WebContents (absent in tests). */
   sender?: WebContents
 }
 
@@ -44,7 +44,7 @@ export type Handler<C extends Channel> = (
 export type DomainHandlers<D extends Domain> = { [C in ChannelOf<D>]: Handler<C> }
 export type AllHandlers = { [C in Channel]: Handler<C> }
 
-/** Handlers `not_implemented` pour tous les canaux d'un domaine. */
+/** `not_implemented` handlers for all channels of a domain. */
 export function notImplemented<D extends Domain>(domain: D): DomainHandlers<D> {
   const out: Record<string, Handler<Channel>> = {}
   for (const ch of CHANNELS) {
@@ -58,7 +58,7 @@ export function notImplemented<D extends Domain>(domain: D): DomainHandlers<D> {
 
 export interface DispatchOptions {
   handlers: Partial<AllHandlers>
-  /** Valide aussi la sortie (dev). */
+  /** Also validates the output (dev). */
   validateOutput: boolean
   onError?: (channel: string, err: unknown) => void
 }
@@ -72,7 +72,7 @@ function toErrorShape(err: unknown): AppErrorShape {
   return { code: 'internal', message: err instanceof Error ? err.message : String(err) }
 }
 
-/** Valide, appelle le handler, renvoie une enveloppe : ne lève jamais. */
+/** Validates, calls the handler, returns an envelope: never throws. */
 export async function dispatch(
   channel: unknown,
   input: unknown,
@@ -97,7 +97,7 @@ export async function dispatch(
       },
     }
   }
-  // Le canal est validé dynamiquement : on appelle le handler sous une signature large.
+  // The channel is validated dynamically: the handler is called under a broad signature.
   const handler = opts.handlers[channel] as
     ((input: unknown, ctx: HandlerContext) => unknown) | undefined
   if (!handler) {
@@ -132,12 +132,12 @@ export async function dispatch(
 }
 
 /**
- * Origine autorisée : dev = serveur Vite (`ELECTRON_RENDERER_URL`) ; prod = `index.html`
- * du renderer en `file://`. Les fenêtres hors écran n'ont pas de preload et ne peuvent pas appeler.
+ * Allowed origin: dev = Vite server (`ELECTRON_RENDERER_URL`); prod = `index.html`
+ * of the renderer under `file://`. Off-screen windows have no preload and cannot call.
  *
- * En prod on compare des CHEMINS décodés (`fileURLToPath`), pas des URL : Node encode `[`, `]` et `~`
- * (`%5B`, `%5D`, `%7E`) dans `pathToFileURL`, Chromium non ; une comparaison de chaînes refuserait
- * tous les appels si le chemin d'installation contient l'un d'eux. `?` et `#` sont ignorés.
+ * In prod we compare DECODED PATHS (`fileURLToPath`), not URLs: Node encodes `[`, `]` and `~`
+ * (`%5B`, `%5D`, `%7E`) in `pathToFileURL`, Chromium does not; a string comparison would refuse
+ * all calls if the install path contains one of them. `?` and `#` are ignored.
  */
 export function makeSenderCheck(opts: { rendererUrl: string | null; rendererIndexPath: string }) {
   const devOrigin = opts.rendererUrl ? new URL(opts.rendererUrl).origin : null
@@ -170,7 +170,7 @@ export function registerRpc(opts: RegisterRpcOptions): () => void {
   return () => opts.ipcMain.removeHandler(RAW_CHANNELS.rpc)
 }
 
-/** Valide (dev) puis envoie `evt:<name>` à chaque WebContents cible. */
+/** Validates (dev) then sends `evt:<name>` to each target WebContents. */
 export function makeEmitter(opts: {
   targets: () => WebContents[]
   validate: boolean

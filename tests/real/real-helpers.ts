@@ -1,6 +1,6 @@
 /**
- * Import réel sous Node : copie de `moodmark.db` (jamais la source) + fichiers GatherOS
- * clonés en lecture seule vers une bibliothèque temporaire.
+ * Real import under Node: copy of `moodmark.db` (never the source) + GatherOS files
+ * cloned read-only into a temporary library.
  */
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -15,7 +15,7 @@ import { cloneFile, hashFile } from '../../src/main/workers/media/files'
 import { ImportOptions } from '../../src/shared/ipc/import'
 
 export const REAL_ROOT = process.env.RECOLTOS_REAL_LIBRARY ?? ''
-/** Copie de travail de la base (sinon : copie faite par l'importeur depuis la source). */
+/** Working copy of the database (otherwise: copy made by the importer from the source). */
 export const REAL_DB = process.env.RECOLTOS_REAL_DB ?? ''
 
 export function realSource(): GatherosLibrary {

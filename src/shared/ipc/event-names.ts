@@ -1,7 +1,7 @@
 /**
- * Liste blanche des événements main → renderer (`evt:<nom>`). Sans dépendance : importée par le
- * preload sandboxé. Doit égaler `EVENT_NAMES` (clés de `events`, index.ts) : vérifié par
- * `tests/unit/shared/ipc-contract.test.ts`. Tout nouvel événement est ajouté ici et dans son domaine.
+ * Allowlist of main → renderer events (`evt:<name>`). No dependency: imported by the
+ * sandboxed preload. Must equal `EVENT_NAMES` (keys of `events`, index.ts): checked by
+ * `tests/unit/shared/ipc-contract.test.ts`. Any new event is added here and in its domain.
  */
 export const EVENT_NAME_LIST = [
   'ai.queue',

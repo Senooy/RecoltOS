@@ -1,6 +1,6 @@
 /**
- * Briques communes des repos : horloge injectable, listes d'ids passées en JSON (`json_each`),
- * colonnes JSON et booléens SQLite.
+ * Shared building blocks of the repos: injectable clock, id lists passed as JSON (`json_each`),
+ * JSON columns and SQLite booleans.
  */
 import type Database from 'better-sqlite3'
 import { preparedFor, type Prepared } from '../open'
@@ -8,7 +8,7 @@ import { preparedFor, type Prepared } from '../open'
 export type Clock = () => number
 
 export interface RepoOptions {
-  /** Horloge (ms epoch) ; injectée dans les tests. */
+  /** Clock (ms epoch); injected in tests. */
   now?: Clock
 }
 
@@ -22,7 +22,7 @@ export function repoBase(db: Database.Database, opts: RepoOptions = {}): RepoBas
   return { db, q: preparedFor(db), now: opts.now ?? Date.now }
 }
 
-/** Liste d'ids pour `IN (SELECT value FROM json_each(?))` (une seule requête préparée). */
+/** List of ids for `IN (SELECT value FROM json_each(?))` (a single prepared query). */
 export function idList(ids: readonly number[]): string {
   return JSON.stringify(ids.filter((n) => Number.isInteger(n)))
 }
@@ -45,7 +45,7 @@ export function toBool(v: boolean | number | null | undefined): number | null {
   return v ? 1 : 0
 }
 
-/** Découpe un tableau en tranches (lots d'insertion). */
+/** Splits an array into slices (insert batches). */
 export function chunks<T>(arr: readonly T[], size: number): T[][] {
   const out: T[][] = []
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
@@ -53,8 +53,8 @@ export function chunks<T>(arr: readonly T[], size: number): T[][] {
 }
 
 /**
- * Construit `SET a = @a, b = @b` depuis un patch camelCase, en ne gardant que les colonnes connues.
- * Les valeurs passent par `encode` (JSON, booléens). Renvoie `null` si rien à mettre à jour.
+ * Builds `SET a = @a, b = @b` from a camelCase patch, keeping only the known columns.
+ * Values go through `encode` (JSON, booleans). Returns `null` if there is nothing to update.
  */
 export function buildSet<K extends string>(
   patch: Partial<Record<K, unknown>>,

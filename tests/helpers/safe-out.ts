@@ -1,38 +1,38 @@
 /**
- * Garde des dossiers de sortie destructifs (`make-fixtures.mts`, `seed-bench.mts`, `cloneDir`) : ces
- * scripts SUPPRIMENT récursivement `--out` avant d'écrire. Une faute de frappe (`--out ~`, `--out .`,
- * le `userData` réel de RecoltOS, le dossier de l'ancienne app GatherOS, source de l'import) ne doit
- * jamais effacer de données.
+ * Guard for destructive output folders (`make-fixtures.mts`, `seed-bench.mts`, `cloneDir`): these
+ * scripts RECURSIVELY DELETE `--out` before writing. A typo (`--out ~`, `--out .`,
+ * the real RecoltOS `userData`, the old GatherOS app folder, the import source) must
+ * never erase data.
  *
- * Règles de `assertSafeOutDir(out)` :
- *  1. toujours refusés, même avec `force` : `/`, `$HOME` et ses parents, la racine du dépôt et ses
- *     parents (dont le checkout principal quand on est dans un worktree), tout chemin sous
- *     `…/Library` ou `…/Application Support`, tout chemin contenant un segment « GatherOS » ;
- *  2. un dossier existant NON vide n'est accepté que s'il porte le marqueur `.recolt-fixture` écrit
- *     par ces scripts (donc un dossier qu'ils ont eux-mêmes fabriqué) ; `force` n'y change rien ;
- *  3. hors `<dépôt>/.tmp` et `os.tmpdir()`, il faut `force` (`--force`) ;
- *  4. les liens symboliques sont résolus avant tout contrôle.
+ * Rules of `assertSafeOutDir(out)`:
+ *  1. always refused, even with `force`: `/`, `$HOME` and its parents, the repo root and its
+ *     parents (including the main checkout when inside a worktree), any path under
+ *     `…/Library` or `…/Application Support`, any path containing a "GatherOS" segment;
+ *  2. an existing NON-empty folder is only accepted if it carries the `.recolt-fixture` marker
+ *     written by these scripts (i.e. a folder they created themselves); `force` changes nothing;
+ *  3. outside `<repo>/.tmp` and `os.tmpdir()`, `force` (`--force`) is required;
+ *  4. symbolic links are resolved before any check.
  */
 import { existsSync, lstatSync, readdirSync, realpathSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { REPO_ROOT } from './paths'
 
-/** Fichier posé dans tout dossier fabriqué par `make-fixtures` / `seed-bench`. */
+/** File placed in every folder created by `make-fixtures` / `seed-bench`. */
 export const FIXTURE_MARKER = '.recolt-fixture'
 
 export interface SafeOutOptions {
-  /** Autorise un dossier hors `<dépôt>/.tmp` et `os.tmpdir()` (jamais les chemins protégés). */
+  /** Allows a folder outside `<repo>/.tmp` and `os.tmpdir()` (never protected paths). */
   force?: boolean
-  /** Racine du dépôt (défaut : celle des tests). */
+  /** Repo root (default: the tests' one). */
   repoRoot?: string
-  /** Dossier personnel (défaut : `os.homedir()`). */
+  /** Home folder (default: `os.homedir()`). */
   home?: string
-  /** Dossier temporaire système (défaut : `os.tmpdir()`). */
+  /** System temporary folder (default: `os.tmpdir()`). */
   tmp?: string
 }
 
-/** Chemin absolu avec liens symboliques résolus, même si la fin du chemin n'existe pas encore. */
+/** Absolute path with symlinks resolved, even if the end of the path does not exist yet. */
 export function realish(p: string): string {
   let current = resolve(p)
   const tail: string[] = []
@@ -49,7 +49,7 @@ export function realish(p: string): string {
   }
 }
 
-/** `inner` est `outer` ou se trouve dessous. */
+/** `inner` is `outer` or lies under it. */
 function within(outer: string, inner: string): boolean {
   const rel = relative(outer, inner)
   return rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))
@@ -75,8 +75,8 @@ export function protectedReason(target: string, options: SafeOutOptions = {}): s
 }
 
 /**
- * Valide `out` avant toute suppression et renvoie son chemin résolu. Lève une `Error` (message en
- * français) si le dossier est refusé.
+ * Validates `out` before any deletion and returns its resolved path. Throws an `Error` (message in
+ * French) if the folder is refused.
  */
 export function assertSafeOutDir(out: string, options: SafeOutOptions = {}): string {
   if (!out || out.trim() === '')
@@ -112,7 +112,7 @@ export function assertSafeOutDir(out: string, options: SafeOutOptions = {}): str
   return target
 }
 
-/** Pose le marqueur : le dossier pourra être régénéré sans `--force` ni confirmation. */
+/** Places the marker: the folder can be regenerated without `--force` or confirmation. */
 export function markFixtureDir(dir: string, generator: string): void {
   writeFileSync(join(dir, FIXTURE_MARKER), `${generator}\n`)
 }

@@ -1,7 +1,7 @@
 /**
- * Point d'entrée du media-worker (utilityProcess `recolt-media`).
- * sharp / ffmpeg / sips / hash / palette / zip. N'ouvre JAMAIS la base : main envoie les chemins.
- * Les chemins des binaires arrivent par `__configure` (jamais via le `PATH`).
+ * Entry point of the media-worker (utilityProcess `recolt-media`).
+ * sharp / ffmpeg / sips / hash / palette / zip. NEVER opens the database: main sends the paths.
+ * Binary paths arrive via `__configure` (never via the `PATH`).
  */
 import sharp from 'sharp'
 import { isLang, setLang } from '../../shared/i18n/lang'
@@ -10,7 +10,7 @@ import { runMediaOp } from './media/ops'
 import { serve } from './runtime'
 
 sharp.concurrency(2)
-// Pas de cache libvips : un même chemin peut être réécrit (dérivés régénérés).
+// No libvips cache: the same path may be rewritten (derived files are regenerated).
 sharp.cache(false)
 
 let tools: MediaTools = {}
@@ -33,12 +33,12 @@ serve({
     runMediaOp(op, args, { tools, signal: ctx.signal, progress: ctx.progress }),
 })
 
-// Une exception non rattrapée laisse un état incertain : on sort en erreur, l'hôte redémarre.
+// An uncaught exception leaves an uncertain state: exit with an error, the host restarts.
 process.on('uncaughtException', (err) => {
-  console.error('[media-worker] exception non rattrapée', err)
+  console.error('[media-worker] uncaught exception', err)
   process.exit(70)
 })
 process.on('unhandledRejection', (err) => {
-  console.error('[media-worker] promesse rejetée non gérée', err)
+  console.error('[media-worker] unhandled promise rejection', err)
   process.exit(70)
 })

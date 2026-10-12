@@ -1,7 +1,7 @@
 /**
- * DTO de grille `ItemCard` : URL `recolt://` résolues ici (repli compris),
- * vue de post `PostView` (texte tronqué à 600, auteur avec avatar local ou `null` → monogramme,
- * images citées seulement si déjà téléchargées). Aucune URL http(s) ne sort.
+ * Grid DTO `ItemCard`: `recolt://` URLs resolved here (fallback included),
+ * post view `PostView` (text truncated at 600, author with local avatar or `null` → monogram,
+ * quoted images only if already downloaded). No http(s) URL is ever returned.
  */
 import type { ItemCard, PostAuthorView, PostView, QuotedPostView } from '../../shared/dto/items'
 import { POST_VIEW_TEXT_MAX, parsePostMeta, type PostMeta } from '../../shared/post-meta'
@@ -41,7 +41,7 @@ function truncate(text: string | null, max = POST_VIEW_TEXT_MAX): string | null 
   return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
 
-/** URL `recolt://…/remote/…` d'une image distante déjà téléchargée, sinon rien. */
+/** `recolt://…/remote/…` URL of a remote image already downloaded, otherwise nothing. */
 export function remoteImageUrls(lib: DtoLib, urls: readonly (string | null)[]): string[] {
   const out: string[] = []
   for (const u of urls) {

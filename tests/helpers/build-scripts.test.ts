@@ -17,11 +17,11 @@ function write(root: string, rel: string, content: string): void {
 }
 
 describe('build-host', () => {
-  it('sans src/host/index.ts : rien à construire', async () => {
+  it('without src/host/index.ts: nothing to build', async () => {
     expect(await buildHost({ root: makeTmpDir('host-none') })).toBeNull()
   })
 
-  it('bundle CJS autonome : alias @shared inliné, aucun require hors builtins', async () => {
+  it('standalone CJS bundle: @shared alias inlined, no require outside builtins', async () => {
     const root = makeTmpDir('host')
     write(root, 'src/shared/proto.ts', 'export const PROTOCOL_VERSION = 7\n')
     write(
@@ -38,7 +38,7 @@ describe('build-host', () => {
     expect(r.stdout.trim()).toBe('["createServer",7]')
   })
 
-  it('détecte un require de module externe', () => {
+  it('detects a require of an external module', () => {
     expect(
       externalRequires('require("node:fs");require("zod");require("./x");require(\'fs\')'),
     ).toEqual(['zod'])
@@ -46,11 +46,11 @@ describe('build-host', () => {
 })
 
 describe('build-ext', () => {
-  it('sans manifest : rien à construire', async () => {
+  it('without manifest: nothing to build', async () => {
     expect(await buildExt({ root: makeTmpDir('ext-none') })).toBeNull()
   })
 
-  it('par cible : scripts IIFE sans import, alias @shared, manifest généré, icônes copiées', async () => {
+  it('per target: IIFE scripts without import, @shared alias, generated manifest, icons copied', async () => {
     const root = makeTmpDir('ext')
     write(
       root,
@@ -86,7 +86,7 @@ describe('build-ext', () => {
 })
 
 describe('gen-extension-key.mjs', () => {
-  it('clé publique SPKI et identifiant a–p cohérents ; aucune clé privée en sortie', () => {
+  it('SPKI public key and a–p identifier consistent; no private key in output', () => {
     const r = node(['scripts/gen-extension-key.mjs'])
     expect(r.status, r.stderr).toBe(0)
     expect(r.stdout).not.toMatch(/PRIVATE/)
@@ -99,7 +99,7 @@ describe('gen-extension-key.mjs', () => {
 })
 
 describe('sanitize-fixture.mjs', () => {
-  it('masque jetons, cookies, e-mails, hôtes et pseudonymise noms et textes (déterministe)', () => {
+  it('masks tokens, cookies, e-mails, hosts and pseudonymizes names and texts (deterministic)', () => {
     const dir = makeTmpDir('sanitize')
     const input = {
       headers: { Authorization: 'Bearer abc.def', cookie: 'ct0=zzz; auth_token=yyy' },
@@ -139,7 +139,7 @@ describe('sanitize-fixture.mjs', () => {
     expect(out.user.email).toBe('utilisateur@example.test')
     expect(out.posts[0]?.url).toMatch(/^https:\/\/example\.test\//)
     expect(out.posts[0]).toMatchObject({ likes: 12, ok: true })
-    // Même valeur → même pseudonyme.
+    // Same value → same pseudonym.
     expect(out.posts[0]?.full_text).toBe(out.posts[1]?.full_text)
     expect(out.posts[1]?.user?.name).toBe(out.user.name)
   })

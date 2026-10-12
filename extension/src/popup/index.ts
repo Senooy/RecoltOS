@@ -1,7 +1,7 @@
 /**
- * Popup 360×520 (tutoiement) : état du pont, aperçu, enregistrement de la page ou de
- * l'image principale, collection, note, état de la synchro par plateforme et « Synchroniser
- * maintenant ». Firefox : bouton « Autoriser l'accès aux sites » si les autorisations d'hôte
+ * Popup 360×520 (informal "tu" tone): bridge state, preview, saving the page or
+ * the main image, collection, note, per-platform sync state and "Sync now". Firefox: an "Allow
+ * site access" button if host permissions (optional in MV3) are missing.
  * (optionnelles en MV3) manquent.
  */
 import { BRIDGE_PLATFORMS, type BridgePlatform } from '../../../src/shared/bridge/constants'
@@ -11,7 +11,7 @@ import { ENDPOINTS } from '../lib/endpoints'
 import { setExtLang, xt } from '../lib/i18n'
 import type { PopupRequest, PopupState } from '../lib/popup-protocol'
 
-/** Libellé et aide de chaque état du pont, dans la langue active. */
+/** Label and help of each bridge state, in the active language. */
 export const STATUS_TEXT: Record<string, { label: string; hint?: string }> = new Proxy(
   {},
   {
@@ -27,7 +27,7 @@ export const STATUS_TEXT: Record<string, { label: string; hint?: string }> = new
 
 const NAMES: Record<BridgePlatform, string> = { x: 'X', instagram: 'Instagram', cosmos: 'Cosmos' }
 
-/** « il y a 4 min », « il y a 2 h », « hier »… (« 4 min ago », « yesterday » en anglais). */
+/** Relative time labels, e.g. "4 min ago", "2 h ago", "yesterday" (French: "il y a 4 min", "hier"). */
 export function relTime(at: number, now = Date.now()): string {
   const t = xt().time
   const s = Math.max(0, Math.round((now - at) / 1000))
@@ -57,7 +57,7 @@ function send<T>(msg: PopupRequest): Promise<T> {
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 
-/** Textes statiques de `popup.html` (attributs `data-i18n*`), dans la langue active. */
+/** Static texts of `popup.html` (`data-i18n*` attributes), in the active language. */
 export function applyStaticTexts(doc: Document): void {
   const p = xt().popup as Record<string, string>
   for (const el of doc.querySelectorAll<HTMLElement>('[data-i18n]')) {
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
   let selected: string | null = st.lastCollectionId
   let collections: BridgeCollection[] = st.collections
 
-  // ---- état
+  // ---- state
   const key = st.stale ? 'stale' : st.bridge
   const status = STATUS_TEXT[key] ?? STATUS_TEXT.connecting!
   const pill = $('status')
@@ -92,7 +92,7 @@ async function main(): Promise<void> {
   hint.hidden = !status.hint
   hint.textContent = status.hint ?? ''
 
-  // ---- aperçu
+  // ---- preview
   $<HTMLInputElement>('title').value = st.tab.title ?? ''
   try {
     const shot = await api().tabs.captureVisibleTab({ format: 'jpeg', quality: 70 })
@@ -101,7 +101,7 @@ async function main(): Promise<void> {
     img.hidden = false
     $('noshot').hidden = true
   } catch {
-    // pages internes : pas d'aperçu
+    // internal pages: no preview
   }
   $('saveImage').hidden = !st.ogImage
   if (st.pending) $('savePage').textContent = xt().popup.saveHere
@@ -149,7 +149,7 @@ async function main(): Promise<void> {
     })
   })
 
-  // ---- enregistrement
+  // ---- saving
   const result = $('result')
   const save = async (mode: 'page' | 'image') => {
     for (const id of ['savePage', 'saveImage']) $<HTMLButtonElement>(id).disabled = true
@@ -181,7 +181,7 @@ async function main(): Promise<void> {
   $('savePage').addEventListener('click', () => void save('page'))
   $('saveImage').addEventListener('click', () => void save('image'))
 
-  // ---- synchro
+  // ---- sync
   const sync = $('sync')
   sync.replaceChildren(
     ...BRIDGE_PLATFORMS.map((p) => {
@@ -200,7 +200,7 @@ async function main(): Promise<void> {
   grant.hidden = missing.length === 0
   grant.addEventListener('click', () => {
     const origins = missing.flatMap((p) => ENDPOINTS[p].permissions)
-    // Doit rester dans le geste de l'utilisateur (Firefox).
+    // Must stay within the user gesture (Firefox).
     void api()
       .permissions.request({ origins })
       .then((ok) => {

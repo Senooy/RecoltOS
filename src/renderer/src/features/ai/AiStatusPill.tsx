@@ -1,6 +1,6 @@
 /**
- * Pastille IA de la barre du haut : visible seulement quand la file IA travaille, attend
- * ou est en pause. Ouvre Réglages › IA.
+ * AI status dot in the top bar: visible only when the AI queue is working, waiting
+ * or paused. Opens Settings › AI.
  */
 import { Sparkles } from 'lucide-react'
 import { tr } from '../../i18n'

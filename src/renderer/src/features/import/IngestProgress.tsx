@@ -1,6 +1,6 @@
 /**
- * Progression d'un import (`evt:ingest.progress`) dans une pilule bas-centre,
- * affichée au-delà de 3 fichiers, masquée à la fin.
+ * Progress of an import (`evt:ingest.progress`) in a bottom-centre pill,
+ * shown beyond 3 files, hidden at the end.
  */
 import { useEffect, useState } from 'react'
 import { PILL_CLASS } from '../../components/ui'

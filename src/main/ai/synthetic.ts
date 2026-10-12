@@ -1,6 +1,6 @@
 /**
- * Image synthétique 256×256 du test de connexion niveau 2 : PNG encodé à la main (zlib),
- * dégradé et damier, sans aucune donnée de l'utilisateur. Le media-worker en fait le JPEG envoyé.
+ * Synthetic 256×256 image for the level-2 connection test: PNG hand-encoded (zlib),
+ * gradient and checkerboard, with no user data at all. The media-worker turns it into the JPEG sent.
  */
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'

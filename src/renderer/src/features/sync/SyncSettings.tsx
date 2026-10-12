@@ -1,7 +1,7 @@
 /**
- * Réglages › Synchronisation. En haut : titre, description, libellé de groupe, trois lignes à interrupteur (58 pt), note de bas.
- * Puis : la ligne d'état sous chaque libellé, le lien « En savoir plus », le bouton « … »
- * (visible au survol) et, SOUS la note, la carte « Extension navigateur ».
+ * Settings › Synchronisation. At the top: title, description, group label, three switch rows
+ * (58 pt), footnote. Then: the status line under each label, the « En savoir plus » link, the
+ * « … » button (visible on hover) and, BELOW the footnote, the « Extension navigateur » card.
  */
 import { MoreHorizontal } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
@@ -22,7 +22,7 @@ const label = (p: SyncPlatformKey): string => tr.settings.sync[p]
 
 const hhmm = (ts: number): string => hourMinute(ts)
 
-/** Ligne d'état et sa tonalité (gris, ambre, rouge). */
+/** Status line and its tone (grey, amber, red). */
 export function statusLine(
   s: SyncSourceStatus,
   now = Date.now(),

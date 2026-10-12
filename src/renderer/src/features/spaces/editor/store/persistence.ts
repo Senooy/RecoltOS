@@ -1,10 +1,11 @@
 /**
- * Persistance différée : suivi `dirty` HORS de l'état immer, vidage après 500 ms
- * d'inactivité (attente max 3 s), en sous-lots de 2 000 nœuds, chaque `spaces.applyBatch` étant
- * atomique ; `dirty` n'est purgé qu'après succès (et seulement si le nœud n'a pas changé entre-temps).
- * `validation` : non réessayable → rejeu nœud par nœud, quarantaine des fautifs, toast. `busy` / `io`
- * (et toute autre erreur) : `dirty` conservé, nouvel essai à 2 s puis backoff plafonné à 15 s.
- * Viewport à part (1 s), sans toucher `updated_at`. `flushSync()` = dernier recours de `beforeunload`.
+ * Deferred persistence: `dirty` tracking OUTSIDE the immer state, flush after 500 ms of
+ * inactivity (max wait 3 s), in sub-batches of 2,000 nodes, each `spaces.applyBatch` being
+ * atomic; `dirty` is purged only after success (and only if the node did not change in the
+ * meantime). `validation`: not retryable → node-by-node replay, offenders quarantined, toast.
+ * `busy` / `io` (and any other error): `dirty` kept, retry at 2 s, then backoff capped at 15 s.
+ * Viewport separately (1 s), without touching `updated_at`. `flushSync()` = last resort of
+ * `beforeunload`.
  */
 import type { SpaceBackground, SpaceNode, Camera } from '../../../../../../shared/spaces-schema'
 import { FLUSH_CHUNK, MAX_SYNC_BATCH } from '../../../../../../shared/spaces-schema'
@@ -27,9 +28,9 @@ export interface BatchPayload {
 export interface PersistenceDeps {
   send(p: BatchPayload): Promise<unknown>
   sendSync?(p: BatchPayload): unknown
-  /** Nœuds courants (état committé du store). */
+  /** Current nodes (committed store state). */
   nodes(): Record<string, SpaceNode>
-  /** Code d'erreur d'un échec (`validation`, `busy`…). */
+  /** Error code of a failure (`validation`, `busy`…). */
   codeOf(err: unknown): string
   onInvalid?(count: number, ids: string[]): void
   onRetry?(err: unknown): void
@@ -133,7 +134,7 @@ export class Persistence {
     }, wait)
   }
 
-  /** Vide tout ce qui est en attente ; ne lève jamais. Appels concurrents chaînés. */
+  /** Flushes everything pending; never throws. Concurrent calls are chained. */
   flush(): Promise<void> {
     const run = async (): Promise<void> => {
       if (this.inflight) await this.inflight.catch(() => undefined)
@@ -189,7 +190,7 @@ export class Persistence {
       this.retryMs = 0
       this.d.onSaved?.()
     } catch (err) {
-      // Réessayable : on remet ce qui n'a pas été écrit.
+      // Retryable: put back what was not written.
       this.meta = { ...meta, ...this.meta }
       if (viewport && !this.viewport) this.viewport = viewport
       this.retryMs = this.retryMs === 0 ? RETRY_MIN_MS : Math.min(RETRY_MAX_MS, this.retryMs * 2)
@@ -241,7 +242,7 @@ export class Persistence {
     if (bad.length > 0) this.d.onInvalid?.(bad.length, bad)
   }
 
-  /** `beforeunload` : un seul sous-lot synchrone (≤ 2 000), sans attente possible. */
+  /** `beforeunload`: a single synchronous sub-batch (≤ 2,000), no waiting possible. */
   flushSync(): void {
     const space = this.spaceUuid
     if (!space || !this.isDirty || !this.d.sendSync) return
@@ -264,7 +265,7 @@ export class Persistence {
         this.viewport = null
       }
     } catch {
-      // dernier recours : rien d'autre à faire
+      // last resort: nothing else to do
     }
   }
 

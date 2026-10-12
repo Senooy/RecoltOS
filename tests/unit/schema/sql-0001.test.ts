@@ -36,13 +36,13 @@ beforeEach(() => {
 afterEach(() => db.close())
 
 describe('0001_init.sql', () => {
-  it('s’applique, user_version = 1, intégrité ok', () => {
+  it('applies, user_version = 1, integrity ok', () => {
     expect(db.pragma('user_version', { simple: true })).toBe(1)
     expect(db.pragma('integrity_check', { simple: true })).toBe('ok')
     expect(db.pragma('foreign_key_check')).toEqual([])
   })
 
-  it('contient les tables attendues et pas item_embeddings', () => {
+  it('contains the expected tables and no item_embeddings', () => {
     const tables = (
       db.prepare("SELECT name FROM sqlite_master WHERE type IN ('table','view')").all() as {
         name: string
@@ -92,7 +92,7 @@ describe('0001_init.sql', () => {
     expect(cols('sync_state')[0]).toBe('source')
   })
 
-  it('FTS5 : diacritiques, préfixes, tags, purge sans ligne fantôme', () => {
+  it('FTS5: diacritics, prefixes, tags, purge with no ghost row', () => {
     const a = addItem(1, { title: 'Café crème' })
     const b = addItem(2, {
       kind: 'tweet',
@@ -124,7 +124,7 @@ describe('0001_init.sql', () => {
     expect(db.prepare('SELECT count(*) c FROM items_fts').get()).toEqual({ c: 1 })
   })
 
-  it('pierres tombales GatherOS', () => {
+  it('GatherOS tombstones', () => {
     const i = addItem(3, { origin: 'gatheros', origin_id: 'save-1' })
     db.prepare(
       'INSERT INTO collections(uuid,name,origin,origin_id,created_at,updated_at) VALUES (?,?,?,?,?,?)',
@@ -144,7 +144,7 @@ describe('0001_init.sql', () => {
     ])
   })
 
-  it('contraintes : nœud ≥ 24, type de job, bucket couleur, cascade et SET NULL', () => {
+  it('constraints: node ≥ 24, job type, color bucket, cascade and SET NULL', () => {
     db.prepare('INSERT INTO spaces(uuid,created_at,updated_at) VALUES (?,?,?)').run(
       uuid(300),
       now,
@@ -170,7 +170,7 @@ describe('0001_init.sql', () => {
     )
   })
 
-  it('les index partiels de liste sont utilisés', () => {
+  it('partial list indexes are used', () => {
     const plan = db
       .prepare(
         'EXPLAIN QUERY PLAN SELECT id FROM items WHERE deleted_at IS NULL AND hidden_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 120',
@@ -179,7 +179,7 @@ describe('0001_init.sql', () => {
     expect(plan.map((p) => p.detail).join(' ')).toMatch(/ix_items_live_created/)
   })
 
-  it('post_meta.thread non objet (chaîne, tableau de chaînes) : INSERT, UPDATE et reconstruction ne lèvent pas', () => {
+  it('post_meta.thread not an object (string, array of strings): INSERT, UPDATE and rebuild do not throw', () => {
     expect(() => addItem(30, { post_meta: '{"v":1,"thread":"x"}' })).not.toThrow()
     expect(() => addItem(31, { post_meta: '{"v":1,"thread":["a"]}' })).not.toThrow()
     const mixed = addItem(32, {

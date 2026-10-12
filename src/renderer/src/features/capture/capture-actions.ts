@@ -1,6 +1,6 @@
 /**
- * Actions de capture côté renderer : lancer (`capture.run`), retours (`evt:capture.done`), guide
- * de permission (`evt:capture.permissionRequired`).
+ * Capture actions on the renderer side: start (`capture.run`), feedback (`evt:capture.done`), permission
+ * guide (`evt:capture.permissionRequired`).
  */
 import { create } from 'zustand'
 import { toast } from '../../components/ui'
@@ -12,7 +12,7 @@ export const useCaptureUi = create<{ guideOpen: boolean; setGuide: (o: boolean) 
   (set) => ({ guideOpen: false, setGuide: (guideOpen) => set({ guideOpen }) }),
 )
 
-/** Capture depuis le menu, le FAB ou la palette (collection ouverte = destination). */
+/** Capture from the menu, the FAB or the palette (open collection = destination). */
 export async function runCapture(): Promise<void> {
   const route = useUi.getState().route
   try {

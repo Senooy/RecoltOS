@@ -1,14 +1,14 @@
 /**
- * Application des résultats en UNE transaction, conditionnée à `deleted_at IS NULL` :
- * description, OCR (si non vide, ou si `force`), titre IA (`ai_title` toujours ; `title` selon la
- * politique), tags `source='ai'` (les tags `user` / `import` ne sont jamais touchés), `ai_lang` = langue de sortie
- * demandée (celle de l'interface, `fr` ou `en`).
- * La FTS suit par les triggers de 0001 (`items` : title, ocr_text, ai_description, ai_tags ;
- * `item_tags`). Règles du titre :
- * - `title_source = 'user'` : JAMAIS écrasé ;
- * - `'import'` : remplacé seulement en politique `always` ou sur demande explicite (« Régénérer le
- *   titre ») ;
- * - vide, `'source'` (titre de page) ou `'ai'` : remplacé si `autoName`.
+ * Applies the results in ONE transaction, conditioned on `deleted_at IS NULL`:
+ * description, OCR (if non-empty, or if `force`), AI title (`ai_title` always; `title` per the
+ * policy), tags `source='ai'` (`user` / `import` tags are never touched), `ai_lang` = requested output
+ * language (that of the interface, `fr` or `en`).
+ * FTS follows the triggers of 0001 (`items`: title, ocr_text, ai_description, ai_tags;
+ * `item_tags`). Title rules:
+ * - `title_source = 'user'`: NEVER overwritten;
+ * - `'import'`: replaced only under the `always` policy or on explicit request ("Regenerate
+ *   title" button);
+ * - empty, `'source'` (page title) or `'ai'`: replaced if `autoName`.
  */
 import { AI_FIELDS, type AiAnalysis, type AiCallMeta, type AiField } from '../../shared/ai-types'
 import { getLang } from '../../shared/i18n/lang'
@@ -18,10 +18,10 @@ import { filterTags } from './tags'
 
 export interface ApplyOptions {
   fields?: readonly AiField[]
-  /** Écrire le titre (autoName, analyse manuelle) ; faux pour « autoAnalyzeOnSave » seul. */
+  /** Write the title (autoName, manual analysis); false for "autoAnalyzeOnSave" alone. */
   autoName: boolean
   titlePolicy: 'empty' | 'always'
-  /** Demande explicite de l'utilisateur sur le titre (bouton « Régénérer le titre »). */
+  /** Explicit user request on the title ("Regenerate title" button). */
   explicitTitle?: boolean
   force?: boolean
   vocabulary: readonly string[]
@@ -40,7 +40,7 @@ export function shouldWriteTitle(
   return item.title_source === 'source' || item.title_source === 'ai' || item.title_source === null
 }
 
-/** Renvoie l'item mis à jour, ou `null` s'il est absent ou à la corbeille. */
+/** Returns the updated item, or `null` if it is absent or in the trash. */
 export function applyAnalysis(
   lib: LibraryContext,
   itemId: number,

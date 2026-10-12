@@ -1,9 +1,9 @@
 /**
- * `BridgeServer` : socket Unix 0600 dans `os.tmpdir()`, NDJSON, un hôte natif
- * par connexion. Premier message attendu : `host.hello` (protocole 1, sinon `PROTOCOL_MISMATCH` et
- * fermeture). Les messages suivants sont validés (`parseMessage`) puis distribués par `type`.
- * Clients gardés en mémoire (aucune table). `send` refuse tout message de plus de 900 Ko.
- * Sans `electron` : testable sous Node.
+ * `BridgeServer`: Unix socket 0600 in `os.tmpdir()`, NDJSON, one native host
+ * per connection. First expected message: `host.hello` (protocol 1, otherwise `PROTOCOL_MISMATCH` and
+ * closing). Following messages are validated (`parseMessage`) then dispatched by `type`.
+ * Clients kept in memory (no table). `send` refuses any message over 900 KB.
+ * Without `electron`: testable under Node.
  */
 import { chmodSync, existsSync, rmSync } from 'node:fs'
 import net from 'node:net'
@@ -35,7 +35,7 @@ export interface BridgeClient {
   platforms: PlatformsState | null
   connectedAt: number
   lastSeenAt: number
-  /** `hello` reçu : l'extension est réellement connectée (pas seulement l'hôte). */
+  /** `hello` received: the extension is actually connected (not just the host). */
   ready: boolean
 }
 
@@ -71,13 +71,13 @@ export class BridgeServer {
     this.now = now
   }
 
-  /** Gestionnaire d'un type de message (un seul par type). */
+  /** Handler for a message type (only one per type). */
   handle<T extends MessageType>(type: T, fn: Handler<T>): this {
     this.handlers.set(type, fn as unknown as Handler<MessageType>)
     return this
   }
 
-  /** Changement de la liste des clients ou de leur état ; rend la fonction de retrait. */
+  /** Change of the client list or their state; returns the unsubscribe function. */
   onClients(fn: () => void): () => void {
     this.clientListeners.add(fn)
     return () => this.clientListeners.delete(fn)
@@ -88,7 +88,7 @@ export class BridgeServer {
       try {
         fn()
       } catch (err) {
-        this.log.warn('[bridge] écouteur clients', err)
+        this.log.warn('[bridge] clients listener', err)
       }
     }
   }
@@ -104,7 +104,7 @@ export class BridgeServer {
       })
     })
     chmodSync(this.socketPath, 0o600)
-    server.on('error', (err) => this.log.warn('[bridge] serveur', err))
+    server.on('error', (err) => this.log.warn('[bridge] server', err))
     this.server = server
   }
 
@@ -118,14 +118,14 @@ export class BridgeServer {
     this.emitClients()
   }
 
-  /** Clients dont l'extension a dit `hello`. */
+  /** Clients whose extension sent `hello`. */
   clients(): BridgeClient[] {
     return [...this.conns.values()]
       .map((c) => c.client)
       .filter((c): c is BridgeClient => c !== null && c.ready)
   }
 
-  /** Hôtes connectés (même sans `hello`). */
+  /** Connected hosts (even without `hello`). */
   hosts(): BridgeClient[] {
     return [...this.conns.values()].map((c) => c.client).filter((c): c is BridgeClient => !!c)
   }
@@ -134,7 +134,7 @@ export class BridgeServer {
     return this.conns.get(connId)?.client ?? null
   }
 
-  /** Client choisi pour une plateforme : session active, puis le plus récemment vu. */
+  /** Client chosen for a platform: active session first, then the most recently seen. */
   pickClient(p: BridgePlatform): BridgeClient | null {
     const ready = this.clients()
     const logged = ready.filter((c) => c.platforms?.[p]?.loggedIn)
@@ -142,7 +142,7 @@ export class BridgeServer {
     return pool.sort((a, b) => b.lastSeenAt - a.lastSeenAt)[0] ?? null
   }
 
-  /** Envoie un message ; `false` s'il dépasse 900 Ko (refusé) ou si la connexion n'existe plus. */
+  /** Sends a message; `false` if over 900 KB (refused) or if the connection is gone. */
   send<T extends MessageType>(
     connId: number,
     type: T,
@@ -154,7 +154,7 @@ export class BridgeServer {
     const msg = envelope(type, payload, re, this.now())
     const line = JSON.stringify(msg)
     if (Buffer.byteLength(line) > MAX_APP_TO_EXT_BYTES) {
-      this.log.warn(`[bridge] message ${type} refusé (> 900 Ko)`)
+      this.log.warn(`[bridge] message ${type} refused (> 900 KB)`)
       if (type !== 'error') {
         this.send(connId, 'error', { code: 'MESSAGE_TOO_LARGE', type }, re ?? msg.id)
       }
@@ -176,7 +176,7 @@ export class BridgeServer {
     socket.on('data', (d: string) => {
       const got = lines.push(d)
       if (!got) {
-        this.log.warn('[bridge] ligne trop longue, connexion fermée')
+        this.log.warn('[bridge] line too long, connection closed')
         socket.destroy()
         return
       }
@@ -194,7 +194,7 @@ export class BridgeServer {
     try {
       raw = JSON.parse(line)
     } catch {
-      this.log.warn('[bridge] ligne invalide')
+      this.log.warn('[bridge] invalid line')
       return
     }
     if (!conn.client) {
@@ -205,7 +205,7 @@ export class BridgeServer {
     const client = conn.client
     client.lastSeenAt = this.now()
     if (!r.ok) {
-      this.log.warn(`[bridge] message refusé : ${r.error}`)
+      this.log.warn(`[bridge] message refused: ${r.error}`)
       if (r.id) this.send(conn.id, 'error', { code: 'VALIDATION', message: r.error }, r.id)
       return
     }

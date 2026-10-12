@@ -1,11 +1,11 @@
 /**
- * Langue active du renderer : `tr` est le catalogue courant (liaison ES vivante, relue à chaque
- * rendu), `setUiLang` le change et notifie `useUiLang` (la racine remonte la coque avec
- * `key={lang}` : tout le texte suit sans redémarrage). Les formats (`lib/format.ts`) et zod
- * suivent la même langue (`shared/i18n/lang`).
+ * Active renderer language: `tr` is the current catalog (live ES binding, re-read at each
+ * render), `setUiLang` changes it and notifies `useUiLang` (the root remounts the shell with
+ * `key={lang}`: all text follows without restart). Formats (`lib/format.ts`) and zod
+ * follow the same language (`shared/i18n/lang`).
  *
- * Règle : un texte lu à l'import d'un module (constante de module) ne suit PAS le changement ;
- * lire `tr` dans le rendu ou dans une fonction.
+ * Rule: a text read at module import (module constant) does NOT follow the change;
+ * read `tr` in the render or in a function.
  */
 import { useSyncExternalStore } from 'react'
 import { getLang, onLangChange, setLang, type Lang } from '../../../shared/i18n/lang'
@@ -23,7 +23,7 @@ onLangChange((lang) => {
   if (typeof document !== 'undefined') document.documentElement.lang = lang
 })
 
-/** Catalogue d'une langue donnée (tests, aperçus). */
+/** Catalog for a given language (tests, previews). */
 export function messagesFor(lang: Lang): Messages {
   return CATALOGS[lang]
 }
@@ -36,14 +36,14 @@ export function setUiLang(lang: Lang): void {
   setLang(lang)
 }
 
-/** Langue active, réactive (re-rendu au changement). */
+/** Active language, reactive (re-renders on change). */
 export function useUiLang(): Lang {
   return useSyncExternalStore(onLangChange, getLang, getLang)
 }
 
 /**
- * Nom affiché d'une bibliothèque : la bibliothèque par défaut jamais renommée (« Bibliothèque »
- * ou « Library », selon la langue de sa création) prend le libellé de la langue active.
+ * Displayed name of a library: the default library, never renamed ("Bibliothèque"
+ * or "Library", depending on the language it was created in), takes the label of the active language.
  */
 export function libraryDisplayName(l: { id: string; name: string }): string {
   return l.id === 'default' && (l.name === 'Bibliothèque' || l.name === 'Library')

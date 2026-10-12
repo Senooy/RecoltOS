@@ -1,6 +1,6 @@
 /**
- * Parseurs de sync X / Instagram / Cosmos. Fonctions pures : `json` brut d'un `sync.page`
- * → `PageParseResult` (publications normalisées + curseur, ou erreur classée), jamais d'exception.
+ * Sync parsers for X / Instagram / Cosmos. Pure functions: raw `json` of a `sync.page`
+ * → `PageParseResult` (normalized posts + cursor, or a classified error), never throws.
  */
 import { parseCosmosSavesPage } from './cosmos'
 import { parseInstagramSavedPage } from './instagram'
@@ -12,7 +12,7 @@ export { parseInstagramSavedPage, parseInstagramMediaInfo, igExpiry } from './in
 export { parseCosmosSavesPage, cosmosOriginal } from './cosmos'
 export * from './types'
 
-/** Aiguillage par plateforme (pages `sync.page` et captures passives). */
+/** Routing by platform (`sync.page` pages and passive captures). */
 export function parseSyncPage(
   platform: SyncPlatform,
   json: unknown,

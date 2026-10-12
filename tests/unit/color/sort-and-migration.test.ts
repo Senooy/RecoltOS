@@ -24,8 +24,8 @@ function insert(db: ReturnType<typeof openTestDb>, id: number, hex: string | nul
   )
 }
 
-describe('tri couleur', () => {
-  it('éléments sans palette (bucket 13) en fin, rouges groupés, neutres du clair au sombre', () => {
+describe('color sort', () => {
+  it('items without a palette (bucket 13) at the end, reds grouped, neutrals from light to dark', () => {
     const db = openTestDb()
     const hexes = ['#2f6be0', '#e0312b', '#ff3a6e', '#f4d02c', '#ffffff', '#202020', '#3fa34d']
     hexes.forEach((h, i) => insert(db, i + 1, h))
@@ -39,15 +39,15 @@ describe('tri couleur', () => {
     })
     const ids = r.rows.map((x) => Number(x.uuid.slice(-12)))
     expect(ids.slice(-5).sort()).toEqual([100, 101, 102, 103, 104])
-    // Le blanc précède le noir (neutres du clair au sombre), après les teintes.
+    // White precedes black (neutrals from light to dark), after the hues.
     expect(ids.indexOf(5)).toBeLessThan(ids.indexOf(6))
     expect(ids.indexOf(5)).toBeGreaterThan(ids.indexOf(1))
     db.close()
   })
 })
 
-describe('migration 0002 (buckets décalés de 15°)', () => {
-  it('recalcule les buckets de teinte, laisse neutres et inconnus', () => {
+describe('migration 0002 (buckets shifted by 15°)', () => {
+  it('recomputes the hue buckets, leaves neutrals and unknowns alone', () => {
     const u = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`
     const mem = openTestDb({ upTo: 1 })
     mem.exec(`INSERT INTO items(id, uuid, kind, created_at, updated_at, color_l, color_c, color_h, color_bucket)

@@ -1,7 +1,7 @@
 /**
- * Réglages › Bibliothèques : liste en carte (nom, chemin, nombre
- * d'éléments, menu « … »), « Nouvelle bibliothèque », « Ouvrir un dossier… », et l'encart
- * « Importer depuis GatherOS » (détection, options, cible, progression par phase, aperçus, résumé).
+ * Settings › Libraries: card list (name, path, item count, "…" menu), "New library",
+ * "Open a folder…", and the "Import from GatherOS" box (detection, options, target, progress per
+ * phase, previews, summary).
  */
 import { Check, Ellipsis, FolderOpen, Pencil, Plus, Trash } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'

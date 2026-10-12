@@ -1,7 +1,7 @@
 /**
- * Service Redécouvrir : deck paginé (ordre complet mémorisé par graine et portée), actions
- * journalisées dans `rediscover_log`, annulation ≤ 10 s (pile de 10). Sans Electron : les
- * dépendances (base, repos, émission) sont injectées.
+ * Rediscover service: paginated deck (full order memorized per seed and scope), actions
+ * logged in `rediscover_log`, undo ≤ 10 s (stack of 10). Without Electron: the
+ * dependencies (database, repos, emission) are injected.
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../shared/errors'
@@ -121,7 +121,7 @@ export function createRediscover() {
       if (entry.collection) deps.collectionsChanged?.([entry.collection.uuid])
     },
 
-    /** Annule la dernière action de moins de 10 s ; `null` sinon. */
+    /** Undoes the last action made less than 10 s ago; `null` otherwise. */
     undo(deps: RediscoverDeps): { itemUuid: string } | null {
       const { db, repos } = deps
       const now = (deps.now ?? Date.now)()

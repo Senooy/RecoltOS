@@ -1,6 +1,6 @@
 /**
- * DTO `ItemDetail` : carte + notes, post complet (fil, post cité), slides, collections,
- * tags, palette, champs IA. Construit par main ; aucune URL http(s) de ressource.
+ * `ItemDetail` DTO: card + notes, full post (thread, quoted post), slides, collections,
+ * tags, palette, AI fields. Built by main; no http(s) URL of resources.
  */
 import type Database from 'better-sqlite3'
 import type { ItemDetail, PostDetailView } from '../../shared/dto/items'
@@ -99,7 +99,7 @@ export function toItemDetail(lib: DtoLib, db: Database.Database, uuid: string): 
   }
 }
 
-/** Job IA actif et dernière erreur (panneau Détails). */
+/** Active AI job and last error (Details panel). */
 function aiJobState(
   db: Database.Database,
   itemId: number,

@@ -1,14 +1,15 @@
 /**
- * Bibliothèque de démonstration (`pnpm run fixtures`, `pnpm run dev:demo`, projets e2e / visual).
+ * Demo library (`pnpm run fixtures`, `pnpm run dev:demo`, e2e / visual projects).
  *
  *   tsx --tsconfig tsconfig.node.json scripts/make-fixtures.mts --out <userData> [--if-missing]
  *       [--count 60] [--collections 6] [--no-cache] [--force]
  *
- * Simple CLI : la fabrication, le cache et le clonage vivent dans `tests/helpers/demo-library.ts`
- * (importable aussi depuis Playwright, qui charge les fichiers de test en CJS).
+ * Simple CLI: generation, cache and cloning live in `tests/helpers/demo-library.ts`
+ * (also importable from Playwright, which loads test files as CJS).
  *
- * SÉCURITÉ : `--out` est supprimé avant d'être régénéré. `tests/helpers/safe-out.ts` refuse un dossier
- * non vide sans marqueur `.recolt-fixture`, `$HOME`, le dépôt, `Library` / `Application Support` ; hors `<dépôt>/.tmp` et `os.tmpdir()`, `--force` est exigé.
+ * SECURITY: `--out` is deleted before being regenerated. `tests/helpers/safe-out.ts` refuses a
+ * non-empty directory without a `.recolt-fixture` marker, `$HOME`, the repository,
+ * `Library` / `Application Support`; outside `<repo>/.tmp` and `os.tmpdir()`, `--force` is required.
  */
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -17,7 +18,7 @@ import { parseArgs } from 'node:util'
 import { isDemoLibraryCurrent, makeDemoLibrary } from '../tests/helpers/demo-library'
 import { assertSafeOutDir } from '../tests/helpers/safe-out'
 
-/** Entier ≥ 0 d'une option numérique. Refus explicite (sortie 2) plutôt que `NaN` silencieux. */
+/** Integer ≥ 0 for a numeric option. Explicit refusal (exit 2) rather than a silent `NaN`. */
 function parseCount(flag: string, raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined
   const n = raw.trim() === '' ? Number.NaN : Number(raw)
@@ -26,7 +27,7 @@ function parseCount(flag: string, raw: string | undefined): number | undefined {
   return n
 }
 
-/** Analyse des options : une exception de `parseArgs` (option inconnue, valeur absente) devient une erreur d'usage. */
+/** Option parsing: an exception from `parseArgs` (unknown option, missing value) becomes a usage error. */
 function parseOptions(argv: readonly string[]) {
   return parseArgs({
     args: [...argv],
@@ -62,13 +63,13 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   const out = resolve(values.out)
   if (values['if-missing']) {
-    // Une copie antérieure à la dernière migration (user_version périmé) est régénérée, pas réutilisée.
+    // A copy older than the latest migration (stale user_version) is regenerated, not reused.
     if (isDemoLibraryCurrent(out)) {
-      console.log(`fixtures : ${out} existe déjà et est à jour (--if-missing)`)
+      console.log(`fixtures : ${out} already exists and is up to date (--if-missing)`)
       return 0
     }
     if (existsSync(join(out, 'libraries.json')))
-      console.log(`fixtures : ${out} est périmé ou incomplet, régénération (--if-missing)`)
+      console.log(`fixtures : ${out} is stale or incomplete, regenerating (--if-missing)`)
   }
   const t0 = Date.now()
   try {
@@ -94,7 +95,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
   const res = await makeDemoLibrary(out, counts, !values['no-cache'], { force: values.force })
   console.log(
-    `fixtures : ${res.items} éléments, ${res.media} médias${res.cached ? ' (cache)' : ''}${res.ffmpeg ? '' : ' (ffmpeg absent : vidéos sans fichier lisible)'} → ${out} en ${Date.now() - t0} ms`,
+    `fixtures : ${res.items} items, ${res.media} media${res.cached ? ' (cache)' : ''}${res.ffmpeg ? '' : ' (ffmpeg not found: videos without a readable file)'} → ${out} in ${Date.now() - t0} ms`,
   )
   return 0
 }

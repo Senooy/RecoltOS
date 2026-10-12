@@ -1,6 +1,6 @@
 /**
- * Registre FIGÉ des handlers IPC : un fichier par domaine de `DOMAINS`
- * (`src/shared/ipc/index.ts`). Chaque domaine ne remplit que `handlers/<domaine>.ts`.
+ * FROZEN registry of IPC handlers: one file per domain of `DOMAINS`
+ * (`src/shared/ipc/index.ts`). Each domain only fills `handlers/<domain>.ts`.
  */
 import type { Domain } from '../../../shared/ipc'
 import type { AllHandlers, DomainHandlers } from '../router'

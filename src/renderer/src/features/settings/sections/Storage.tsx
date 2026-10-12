@@ -1,8 +1,8 @@
 /**
- * Réglages › Stockage : barre empilée de 8 px (Images, Vidéos, Aperçus,
- * Instantanés, en 4 gris) avec légende, « Télécharger les médias distants », « Vider la corbeille
- * automatiquement », « Régénérer les aperçus », « Vider la corbeille maintenant ».
- * « Conserver les originaux » n'est pas proposé : RecoltOS garde toujours les originaux.
+ * Settings › Storage: 8 px stacked bar (Images, Videos, Previews,
+ * Snapshots, in 4 greys) with legend, "Download remote media", "Empty trash"
+ * automatically", "Regenerate previews", "Empty trash now".
+ * "Keep originals" is not offered: RecoltOS always keeps the originals.
  */
 import { useCallback, useEffect, useState } from 'react'
 import type { z } from 'zod'
@@ -17,7 +17,7 @@ import { SettingsRow, SettingsTitle } from '../SettingsDialog'
 
 type Storage = z.output<typeof StorageBreakdown>
 
-// Gris de la barre d'occupation : tokens par thème (`tokens.css`, --set-storage-1…4).
+// Greys of the usage bar: per-theme tokens (`tokens.css`, --set-storage-1…4).
 const GREYS = [
   'var(--set-storage-1)',
   'var(--set-storage-2)',

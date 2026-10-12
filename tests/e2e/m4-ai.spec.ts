@@ -1,7 +1,7 @@
 /**
- * M4 avec les FAUX CLI (`tests/helpers/fake-bin/{claude,codex}`), jamais les vrais :
- * consentement exigé avant tout appel, feuille « Changer », génération sur une image depuis le
- * panneau Détails (description, tags en chips, OCR), aperçu de l'envoi, journal.
+ * M4 with the FAKE CLIs (`tests/helpers/fake-bin/{claude,codex}`), never the real ones:
+ * consent required before any call, "Change" sheet, generation on an image from the
+ * Details panel (description, tags as chips, OCR), send preview, log.
  */
 import path from 'node:path'
 import type { Page } from '@playwright/test'
@@ -21,12 +21,12 @@ const invoke = (page: Page, channel: string, input: unknown) =>
     [channel, input] as const,
   ) as Promise<{ ok: boolean; data?: unknown; error?: { code: string } }>
 
-test.describe('IA avec faux CLI', () => {
+test.describe('AI with fake CLIs', () => {
   test.use({ demoLibrary: { count: 12, collections: 2 } })
 
-  test('consentement, génération, aperçu et journal', async ({ page, openDbReadonly }) => {
+  test('consent, generation, preview and log', async ({ page, openDbReadonly }) => {
     await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
-    // Jamais les vrais binaires : chemins forcés vers les faux CLI.
+    // Never the real binaries: paths forced to the fake CLIs.
     const set = await invoke(page, 'prefs.set', {
       patch: { ai: { claude: { path: FAKE_CLAUDE }, codex: { path: FAKE_CODEX } } },
     })
@@ -34,14 +34,14 @@ test.describe('IA avec faux CLI', () => {
     const db = openDbReadonly()
     const calls = () => (db.prepare('SELECT count(*) AS n FROM ai_calls').get() as { n: number }).n
 
-    // Aucun appel possible sans moteur ni consentement.
+    // No call possible without an engine or consent.
     const card = page.locator(`${t('grid')} ${t('card')}[data-kind="image"]`).first()
     const uuid = await card.getAttribute('data-uuid')
     const refused = await invoke(page, 'ai.enqueue', { itemUuids: [uuid], task: 'analyze' })
     expect(refused.ok).toBe(false)
     expect(refused.error?.code).toBe('ai_disabled')
 
-    // Activer un interrupteur sans moteur ouvre la feuille « Changer ».
+    // Turning on a toggle without an engine opens the "Change" sheet.
     await page.locator(t('btn-settings')).click()
     await page.locator(t('settings-nav-ai')).click()
     await page.locator(t('ai-autoname')).click()
@@ -57,7 +57,7 @@ test.describe('IA avec faux CLI', () => {
     await page.keyboard.press('Escape')
     await expect(page.locator(t('settings'))).toBeHidden()
 
-    // Génération depuis le panneau Détails.
+    // Generation from the Details panel.
     await card.click()
     await expect(page.locator(t('details-panel'))).toBeVisible()
     await page.locator(t('detail-ai-generate')).click()
@@ -78,14 +78,14 @@ test.describe('IA avec faux CLI', () => {
     expect(item).toEqual({ ai_state: 'done', ai_lang: 'fr', ocr_text: 'TEXTE' })
     await page.keyboard.press('Escape')
 
-    // Recherche plein texte sur la description générée.
+    // Full-text search on the generated description.
     const found = (await invoke(page, 'search.query', { q: 'synthétique', limit: 20 })) as {
       ok: boolean
       data: { items: { uuid: string }[] }
     }
     expect(found.data.items.map((i) => i.uuid)).toContain(uuid)
 
-    // Aperçu exact et journal.
+    // Exact preview and log.
     await page.locator(t('btn-settings')).click()
     await page.locator(t('settings-nav-ai')).click()
     await page.locator(t('ai-privacy')).click()

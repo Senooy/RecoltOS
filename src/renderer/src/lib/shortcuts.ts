@@ -1,7 +1,7 @@
 /**
- * Raccourcis côté renderer : table unique `src/shared/shortcuts.ts` +
- * raccourcis propres à chaque domaine UI (`lib/shortcuts/<domaine>.ts`, liste FIGÉE).
- * AZERTY : chiffres par `e.code`, lettres par la touche imprimée (`getLayoutMap()` ou `e.key`).
+ * Renderer-side shortcuts: single table `src/shared/shortcuts.ts` +
+ * shortcuts specific to each UI domain (`lib/shortcuts/<domain>.ts`, FROZEN list).
+ * AZERTY: digits by `e.code`, letters by the printed key (`getLayoutMap()` or `e.key`).
  */
 import {
   SHORTCUTS,
@@ -31,7 +31,7 @@ import type { RendererShortcut } from './shortcuts/types'
 export type { RendererShortcut } from './shortcuts/types'
 export { SHORTCUTS }
 
-/** Raccourcis renderer de tous les domaines (agrégés). */
+/** Renderer shortcuts of all domains (aggregated). */
 export const DOMAIN_SHORTCUTS: Readonly<Record<string, readonly RendererShortcut[]>> = {
   shell: shellShortcuts,
   grid: gridShortcuts,
@@ -63,7 +63,7 @@ export interface KeyboardLike {
 
 let layoutMap: Map<string, string> | null = null
 
-/** Carte de disposition (`navigator.keyboard.getLayoutMap()`), relue au focus de la fenêtre. */
+/** Layout map (`navigator.keyboard.getLayoutMap()`), re-read when the window gets focus. */
 export async function initLayoutMap(): Promise<void> {
   const kb = (
     navigator as Navigator & { keyboard?: { getLayoutMap(): Promise<Map<string, string>> } }
@@ -76,7 +76,7 @@ export async function initLayoutMap(): Promise<void> {
   }
 }
 
-/** Lettre imprimée en minuscule, insensible à ⌥ et ⇧ (⌥A ne donne pas « å »). */
+/** Printed letter in lowercase, ignoring ⌥ and ⇧ (⌥A does not give « å »). */
 export function baseChar(e: KeyboardLike): string {
   const fromMap = layoutMap?.get(e.code)
   if (fromMap) return fromMap.toLowerCase()
@@ -106,9 +106,9 @@ export function matchesKey(e: KeyboardLike, m: KeyMatch & Modifiers): boolean {
     case 'key':
       return modsMatch(e, m) && e.key === m.key
     case 'zoom': {
-      // '+' exige ⇧ sur certaines dispositions : on ignore ⇧ pour le zoom.
-      // Pas de repli positionnel (`e.code` Equal/Minus) : en AZERTY la touche « - » a
-      // `code:'Equal'` et « ) » a `code:'Minus'`, ce qui déclencherait la mauvaise commande.
+      // '+' requires ⇧ on some layouts: ⇧ is ignored for zoom.
+      // No positional fallback (`e.code` Equal/Minus): on AZERTY the « - » key has
+      // `code:'Equal'` and « ) » has `code:'Minus'`, which would trigger the wrong command.
       if (!modsMatch(e, m, true)) return false
       return m.dir === 'in'
         ? e.key === '+' || e.key === '=' || e.code === 'NumpadAdd'
@@ -121,7 +121,7 @@ export function matchesShortcut(e: KeyboardLike, def: Pick<ShortcutDef, 'match'>
   return matchesKey(e, def.match)
 }
 
-/** Un champ éditable a le focus : les commandes d'édition restent natives. */
+/** An editable field has focus: editing commands stay native. */
 export function isEditableTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false
   if (t.isContentEditable) return true

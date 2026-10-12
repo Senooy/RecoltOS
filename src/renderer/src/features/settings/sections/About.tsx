@@ -1,4 +1,4 @@
-/** Réglages › À propos. */
+/** Settings › About. */
 import { useEffect, useState } from 'react'
 import { RecoltLogo } from '../../../components/icons'
 import { tr } from '../../../i18n'

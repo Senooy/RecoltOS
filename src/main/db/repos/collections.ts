@@ -1,9 +1,9 @@
 /**
- * Repo `collections` + `collection_items` : API d'écriture gelée.
- * - cycles refusés par CTE récursive avant tout changement de parent (`collection_cycle`) ;
- * - suppression : pierres tombales explicites des descendants d'origine `gatheros` (la cascade
- *   sur une table auto-référencée ne déclenche pas forcément `trg_tomb_collection`) ;
- * - retrait d'appartenance : `trg_tomb_membership` pose la pierre tombale.
+ * `collections` repo + `collection_items`: write API frozen.
+ * - cycles rejected by a recursive CTE before any parent change (`collection_cycle`);
+ * - deletion: explicit tombstones for the original descendants of `gatheros` (the cascade
+ *   on a self-referencing table does not necessarily fire `trg_tomb_collection`);
+ * - membership removal: `trg_tomb_membership` places the tombstone.
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
@@ -33,7 +33,7 @@ export interface NewCollection {
   parentId?: number | null
   color?: string
   coverItemId?: number | null
-  /** Défaut : après le dernier frère. */
+  /** Default: after the last sibling. */
   orderIndex?: number
   aiExcluded?: boolean
   origin?: string
@@ -64,7 +64,7 @@ const COLUMNS: Readonly<Record<keyof CollectionPatch, ColumnSpec>> = {
 }
 
 export const DEFAULT_COLLECTION_COLOR = '#007aff'
-/** Écart minimal entre deux `order_index` avant renumérotation des frères. */
+/** Minimal gap between two `order_index` values before renumbering siblings. */
 const MIN_ORDER_GAP = 1e-6
 
 export interface CollectionUpsertResult {
@@ -97,7 +97,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
       ) as { o: number }
     ).o
 
-  /** Ids des descendants (sans la collection elle-même). */
+  /** Ids of the descendants (excluding the collection itself). */
   const descendantIds = (id: number): number[] =>
     (
       q(
@@ -108,7 +108,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
       ).all(id) as { id: number }[]
     ).map((r) => r.id)
 
-  /** Refuse un parent égal à la collection ou à l'un de ses descendants (CTE des ancêtres). */
+  /** Rejects a parent equal to the collection or to one of its descendants (ancestors CTE). */
   const assertNoCycle = (id: number, newParentId: number | null): void => {
     if (newParentId === null) return
     if (newParentId === id) {
@@ -126,7 +126,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
     }
   }
 
-  /** Un nom de collection ne peut pas être vide (après rognage des espaces). */
+  /** A collection name cannot be empty (after trimming spaces). */
   const assertName = (name: string): void => {
     if (name.trim() === '') {
       throw new AppError('validation', mt().errors.collectionNameEmpty)
@@ -201,7 +201,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
   return {
     create,
 
-    /** Idempotent par `(origin, origin_id)` ; une collection en pierre tombale n'est pas recréée. */
+    /** Idempotent by `(origin, origin_id)`; a tombstoned collection is not recreated. */
     upsertByOrigin(
       c: NewCollection & { origin: string; originId: string },
       options: { respectTombstones?: boolean } = {},
@@ -224,7 +224,7 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
 
     update,
 
-    /** Change le parent (cycle refusé). `null` = racine. */
+    /** Changes the parent (cycle rejected). `null` = root. */
     setParent(id: number, parentId: number | null): boolean {
       return update(id, { parentId })
     },
@@ -233,9 +233,9 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
     descendantIds,
 
     /**
-     * Supprime une collection. `keepChildren` : les sous-collections remontent d'un niveau.
-     * Sinon : pierres tombales (origine `gatheros`) de la collection et de TOUS ses descendants,
-     * puis `DELETE` (cascade). Renvoie le nombre de collections supprimées.
+     * Deletes a collection. `keepChildren`: the sub-collections move up one level.
+     * Otherwise: tombstones (origin `gatheros`) for the collection and ALL its descendants,
+     * then `DELETE` (cascade). Returns the number of collections deleted.
      */
     delete(id: number, options: { keepChildren?: boolean } = {}): number {
       return db.transaction(() => {
@@ -263,8 +263,8 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
     },
 
     /**
-     * Place `id` juste avant `beforeId` parmi ses frères (ou en dernier si `null`).
-     * `order_index` REAL : milieu des voisins, renumérotation 1..n si l'écart devient trop faible.
+     * Places `id` just before `beforeId` among its siblings (or last if `null`).
+     * `order_index` REAL: midpoint of the neighbors, renumbering 1..n if the gap becomes too small.
      */
     reorder(id: number, beforeId: number | null): void {
       db.transaction(() => {
@@ -291,19 +291,19 @@ export function createCollectionsRepo(db: Database.Database, opts: RepoOptions =
       })()
     },
 
-    /** Ajoute des items (doublons ignorés) ; renvoie le nombre d'appartenances créées. */
+    /** Adds items (duplicates ignored); returns the number of memberships created. */
     addItems,
-    /** Retire des items ; `trg_tomb_membership` pose les pierres tombales d'import. */
+    /** Removes items; `trg_tomb_membership` places the import tombstones. */
     removeItems,
-    /** Déplace des items d'une collection vers une autre (retrait + ajout, une transaction). */
+    /** Moves items from one collection to another (removal + addition, one transaction). */
     moveItems(
       fromId: number,
       toId: number,
       itemIds: readonly number[],
       at: number = now(),
     ): number {
-      // Même collection : rien à faire (retirer puis rajouter poserait une pierre tombale sur un
-      // membre vivant).
+      // Same collection: nothing to do (removing then re-adding would place a tombstone on a
+      // live member).
       if (fromId === toId) return 0
       return db.transaction(() => {
         removeItems(fromId, itemIds)

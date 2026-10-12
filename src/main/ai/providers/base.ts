@@ -1,7 +1,7 @@
 /**
- * Base des fournisseurs CLI : prompt, empreinte, fichiers envoyés, décodage tolérant,
- * validation zod bornante, wrappers champ unique. Chaque fournisseur n'implémente que `exec`
- * (lancement du CLI et lecture de sa sortie) et `status`.
+ * Base of the CLI providers: prompt, fingerprint, files sent, tolerant decoding,
+ * bounding zod validation, single-field wrappers. Each provider only implements `exec`
+ * (launching the CLI and reading its output) and `status`.
  */
 import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -35,13 +35,13 @@ import {
 } from '../schemas'
 
 export interface CliRuntime {
-  /** Binaire résolu (mis en cache par l'appelant). */
+  /** Resolved binary (cached by the caller). */
   resolve(): Promise<ResolvedCli | null>
   loginPath(): Promise<string | null>
-  /** `<userData>/ai-sandbox/<fournisseur>` (cwd fixe, 0700). */
+  /** `<userData>/ai-sandbox/<provider>` (fixed cwd, 0700). */
   sandboxDir: string
   prefs(): AiPrefs
-  /** Entrée de test (image synthétique 256×256) pour le test de connexion niveau 2. */
+  /** Test input (synthetic 256×256 image) for the level 2 connection test. */
   makeTestInput?(jobDir: string): Promise<AiInput>
 }
 
@@ -123,7 +123,7 @@ export abstract class CliProviderBase implements AiProvider {
     })
   }
 
-  /** Analyse limitée à `fields` (tous par défaut). */
+  /** Analysis limited to `fields` (all by default). */
   analyzeFields(
     i: AiInput,
     fields: readonly AiField[],
@@ -157,7 +157,7 @@ export abstract class CliProviderBase implements AiProvider {
     return this.structured('imagePrompt', i, prompt, IMAGE_PROMPT_SCHEMA, ImagePromptZ, o)
   }
 
-  /** Niveau 1 (gratuit) puis, si `live`, un vrai appel sur une image synthétique (niveau 2). */
+  /** Level 1 (free) then, if `live`, a real call on a synthetic image (level 2). */
   async test(o: { live: boolean }): Promise<ProviderTestResult> {
     const status = await this.status()
     if (!o.live || !status.installed || status.loggedIn === false) {

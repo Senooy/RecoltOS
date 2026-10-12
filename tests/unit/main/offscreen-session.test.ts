@@ -26,13 +26,13 @@ import {
   resetOffscreenForTests,
 } from '../../../src/main/windows/offscreen'
 
-describe('configuration des sessions hors écran', () => {
+describe('offscreen session configuration', () => {
   beforeEach(() => {
     sessions.clear()
     resetOffscreenForTests()
   })
 
-  it('appelle le point d’accroche sur chaque nouvelle partition', () => {
+  it('calls the hook on each new partition', () => {
     const fn = vi.fn()
     registerOffscreenSessionSetup(fn)
     const p1 = acquirePartition()
@@ -42,7 +42,7 @@ describe('configuration des sessions hors écran', () => {
     expect(fn.mock.calls.map((c) => (c[0] as { name: string }).name)).toEqual([p1, p2])
   })
 
-  it('applique aussi la configuration aux partitions déjà créées', () => {
+  it('also applies the configuration to partitions already created', () => {
     const p1 = acquirePartition()
     const fn = vi.fn()
     registerOffscreenSessionSetup(fn)

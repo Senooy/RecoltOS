@@ -1,6 +1,6 @@
 /**
- * `scripts/sanitize-fixture.mjs` : anonymisation par liste blanche et garde de fin
- * anti-fuite. Les valeurs ci-dessous sont des FAUSSES données réalistes (pas de donnée réelle).
+ * `scripts/sanitize-fixture.mjs`: anonymization by allowlist and end guard
+ * against leaks. The values below are FAKE, realistic data (no real data).
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
@@ -39,11 +39,11 @@ const RAW = {
 
 const text = (v: unknown): string => JSON.stringify(v)
 
-describe('sanitize-fixture : liste blanche', () => {
+describe('sanitize-fixture: allowlist', () => {
   const clean = sanitize(RAW) as Record<string, Record<string, unknown>>
   const raw = text(clean)
 
-  it('ne laisse subsister aucune donnée personnelle de la source', () => {
+  it('leaves no personal data from the source behind', () => {
     for (const secret of [
       'realuser',
       'dupont',
@@ -67,17 +67,17 @@ describe('sanitize-fixture : liste blanche', () => {
     }
   })
 
-  it('pseudonymise les identifiants (chaîne et nombre) sans casser leur forme', () => {
+  it('pseudonymizes identifiers (string and number) without breaking their shape', () => {
     const u = clean.champ_1 as Record<string, unknown>
     expect(u.rest_id).toMatch(/^\d{10}$/)
-    expect(u.id_str).toBe(u.rest_id) // même valeur → même pseudonyme
+    expect(u.id_str).toBe(u.rest_id) // same value → same pseudonym
     expect(typeof u.user_id).toBe('number')
     expect(u.user_id).not.toBe(987654321)
     expect(u.entryId).toMatch(/^tweet-\d{10}$/)
     expect(u.code).toMatch(/^id_\d+$/)
   })
 
-  it('texte libre sous toute clé, nom légal, téléphone et géolocalisation', () => {
+  it('free text under any key, legal name, phone and geolocation', () => {
     const u = clean.champ_1 as Record<string, unknown>
     expect(u.alt_text).toMatch(/^texte \d+$/)
     expect(u.message).toMatch(/^texte \d+$/)
@@ -85,10 +85,10 @@ describe('sanitize-fixture : liste blanche', () => {
     expect(u.legal_name).toMatch(/^auteur_\d+$/)
     expect(u.phone).toBe('[redacted]')
     expect(u.lat).toBe('[redacted]')
-    expect(u.champ_2).toMatch(/^texte \d+$/) // clé inconnue renommée, valeur synthétique
+    expect(u.champ_2).toMatch(/^texte \d+$/) // unknown key renamed, synthetic value
   })
 
-  it('conserve la structure : clés connues, nombres, types, dates', () => {
+  it('keeps the structure: known keys, numbers, types, dates', () => {
     const u = clean.champ_1 as Record<string, unknown>
     expect(u.type).toBe('photo')
     expect(u.created_at).toBe('2024-05-06T10:00:00Z')
@@ -96,50 +96,50 @@ describe('sanitize-fixture : liste blanche', () => {
     expect(u.profile_image_url_https).toBe('https://example.test/x/x/x.jpg')
   })
 
-  it('la clé d’objet qui est un pseudo est renommée, de façon déterministe', () => {
+  it('the object key that is a username is renamed, deterministically', () => {
     expect(Object.keys(clean)).toEqual(['champ_1'])
     const run = makeSanitizer()
     expect(text(run(RAW))).toBe(text(run(RAW)))
   })
 
-  it('--keep-keys / keepKeys conserve des clés structurelles supplémentaires', () => {
+  it('--keep-keys / keepKeys keeps additional structural keys', () => {
     const out = sanitize({ edge_thing: { page_info: 1 } }, { keepKeys: ['edge_thing'] })
     expect(Object.keys(out as object)).toEqual(['edge_thing'])
   })
 })
 
-describe('sanitize-fixture : garde de fin', () => {
-  it('détecte une chaîne de 8 caractères ou plus qui survit', () => {
+describe('sanitize-fixture: end guard', () => {
+  it('detects a string of 8 characters or more that survives', () => {
     const source = { note: 'Texte confidentiel de 30 caractères', court: 'abc' }
     const fuite = { champ: 'préfixe Texte confidentiel de 30 caractères suffixe', court: 'abc' }
     expect(findLeaks(source, fuite)).toEqual(['Texte confidentiel de 30 caractères'])
     expect(() => assertNoLeak(source, fuite)).toThrow(/survivent/)
-    // La valeur réelle n'est jamais recopiée dans le message d'erreur.
+    // The real value is never copied into the error message.
     expect(() => assertNoLeak(source, fuite)).not.toThrow(/confidentiel/)
   })
 
-  it('ne signale pas les valeurs structurelles conservées volontairement', () => {
+  it('does not flag structural values kept on purpose', () => {
     const source = { content_type: 'application/json', created_at: '2024-05-06T10:00:00Z' }
     const run = makeSanitizer()
     const out = run(source)
     expect(findLeaks(source, out, run.survivors)).toEqual([])
-    // Sans la liste des valeurs conservées, elles seraient prises pour des fuites.
+    // Without the list of kept values, they would be taken for leaks.
     expect(findLeaks(source, out).length).toBeGreaterThan(0)
   })
 
-  it('la fonction sanitize() passe la garde sur des données variées', () => {
+  it('the sanitize() function passes the guard on varied data', () => {
     expect(() => sanitize(RAW)).not.toThrow()
   })
 })
 
-describe('sanitize-fixture : CLI', () => {
+describe('sanitize-fixture: CLI', () => {
   const run = (args: string[]) =>
     spawnSync('node', ['scripts/sanitize-fixture.mjs', ...args], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
     })
 
-  it('écrit une sortie propre et signale les clés renommées sans les nommer', () => {
+  it('writes clean output and reports renamed keys without naming them', () => {
     const dir = makeTmpDir('sanitize-cli')
     const from = join(dir, 'in.json')
     const to = join(dir, 'out.json')
@@ -147,29 +147,29 @@ describe('sanitize-fixture : CLI', () => {
     const r = run(['--in', from, '--out', to])
     expect(r.status, r.stderr).toBe(0)
     expect(readFileSync(to, 'utf8')).not.toContain('Dupontel')
-    expect(r.stderr).toContain('clé(s) inconnue(s)')
+    expect(r.stderr).toContain('unknown key(s)')
     expect(r.stderr).not.toContain('realuser')
     const withReport = run(['--in', from, '--out', to, '--report-keys'])
     expect(withReport.stderr).toContain('realuser_dupont')
   })
 
-  it('fichier absent ou JSON invalide : message français, code 1, pas de trace de pile', () => {
+  it('missing file or invalid JSON: French message, code 1, no stack trace', () => {
     const dir = makeTmpDir('sanitize-cli-bad')
     const to = join(dir, 'out.json')
     const missing = run(['--in', join(dir, 'absent.json'), '--out', to])
     expect(missing.status).toBe(1)
-    expect(missing.stderr).toContain('sanitize-fixture : lecture impossible')
+    expect(missing.stderr).toContain('sanitize-fixture: cannot read')
     expect(missing.stderr).not.toMatch(/\n\s+at /)
     const bad = join(dir, 'bad.json')
     writeFileSync(bad, '{ pas du json')
     const invalid = run(['--in', bad, '--out', to])
     expect(invalid.status).toBe(1)
-    expect(invalid.stderr).toContain('JSON invalide')
+    expect(invalid.stderr).toContain('invalid JSON')
     expect(invalid.stderr).not.toMatch(/\n\s+at /)
     expect(existsSync(to)).toBe(false)
   })
 
-  it('usage sans arguments : code 2 et rien d’écrit', () => {
+  it('usage without arguments: code 2 and nothing written', () => {
     const dir = makeTmpDir('sanitize-cli-usage')
     const r = run(['--in', join(dir, 'absent.json')])
     expect(r.status).toBe(2)

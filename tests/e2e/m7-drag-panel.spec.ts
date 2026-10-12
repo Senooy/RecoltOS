@@ -1,11 +1,11 @@
 /**
- * Panneau « Collections » du glisser : glisser une carte de la grille ouvre le panneau du bord
- * droit ; déposer sur une ligne ajoute à la collection (compteur +1, toast « Ajouté à … »), un
- * second dépôt du même élément n'ajoute rien (« Déjà dans … »), ⌘Z (menu) annule l'ajout.
+ * "Collections" panel during a drag: dragging a grid card opens the right-edge panel;
+ * dropping on a row adds to the collection (counter +1, toast « Added to … »), a
+ * second drop of the same item adds nothing (« Already in … »), ⌘Z (menu) undoes the add.
  *
- * Le glisser natif (`webContents.startDrag`) ouvrirait une boucle modale macOS que Playwright ne
- * peut pas terminer : le canal brut `drag` est remplacé, côté main, par un écouteur qui note les
- * charges reçues (le renderer l'appelle toujours : le glisser vers le Finder reste branché).
+ * The native drag (`webContents.startDrag`) would open a macOS modal loop that Playwright cannot
+ * end: the raw `drag` channel is replaced, on the main side, by a listener that records the
+ * payloads received (the renderer always calls it: drag to Finder stays wired).
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -22,7 +22,7 @@ async function clickMenu(app: ElectronApplication, id: string): Promise<boolean>
   }, id)
 }
 
-/** Remplace l'écouteur `drag` du main par un enregistreur (pas de session de glisser macOS). */
+/** Replaces main's `drag` listener with a recorder (no macOS drag session). */
 async function stubNativeDrag(app: ElectronApplication): Promise<void> {
   await app.evaluate(({ ipcMain }) => {
     const g = globalThis as unknown as { __drags: unknown[] }
@@ -37,7 +37,7 @@ async function stubNativeDrag(app: ElectronApplication): Promise<void> {
 const nativeDrags = (app: ElectronApplication) =>
   app.evaluate(() => (globalThis as unknown as { __drags: unknown[] }).__drags.length)
 
-/** `dragstart` sur la carte (comme le geste réel : React lance `startCardDrag`). */
+/** `dragstart` on the card (like the real gesture: React starts `startCardDrag`). */
 async function startDrag(page: Page, uuid: string): Promise<void> {
   await page.evaluate((u) => {
     const card = document.querySelector(
@@ -53,7 +53,7 @@ async function startDrag(page: Page, uuid: string): Promise<void> {
   }, uuid)
 }
 
-/** Survol puis dépôt sur une ligne du panneau, avec un type `Files` comme le glisser natif. */
+/** Hover then drop on a panel row, with a `Files` type like the native drag. */
 async function dropOnRow(page: Page, collectionUuid: string): Promise<void> {
   await page.evaluate((cu) => {
     const row = document.querySelector(`[data-testid="drag-collection-row"][data-uuid="${cu}"]`)!
@@ -75,10 +75,10 @@ async function dropOnRow(page: Page, collectionUuid: string): Promise<void> {
   }, collectionUuid)
 }
 
-test.describe('panneau Collections pendant le glisser', () => {
+test.describe('Collections panel during drag', () => {
   test.use({ demoLibrary: { count: 40, collections: 4 } })
 
-  test('glisser, déposer sur une collection, doublon ignoré, ⌘Z', async ({
+  test('drag, drop on a collection, duplicate ignored, ⌘Z', async ({
     app,
     page,
     openDbReadonly,
@@ -104,7 +104,7 @@ test.describe('panneau Collections pendant le glisser', () => {
     const before = members()
     const items = itemCount()
 
-    // Une carte affichée qui n'est pas encore dans la collection.
+    // A displayed card not yet in the collection.
     const shown = await page
       .locator(`${t('grid')} ${t('card')}`)
       .evaluateAll((els) => els.map((e) => e.getAttribute('data-uuid')!))
@@ -130,7 +130,7 @@ test.describe('panneau Collections pendant le glisser', () => {
     const row = panel.locator(`${t('drag-collection-row')}[data-uuid="${col.uuid}"]`)
     await expect(row).toContainText(col.name)
     await expect(row.locator(t('drag-collection-count'))).toHaveText(String(before))
-    // Bord droit, sous l'en-tête.
+    // Right edge, below the header.
     const box = (await panel.boundingBox())!
     const vw = await page.evaluate(() => window.innerWidth)
     expect(Math.round(box.x + box.width)).toBe(vw)
@@ -141,11 +141,11 @@ test.describe('panneau Collections pendant le glisser', () => {
     await expect(page.getByText(`Ajouté à ${col.name}`)).toBeVisible()
     await expect.poll(members).toBe(before + 1)
     await expect(panel).toHaveCount(0)
-    // Le calque de dépôt n'a rien importé (glisser interne).
+    // The drop layer imported nothing (internal drag).
     expect(itemCount()).toBe(items)
     await expect(page.locator(t('drop-overlay'))).toHaveCount(0)
 
-    // Second dépôt du même élément : rien d'ajouté, pas d'entrée d'annulation.
+    // Second drop of the same item: nothing added, no undo entry.
     await startDrag(page, card)
     await expect(panel).toBeVisible()
     await expect(row.locator(t('drag-collection-count'))).toHaveText(String(before + 1))
@@ -154,14 +154,14 @@ test.describe('panneau Collections pendant le glisser', () => {
     await expect(panel).toHaveCount(0)
     expect(members()).toBe(before + 1)
 
-    // ⌘Z : l'ajout est annulé, la rangée de collections suit.
+    // ⌘Z: the add is undone, the collections row follows.
     expect(await clickMenu(app, 'undo')).toBe(true)
     await expect.poll(members).toBe(before)
     await expect(page.locator(`${t('collection-card')}[data-uuid="${col.uuid}"]`)).toContainText(
       before > 1 ? `${before} éléments` : `${before} élément`,
     )
 
-    // Échap annule un glisser sans dépôt : le panneau repart.
+    // Escape cancels a drag without a drop: the panel resets.
     await startDrag(page, card)
     await expect(panel).toBeVisible()
     await page.keyboard.press('Escape')

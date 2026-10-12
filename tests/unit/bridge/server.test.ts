@@ -1,6 +1,6 @@
 /**
- * `BridgeServer` : `host.hello` obligatoire, contrôle de protocole, clients en mémoire,
- * refus des messages app → ext de plus de 900 Ko, socket 0600 et chemin < 104 octets.
+ * `BridgeServer`: `host.hello` required, protocol check, in-memory clients,
+ * refusal of app → ext messages over 900 KB, socket 0600 and path < 104 bytes.
  */
 import { statSync } from 'node:fs'
 import net from 'node:net'
@@ -80,7 +80,7 @@ const hello = () => ({
 })
 
 describe('BridgeServer', () => {
-  it('socket 0600, chemin < 104 octets même pour un userData de 200 caractères', async () => {
+  it('socket 0600, path < 104 bytes even for a 200-character userData', async () => {
     const s = await start()
     expect(statSync(s.socketPath).mode & 0o777).toBe(0o600)
     const long = `/Users/test/${'x'.repeat(200)}`
@@ -88,7 +88,7 @@ describe('BridgeServer', () => {
     expect(socketPath(long, `/var/${'t'.repeat(120)}`).startsWith('/tmp/recolt-')).toBe(true)
   })
 
-  it('premier message autre que host.hello → refus et fermeture', async () => {
+  it('first message other than host.hello → refusal and close', async () => {
     const s = await start()
     const c = client(s.socketPath)
     c.send(hello())
@@ -97,7 +97,7 @@ describe('BridgeServer', () => {
     expect(c.got[0]?.payload?.code).toBe('VALIDATION')
   })
 
-  it('protocole différent → PROTOCOL_MISMATCH', async () => {
+  it('different protocol → PROTOCOL_MISMATCH', async () => {
     const s = await start()
     const c = client(s.socketPath)
     c.send(hostHello(2))
@@ -105,7 +105,7 @@ describe('BridgeServer', () => {
     expect(c.got[0]?.payload).toMatchObject({ code: 'PROTOCOL_MISMATCH', appProtocol: 1 })
   })
 
-  it('clients en mémoire : visibles après hello, choisis par session, retirés à la fermeture', async () => {
+  it('in-memory clients: visible after hello, chosen per session, removed on close', async () => {
     const s = await start()
     let changes = 0
     s.onClients(() => changes++)
@@ -130,7 +130,7 @@ describe('BridgeServer', () => {
     expect(changes).toBeGreaterThanOrEqual(3)
   })
 
-  it('message invalide → VALIDATION avec re ; plus de 900 Ko refusé', async () => {
+  it('invalid message → VALIDATION with re; over 900 KB refused', async () => {
     const s = await start()
     const c = client(s.socketPath)
     c.send(hostHello())

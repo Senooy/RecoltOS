@@ -1,7 +1,7 @@
 /**
- * `data.verify` : médias dont l'original a disparu (→ `missing` si `fix`), fichiers de
- * `items/` sans ligne en base (signalés, jamais supprimés), miniatures manquantes (→ job
- * `media.derive` si `fix`). Pas d'import electron.
+ * `data.verify`: media whose original has disappeared (→ `missing` if `fix`), files in
+ * `items/` with no database row (reported, never deleted), missing thumbnails (→ job
+ * `media.derive` if `fix`). No electron import.
  */
 import fs from 'node:fs'
 import path from 'node:path'

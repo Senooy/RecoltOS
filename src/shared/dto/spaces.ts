@@ -1,6 +1,6 @@
 /**
- * DTO Spaces : `SpaceDoc {space, nodes, items}` ;
- * vignette de liste = rendu DOM réduit des 20 premiers nœuds (aucune image générée).
+ * Spaces DTO: `SpaceDoc {space, nodes, items}`;
+ * list thumbnail = reduced DOM rendering of the first 20 nodes (no generated image).
  */
 import { z } from 'zod'
 import { MediaUrl, Uuid } from '../enums'
@@ -27,7 +27,7 @@ export const SpaceSummary = z.object({
   nodeCount: z.number().int().min(0),
   createdAt: z.number().int(),
   updatedAt: z.number().int(),
-  /** 20 premiers nœuds (ordre z) et leurs éléments, pour la vignette DOM réduite. */
+  /** First 20 nodes (z order) and their items, for the reduced DOM thumbnail. */
   preview: z.object({
     nodes: z.array(SpaceNode).max(SPACE_PREVIEW_NODES),
     items: z.record(z.string(), ItemCard),
@@ -38,7 +38,7 @@ export type SpaceSummary = z.output<typeof SpaceSummary>
 export const SpaceDoc = z.object({
   space: SpaceMeta,
   nodes: z.array(SpaceNode),
-  /** Éléments référencés par les nœuds `item`, indexés par uuid. */
+  /** Items referenced by the `item` nodes, indexed by uuid. */
   items: z.record(z.string(), ItemCard),
 })
 export type SpaceDoc = z.output<typeof SpaceDoc>

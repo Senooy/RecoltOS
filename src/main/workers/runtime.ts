@@ -1,14 +1,14 @@
 /**
- * Côté worker : transport des messages (`process.parentPort` dans un utilityProcess Electron,
- * `process.send` dans un `child_process.fork` Node, utilisé par les tests), file p-queue,
- * sérialisation des erreurs. Un échec d'opération ne termine jamais le processus.
+ * Worker side: message transport (`process.parentPort` in an Electron utilityProcess,
+ * `process.send` in a Node `child_process.fork`, used by the tests), p-queue queue,
+ * error serialization. A failed operation never terminates the process.
  */
 import PQueue from 'p-queue'
 import { AppError } from '../../shared/errors'
 import type { WorkerRequest, WorkerResponse } from '../../shared/worker-protocol'
 import { CONTROL_OPS, type WorkerHello } from './control'
 
-/** Sous-ensemble de `Electron.ParentPort` utilisé ici (pas d'import `electron` dans un worker). */
+/** Subset of `Electron.ParentPort` used here (no `electron` import in a worker). */
 interface ParentPortLike {
   on(event: 'message', listener: (e: { data: unknown }) => void): unknown
   postMessage(message: unknown): void
@@ -65,17 +65,17 @@ function isRequest(m: unknown): m is WorkerRequest {
 export interface ServeOptions {
   transport?: Transport
   concurrency?: number
-  /** Exécute une opération métier (`progress` émet `{ id, progress }`). */
+  /** Runs a business operation (`progress` emits `{ id, progress }`). */
   handle(
     op: string,
     args: unknown,
     ctx: { signal: AbortSignal; progress: (p: unknown) => void },
   ): Promise<unknown>
-  /** Opération de contrôle `__configure` (outils, réglages). */
+  /** Control operation `__configure` (tools, settings). */
   configure?(args: unknown): void
 }
 
-/** Boucle de service du worker : retourne le transport (pour les tests). */
+/** Worker service loop: returns the transport (for the tests). */
 export function serve(opts: ServeOptions): Transport {
   const t = opts.transport ?? detectTransport()
   const queue = new PQueue({ concurrency: opts.concurrency ?? 4 })

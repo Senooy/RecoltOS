@@ -1,7 +1,6 @@
 /**
- * Handlers `data.*` : export zip (dialogue d'enregistrement, media-worker,
- * `export.progress`, affichage dans le Finder), instantanés (création, liste, suppression,
- * restauration), vérification, stockage, régénération des aperçus.
+ * Handlers `data.*`: zip export (save dialog, media-worker, `export.progress`, reveal in Finder),
+ * snapshots (create, list, delete, restore), verification, storage, preview regeneration.
  */
 import { app, dialog, shell, BrowserWindow } from 'electron'
 import path from 'node:path'

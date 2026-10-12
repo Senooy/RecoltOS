@@ -1,7 +1,7 @@
 /**
- * Pastilles de la palette, centrées sous l'aperçu : 8 pastilles Ø 22, écart 8 ; clic = recherche
- * par couleur (`ui.openSearch({color})`) ; ⌥-clic = copier l'hex (toast « #3f3fbf
- * copié ») ; infobulle avec l'hex en mono.
+ * Palette swatches, centered under the preview: 8 swatches Ø 22, gap 8; click = search
+ * by color (`ui.openSearch({color})`); ⌥-click = copy the hex (toast "#3f3fbf
+ * copied"); tooltip with the hex in mono.
  */
 import { Tooltip, toast } from '../../components/ui'
 import { tr } from '../../i18n'

@@ -1,7 +1,7 @@
 /**
- * Index complet de la vue en mémoire : première page de 120 tout de suite, pages
- * suivantes en arrière-plan (keyset), rechargé (débouncé) à chaque `items.changed` ; l'ancienne liste
- * reste affichée pendant le rechargement (pas de clignotement).
+ * Full in-memory index of the view: first page of 120 immediately, pages
+ * following in the background (keyset), reloaded (debounced) on each `items.changed`; the previous list
+ * stays displayed during the reload (no flicker).
  */
 import { useEffect, useRef, useState } from 'react'
 import type { ItemCard, ItemsPage } from '../../../../shared/dto/items'
@@ -13,7 +13,7 @@ export interface LibraryItemsState {
   items: ItemCard[]
   total: number
   loading: boolean
-  /** Première page reçue au moins une fois. */
+  /** First page received at least once. */
   loaded: boolean
 }
 
@@ -23,7 +23,7 @@ export function useLibraryItems(tab: LibraryTab, sort: SortMode, seed: number): 
   return useItemsList({ scope: 'library', tab, sort, seed }, tab === 'saved' || tab === 'unsorted')
 }
 
-/** Membres directs d'une collection, rechargés aussi sur `collections.changed`. */
+/** Direct members of a collection, also reloaded on `collections.changed`. */
 export function useCollectionItems(
   collectionUuid: string,
   sort: SortMode,
@@ -36,7 +36,7 @@ type ListBase =
   | { scope: 'library'; tab: LibraryTab; sort: SortMode; seed: number }
   | { scope: 'collection'; collectionUuid: string; sort: SortMode; seed: number }
 
-/** Liste complète d'une portée, par pages keyset. */
+/** Full list of a scope, by keyset pages. */
 export function useItemsList(base: ListBase, onCollectionsChanged: boolean): LibraryItemsState {
   const key = JSON.stringify(base)
   const [state, setState] = useState<LibraryItemsState>({
@@ -63,7 +63,7 @@ export function useItemsList(base: ListBase, onCollectionsChanged: boolean): Lib
           all.push(...r.items)
           total = r.total
           cursor = r.nextCursor
-          // Première page : affichage immédiat (premier rendu < 800 ms).
+          // First page: immediate display (first render < 800 ms).
           if (page === 0)
             setState({ items: [...all], total, loading: cursor !== null, loaded: true })
           if (!cursor) break
@@ -71,7 +71,7 @@ export function useItemsList(base: ListBase, onCollectionsChanged: boolean): Lib
         setState({ items: all, total, loading: false, loaded: true })
       } catch (err) {
         if (my !== gen.current) return
-        if (!isNotImplemented(err)) console.warn('[items] liste indisponible', err)
+        if (!isNotImplemented(err)) console.warn('[items] list unavailable', err)
         setState((s) => ({ ...s, loading: false, loaded: true }))
       }
     }
@@ -92,7 +92,7 @@ export function useItemsList(base: ListBase, onCollectionsChanged: boolean): Lib
       if (timer) clearTimeout(timer)
       offs.forEach((o) => o())
     }
-    // `key` résume `base` (objet recréé à chaque rendu).
+    // `key` summarizes `base` (object recreated on each render).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, onCollectionsChanged])
   return state

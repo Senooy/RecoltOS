@@ -1,6 +1,6 @@
 /**
- * Outils du media-worker : chemins explicites, exécution sans shell,
- * erreurs typées. Les workers ne se fient jamais au `PATH`.
+ * media-worker tools: explicit paths, execution without shell,
+ * typed errors. Workers never rely on `PATH`.
  */
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
@@ -9,11 +9,11 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path
 import { AppError } from '../../../shared/errors'
 import { mt } from '../../i18n'
 
-/** Chemins absolus des binaires, résolus par main (`platform/binaries.ts`). */
+/** Absolute paths of the binaries, resolved by main (`platform/binaries.ts`). */
 export interface MediaTools {
   ffmpeg?: string | undefined
   ffprobe?: string | undefined
-  /** Toujours `/usr/bin/sips` sur macOS. */
+  /** Always `/usr/bin/sips` on macOS. */
   sips?: string | undefined
 }
 
@@ -39,16 +39,16 @@ export function assertAbs(p: unknown, field: string): string {
   return p
 }
 
-/** Code et message Node d'une erreur, pour le journal (`details`) : jamais affichés tels quels. */
+/** Node error code and message, for the log (`details`): never shown as-is. */
 export function rawError(err: unknown): { code?: string; message: string } {
   const e = err as NodeJS.ErrnoException | undefined
   return { code: e?.code, message: e?.message ?? String(err) }
 }
 
 /**
- * Erreur d'E/S Node → AppError typée et en français : ENOENT/ENOTDIR → `not_found`,
- * EISDIR → `validation` (pas un fichier), EACCES/EPERM → `io` « accès refusé », le reste → `io`.
- * Le message Node brut ne sort que dans `details` (journal), jamais dans le texte.
+ * Node I/O error → typed AppError with a French message: ENOENT/ENOTDIR → `not_found`,
+ * EISDIR → `validation` (not a file), EACCES/EPERM → `io` « accès refusé », the rest → `io`.
+ * The raw Node message only goes into `details` (log), never into the text.
  */
 export function ioError(err: unknown, p: string): AppError {
   if (err instanceof AppError) return err
@@ -63,7 +63,7 @@ export function ioError(err: unknown, p: string): AppError {
   return new AppError('io', `erreur d'accès au fichier : ${p}`, rawError(err))
 }
 
-/** `src` et `dst` désignent-ils le même fichier (chemins normalisés, puis inode si `dst` existe) ? */
+/** Do `src` and `dst` designate the same file (normalized paths, then inode if `dst` exists)? */
 export async function sameFile(src: string, dst: string): Promise<boolean> {
   if (resolve(src) === resolve(dst)) return true
   try {
@@ -75,8 +75,8 @@ export async function sameFile(src: string, dst: string): Promise<boolean> {
 }
 
 /**
- * Refuse une destination qui est la source, quelle que soit son écriture (`/./`, `//`, lien
- * symbolique, lien dur) : sinon l'écriture atomique écraserait l'original.
+ * Refuses a destination that is the source, whatever its spelling (`/./`, `//`, symbolic
+ * link, hard link): otherwise the atomic write would overwrite the original.
  */
 export async function assertDistinct(src: string, dst: string): Promise<void> {
   if (await sameFile(src, dst)) {
@@ -84,7 +84,7 @@ export async function assertDistinct(src: string, dst: string): Promise<void> {
   }
 }
 
-/** Vérifie que `p` est un fichier régulier ; sinon `not_found` / `validation` / `io`. */
+/** Checks that `p` is a regular file; otherwise `not_found` / `validation` / `io`. */
 export async function assertFile(p: string): Promise<void> {
   try {
     if (!(await stat(p)).isFile())
@@ -102,15 +102,15 @@ export interface RunResult {
 export interface RunOptions {
   timeoutMs?: number
   signal?: AbortSignal | undefined
-  /** Outil logique, pour l'erreur `tool_missing` si le binaire n'existe pas. */
+  /** Logical tool, for the `tool_missing` error if the binary does not exist. */
   tool: ToolName
 }
 
 const MAX_CAPTURE = 4 * 1024 * 1024
 
 /**
- * Lance `cmd args` sans shell. ENOENT/EACCES → `tool_missing` ; code ≠ 0 → `tool_failed`
- * (stderr tronqué dans le message) ; dépassement → `timeout` ; annulation → `cancelled`.
+ * Runs `cmd args` without shell. ENOENT/EACCES → `tool_missing`; code ≠ 0 → `tool_failed`
+ * (stderr truncated in the message); overrun → `timeout`; cancellation → `cancelled`.
  */
 export function run(cmd: string, args: readonly string[], opts: RunOptions): Promise<RunResult> {
   return new Promise((resolve, reject) => {
@@ -166,7 +166,7 @@ export function run(cmd: string, args: readonly string[], opts: RunOptions): Pro
         } else if (code === 0) {
           resolve({ stdout, stderr })
         } else {
-          // Message en français ; le stderr brut, en anglais, reste dans `details`.
+          // Message in French; the raw stderr, in English, stays in `details`.
           const tail = stderr.trim().split('\n').slice(-3).join(' | ').slice(0, 500)
           const status = code ?? signal ?? '?'
           reject(
@@ -182,7 +182,7 @@ export function run(cmd: string, args: readonly string[], opts: RunOptions): Pro
   })
 }
 
-/** Stderr brut (tronqué) d'un `tool_failed` produit par `run`, sinon chaîne vide. */
+/** Raw (truncated) stderr of a `tool_failed` produced by `run`, otherwise an empty string. */
 export function toolStderr(err: unknown): string {
   if (!(err instanceof AppError) || err.code !== 'tool_failed') return ''
   const d = err.details as { stderr?: unknown } | undefined
@@ -193,10 +193,10 @@ const SOURCE_STDERR =
   /Invalid data found when processing input|does not contain any stream|moov atom not found|matches no streams/i
 
 /**
- * Un échec ffmpeg dû à la source (fichier corrompu, sans piste exploitable) devient
- * `decode_failed` (message français, stderr dans `details`) ; toute autre erreur est rendue
- * telle quelle. Distingue « fichier cassé » de « outil cassé » (seul le second
- * mène à Re-détecter).
+ * An ffmpeg failure caused by the source (corrupted file, no usable track) becomes
+ * `decode_failed` (French message, stderr in `details`); any other error is returned
+ * as is. Distinguishes "broken file" from "broken tool" (only the second
+ * leads to Re-detect).
  */
 export function sourceFailure(err: unknown): unknown {
   const stderr = toolStderr(err)
@@ -206,7 +206,7 @@ export function sourceFailure(err: unknown): unknown {
   return err
 }
 
-/** Environnement réduit : pas d'héritage de secrets ; locale stable pour parser les sorties. */
+/** Reduced environment: no inheritance of secrets; stable locale to parse the outputs. */
 function minimalEnv(): NodeJS.ProcessEnv {
   return {
     PATH: '/usr/bin:/bin:/usr/sbin:/sbin',
@@ -217,15 +217,15 @@ function minimalEnv(): NodeJS.ProcessEnv {
   }
 }
 
-/** Nom temporaire à côté de `dst` (même volume → `rename` atomique), extension conservée. */
+/** Temporary name next to `dst` (same volume → atomic `rename`), extension kept. */
 export function tmpSibling(dst: string, ext = extname(dst)): string {
   const tag = `${process.pid}-${randomBytes(4).toString('hex')}`
   return join(dirname(dst), `.${basename(dst, extname(dst))}.${tag}.part${ext}`)
 }
 
 /**
- * Écrit via un fichier temporaire puis `rename` : un lecteur ne voit jamais de fichier partiel.
- * Le temporaire est supprimé en cas d'échec.
+ * Writes via a temporary file then `rename`: a reader never sees a partial file.
+ * The temporary file is deleted on failure.
  */
 export async function writeAtomic<T>(
   dst: string,

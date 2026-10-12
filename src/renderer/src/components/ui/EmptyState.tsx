@@ -1,6 +1,6 @@
 /**
- * `EmptyState` : icône, titre, description, action. Variante `dark` pour les
- * surfaces immersives (étagère, viewer).
+ * `EmptyState`: icon, title, description, action. `dark` variant for immersive
+ * surfaces (shelf, viewer).
  */
 import { cva } from 'class-variance-authority'
 import type { ReactNode } from 'react'
@@ -19,7 +19,7 @@ export interface EmptyStateProps {
   icon?: ReactNode
   title: string
   description?: string
-  /** Boutons d'action (noir primaire + outline secondaire). */
+  /** Action buttons (black primary + outline secondary). */
   action?: ReactNode
   variant?: 'default' | 'dark'
   className?: string

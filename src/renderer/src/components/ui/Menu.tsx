@@ -1,11 +1,11 @@
 /**
- * `Menu` : menus Radix stylés, DropdownMenu et ContextMenu (jamais de menu
- * natif). Items `default` / `danger` / `checkbox` / `sub`. Gabarit : 200 px min, padding 5, rayon 10,
- * items de 28 px (rayon 6, gap 10, icône 15 px, libellé 13,5 px), sans séparateurs par défaut.
- * Animation : opacity + scale .97→1 depuis l'origine Radix (140 ms / 100 ms) ; fondu seul en
- * mouvement réduit (`ui.css`). Le contenu est explicitement `app-no-drag`.
+ * `Menu`: styled Radix menus, DropdownMenu and ContextMenu (never a native
+ * menu). Items `default` / `danger` / `checkbox` / `sub`. Template: 200 px min, padding 5, radius 10,
+ * items 28 px tall (radius 6, gap 10, icon 15 px, label 13.5 px), no separators by default.
+ * Animation: opacity + scale .97→1 from the Radix origin (140 ms / 100 ms); fade only in
+ * reduced motion (`ui.css`). The content is explicitly `app-no-drag`.
  *
- * Usage : `<Menu.Dropdown.Root> … <Menu.Dropdown.Content> <Menu.Dropdown.Item icon={…}>…`.
+ * Usage: `<Menu.Dropdown.Root> … <Menu.Dropdown.Content> <Menu.Dropdown.Item icon={…}>…`.
  */
 import { Check, ChevronRight } from 'lucide-react'
 import { ContextMenu as CtxPrimitive, DropdownMenu as DdPrimitive } from 'radix-ui'
@@ -37,9 +37,9 @@ function itemClass(tone: MenuItemTone | undefined, className?: string): string {
 }
 
 interface ItemExtras {
-  /** Icône de 15 px à gauche. */
+  /** 15 px icon on the left. */
   icon?: ReactNode
-  /** Raccourci affiché à droite. */
+  /** Shortcut shown on the right. */
   shortcut?: readonly string[]
   tone?: MenuItemTone
 }
@@ -251,7 +251,7 @@ function CtxSeparator({ className, ...rest }: ComponentProps<typeof CtxPrimitive
 }
 
 export const Menu = {
-  /** Menu déroulant ancré à un déclencheur (FAB, tri, sélecteur de bibliothèque…). */
+  /** Dropdown menu anchored to a trigger (FAB, sort, library selector...). */
   Dropdown: {
     Root: DdPrimitive.Root,
     Trigger: DdPrimitive.Trigger,
@@ -265,7 +265,7 @@ export const Menu = {
     Separator: DdSeparator,
     Group: DdPrimitive.Group,
   },
-  /** Menu contextuel (clic droit). */
+  /** Context menu (right click). */
   Context: {
     Root: CtxPrimitive.Root,
     Trigger: CtxPrimitive.Trigger,

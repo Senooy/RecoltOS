@@ -1,6 +1,6 @@
 /**
- * Formats que sharp ne décode pas (HEIC/HEIF en HEVC, PSD) : décodage par `/usr/bin/sips`.
- * L'original n'est jamais modifié.
+ * Formats sharp cannot decode (HEIC/HEIF in HEVC, PSD): decoded via `/usr/bin/sips`.
+ * The original is never modified.
  */
 import { randomBytes } from 'node:crypto'
 import { mkdtemp, open, rm } from 'node:fs/promises'
@@ -31,7 +31,7 @@ const HEIC_BRANDS = new Set(['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'he
 const HEIF_BRANDS = new Set(['mif1', 'msf1'])
 const AVIF_BRANDS = new Set(['avif', 'avis'])
 
-/** Reconnaît HEIC/HEIF/PSD par les octets magiques (jamais par l'extension). */
+/** Recognizes HEIC/HEIF/PSD by magic bytes (never by extension). */
 export async function sniffForeign(abs: string): Promise<ForeignKind | null> {
   let fh
   try {
@@ -45,7 +45,7 @@ export async function sniffForeign(abs: string): Promise<ForeignKind | null> {
     try {
       ;({ bytesRead } = await fh.read(buf, 0, 64, 0))
     } catch (err) {
-      throw ioError(err, abs) // EISDIR : un dossier s'ouvre en lecture mais ne se lit pas
+      throw ioError(err, abs) // EISDIR: a folder opens for reading but cannot be read
     }
     const head = buf.subarray(0, bytesRead)
     if (head.length >= 4 && head.toString('latin1', 0, 4) === '8BPS') return 'psd'
@@ -55,7 +55,7 @@ export async function sniffForeign(abs: string): Promise<ForeignKind | null> {
       const compat: string[] = []
       for (let o = 16; o + 4 <= boxSize; o += 4) compat.push(head.toString('latin1', o, o + 4))
       const brands = [major, ...compat]
-      if (brands.some((b) => AVIF_BRANDS.has(b))) return null // AVIF : lu par sharp
+      if (brands.some((b) => AVIF_BRANDS.has(b))) return null // AVIF: read by sharp
       if (HEIC_BRANDS.has(major) || compat.some((b) => HEIC_BRANDS.has(b))) return 'heic'
       if (HEIF_BRANDS.has(major) || compat.some((b) => HEIF_BRANDS.has(b))) return 'heif'
     }
@@ -70,8 +70,8 @@ function sipsPath(tools: MediaTools): string {
 }
 
 /**
- * Dimensions affichées : orientation EXIF 5 à 8 (rotation de 90°) → largeur et hauteur
- * permutées. sips recopie l'orientation HEIF dans le PNG/JPEG décodé sans tourner les pixels.
+ * Displayed dimensions: EXIF orientation 5 to 8 (90° rotation) → width and height swapped.
+ * sips copies the HEIF orientation into the decoded PNG/JPEG without rotating the pixels.
  */
 export function orientedSize(meta: { width: number; height: number; orientation?: number }): {
   width: number
@@ -90,7 +90,7 @@ function asDecodeFailed(err: unknown): unknown {
   return err
 }
 
-/** `sips -s format <jpeg|png> <src> --out <dst>` ; écrit `dst` de façon atomique. */
+/** `sips -s format <jpeg|png> <src> --out <dst>`; writes `dst` atomically. */
 export async function decodeForeign(
   a: { src: string; dst: string; format: 'jpeg' | 'png' },
   tools: MediaTools,
@@ -117,20 +117,20 @@ export async function decodeForeign(
     },
     ext,
   )
-  // Dimensions affichées (comme makeDisplay et probeImage), pas celles des pixels stockés.
+  // Displayed dimensions (like makeDisplay and probeImage), not those of the stored pixels.
   return orientedSize(await sharp(dst).metadata())
 }
 
 export interface Readable {
-  /** Fichier lisible par sharp (l'original ou sa version décodée). */
+  /** File readable by sharp (the original or its decoded version). */
   input: string
   foreign: ForeignKind | null
   cleanup(): Promise<void>
 }
 
 /**
- * Donne un fichier lisible par sharp. Pour HEIC/HEIF/PSD, décode en PNG (alpha conservé)
- * dans un dossier temporaire supprimé par `cleanup()`.
+ * Provides a file readable by sharp. For HEIC/HEIF/PSD, decodes to PNG (alpha kept)
+ * in a temporary folder removed by `cleanup()`.
  */
 export async function openReadable(
   abs: string,

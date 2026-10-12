@@ -1,5 +1,5 @@
 /**
- * DTO synchronisation et bridge (`SyncStatus`, `sync_state`).
+ * DTOs for sync and bridge (`SyncStatus`, `sync_state`).
  */
 import { z } from 'zod'
 import { SyncSource } from '../enums'
@@ -17,9 +17,9 @@ export const SyncSourceStatusState = z.enum([
 ])
 
 /**
- * Précision de l'état : `blocked` (cookies présents mais requête refusée),
- * `permissions` (autorisations d'hôte manquantes, Firefox), `not_logged_in` (aucun cookie de session),
- * `browser_closed` (aucune extension connectée), `network`, `budget` (quota du jour atteint).
+ * State detail: `blocked` (cookies present but request refused),
+ * `permissions` (missing host permissions, Firefox), `not_logged_in` (no session cookie),
+ * `browser_closed` (no extension connected), `network`, `budget` (daily quota reached).
  */
 export const SyncDetail = z.enum([
   'blocked',
@@ -45,34 +45,34 @@ export const SyncSourceStatus = z.object({
   totalSynced: z.number().int(),
   backfillDone: z.boolean(),
   cooldownUntil: z.number().int().nullable(),
-  /** Run en cours : pages reçues et éléments ajoutés. */
+  /** Current run: pages received and items added. */
   running: z
     .object({ mode: z.string(), pages: z.number().int(), newItems: z.number().int() })
     .nullable(),
-  /** Navigateur qui synchronise cette source (libellé), `null` si aucun. */
+  /** Browser syncing this source (label), `null` if none. */
   browser: z.string().nullable(),
-  /** Session vue par l'extension (`null` : aucune extension connectée). */
+  /** Session seen by the extension (`null`: no extension connected). */
   loggedIn: z.boolean().nullable(),
-  /** Publications rattrapées par le backfill, pas encore revues. */
+  /** Posts recovered by the backfill, not yet reviewed. */
   recovered: z.number().int(),
-  /** Réglage repris de GatherOS à l'import (proposé, jamais appliqué seul). */
+  /** Setting carried over from GatherOS at import (offered, never applied on its own). */
   importedFlag: z.boolean().nullable(),
   nextRunAt: z.number().int().nullable(),
 })
 export type SyncSourceStatus = z.output<typeof SyncSourceStatus>
 
-/** État d'une plateforme vu par une extension connectée (jamais de cookie ni de jeton). */
+/** Platform state seen by a connected extension (never a cookie or token). */
 export const ClientPlatformState = z.object({
   loggedIn: z.boolean(),
-  /** Autorisations d'hôte (Firefox MV3) ; `null` = sans objet. */
+  /** Host permissions (Firefox MV3); `null` = not applicable. */
   permission: z.boolean().nullable(),
   handle: z.string().nullable(),
 })
 
 export const BridgeClient = z.object({
-  /** Identifiant du navigateur (`firefox`, `chrome`, `brave`…), d'après le wrapper. */
+  /** Browser ID (`firefox`, `chrome`, `brave`…), from the wrapper. */
   browser: z.string(),
-  /** Libellé affiché (« Firefox », « Chrome »…). */
+  /** Displayed label (« Firefox », « Chrome »…). */
   label: z.string(),
   target: z.enum(['chromium', 'firefox']).nullable(),
   extVersion: z.string().nullable(),
@@ -81,7 +81,7 @@ export const BridgeClient = z.object({
   platforms: z
     .object({ x: ClientPlatformState, instagram: ClientPlatformState, cosmos: ClientPlatformState })
     .nullable(),
-  /** Extension plus ancienne que celle livrée (`ext.stale`). */
+  /** Extension older than the bundled one (`ext.stale`). */
   stale: z.boolean(),
 })
 export type BridgeClient = z.output<typeof BridgeClient>
@@ -89,11 +89,11 @@ export type BridgeClient = z.output<typeof BridgeClient>
 export const SyncStatus = z.object({
   sources: z.array(SyncSourceStatus),
   clients: z.array(BridgeClient),
-  /** GatherOS (sync ou extension) actif : avertissement, bloquant pour Instagram. */
+  /** GatherOS (sync or extension) active: warning, blocking for Instagram. */
   gatherosConflict: z.boolean(),
-  /** Une extension est connectée : la sync ne tourne que navigateur ouvert. */
+  /** An extension is connected: sync only runs while the browser is open. */
   browserConnected: z.boolean(),
-  /** Pont arrêté (tests e2e sans `RECOLTOS_BRIDGE`). */
+  /** Bridge stopped (e2e tests without `RECOLTOS_BRIDGE`). */
   bridgeRunning: z.boolean(),
 })
 export type SyncStatus = z.output<typeof SyncStatus>
@@ -136,7 +136,7 @@ export const GatherOSPresence = z.object({
       cosmos: z.boolean().nullable(),
     })
     .nullable(),
-  /** Avertissement bloquant avant d'activer Instagram. */
+  /** Blocking warning before enabling Instagram. */
   blocksInstagram: z.boolean(),
 })
 export type GatherOSPresence = z.output<typeof GatherOSPresence>
@@ -145,11 +145,11 @@ export const ExtensionInfo = z.object({
   bundledVersion: z.string(),
   extensionId: z.string(),
   geckoId: z.string(),
-  /** Dossier à charger dans Chrome / Brave / Edge / Vivaldi (mode développeur). */
+  /** Folder to load in Chrome / Brave / Edge / Vivaldi (developer mode). */
   chromiumDir: z.string().nullable(),
-  /** Dossier `manifest.json` pour le chargement temporaire dans Firefox. */
+  /** `manifest.json` folder for temporary loading in Firefox. */
   firefoxDir: z.string().nullable(),
-  /** Extension Firefox signée (`.xpi`), si `pnpm run sign:firefox` a été fait. */
+  /** Signed Firefox extension (`.xpi`), if `pnpm run sign:firefox` was run. */
   firefoxXpi: z.string().nullable(),
 })
 export type ExtensionInfo = z.output<typeof ExtensionInfo>

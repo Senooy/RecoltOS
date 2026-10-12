@@ -1,6 +1,6 @@
 /**
- * Point d'entrée de l'hôte natif (→ `out/host/host.js`, puis exécutable Node SEA
- * `out/native-host/recolt-host`). Voir `host.ts`.
+ * Entry point of the native host (→ `out/host/host.js`, then Node SEA executable
+ * `out/native-host/recolt-host`). See `host.ts`.
  */
 import { startHost } from './host'
 
@@ -13,7 +13,7 @@ startHost({
   stdout: process.stdout,
   stderr: process.stderr,
   exit: (code) => {
-    // Laisse stdout se vider avant de sortir.
+    // Let stdout flush before exiting.
     process.stdout.write('', () => process.exit(code))
   },
   pid: process.pid,

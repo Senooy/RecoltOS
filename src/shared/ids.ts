@@ -1,16 +1,16 @@
-/** Identifiants. */
+/** Identifiers. */
 
-/** Nouvel UUID v4 (`crypto.randomUUID()`, disponible dans Node 22+, Electron et Chromium). */
+/** New UUID v4 (`crypto.randomUUID()`, available in Node 22+, Electron and Chromium). */
 export function newUuid(): string {
   return globalThis.crypto.randomUUID()
 }
 
-/** Dossier de répartition d'un fichier : 2 premiers caractères de l'uuid (`items/<ab>/<uuid>.<ext>`). */
+/** Sharding folder of a file: first 2 characters of the uuid (`items/<ab>/<uuid>.<ext>`). */
 export function shard(uuid: string): string {
   return uuid.slice(0, 2).toLowerCase()
 }
 
-/** Identifiant de nouvelle bibliothèque : `l` + `Date.now().toString(36)`. */
+/** New library identifier: `l` + `Date.now().toString(36)`. */
 export function newLibraryId(now: number = Date.now()): string {
   return `l${now.toString(36)}`
 }

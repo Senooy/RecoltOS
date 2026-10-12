@@ -1,7 +1,7 @@
 /**
- * Menu du FAB « + » : « Importer des fichiers… » ⌘O, « Importer un
- * dossier… », « Coller une URL… » (`UrlPopover`), « Capturer l'écran » ⇧⌘S ; dans une collection,
- * titre « Ajouter à « Dev » ». Le « + » pivote de 45° à l'ouverture.
+ * FAB "+" menu: "Import files…" ⌘O, "Import a
+ * folder…", "Paste a URL…" (`UrlPopover`), "Capture the screen" ⇧⌘S; in a collection,
+ * title "Add to "Dev"". The "+" rotates 45° on open.
  */
 import { Camera, FileUp, FolderUp, Link2, Plus } from 'lucide-react'
 import { useState } from 'react'

@@ -1,8 +1,8 @@
 /**
- * Domaine `jobs` : media-worker partagé, file de jobs persistante, services de
- * l'ingestion. Branché sur le cycle de vie des bibliothèques (`registerLibraryLifecycle`) :
- * au démarrage d'une bibliothèque, les jobs `running` repassent en `queued`, les `.part` orphelins
- * sont supprimés et les vieux jobs terminés nettoyés.
+ * `jobs` domain: shared media-worker, persistent job queue, services of
+ * ingestion. Plugged into the library lifecycle (`registerLibraryLifecycle`):
+ * when a library starts, `running` jobs go back to `queued`, orphan `.part` files
+ * are deleted and old finished jobs are cleaned up.
  */
 import { net } from 'electron'
 import { mkdirSync } from 'node:fs'
@@ -35,7 +35,7 @@ import { mt } from '../i18n'
 
 export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
   if (typeof net?.fetch !== 'function') {
-    ctx.log.warn('[jobs] hors Electron : file de jobs non démarrée')
+    ctx.log.warn('[jobs] outside Electron: job queue not started')
     return
   }
   const prefsStore = requirePrefsStore()
@@ -49,7 +49,7 @@ export async function initJobs(ctx: ServiceContext): Promise<Disposer | void> {
     log: ctx.log,
     onCrash: (info) => {
       ctx.log.warn(
-        `[jobs] media-worker arrêté (${info.code ?? info.signal ?? '?'}), ${info.interrupted.length} appel(s) interrompu(s)${info.broken ? ', état broken' : ''}`,
+        `[jobs] media-worker stopped (${info.code ?? info.signal ?? '?'}), ${info.interrupted.length} call(s) interrupted${info.broken ? ', broken state' : ''}`,
       )
     },
   })

@@ -1,9 +1,9 @@
 /**
- * Handlers `system.*` :
- * revealInFinder, openExternal (http(s) seulement), copyImage (`toPng` du media-worker →
- * `clipboard.write([ClipboardItem image/png])`, poster pour une vidéo), copyText, saveAs, quickLook
+ * `system.*` handlers:
+ * revealInFinder, openExternal (http(s) only), copyImage (`toPng` from the media worker →
+ * `clipboard.write([ClipboardItem image/png])`, poster for a video), copyText, saveAs, quickLook
  * (`previewFile`), edit (`webContents.<cmd>()`), openLogs, redetectTools, appInfo.
- * L'original est toujours donné tel quel (jamais un dérivé), sauf pour la copie d'image.
+ * The original is always given as is (never a derivative), except for the image copy.
  */
 import {
   BrowserWindow,
@@ -29,7 +29,7 @@ import { getMainWindow } from '../../windows/main-window'
 import type { DomainHandlers, HandlerContext } from '../router'
 import { mt } from '../../i18n'
 
-/** Côté le plus long de l'image copiée (un original de 50 Mpx donnerait un PNG énorme). */
+/** Longest side of the copied image (an original of 50 Mpx would give a huge PNG). */
 export const COPY_IMAGE_MAX_EDGE = 4096
 export const COPY_IMAGE_TIMEOUT_MS = 30_000
 
@@ -44,12 +44,12 @@ function webContentsOf(ctx: HandlerContext): WebContents {
   return wc
 }
 
-/** Nom proposé par « Enregistrer sous » : titre nettoyé + extension de l'original. */
+/** Name suggested by "Save as": cleaned title + extension of the original. */
 export function suggestedFileName(title: string | null | undefined, original: string): string {
   const ext = path.extname(original)
   const base = (title ?? '')
     .normalize('NFC')
-    // Ni séparateur, ni caractère de contrôle, ni « : » (affiché « / » par le Finder).
+    // No separator, no control character, no ":" (shown as "/" by Finder).
     .replace(/[/\\:\p{Cc}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
@@ -65,7 +65,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
   },
 
   'system.openExternal': async ({ url }) => {
-    // Le contrat (`WebUrl`) l'impose déjà ; défense en profondeur avant de passer la main à macOS.
+    // The contract (`WebUrl`) already enforces it; defense in depth before handing over to macOS.
     const protocol = new URL(url).protocol
     if (protocol !== 'http:' && protocol !== 'https:') {
       throw new AppError('validation', mt().errors.httpOnly)
@@ -83,8 +83,8 @@ export const systemHandlers: DomainHandlers<'system'> = {
       { timeoutMs: COPY_IMAGE_TIMEOUT_MS },
     )
     const bytes = Buffer.from(png)
-    // Electron 44 : `clipboard.writeImage` n'existe plus ; `write([ClipboardItem])` (W3C).
-    // `nativeImage` sert seulement à vérifier que le PNG du worker est décodable et non vide.
+    // Electron 44: `clipboard.writeImage` no longer exists; `write([ClipboardItem])` (W3C).
+    // `nativeImage` is only used to check that the worker's PNG is decodable and non-empty.
     if (nativeImage.createFromBuffer(bytes).isEmpty()) {
       throw new AppError('system.decode_failed', mt().errors.copyImageFailed)
     }
@@ -165,7 +165,7 @@ export const systemHandlers: DomainHandlers<'system'> = {
 
   'system.redetectTools': async () => {
     const store = requirePrefsStore()
-    // Détection neuve : le cache `prefs.tools` peut pointer vers un binaire désinstallé.
+    // Fresh detection: the `prefs.tools` cache may point to an uninstalled binary.
     const bins = await resolveBinaries({ tools: {} })
     const next = store.set({ tools: toolsPrefsPatch(bins) })
     await localMediaWorker()

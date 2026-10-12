@@ -1,14 +1,14 @@
 /**
- * Caméra de la toile : `screen = world × zoom + (x, y)`. Zoom borné par le contrat
- * (`Camera.zoom` ∈ [0,1 ; 4], soit 10–400 %). `zoomAt` garde fixe le point monde sous
- * l'ancre (invariant testé à 1e-9).
+ * Canvas camera: `screen = world × zoom + (x, y)`. Zoom bounded by the contract
+ * (`Camera.zoom` ∈ [0.1; 4], i.e. 10–400 %). `zoomAt` keeps fixed the world point under
+ * the anchor (invariant tested to 1e-9).
  */
 import type { Rect, Vec } from '../../../../../../shared/spaces-geometry'
 import type { Camera } from '../../../../../../shared/spaces-schema'
 
 export const MIN_ZOOM = 0.1
 export const MAX_ZOOM = 4
-/** Paliers des boutons « − / + » et de ⌘+ / ⌘−. */
+/** Steps for the "−" / "+" buttons and ⌘+ / ⌘−. */
 export const ZOOM_STEPS = [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4] as const
 
 export const clampZoom = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z))
@@ -29,13 +29,13 @@ export function zoomAt(c: Camera, anchor: Vec, next: number): Camera {
   return { zoom: z, x: anchor.x - (anchor.x - c.x) * k, y: anchor.y - (anchor.y - c.y) * k }
 }
 
-/** Palier suivant (`dir = 1`) ou précédent (`-1`). */
+/** Next step (`dir = 1`) or previous (`-1`). */
 export function stepZoom(zoom: number, dir: 1 | -1): number {
   if (dir > 0) return ZOOM_STEPS.find((s) => s > zoom + 1e-6) ?? MAX_ZOOM
   return [...ZOOM_STEPS].reverse().find((s) => s < zoom - 1e-6) ?? MIN_ZOOM
 }
 
-/** Caméra qui centre `box` dans une vue `w × h` avec une marge, zoom ≤ `maxZoom`. */
+/** Camera that centers `box` in a `w × h` view with a margin, zoom ≤ `maxZoom`. */
 export function fitBox(view: { w: number; h: number }, box: Rect, pad = 64, maxZoom = 1): Camera {
   const bw = Math.max(1, box.width)
   const bh = Math.max(1, box.height)
@@ -49,19 +49,19 @@ export function fitBox(view: { w: number; h: number }, box: Rect, pad = 64, maxZ
   }
 }
 
-/** Rectangle monde visible. */
+/** Visible world rectangle. */
 export function viewRect(c: Camera, view: { w: number; h: number }): Rect {
   return { x: -c.x / c.zoom, y: -c.y / c.zoom, width: view.w / c.zoom, height: view.h / c.zoom }
 }
 
-/** Agrandit un rectangle d'une fraction de sa taille de chaque côté (culling). */
+/** Enlarges a rectangle by a fraction of its size on each side (culling). */
 export function inflate(r: Rect, frac: number): Rect {
   const dx = r.width * frac
   const dy = r.height * frac
   return { x: r.x - dx, y: r.y - dy, width: r.width + 2 * dx, height: r.height + 2 * dy }
 }
 
-/** Vrai si `inner` est entièrement dans `outer`. */
+/** True if `inner` is entirely within `outer`. */
 export function contains(outer: Rect, inner: Rect): boolean {
   return (
     inner.x >= outer.x &&
@@ -71,7 +71,7 @@ export function contains(outer: Rect, inner: Rect): boolean {
   )
 }
 
-/** Molette : ⌃ = pincement, ⌘ ou réglage « zoomer » = zoom, sinon défilement. */
+/** Wheel: ⌃ = pinch, ⌘ or the "zoom" setting = zoom, otherwise scroll. */
 export function wheelAction(
   e: { deltaX: number; deltaY: number; deltaMode: number; ctrlKey: boolean; metaKey: boolean },
   wheelMode: 'scroll' | 'zoom',

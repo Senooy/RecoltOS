@@ -1,6 +1,6 @@
 /**
- * Capture d'une page HTML : fenêtre hors écran 1440×900 (partition non
- * persistante, sandbox, sans preload, `withOffscreenWindow`), titre et `og:description`.
+ * Captures an HTML page: off-screen window 1440×900 (non-persistent
+ * partition, sandbox, no preload, `withOffscreenWindow`), title and `og:description`.
  */
 import { withOffscreenWindow } from '../windows/offscreen'
 import type { PageCapture } from './ingest'

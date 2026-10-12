@@ -1,5 +1,5 @@
 /**
- * Handler du job `ai.prompt` : prompt d'image à la demande, via le service IA.
+ * Handler for the `ai.prompt` job: on-demand image prompt, via the AI service.
  */
 import { AppError } from '../../../shared/errors'
 import { getAiService } from '../../ai/service'

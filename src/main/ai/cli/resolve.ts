@@ -1,8 +1,8 @@
 /**
- * Détection des CLI IA. Une app lancée depuis le Finder n'hérite pas du PATH du shell :
- * on interroge le shell de login (`/bin/zsh -lc 'whence -ap <nom>'`), on dédoublonne par chemin
- * réel, on lit `--version` (env minimal, 5 s) et on garde la version la plus haute. Surcharge
- * manuelle : `prefs.ai.<cli>.path`, puis `prefs.tools.<cli>` (cache de `platform/binaries.ts`).
+ * AI CLI detection. An app launched from Finder does not inherit the shell PATH:
+ * we query the login shell (`/bin/zsh -lc 'whence -ap <nom>'`), dedupe by real path,
+ * read `--version` (minimal env, 5 s) and keep the highest version. Manual override:
+ * `prefs.ai.<cli>.path`, then `prefs.tools.<cli>` (cache of `platform/binaries.ts`).
  */
 import { realpathSync } from 'node:fs'
 import { dirname } from 'node:path'
@@ -35,7 +35,7 @@ const defaultShell: ShellRunner = async (script, timeoutMs) => {
 
 let loginPathCache: Promise<string | null> | null = null
 
-/** PATH du shell de login (mis en cache pour la session de l'app). */
+/** Login shell PATH (cached for the app session). */
 export function loginShellPath(): Promise<string | null> {
   loginPathCache ??= readLoginShellEnv().then((e) => e.path)
   return loginPathCache
@@ -45,7 +45,7 @@ export function resetLoginPathCache(): void {
   loginPathCache = null
 }
 
-/** Compare deux versions « a.b.c » (les parties manquantes valent 0). */
+/** Compares two "a.b.c" versions (missing parts count as 0). */
 export function compareSemver(a: string, b: string): number {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0)
   const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0)
@@ -68,7 +68,7 @@ export async function cliVersion(
   try {
     real = realpathSync(bin)
   } catch {
-    // lien cassé : `--version` échouera
+    // broken link: `--version` will fail
   }
   const r = await runCli({
     bin,
@@ -85,13 +85,13 @@ export interface DetectDeps {
   shell?: ShellRunner
   version?: (bin: string) => Promise<string | undefined>
   isExecutable?: (p: string) => Promise<boolean>
-  /** Dossiers parcourus en plus du shell ; par défaut PATH interactif + dossiers courants (aucun sous Vitest). */
+  /** Directories scanned in addition to the shell; by default interactive PATH + common directories (none under Vitest). */
   searchDirs?: string[]
 }
 
 /**
- * Dossiers d'installation courants, consultés en plus du shell : `zsh -lc` ne lit pas `.zshrc`,
- * où beaucoup d'installeurs (npm global, Hermes, bun, volta) ajoutent leur dossier au PATH.
+ * Common install directories, checked in addition to the shell: `zsh -lc` does not read `.zshrc`,
+ * where many installers (npm global, Hermes, bun, volta) add their directory to PATH.
  */
 export function fallbackDirs(home: string): string[] {
   return [
@@ -106,19 +106,19 @@ export function fallbackDirs(home: string): string[] {
   ]
 }
 
-/** Toutes les copies trouvées par le shell de login, dédoublonnées, avec leur version. */
+/** All copies found by the login shell, deduplicated, with their version. */
 export async function detectCli(name: AiCliId, deps: DetectDeps = {}): Promise<CliCandidate[]> {
   const shell = deps.shell ?? defaultShell
   const isExec = deps.isExecutable ?? isExecutable
   const loginPath = await loginShellPath().catch(() => null)
   const version = deps.version ?? ((bin: string) => cliVersion(bin, loginPath))
-  // Nom figé (pas d'entrée utilisateur) : aucune interpolation dangereuse.
+  // Fixed name (no user input): no dangerous interpolation.
   const out = await shell(
     `whence -ap ${name} 2>/dev/null; command -v ${name} 2>/dev/null`,
     5_000,
   ).catch(() => '')
-  // PATH du shell de login interactif (`zsh -lic`, lit `.zshrc`) puis dossiers courants.
-  // Sous Vitest, rien par défaut : un test ne doit jamais tomber sur le vrai CLI de la machine.
+  // Interactive login shell PATH (`zsh -lic`, reads `.zshrc`), then common directories.
+  // Under Vitest, nothing by default: a test must never hit the machine's real CLI.
   const dirs =
     deps.searchDirs ??
     (process.env.VITEST
@@ -155,7 +155,7 @@ export interface ResolvedCli {
   source: 'prefs' | 'tools' | 'login-shell'
 }
 
-/** Choix du binaire : surcharge manuelle, cache `prefs.tools`, puis la plus haute version trouvée. */
+/** Binary choice: manual override, `prefs.tools` cache, then the highest version found. */
 export async function resolveCli(
   name: AiCliId,
   prefs: Pick<Prefs, 'ai' | 'tools'>,

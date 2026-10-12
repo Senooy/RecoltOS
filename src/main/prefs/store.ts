@@ -1,7 +1,7 @@
 /**
- * Magasin `prefs.json` : lecture tolérante (`parsePrefsLenient`, réparation
- * champ par champ), patch profond revalidé (`mergePrefs`), écriture atomique, notification
- * `prefs.changed`. Pas d'import `electron` (le thème natif est suivi par `prefs/init.ts`).
+ * `prefs.json` store: lenient read (`parsePrefsLenient`, field-by-field repair),
+ * validated deep patch (`mergePrefs`), atomic write, notification
+ * `prefs.changed`. No `electron` import (the native theme is followed by `prefs/init.ts`).
  */
 import fs from 'node:fs'
 import { AppError } from '../../shared/errors'
@@ -28,8 +28,8 @@ export function createPrefsStore(deps: PrefsStoreDeps) {
   const listeners = new Set<PrefsListener>()
 
   /**
-   * Lit le fichier. `repaired` : le fichier était absent, mis de côté ou différent de ce qui a été
-   * lu (champ réparé) ; il doit alors être réécrit (`persist`), sinon il reste abîmé sur disque.
+   * Reads the file. `repaired`: the file was absent, set aside or different from what was
+   * read (repaired field); it must then be rewritten (`persist`), otherwise it stays damaged on disk.
    */
   const read = (): { prefs: Prefs; repaired: boolean } => {
     let raw: unknown
@@ -37,7 +37,7 @@ export function createPrefsStore(deps: PrefsStoreDeps) {
       raw = JSON.parse(fs.readFileSync(deps.file, 'utf8'))
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
-        deps.log?.warn('[prefs] prefs.json illisible, mis de côté', err)
+        deps.log?.warn('[prefs] prefs.json unreadable, set aside', err)
         quarantine(deps.file, (deps.now ?? Date.now)())
       }
       return { prefs: DEFAULT_PREFS, repaired: true }
@@ -50,7 +50,7 @@ export function createPrefsStore(deps: PrefsStoreDeps) {
   let current: Prefs = initial.prefs
 
   return {
-    /** Vrai si `prefs.json` a été créé, mis de côté ou réparé à l'ouverture : à réécrire. */
+    /** True if `prefs.json` was created, set aside or repaired on opening: to be rewritten. */
     repairedAtOpen: initial.repaired,
 
     get(): Prefs {
@@ -58,8 +58,8 @@ export function createPrefsStore(deps: PrefsStoreDeps) {
     },
 
     /**
-     * Applique un patch profond, revalide l'ensemble (une `ZodError` laisse tout inchangé),
-     * écrit atomiquement puis notifie. Renvoie les prefs à jour.
+     * Applies a deep patch, revalidates everything (a `ZodError` leaves everything unchanged),
+     * writes atomically then notifies. Returns the updated prefs.
      */
     set(patch: PrefsPatch): Prefs {
       const previous = current
@@ -71,13 +71,13 @@ export function createPrefsStore(deps: PrefsStoreDeps) {
         try {
           l(next, previous)
         } catch (err) {
-          deps.log?.error('[prefs] écouteur en échec', err)
+          deps.log?.error('[prefs] listener failed', err)
         }
       }
       return next
     },
 
-    /** Écrit les prefs courantes (première exécution : fichier absent ou réparé). */
+    /** Writes the current prefs (first run: file absent or repaired). */
     persist(): void {
       writeJsonAtomic(deps.file, current)
     },
@@ -99,7 +99,7 @@ export function getPrefsStore(): PrefsStore | null {
   return instance
 }
 
-/** Magasin initialisé par `initPrefs`, sinon `AppError('internal')`. */
+/** Store initialized by `initPrefs`, otherwise `AppError('internal')`. */
 export function requirePrefsStore(): PrefsStore {
   if (!instance) throw new AppError('internal', 'Préférences non initialisées.')
   return instance

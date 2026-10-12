@@ -1,10 +1,10 @@
 /**
- * À importer EN PREMIER par chaque entrée du renderer (`main.tsx`, `offscreen.tsx`).
- * zod 4 compile un analyseur rapide des objets avec `new Function` ; sa détection (`allowsEval`)
- * tente l'évaluation une fois, ce que la CSP du renderer (sans `unsafe-eval`) bloque en produisant
- * une violation `script-src eval` (vue par `tests/e2e/security.spec.ts`). `jitless` doit être posé
- * avant la construction du premier `z.object` : la décision est prise à la construction du schéma.
- * Le main (Node, sans CSP) garde le JIT.
+ * To be imported FIRST by each renderer entry point (`main.tsx`, `offscreen.tsx`).
+ * zod 4 compiles a fast object parser with `new Function`; its detection (`allowsEval`)
+ * tries evaluation once, which the renderer CSP (without `unsafe-eval`) blocks, producing
+ * a `script-src eval` violation (seen by `tests/e2e/security.spec.ts`). `jitless` must be set
+ * before the first `z.object` is built: the decision is made when the schema is built.
+ * The main process (Node, no CSP) keeps the JIT.
  */
 import { z } from 'zod'
 

@@ -1,34 +1,34 @@
 /**
- * Découverte de la configuration X depuis le client web PUBLIC (relevé du 2026-10-12).
+ * Discovery of the X configuration from the PUBLIC web client (checked 2026-10-12).
  *
- * Depuis l'automne 2026, x.com sert un nouveau client « x-web » (TanStack Router + Relay, modules ES
- * sous `abs.twimg.com/x-web/x-web/`) à la place de `responsive-web/client-web/main.<hash>.js`. Les
- * opérations GraphQL sont des requêtes Relay PERSISTÉES : `GET <passerelle>/<id>/<nom>?variables=…`,
- * sans `features` ; les « provided variables » Relay (`__relay_internal__pv__…`) font partie des
- * variables. Chaîne observée pour les favoris (aucun cookie, HTML déconnecté) :
- *   x.com/ → `<script type="module" src=…/entry-client-*.js>` → arbre de routes (import statique de
- *   l'entrée) → route `history-*.js` (`__vite__mapDeps`) → `bookmarks-*.js`, qui contient
+ * Since autumn 2026, x.com serves a new "x-web" client (TanStack Router + Relay, ES modules
+ * under `abs.twimg.com/x-web/x-web/`) instead of `responsive-web/client-web/main.<hash>.js`. The
+ * GraphQL operations are PERSISTED Relay requests: `GET <gateway>/<id>/<name>?variables=…`,
+ * without `features`; Relay "provided variables" (`__relay_internal__pv__…`) are part of the
+ * variables. Observed chain for bookmarks (no cookie, logged-out HTML):
+ *   x.com/ → `<script type="module" src=…/entry-client-*.js>` → route tree (static import of
+ *   the entry) → `history-*.js` route (`__vite__mapDeps`) → `bookmarks-*.js`, which contains
  *   `params:{id:"…",metadata:{},name:"bookmarksQuery",operationKind:"query",…,providedVariables:{…}}`.
- * Jeton public du client web : constante `Bearer AAAA…` présente dans `x.com/sw.js` et dans un chunk.
+ * Public token of the web client: constant `Bearer AAAA…` present in `x.com/sw.js` and in a chunk.
  *
- * Fonctions pures (testées sur des extraits réels minimaux) + `discoverXWeb`, parcours borné et
- * priorisé du graphe de modules (noms `bookmarks-*` puis `history-*` d'abord ; les autres seulement
- * depuis l'entrée et un niveau en dessous), avec un message d'erreur précis à chaque étape.
+ * Pure functions (tested on minimal real excerpts) + `discoverXWeb`, bounded and
+ * prioritized walk of the module graph (`bookmarks-*` then `history-*` names first; others only
+ * from the entry and one level below), with a precise error message at each step.
  */
 import { xt } from '../../lib/i18n'
 import type { FetchFn } from './fetcher'
 
-/** Jeton public du client web X (stable depuis des années ; repli si la lecture échoue). */
+/** Public token of the X web client (stable for years; fallback if reading fails). */
 export const X_PUBLIC_BEARER =
   'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA'
 
 export const XWEB_BOOKMARKS_OP = 'bookmarksQuery'
 
-/** Opération persistée trouvée dans un chunk. */
+/** Persisted operation found in a chunk. */
 export interface PersistedOp {
   id: string
   name: string
-  /** Noms des « provided variables » Relay attendues par l'opération. */
+  /** Names of the Relay "provided variables" expected by the operation. */
   providedVariables: string[]
 }
 
@@ -40,15 +40,15 @@ export interface XWebDiscovery {
   bearerSource: 'bundle' | 'sw' | 'constant'
   appVersion: string | null
   entryUrl: string
-  /** Chunk où l'opération a été trouvée. */
+  /** Chunk where the operation was found. */
   bundleUrl: string
-  /** Nombre de scripts lus (diagnostic). */
+  /** Number of scripts read (diagnostics). */
   scripts: number
 }
 
 export type DiscoveryResult = { ok: true; value: XWebDiscovery } | { ok: false; error: string }
 
-/** `data-app-version` de `<html>` ou `<meta name="app-version">` (clé de cache). */
+/** `data-app-version` of `<html>` or `<meta name="app-version">` (cache key). */
 export function appVersion(html: string): string | null {
   const m =
     /\bdata-app-version=["']([\w.-]{6,80})["']/.exec(html) ??
@@ -57,8 +57,8 @@ export function appVersion(html: string): string | null {
 }
 
 /**
- * Scripts d'entrée x-web du HTML (`<script … src=…>` dont le chemin contient `/x-web/` ou
- * `entry-client`), ordre d'apparition, sans doublon. Attributs dans n'importe quel ordre.
+ * x-web entry scripts of the HTML (`<script … src=…>` whose path contains `/x-web/` or
+ * `entry-client`), in order of appearance, no duplicates. Attributes in any order.
  */
 export function findEntryScripts(html: string, base: string): string[] {
   const out: string[] = []
@@ -69,22 +69,22 @@ export function findEntryScripts(html: string, base: string): string[] {
       const u = new URL(src, base).href
       if (!out.includes(u)) out.push(u)
     } catch {
-      // URL illisible
+      // unreadable URL
     }
   }
-  // Les entrées d'abord (`entry-client*`), puis les autres modules x-web.
+  // The entries first (`entry-client*`), then the other x-web modules.
   return out.sort((a, b) => Number(!/entry-client/.test(a)) - Number(!/entry-client/.test(b)))
 }
 
-/** Jeton public `AAAA…` (avec ou sans `Bearer `), entre guillemets, apostrophes ou accents graves. */
+/** Public token `AAAA…` (with or without `Bearer `), between quotes, apostrophes or backticks. */
 export function findBearer(js: string): string | null {
   const m = /["'`](?:Bearer\s+)?(AAAAAAAAAAAAAAAAAAAAA[A-Za-z0-9%]{30,})["'`]/.exec(js)
   return m?.[1] ?? null
 }
 
 /**
- * Références de chunks `./x.js` / `./assets/x.js` / `../x.js` (imports statiques, `import()`,
- * listes `__vite__mapDeps`), résolues par rapport à l'URL du fichier.
+ * Chunk references `./x.js` / `./assets/x.js` / `../x.js` (static imports, `import()`,
+ * lists `__vite__mapDeps`), resolved relative to the file's URL.
  */
 export function chunkRefs(js: string, fileUrl: string): string[] {
   const out = new Set<string>()
@@ -92,13 +92,13 @@ export function chunkRefs(js: string, fileUrl: string): string[] {
     try {
       out.add(new URL(m[1]!, fileUrl).href)
     } catch {
-      // référence illisible
+      // unreadable reference
     }
   }
   return [...out]
 }
 
-/** Valeur d'une clé dans le corps d'un objet littéral (`id:"…"`, `id:\`…\``, `"id":"…"`). */
+/** Value of a key in an object literal body (`id:"…"`, `id:\`…\``, `"id":"…"`). */
 function literal(body: string, key: string): string | null {
   const m = new RegExp(`(?:^|[,{\\s])["']?${key}["']?\\s*:\\s*["'\`]([^"'\`]{1,200})["'\`]`).exec(
     body,
@@ -107,9 +107,9 @@ function literal(body: string, key: string): string | null {
 }
 
 /**
- * `params:{id,…,name,operationKind,…,providedVariables:{…}}` d'une opération Relay persistée, quel
- * que soit l'ordre des clés et le type de guillemets. Un seul niveau d'imbrication (`metadata:{}`,
- * `providedVariables:{…}`) est attendu dans `params`.
+ * `params:{id,…,name,operationKind,…,providedVariables:{…}}` of a persisted Relay operation, in any
+ * order of keys and quote style. A single nesting level (`metadata:{}`,
+ * `providedVariables:{…}`) is expected inside `params`.
  */
 export function parsePersistedOps(js: string): PersistedOp[] {
   const out: PersistedOp[] = []
@@ -129,12 +129,12 @@ export function parsePersistedOps(js: string): PersistedOp[] {
   return out
 }
 
-/** Valeur par défaut d'une « provided variable » : « connecté » vrai, le reste faux. */
+/** Default value of a "provided variable": "logged in" true, the rest false. */
 export function providedDefaults(names: string[]): Record<string, boolean> {
   return Object.fromEntries(names.map((n) => [n, /isloggedin/i.test(n)]))
 }
 
-/** Variables manquantes signalées par la passerelle (`422`, `path: ["variable", nom]`). */
+/** Missing variables reported by the gateway (`422`, `path: ["variable", nom]`). */
 export function missingVariables(json: unknown): string[] {
   const errors = (json as { errors?: { path?: unknown; message?: unknown }[] } | null)?.errors
   if (!Array.isArray(errors)) return []
@@ -154,13 +154,13 @@ export function missingVariables(json: unknown): string[] {
   return [...new Set(out)]
 }
 
-/** `404 {"message":"Query not found"}` : identifiant persisté périmé. */
+/** `404 {"message":"Query not found"}`: stale persisted identifier. */
 export function isQueryNotFound(json: unknown): boolean {
   const m = (json as { message?: unknown } | null)?.message
   return typeof m === 'string' && /query not found/i.test(m)
 }
 
-/** Priorité d'un chunk : 0 favoris, 1 routes « history », 2 autre, `null` à ignorer. */
+/** Priority of a chunk: 0 bookmarks, 1 "history" routes, 2 other, `null` to ignore. */
 export function chunkPriority(url: string): 0 | 1 | 2 | null {
   const name = url.slice(url.lastIndexOf('/') + 1)
   if (/^bookmarks?-[\w-]{4,}\.m?js$/i.test(name)) return 0
@@ -172,19 +172,19 @@ export function chunkPriority(url: string): 0 | 1 | 2 | null {
 export interface DiscoverOptions {
   homeUrl: string
   swUrl: string
-  /** Nom de l'opération cherchée (défaut `bookmarksQuery`). */
+  /** Name of the operation searched for (default `bookmarksQuery`). */
   operation?: string
-  /** Plafond de scripts lus (défaut 140). */
+  /** Cap on scripts read (default 140). */
   maxScripts?: number
-  /** Requêtes en parallèle (défaut 6). */
+  /** Parallel requests (default 6). */
   concurrency?: number
 }
 
 const fail = (error: string): DiscoveryResult => ({ ok: false, error })
 
 /**
- * Découverte complète depuis l'arrière-plan, SANS cookie (`credentials: 'omit'` : le HTML déconnecté
- * donne une chaîne de modules déterministe). Ne lève jamais.
+ * Full discovery from the background, WITHOUT cookie (`credentials: 'omit'`: the logged-out HTML
+ * gives a deterministic module chain). Never throws.
  */
 export async function discoverXWeb(fetch: FetchFn, o: DiscoverOptions): Promise<DiscoveryResult> {
   const op = o.operation ?? XWEB_BOOKMARKS_OP
@@ -211,13 +211,13 @@ export async function discoverXWeb(fetch: FetchFn, o: DiscoverOptions): Promise<
   let found: { op: PersistedOp; url: string } | null = null
   let scripts = 0
   const seen = new Set<string>()
-  // File priorisée : [priorité, profondeur, url].
+  // Priority queue: [priority, depth, url].
   const queue: [number, number, string][] = entries.map((u) => [-1, 0, u])
   const push = (u: string, depth: number) => {
     if (seen.has(u) || !inScope(u)) return
     const p = chunkPriority(u)
     if (p === null) return
-    // Chunks ordinaires : seulement depuis l'entrée et un niveau en dessous.
+    // Ordinary chunks: only from the entry and one level below.
     if (p === 2 && depth > 2) return
     seen.add(u)
     queue.push([p, depth, u])

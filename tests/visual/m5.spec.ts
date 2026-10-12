@@ -1,7 +1,7 @@
 /**
- * Régression visuelle : Réglages › Synchronisation, état initial (aucune extension
- * connectée, trois sources désactivées) : lignes d'état, lien « En savoir plus » et, sous la
- * note, la carte « Extension navigateur ».
+ * Visual regression: Settings › Sync, initial state (no extension
+ * connected, three sources disabled): status rows, "Learn more" link and, below the
+ * note, the "Browser extension" card.
  */
 import type { Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

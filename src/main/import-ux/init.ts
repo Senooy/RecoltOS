@@ -1,6 +1,6 @@
 /**
- * Domaine `import-ux` : « Ouvrir avec RecoltOS », dépôt sur l'icône du Dock, fichiers passés
- * à une seconde instance (`onOpenFiles` de `bootstrap/open-files.ts`).
+ * `import-ux` domain: "Open with RecoltOS", drop onto the Dock icon, files passed
+ * to a second instance (`onOpenFiles` from `bootstrap/open-files.ts`).
  */
 import type { ServiceContext } from '../bootstrap/context'
 import { onOpenFiles } from '../bootstrap/open-files'

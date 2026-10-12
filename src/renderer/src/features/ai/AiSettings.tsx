@@ -1,8 +1,8 @@
 /**
- * Réglages › IA : en haut, titre, intro,
- * encart gris « Moteur : … » + pilule noire « Changer », filet, DEUX lignes à interrupteur
- * (« Nommer automatiquement… », « Décrire et taguer… » : pas de « Recherche visuelle »). Dessous, repliés : « Avancé » (modèle, effort, secours, titres, débit,
- * file, lots) et « Confidentialité » (ce qui est envoyé, aperçu, journal).
+ * Settings › AI: at the top, title, intro,
+ * gray box "Engine: …" + black "Change" pill, divider, TWO toggle rows
+ * ("Name automatically…", "Describe and tag…": no "Visual search"). Below, collapsed: "Advanced" (model, effort, fallback, titles, throughput,
+ * queue, batches) and "Privacy" (what is sent, preview, log).
  */
 import { ChevronRight } from 'lucide-react'
 import { useEffect, useState } from 'react'

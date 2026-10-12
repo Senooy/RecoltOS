@@ -1,8 +1,8 @@
 /**
- * Requêtes de sync depuis l'ARRIÈRE-PLAN : cookies de session envoyés par le navigateur
- * (`credentials: 'include'` + autorisations d'hôte), délai de 30 s, en-têtes de réponse filtrés
- * (`x-rate-limit-*`, `content-type` : jamais d'en-tête d'authentification vers l'app). Repli : la même
- * requête exécutée dans un onglet de la plateforme (`scripting.executeScript`, monde ISOLATED).
+ * Sync requests from the BACKGROUND: session cookies sent by the browser
+ * (`credentials: 'include'` + host permissions), 30 s timeout, response headers filtered
+ * (`x-rate-limit-*`, `content-type`: never an auth header sent to the app). Fallback: the same
+ * request run in a tab of the platform (`scripting.executeScript`, ISOLATED world).
  */
 import { api } from '../../lib/api'
 
@@ -10,13 +10,13 @@ export interface FetchResult {
   status: number
   headers: Record<string, string>
   json: unknown
-  /** Corps texte si la réponse n'est pas du JSON (HTML, script). */
+  /** Text body if the response is not JSON (HTML, script). */
   text: string | null
 }
 
 export type FetchFn = (url: string, init: RequestInit) => Promise<FetchResult>
 
-/** Exécutée telle quelle dans le script d'arrière-plan OU sérialisée dans un onglet. */
+/** Executed as-is in the background script OR serialized into a tab. */
 export async function pageFetch(
   url: string,
   init: RequestInit,
@@ -60,10 +60,10 @@ export async function pageFetch(
 
 export const TIMEOUT_MS = 30_000
 
-/** Arrière-plan (défaut). */
+/** Background (default). */
 export const backgroundFetch: FetchFn = (url, init) => pageFetch(url, init, TIMEOUT_MS)
 
-/** Repli dans un onglet existant ou créé (jamais par défaut). */
+/** Fallback in an existing or newly created tab (never by default). */
 export function tabFetch(tabId: number): FetchFn {
   return async (url, init) => {
     const [res] = await api().scripting.executeScript({
@@ -78,5 +78,5 @@ export function tabFetch(tabId: number): FetchFn {
 
 export const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
 
-/** Délai aléatoire dans [min, max]. */
+/** Random delay within [min, max]. */
 export const jitter = (min: number, max: number) => min + Math.random() * (max - min)

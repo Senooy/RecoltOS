@@ -1,9 +1,9 @@
 /**
- * Rendu d'un space par la fenêtre « stage ».
- * Fenêtre hors écran (`withOffscreenWindow` : partition non persistante, sandbox, sans preload) qui
- * charge `offscreen.html?render=space-stage` ; le main y pousse le document puis place la caméra
- * tuile par tuile (multiples entiers de la tuile : même phase sous-pixel, pas de couture) et assemble
- * les `capturePage` dans un tampon BGRA, encodé en PNG sans dépendance (`nativeImage`).
+ * Rendering a space through the « stage » window.
+ * Off-screen window (`withOffscreenWindow`: non-persistent partition, sandbox, no preload) that
+ * loads `offscreen.html?render=space-stage`; main pushes the document there, then places the camera
+ * tile by tile (whole multiples of the tile: same sub-pixel phase, no seam) and assembles
+ * the `capturePage` results into a BGRA buffer, encoded as PNG without dependency (`nativeImage`).
  */
 import { nativeImage, type BrowserWindow } from 'electron'
 import type { SpaceDoc } from '../../shared/dto/spaces'
@@ -14,9 +14,9 @@ import { placeTile, planExport, type ExportPlan } from './tiles'
 import { mt } from '../i18n'
 
 export type StageMode = 'hidden' | 'offscreen' | 'visible'
-/** Mode retenu après mesure (fenêtre hors écran). */
+/** Mode selected after measurement (off-screen window). */
 export const STAGE_MODE: StageMode = 'offscreen'
-/** Mesures seulement : `RECOLTOS_STAGE_MODE=hidden` sous `RECOLTOS_E2E=1`. */
+/** Measurements only: `RECOLTOS_STAGE_MODE=hidden` under `RECOLTOS_E2E=1`. */
 const stageMode = (): StageMode =>
   process.env.RECOLTOS_E2E === '1' && process.env.RECOLTOS_STAGE_MODE === 'hidden'
     ? 'hidden'
@@ -34,7 +34,7 @@ export interface PngJob {
 export interface StageHooks {
   onProgress?(done: number, total: number): void
   signal?: AbortSignal
-  /** Plan effectif (échelle éventuellement réduite), pour l'UI et les tests. */
+  /** Effective plan (scale possibly reduced), for the UI and the tests. */
   onPlan?(plan: ExportPlan): void
 }
 
@@ -49,7 +49,7 @@ async function waitStage(win: BrowserWindow): Promise<void> {
   throw new AppError('timeout', 'fenêtre stage : chargement trop long')
 }
 
-/** PNG d'un space (tout ou sélection) à l'échelle demandée (bornée à 8 192 px / 40 Mpx). */
+/** PNG of a space (all or a selection) at the requested scale (capped at 8,192 px / 40 Mpx). */
 export async function renderSpacePng(
   doc: SpaceDoc,
   job: PngJob,
@@ -69,7 +69,7 @@ export async function renderSpacePng(
     async (win) => {
       await win.loadURL(offscreenUrl('space-stage', { theme: job.theme }))
       await waitStage(win)
-      // Échelle réelle de la capture (1 en rendu hors écran, 2 sur Retina en fenêtre cachée).
+      // Actual capture scale (1 for off-screen rendering, 2 on Retina in a hidden window).
       const probe = await win.webContents.capturePage()
       const sf = Math.max(1, ...probe.getScaleFactors())
       const plan = planExport(box, job.scale, sf, STAGE_TILE)
@@ -81,7 +81,7 @@ export async function renderSpacePng(
         outScale: plan.scale,
         tile: STAGE_TILE,
       }
-      // JSON = littéral JS valide : aucune interpolation de texte utilisateur hors JSON.
+      // JSON = valid JS literal: no interpolation of user text outside the JSON.
       await win.webContents.executeJavaScript(`window.__stage.load(${JSON.stringify(spec)})`)
       const out = Buffer.alloc(plan.width * plan.height * 4)
       let done = 0

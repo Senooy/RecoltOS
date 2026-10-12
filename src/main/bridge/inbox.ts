@@ -1,8 +1,8 @@
 /**
- * Spool `inbox/` : quand l'app est fermée, l'hôte natif y écrit les `save.create` (média
- * ≤ 8 Mio) de façon atomique. Au démarrage, les fichiers sont ingérés dans l'ordre chronologique
- * (nom = `<horodatage>-<id>.json`) puis supprimés ; le dossier est ensuite surveillé.
- * Un fichier illisible ou refusé est déplacé dans `inbox/rejets/` (jamais perdu, jamais rejoué).
+ * `inbox/` spool: when the app is closed, the native host atomically writes `save.create` requests
+ * there (media ≤ 8 MiB). At startup, files are ingested in chronological order
+ * (name = `<timestamp>-<id>.json`), then deleted; the folder is then watched.
+ * An unreadable or refused file is moved to `inbox/rejets/` (never lost, never replayed).
  */
 import { watch, type FSWatcher } from 'node:fs'
 import { mkdir, readdir, readFile, rename, rm } from 'node:fs/promises'
@@ -28,7 +28,7 @@ export class Inbox {
     this.deps = deps
   }
 
-  /** Ingère tout ce qui est en attente ; rend le nombre de fichiers traités. */
+  /** Ingests everything pending; returns the number of files processed. */
   drain(): Promise<number> {
     if (this.running) {
       this.again = true
@@ -68,15 +68,15 @@ export class Inbox {
         await rm(file, { force: true })
         n += 1
       } else if (ack?.error === mt().errors.noLibrary) {
-        // Réessayé plus tard (bibliothèque en cours d'ouverture).
+        // Retried later (library being opened).
         break
       } else {
         await mkdir(path.join(dir, 'rejets'), { recursive: true })
         await rename(file, path.join(dir, 'rejets', name)).catch(() => rm(file, { force: true }))
-        log.warn(`[bridge] spool : ${name} rejeté`)
+        log.warn(`[bridge] spool: ${name} rejected`)
       }
     }
-    if (n > 0) log.info(`[bridge] spool : ${n} enregistrement(s) ingéré(s)`)
+    if (n > 0) log.info(`[bridge] spool: ${n} record(s) ingested`)
     return n
   }
 
@@ -96,7 +96,7 @@ export class Inbox {
             this.timer = setTimeout(() => void this.drain(), 300)
           })
         } catch (err) {
-          this.deps.log.warn('[bridge] surveillance du spool impossible', err)
+          this.deps.log.warn('[bridge] unable to watch the spool', err)
         }
       })
       .catch(() => undefined)

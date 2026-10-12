@@ -1,6 +1,6 @@
 /**
- * Port natif de l'extension : hello, reconnexion après déconnexion, repli sur l'hôte de dev,
- * classification des erreurs, requêtes (réponse, erreur `APP_NOT_RUNNING`, délai).
+ * Extension native port: hello, reconnection after disconnection, fallback to the dev host,
+ * error classification, requests (reply, `APP_NOT_RUNNING` error, timeout).
  */
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
@@ -53,7 +53,7 @@ beforeEach(() => {
 })
 
 describe('NativeBridge', () => {
-  it('se connecte, envoie hello, puis renvoie hello quand l’app se connecte', async () => {
+  it('connects, sends hello, then sends hello again when the app connects', async () => {
     const b = bridge()
     b.connect()
     await flush()
@@ -71,7 +71,7 @@ describe('NativeBridge', () => {
     expect(types(port.posted)).toEqual(['hello', 'hello'])
   })
 
-  it('reconnexion après onDisconnect avec backoff croissant', () => {
+  it('reconnects after onDisconnect with increasing backoff', () => {
     const b = bridge(['com.recoltos.host'])
     b.connect()
     lastPort(fake).drop('Native host has exited.', fake)
@@ -83,7 +83,7 @@ describe('NativeBridge', () => {
     expect(timers.map((t) => t.ms)).toEqual([2_000])
   })
 
-  it('hôte absent : essaie com.recoltos.host.dev, puis host_missing', async () => {
+  it('host absent: tries com.recoltos.host.dev, then host_missing', async () => {
     fake.missingHosts.add('com.recoltos.host')
     fake.missingHosts.add('com.recoltos.host.dev')
     const b = bridge()
@@ -94,7 +94,7 @@ describe('NativeBridge', () => {
     expect(b.state).toBe('host_missing')
   })
 
-  it('classe les messages d’erreur Chrome et Firefox', () => {
+  it('classifies Chrome and Firefox error messages', () => {
     expect(classifyDisconnect('Specified native messaging host not found.')).toBe('host_missing')
     expect(classifyDisconnect('No such native application com.recoltos.host')).toBe('host_missing')
     expect(classifyDisconnect('Access to the specified native messaging host is forbidden.')).toBe(
@@ -104,7 +104,7 @@ describe('NativeBridge', () => {
     expect(classifyDisconnect(undefined)).toBe('host_exited')
   })
 
-  it('request : réponse par re, erreur APP_NOT_RUNNING remontée, délai', async () => {
+  it('request: reply by re, APP_NOT_RUNNING error surfaced, timeout', async () => {
     const b = bridge()
     b.connect()
     await flush()
@@ -134,7 +134,7 @@ describe('NativeBridge', () => {
     await expect(p3).rejects.toBeInstanceOf(BridgeError)
   })
 
-  it('distribue les messages de l’app aux gestionnaires', () => {
+  it('dispatches app messages to the handlers', () => {
     const b = bridge()
     const got: string[] = []
     b.on('sync.run', (m) => got.push(m.type))
@@ -145,7 +145,7 @@ describe('NativeBridge', () => {
 })
 
 describe('reload-guard', () => {
-  it('un seul runtime.reload par version, puis ext.stale', async () => {
+  it('a single runtime.reload per version, then ext.stale', async () => {
     const stale: unknown[] = []
     expect(await maybeReload('1.1.0', '1.0.0', (s) => stale.push(s))).toBe('reloaded')
     expect(await maybeReload('1.1.0', '1.0.0', (s) => stale.push(s))).toBe('stale')

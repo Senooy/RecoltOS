@@ -1,8 +1,8 @@
 /**
- * Guide « Enregistrement de l'écran » : modale du style Réglages, 3 étapes
- * (Réglages Système, activer RecoltOS — « Electron (ou ton terminal) » en développement —, relancer).
- * « Relancer » toujours proposé ; sondage chaque seconde : coche verte et « Réessayer la capture »
- * quand l'accès devient `granted`. Signature ad hoc signalée.
+ * "Screen recording" guide: modal in the Settings style, 3 steps
+ * (System Settings, enable RecoltOS — "Electron (or your terminal)" in development —, relaunch).
+ * "Relaunch" always offered; poll every second: green check and "Retry capture"
+ * when access becomes `granted`. Ad hoc signature flagged.
  */
 import { Check } from 'lucide-react'
 import { useEffect, useState } from 'react'

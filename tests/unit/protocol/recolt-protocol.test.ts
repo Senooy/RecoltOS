@@ -1,7 +1,7 @@
 /**
- * handler `recolt://`, appelé avec des `Request` Node :
- * 200 / HEAD / 206 + `Content-Range`, `bytes=-500`, 416, `..` et `\0` → 403, racine inconnue → 403,
- * lien symbolique sortant → 403, bibliothèque inconnue → 404, cache `immutable` si `?v`, CORS.
+ * `recolt://` handler, called with Node `Request`s:
+ * 200 / HEAD / 206 + `Content-Range`, `bytes=-500`, 416, `..` and `\0` → 403, unknown root → 403,
+ * outgoing symbolic link → 403, unknown library → 404, `immutable` cache if `?v`, CORS.
  */
 import {
   mkdirSync,
@@ -45,7 +45,7 @@ beforeAll(() => {
   writeFileSync(join(root, 'snapshots', 'recolt-1.db'), 'snapshot')
   mkdirSync(join(root, 'items', 'em'), { recursive: true })
   writeFileSync(join(root, 'items', 'em', 'empty.mp4'), '')
-  // Secret hors de la bibliothèque, et liens symboliques qui tentent d'y mener.
+  // Secret outside the library, and symbolic links trying to lead there.
   writeFileSync(join(base, 'secret.txt'), 'secret')
   symlinkSync(join(base, 'secret.txt'), join(root, 'thumbs', '0d', 'evil.webp'))
   symlinkSync(join(root, 'recolt.db'), join(root, 'thumbs', '0d', 'db.webp'))
@@ -68,8 +68,8 @@ async function bodyOf(res: Response): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer())
 }
 
-describe('recolt:// — réponses', () => {
-  it('200 complet, type MIME, CORS, Accept-Ranges', async () => {
+describe('recolt:// — responses', () => {
+  it('200 complete, MIME type, CORS, Accept-Ranges', async () => {
     const res = await get(VIDEO)
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('video/mp4')
@@ -80,7 +80,7 @@ describe('recolt:// — réponses', () => {
     expect((await bodyOf(res)).equals(BYTES)).toBe(true)
   })
 
-  it('Cache-Control : immutable avec ?v, no-cache sans', async () => {
+  it('Cache-Control: immutable with ?v, no-cache without', async () => {
     const withV = await get(`${THUMB}?v=3`)
     expect(withV.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
     expect(withV.headers.get('content-type')).toBe('image/webp')
@@ -90,7 +90,7 @@ describe('recolt:// — réponses', () => {
     await withoutV.arrayBuffer()
   })
 
-  it('HEAD : mêmes en-têtes, aucun corps', async () => {
+  it('HEAD: same headers, no body', async () => {
     const res = await get(VIDEO, {}, 'HEAD')
     expect(res.status).toBe(200)
     expect(res.headers.get('content-length')).toBe(String(SIZE))
@@ -108,7 +108,7 @@ describe('recolt:// — réponses', () => {
     ['bytes=0-0', 0, 0],
     ['bytes=-500', SIZE - 500, SIZE - 1],
     ['bytes=1990-99999', 1990, SIZE - 1],
-  ])('Range %s → 206, Content-Range et octets exacts', async (range, start, end) => {
+  ])('Range %s → 206, Content-Range and exact bytes', async (range, start, end) => {
     const res = await get(VIDEO, { Range: range })
     expect(res.status).toBe(206)
     expect(res.headers.get('content-range')).toBe(`bytes ${start}-${end}/${SIZE}`)
@@ -119,7 +119,7 @@ describe('recolt:// — réponses', () => {
   })
 
   it.each(['bytes=2000-', 'bytes=5000-6000', 'bytes=50-10', 'bytes=-0', 'bytes=0-1,4-5'])(
-    'Range %s hors plage → 416 avec Content-Range bytes */taille',
+    'Range %s out of range → 416 with Content-Range bytes */size',
     async (range) => {
       const res = await get(VIDEO, { Range: range })
       expect(res.status).toBe(416)
@@ -127,20 +127,20 @@ describe('recolt:// — réponses', () => {
     },
   )
 
-  it('fichier vide : 200 et longueur 0 sans flux', async () => {
+  it('empty file: 200 and length 0 without stream', async () => {
     const res = await get('items/em/empty.mp4')
     expect(res.status).toBe(200)
     expect(res.headers.get('content-length')).toBe('0')
     expect((await bodyOf(res)).length).toBe(0)
   })
 
-  it('lien symbolique interne entre racines servies : autorisé', async () => {
+  it('internal symbolic link between served roots: allowed', async () => {
     const res = await get('thumbs/0d/alias.mp4', { Range: 'bytes=0-9' })
     expect(res.status).toBe(206)
     expect((await bodyOf(res)).equals(BYTES.subarray(0, 10))).toBe(true)
   })
 
-  it('OPTIONS : pré-vol CORS (Range autorisé)', async () => {
+  it('OPTIONS: CORS preflight (Range allowed)', async () => {
     const res = await get(VIDEO, {}, 'OPTIONS')
     expect(res.status).toBe(204)
     expect(res.headers.get('access-control-allow-origin')).toBe('*')
@@ -153,50 +153,50 @@ describe('recolt:// — réponses', () => {
   })
 })
 
-describe('recolt:// — refus', () => {
+describe('recolt:// — refusals', () => {
   it.each([
     ['..', 'thumbs/../../secret.txt'],
     ['%2e%2e', 'thumbs/%2e%2e/%2e%2e/secret.txt'],
     ['..%2F', 'thumbs/..%2F..%2Fsecret.txt'],
-    ['%2F absolu', 'thumbs/%2F..%2Fsecret.txt'],
+    ['%2F absolute', 'thumbs/%2F..%2Fsecret.txt'],
     ['NUL', 'thumbs/0d/x%00.webp'],
-    ['antislash', 'thumbs/0d%5C..%5C..%5Csecret.txt'],
-    ['segment vide', 'thumbs//0d/x.webp'],
-    ['racine inconnue', 'etc/passwd'],
+    ['backslash', 'thumbs/0d%5C..%5C..%5Csecret.txt'],
+    ['empty segment', 'thumbs//0d/x.webp'],
+    ['unknown root', 'etc/passwd'],
     ['snapshots', 'snapshots/recolt-1.db'],
     ['tmp', 'tmp/x.part'],
     ['import', 'import/moodmark.db'],
     ['base', 'recolt.db'],
-    ['racine seule', 'thumbs'],
-    ['encodage invalide', 'thumbs/%E0%A4%A'],
+    ['root only', 'thumbs'],
+    ['invalid encoding', 'thumbs/%E0%A4%A'],
   ])('%s → 403', async (_label, path) => {
     const res = await get(path)
     expect(res.status).toBe(403)
     expect(res.headers.get('access-control-allow-origin')).toBe('*')
   })
 
-  it('lien symbolique vers un fichier hors de la bibliothèque → 403', async () => {
+  it('symbolic link to a file outside the library → 403', async () => {
     expect((await get('thumbs/0d/evil.webp')).status).toBe(403)
   })
 
-  it('lien symbolique vers la base (hors racines servies) → 403', async () => {
+  it('symbolic link to the database (outside served roots) → 403', async () => {
     expect((await get('thumbs/0d/db.webp')).status).toBe(403)
   })
 
-  it('bibliothèque inconnue ou fichier absent → 404', async () => {
+  it('unknown library or missing file → 404', async () => {
     expect((await handler(new Request(`recolt://autre/${VIDEO}`))).status).toBe(404)
     expect((await get('thumbs/0d/absent.webp')).status).toBe(404)
     expect((await get('thumbs/dir.webp')).status).toBe(404)
   })
 
-  it('les refus sont signalés au journal', () => {
+  it('refusals are reported to the log', () => {
     expect(denied.length).toBeGreaterThan(0)
     expect(denied).toContain('racine inconnue')
   })
 })
 
 describe('parseRecoltPath', () => {
-  it('décode et valide', () => {
+  it('decodes and validates', () => {
     expect(parseRecoltPath('/thumbs/0d/a%20b.webp')).toEqual({ rel: 'thumbs/0d/a b.webp' })
     expect(parseRecoltPath('/avatars/x/k.jpg')).toEqual({ rel: 'avatars/x/k.jpg' })
     expect(parseRecoltPath('/thumbs/a/../b')).toHaveProperty('denied')
@@ -204,14 +204,14 @@ describe('parseRecoltPath', () => {
   })
 })
 
-describe('recolt:// — annulation de la requête', () => {
-  // Plus grand que le highWaterMark du flux (64 KiB) : sans lecture, le flux s'arrête et garde le handle.
+describe('recolt:// — request cancellation', () => {
+  // Larger than the stream's highWaterMark (64 KiB): without reading, the stream stops and keeps the handle.
   const BIG = 'items/0d/big.mp4'
   beforeAll(() => {
     writeFileSync(join(root, BIG), Buffer.alloc(256 * 1024, 7))
   })
 
-  /** Espionne les handles ouverts par le handler, sans changer leur comportement. */
+  /** Spies on the handles opened by the handler, without changing their behavior. */
   function spyOpenedHandles(): { handles: FileHandle[]; restore(): void } {
     const handles: FileHandle[] = []
     const realOpen = fsPromises.open
@@ -225,7 +225,7 @@ describe('recolt:// — annulation de la requête', () => {
     return { handles, restore: () => spy.mockRestore() }
   }
 
-  it('abort du signal pendant un corps non lu : le handle est fermé', async () => {
+  it('signal abort while an unread body: the handle is closed', async () => {
     const spied = spyOpenedHandles()
     try {
       const ac = new AbortController()
@@ -240,7 +240,7 @@ describe('recolt:// — annulation de la requête', () => {
     }
   })
 
-  it('signal déjà annulé avant la lecture : 499 et handle fermé', async () => {
+  it('signal already cancelled before reading: 499 and handle closed', async () => {
     const spied = spyOpenedHandles()
     try {
       const ac = new AbortController()

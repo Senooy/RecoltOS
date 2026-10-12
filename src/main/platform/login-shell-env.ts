@@ -1,8 +1,8 @@
 /**
- * Environnement du shell de login : une app lancée depuis le Finder hérite d'un
- * `PATH` minimal et ne voit ni `claude`, ni `codex`, ni `/opt/homebrew/bin/ffmpeg`.
- * On interroge `zsh -lic` (timeout 5 s) ; chaque outil est imprimé sur une ligne balisée pour
- * résister aux sorties parasites de `.zshrc` (invites, extensions) et aux outils absents.
+ * Login shell environment: an app launched from the Finder inherits a minimal `PATH` and sees
+ * neither `claude`, `codex`, nor `/opt/homebrew/bin/ffmpeg`.
+ * We query `zsh -lic` (5 s timeout); each tool is printed on a tagged line to withstand stray
+ * output from `.zshrc` (prompts, extensions) and missing tools.
  */
 import { spawn, type ChildProcess } from 'node:child_process'
 import { isAbsolute } from 'node:path'
@@ -11,9 +11,9 @@ export const LOGIN_SHELL_TOOLS = ['claude', 'codex', 'ffmpeg', 'ffprobe'] as con
 export type LoginShellTool = (typeof LOGIN_SHELL_TOOLS)[number]
 
 export interface LoginShellEnv {
-  /** `PATH` du shell de login, ou `null` si introuvable. */
+  /** `PATH` of the login shell, or `null` if not found. */
   path: string | null
-  /** Chemins absolus trouvés par `command -v`. */
+  /** Absolute paths found by `command -v`. */
   tools: Partial<Record<LoginShellTool, string>>
 }
 
@@ -23,13 +23,13 @@ const MARK = '__RECOLT__'
 export function loginShellScript(tools: readonly string[] = LOGIN_SHELL_TOOLS): string {
   const lines = [`printf '${MARK}PATH=%s\\n' "$PATH"`]
   for (const t of tools) {
-    // Noms figés (pas d'entrée utilisateur) : aucune interpolation dangereuse.
+    // Fixed names (no user input): no dangerous interpolation.
     lines.push(`printf '${MARK}${t}=%s\\n' "$(command -v ${t} 2>/dev/null)"`)
   }
   return lines.join('; ')
 }
 
-/** Analyse la sortie balisée ; ignore tout le reste (exportée pour les tests). */
+/** Parses the tagged output; ignores everything else (exported for tests). */
 export function parseLoginShellOutput(out: string): LoginShellEnv {
   const env: LoginShellEnv = { path: null, tools: {} }
   for (const raw of out.split(/\r?\n/)) {
@@ -43,7 +43,7 @@ export function parseLoginShellOutput(out: string): LoginShellEnv {
     if (key === 'PATH') {
       if (value) env.path = value
     } else if ((LOGIN_SHELL_TOOLS as readonly string[]).includes(key)) {
-      // `command -v` rend un nom nu pour un alias ou une fonction : seuls les chemins absolus comptent.
+      // `command -v` returns a bare name for an alias or function: only absolute paths count.
       if (value && isAbsolute(value) && !value.includes('\n')) {
         env.tools[key as LoginShellTool] = value
       }
@@ -58,14 +58,14 @@ export type SpawnShell = (
   timeoutMs: number,
 ) => Promise<{ stdout: string; timedOut: boolean }>
 
-/** Après la sortie du shell, attente des dernières données avant de rendre la main. */
+/** After the shell exits, waits for the last data before handing control back. */
 const EXIT_GRACE_MS = 250
 
 /**
- * Le délai est une vraie borne : la promesse se résout au déclenchement du timer (stdout
- * partiel, `timedOut`), sans attendre `close` — un petit-enfant lancé par `.zshrc` (agent,
- * démon, `cmd &`) peut garder stdout ouvert bien plus longtemps. Le shell est un chef de groupe
- * (`detached`) : au délai, on tue tout le groupe pour ne laisser aucun orphelin.
+ * The timeout is a real bound: the promise resolves when the timer fires (partial stdout,
+ * `timedOut`), without waiting for `close` — a grandchild launched by `.zshrc` (agent, daemon,
+ * `cmd &`) may keep stdout open much longer. The shell is a group leader (`detached`): on
+ * timeout, the whole group is killed so that no orphan is left behind.
  */
 const defaultSpawnShell: SpawnShell = (shell, args, timeoutMs) =>
   new Promise((resolve) => {
@@ -79,7 +79,7 @@ const defaultSpawnShell: SpawnShell = (shell, args, timeoutMs) =>
       settled = true
       clearTimeout(timer)
       if (graceTimer) clearTimeout(graceTimer)
-      // Libère le tuyau : un petit-enfant qui le garde ouvert ne doit pas retenir la boucle.
+      // Release the pipe: a grandchild that keeps it open must not hold the event loop.
       child?.stdout?.destroy()
       resolve({ stdout, timedOut })
     }
@@ -107,7 +107,7 @@ const defaultSpawnShell: SpawnShell = (shell, args, timeoutMs) =>
       if (stdout.length < 256 * 1024) stdout += d
     })
     child.on('error', finish)
-    // `exit` plutôt que `close` : `close` attend la fermeture de tous les tuyaux héritables.
+    // `exit` rather than `close`: `close` waits for all inheritable pipes to be closed.
     child.on('exit', () => {
       graceTimer = setTimeout(finish, EXIT_GRACE_MS)
     })
@@ -121,8 +121,8 @@ export interface ReadLoginShellOptions {
 }
 
 /**
- * Lance `/bin/zsh -lic '<script>'` et renvoie le `PATH` et les outils trouvés. Ne lève jamais :
- * en cas d'échec ou de délai dépassé, renvoie ce qui a pu être lu (souvent vide).
+ * Runs `/bin/zsh -lic '<script>'` and returns the `PATH` and the tools found. Never throws:
+ * on failure or timeout, returns whatever could be read (often empty).
  */
 export async function readLoginShellEnv(opts: ReadLoginShellOptions = {}): Promise<LoginShellEnv> {
   const shell = opts.shell ?? '/bin/zsh'

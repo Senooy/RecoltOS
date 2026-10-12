@@ -1,14 +1,14 @@
 /**
- * Budget ménageant l'abonnement, priorités `priority DESC` :
- * MANUAL (100) ≈ « 0 », INTERACTIVE (80) ≈ « 10 » (capture unitaire), SYNC (60) ≈ « 15 »,
- * BATCH (20) ≈ « 20 ».
- * - plafond dur `hardPerDay` (24 h glissantes, par fournisseur) : TOUTES priorités, sauf
- *   dérogation `ai.budgetOverrideUntil` ;
- * - MANUAL : exempt de perHour, perDay et minGap ;
- * - INTERACTIVE : exempt de perHour / perDay ; au-delà de 5 appels ≥ INTERACTIVE par minute, le job
- *   est rétrogradé en SYNC ;
- * - SYNC et BATCH : perHour (fenêtre glissante 3 600 000 ms), perDay, minGap.
- * Comptés : `ok`, `error`, `rate_limited`, `timeout`, `violation` (`cancelled` exclu).
+ * Budget protecting the subscription, priorities `priority DESC`:
+ * MANUAL (100) ≈ "0", INTERACTIVE (80) ≈ "10" (single capture), SYNC (60) ≈ "15",
+ * BATCH (20) ≈ "20".
+ * - hard cap `hardPerDay` (rolling 24 h, per provider): ALL priorities, except
+ *   override `ai.budgetOverrideUntil`;
+ * - MANUAL: exempt from perHour, perDay and minGap;
+ * - INTERACTIVE: exempt from perHour / perDay; beyond 5 calls ≥ INTERACTIVE per minute, the job
+ *   is downgraded to SYNC;
+ * - SYNC and BATCH: perHour (rolling window 3,600,000 ms), perDay, minGap.
+ * Counted: `ok`, `error`, `rate_limited`, `timeout`, `violation` (`cancelled` excluded).
  */
 import type Database from 'better-sqlite3'
 import { JOB_PRIORITY } from '../../shared/jobs'
@@ -41,7 +41,7 @@ function count(db: Database.Database, provider: string, since: number, minPriori
   }
 }
 
-/** Horodatage du `k`-ième appel le plus récent de la fenêtre (pour calculer l'attente). */
+/** Timestamp of the `k`-th most recent call in the window (to compute the wait). */
 function nthRecent(db: Database.Database, provider: string, since: number, k: number) {
   const r = db
     .prepare(

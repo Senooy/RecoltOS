@@ -1,7 +1,7 @@
 /**
- * Dérivés vidéo par ffmpeg système :
- * - `posters/` jpg, largeur ≤ 1280 ;
- * - `previews/` mp4 540p, ≤ 8 s, muet, `h264_videotoolbox` avec repli libx264, `+faststart`.
+ * Video derivatives via system ffmpeg:
+ * - `posters/` jpg, width ≤ 1280;
+ * - `previews/` mp4 540p, ≤ 8 s, silent, `h264_videotoolbox` with libx264 fallback, `+faststart`.
  */
 import { stat } from 'node:fs/promises'
 import sharp from 'sharp'
@@ -63,7 +63,7 @@ export async function makePoster(
   const ffmpeg = requireTool(tools, 'ffmpeg')
   requireTool(tools, 'ffprobe')
   await assertFile(src)
-  // Source illisible ou sans piste vidéo → `decode_failed` (jamais un `tool_failed` brut).
+  // Unreadable source or no video track → `decode_failed` (never a raw `tool_failed`).
   await probeVideo({ abs: src }, tools, signal)
   return writeAtomic(
     dst,
@@ -80,7 +80,7 @@ export async function makePoster(
         if (!(e instanceof AppError && e.code === 'tool_failed') || a.atMs <= 0) throw e
         firstErr = e
       }
-      // Au-delà de la fin (vidéo plus courte que prévu), ffmpeg n'écrit rien : repli à 0.
+      // Past the end (video shorter than expected), ffmpeg writes nothing: fall back to 0.
       if ((firstErr || !(await nonEmpty(tmp))) && a.atMs > 0) {
         await run(ffmpeg, posterArgs(src, tmp, 0), {
           tool: 'ffmpeg',
@@ -101,10 +101,10 @@ export async function makePoster(
 export type PreviewEncoder = 'h264_videotoolbox' | 'libx264'
 
 export function previewArgs(src: string, out: string, encoder: PreviewEncoder): string[] {
-  // « 540p » = petit côté ≤ 540, sans agrandir : paysage → hauteur 540 (960×540), portrait →
-  // largeur 540 (540×960), pour que l'aperçu d'une vidéo verticale reste net face à son poster.
-  // Dimensions paires (yuv420p) ; l'autre côté suit le ratio (-2). ffmpeg a déjà appliqué la
-  // rotation d'affichage : iw/ih sont les dimensions vues par l'utilisateur.
+  // "540p" = short side ≤ 540, without upscaling: landscape → height 540 (960×540), portrait →
+  // width 540 (540×960), so that the preview of a vertical video stays sharp next to its poster.
+  // Even dimensions (yuv420p); the other side follows the ratio (-2). ffmpeg has already applied the
+  // display rotation: iw/ih are the dimensions seen by the user.
   const h = PREVIEW.height
   const vf = [
     `scale='if(gte(iw,ih),-2,trunc(min(${h},iw)/2)*2)':'if(gte(iw,ih),trunc(min(${h},ih)/2)*2,-2)':flags=bicubic`,
@@ -114,7 +114,7 @@ export function previewArgs(src: string, out: string, encoder: PreviewEncoder): 
     h264_videotoolbox: ['-b:v', PREVIEW.bitrate, '-profile:v', 'main', '-allow_sw', '1'],
     libx264: ['-preset', 'veryfast', '-crf', '26', '-profile:v', 'main'],
   }
-  // L'encodeur est passé tel quel : un encodeur indisponible fait échouer ffmpeg (repli).
+  // The encoder is passed as-is: an unavailable encoder makes ffmpeg fail (fallback).
   const codec = ['-c:v', encoder, ...(Object.hasOwn(extras, encoder) ? extras[encoder] : [])]
   return [
     '-hide_banner',
@@ -160,8 +160,8 @@ export async function makePreview(
   const ffmpeg = requireTool(tools, 'ffmpeg')
   requireTool(tools, 'ffprobe')
   await assertFile(src)
-  // Source illisible ou sans piste vidéo → `decode_failed` avant tout encodage : inutile de
-  // relancer libx264 (jusqu'à 300 s) pour un problème qui vient du fichier.
+  // Unreadable source or no video track → `decode_failed` before any encoding: no point in
+  // re-running libx264 (up to 300 s) for a problem that comes from the file.
   await probeVideo({ abs: src }, tools, signal)
   return writeAtomic(
     dst,
@@ -180,8 +180,8 @@ export async function makePreview(
           }
           lastErr = new AppError('tool_failed', `${enc} n'a rien produit`)
         } catch (err) {
-          // Binaire absent ou annulation : inutile d'essayer l'encodeur suivant. Idem si le
-          // stderr désigne la source (fichier tronqué que ffprobe a laissé passer).
+          // Binary missing or cancelled: no point trying the next encoder. Same if the
+          // stderr points at the source (truncated file that ffprobe let through).
           const e = sourceFailure(err)
           if (e instanceof AppError && e.code !== 'tool_failed') throw e
           lastErr = e

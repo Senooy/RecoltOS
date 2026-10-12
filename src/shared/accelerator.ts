@@ -1,8 +1,8 @@
 /**
- * Accélérateur Electron saisi par l'utilisateur (raccourci global de capture).
- * Forme : au moins un modificateur, puis une touche : `CommandOrControl+Shift+S`.
- * Liste noire : les raccourcis système ou d'application (⌘Q, ⌘W, ⌘H, ⌘M, ⌘Tab, ⌘Espace…)
- * ne peuvent pas être détournés. Zod seul : importable par main, preload et renderer.
+ * Electron accelerator entered by the user (global capture shortcut).
+ * Form: at least one modifier, then a key: `CommandOrControl+Shift+S`.
+ * Blocklist: system or application shortcuts (⌘Q, ⌘W, ⌘H, ⌘M, ⌘Tab, ⌘Space…)
+ * cannot be hijacked. Zod only: importable by main, preload and renderer.
  */
 import { z } from 'zod'
 import { pick } from './i18n/lang'
@@ -22,7 +22,7 @@ const MODIFIERS = [
 const KEY_RE =
   /^(?:[A-Z0-9]|F(?:[1-9]|1[0-9]|2[0-4])|Space|Tab|Backspace|Delete|Insert|Home|End|PageUp|PageDown|Up|Down|Left|Right)$/
 
-/** Touches qui, avec un modificateur de commande, appartiennent au système ou à l'application. */
+/** Keys that, with a command modifier, belong to the system or the application. */
 const RESERVED_WITH_COMMAND = new Set(['Q', 'W', 'H', 'M', 'Tab', 'Space', 'Delete', 'Backspace'])
 
 function parseAccel(accel: string): { mods: string[]; key: string } | null {

@@ -1,6 +1,6 @@
 /**
- * Handlers `ingest.*` : `files` (glisser-déposer, menu Importer), sélecteurs de
- * fichiers et de dossier (confirmation au-delà de 200 fichiers), URL, presse-papiers (⌘V).
+ * Handlers `ingest.*`: `files` (drag and drop, Import menu), file and folder pickers
+ * (confirmation above 200 files), URL, clipboard (⌘V).
  */
 import { BrowserWindow, dialog, type OpenDialogOptions } from 'electron'
 import type { IngestReport } from '../../../shared/dto/items'
@@ -12,7 +12,7 @@ import type { DomainHandlers, HandlerContext } from '../router'
 import type { IngestDeps } from '../../ingest/ingest'
 import { intlLocale, mt } from '../../i18n'
 
-/** Services d'ingestion de la bibliothèque active (+ capture de page hors écran). */
+/** Ingestion services of the active library (+ off-screen page capture). */
 export function ingestDeps(): IngestDeps {
   const capture = getPageCapture()
   return capture ? { ...requireJobServices(), captureUrl: capture } : requireJobServices()
@@ -29,7 +29,7 @@ async function pick(ctx: HandlerContext, folder: boolean): Promise<string[] | nu
   return res.canceled || res.filePaths.length === 0 ? null : res.filePaths
 }
 
-/** « Importer 1 243 fichiers ? » au-delà de 200 fichiers. */
+/** "Import 1,243 files?" above 200 files. */
 function confirmer(ctx?: HandlerContext) {
   return async (count: number): Promise<boolean> => {
     const options = {
@@ -93,7 +93,7 @@ export const ingestHandlers: DomainHandlers<'ingest'> = {
     return paths ? run(paths, input.collectionUuid, ctx) : null
   },
   'ingest.url': ({ url, collectionUuid }) => single({ type: 'url', url }, collectionUuid, url),
-  /** ⌘V : fichiers du Finder, puis image, puis URL ; `null` si rien d'utilisable. */
+  /** ⌘V: Finder files, then image, then URL; `null` if nothing usable. */
   'ingest.clipboard': async ({ collectionUuid }, ctx) => {
     const files = await readClipboardFiles()
     if (files.length > 0) return run(files, collectionUuid, ctx)

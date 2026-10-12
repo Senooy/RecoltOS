@@ -1,12 +1,13 @@
 /**
- * Génère `build/icon.png` (1024×1024) : logo RecoltOS « Germe double » (une graine pointue et deux
- * feuilles symétriques, nacre douce irisée lavande / beurre / bleu ciel) sur un squircle noir satiné,
- * posé sur la grille d'icône macOS (corps de ~824 px, marge ~100 px, ombre douce). Génère aussi les
- * icônes de l'extension navigateur (`extension/icons/{16,32,48,128}.png`, squircle plein cadre, sans
- * marge, lisible en petit). Lancement : `pnpm run icon` (puis `scripts/make-icns.sh`).
+ * Generates `build/icon.png` (1024×1024): RecoltOS "Double Sprout" logo (a pointed seed and two
+ * symmetrical leaves, soft iridescent pearl lavender / butter / sky blue) on a satin black
+ * squircle, placed on the macOS icon grid (body of ~824 px, margin ~100 px, soft shadow). Also
+ * generates the browser extension icons (`extension/icons/{16,32,48,128}.png`, full-frame
+ * squircle, no margin, readable at small sizes). Run: `pnpm run icon`
+ * (then `scripts/make-icns.sh`).
  *
- * Tout est calculé ici (aucun aléa) : le SVG produit est déterministe, donc les PNG aussi.
- * Dessin en coordonnées 0..100.
+ * Everything is computed here (no randomness): the SVG is deterministic, so are the PNGs.
+ * Drawing in 0..100 coordinates.
  */
 import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -14,12 +15,12 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
 const SIZE = 1024
-const BODY = 824 // grille macOS : corps de l'icône
+const BODY = 824 // macOS grid: icon body
 const MARGIN = (SIZE - BODY) / 2
-/** Mise à l'échelle du symbole dans le squircle (1 = dessin de la planche). */
+/** Scale of the symbol within the squircle (1 = as drawn on the board). */
 const SYMBOL_SCALE = 1.04
 
-/** Superellipse |x|^n + |y|^n = 1 (n = 5 ≈ « squircle » macOS) sur 0..100, polygone lissé. */
+/** Superellipse |x|^n + |y|^n = 1 (n = 5 ≈ macOS "squircle") over 0..100, smoothed polygon. */
 function squirclePath(n = 5, steps = 360): string {
   const pts: string[] = []
   for (let i = 0; i < steps; i += 1) {
@@ -33,7 +34,7 @@ function squirclePath(n = 5, steps = 360): string {
   return `M${pts.join('L')}Z`
 }
 
-/** Le logo en coordonnées 0..100 (fond + symbole), `id` suffixe tous les identifiants. */
+/** The logo in 0..100 coordinates (background + symbol); `id` suffixes all identifiers. */
 function logoDefsAndBody(id: string): { defs: string; body: string; symbol: string } {
   const sq = squirclePath()
   const defs = `
@@ -54,18 +55,18 @@ function logoDefsAndBody(id: string): { defs: string; body: string; symbol: stri
       <path d="M47 45 C30 46 18 38 17 21 C34 20 46 28 47 45 Z"/>
       <path d="M53 45 C54 28 66 20 83 21 C82 38 70 46 53 45 Z"/></g></mask>`
   const body = `<path d="${sq}" fill="url(#bg${id})"/><path d="${sq}" fill="url(#sheen${id})"/>`
-  // Le symbole occupe x 17..83, y 20..90 : on le centre optiquement (centre ≈ 50, 55) puis on l'agrandit.
+  // The symbol spans x 17..83, y 20..90: optically centre it (centre ≈ 50, 55), then scale it up.
   const k = SYMBOL_SCALE
   const symbol = `<g transform="translate(${(50 - 50 * k).toFixed(3)} ${(50 - 55 * k).toFixed(3)}) scale(${k})"><g filter="url(#drop${id})"><g filter="url(#bevel${id})"><g mask="url(#m${id})"><rect width="100" height="100" fill="url(#main${id})"/><rect width="100" height="100" fill="url(#i0${id})"/><rect width="100" height="100" fill="url(#i1${id})"/><rect width="100" height="100" fill="url(#i2${id})"/></g></g></g></g>`
   return { defs, body, symbol }
 }
 
-/** Icône d'app : corps de 824 px dans 1024, ombre portée douce. */
+/** App icon: 824 px body within 1024, soft drop shadow. */
 export function iconSvg(): string {
   const { defs, body, symbol } = logoDefsAndBody('a')
   const k = BODY / 100
   const place = `translate(${MARGIN} ${MARGIN}) scale(${k})`
-  // L'ombre est appliquée hors du groupe mis à l'échelle : ses paramètres sont en pixels.
+  // The shadow is applied outside the scaled group: its parameters are in pixels.
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
   <defs>${defs}
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
@@ -78,7 +79,7 @@ export function iconSvg(): string {
 `
 }
 
-/** Icône d'extension : squircle plein cadre (pas de marge ni d'ombre), carré `size` px. */
+/** Extension icon: full-frame squircle (no margin or shadow), `size` px square. */
 export function extensionIconSvg(size: number): string {
   const { defs, body, symbol } = logoDefsAndBody('e')
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 100 100">
@@ -92,21 +93,21 @@ async function main(): Promise<void> {
   const out = resolve(root, 'build', 'icon.png')
   mkdirSync(dirname(out), { recursive: true })
   await sharp(Buffer.from(iconSvg()), { density: 72 }).resize(SIZE, SIZE).png().toFile(out)
-  console.log(`icône générée : ${out}`)
+  console.log(`icon generated: ${out}`)
   const extDir = resolve(root, 'extension', 'icons')
   mkdirSync(extDir, { recursive: true })
   for (const size of [16, 32, 48, 128]) {
-    // Rendu à 8× puis réduction (lanczos) : bords nets même à 16 px.
+    // Render at 8× then downscale (lanczos): crisp edges even at 16 px.
     await sharp(Buffer.from(extensionIconSvg(size * 8)), { density: 72 })
       .resize(size, size)
       .png()
       .toFile(resolve(extDir, `${size}.png`))
   }
-  console.log(`icônes d'extension générées : ${extDir}`)
+  console.log(`extension icons generated: ${extDir}`)
 }
 
-// Garde : comparaison de chemins décodés (et non de chaînes `file://` brutes), pour qu'un chemin
-// contenant un espace ou un caractère encodé lance bien le script au lieu de sortir en silence.
+// Guard: compares decoded paths (not raw `file://` strings), so a path containing a space or an
+// encoded character still runs the script instead of exiting silently.
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
   main().catch((error: unknown) => {
     console.error(error)

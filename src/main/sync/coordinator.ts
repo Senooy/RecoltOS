@@ -1,10 +1,10 @@
 /**
- * `SyncCoordinator` : l'app décide QUAND et QUOI synchroniser,
- * l'extension exécute en arrière-plan (sans onglet). Planning X 15 min, Instagram 30, Cosmos 30 ;
- * modes `incremental` / `backfill` (tranches reprises par curseur) / `deep` (hebdomadaire) /
- * `passive` (captures) ; un client par plateforme (session active, plus récemment vu) ; budgets et
- * cooldowns ; 3 échecs d'affilée → intervalle doublé (≤ 6 h) ; `auth_required` → aucune relance
- * automatique tant que la session ne change pas ; publication de `evt:sync.status`.
+ * `SyncCoordinator`: the app decides WHEN and WHAT to sync,
+ * the extension runs in the background (without a tab). Schedule X 15 min, Instagram 30, Cosmos 30;
+ * modes `incremental` / `backfill` (slices resumed by cursor) / `deep` (weekly) /
+ * `passive` (captures); one client per platform (active session, most recently seen); budgets and
+ * cooldowns; 3 consecutive failures → interval doubled (≤ 6 h); `auth_required` → no retry
+ * automatic while the session does not change; publication of `evt:sync.status`.
  */
 import type { BridgePlatform } from '../../shared/bridge/constants'
 import { BRIDGE_PLATFORMS } from '../../shared/bridge/constants'
@@ -40,7 +40,7 @@ export const MAX_PAGES: Readonly<Record<SyncMode, Record<BridgePlatform, number>
   backfill: { x: 50, instagram: 20, cosmos: 25 },
   deep: { x: 10, instagram: 10, cosmos: 10 },
 }
-/** Délai entre deux tranches de backfill (réussies). */
+/** Delay between two successful backfill slices. */
 export const BACKFILL_GAP_MIN: Readonly<Record<BridgePlatform, number>> = {
   x: 2,
   instagram: 30,
@@ -61,7 +61,7 @@ export interface ClientView {
   lastSeenAt: number
 }
 
-/** Ce dont le coordinateur a besoin du pont (testable sans socket). */
+/** What the coordinator needs from the bridge (testable without a socket). */
 export interface BridgePort {
   clients(): ClientView[]
   send<T extends 'sync.run' | 'sync.ack' | 'item.refresh' | 'sync.state' | 'authors.wanted'>(
@@ -80,9 +80,9 @@ export interface CoordinatorDeps {
   now(): number
   emitStatus(s: SyncStatus): void
   kickJobs(): void
-  /** Rendu des cartes des posts texte (file sérielle). */
+  /** Rendering of text-post cards (serial queue). */
   renderCards(itemIds: number[]): void
-  /** Avertissement GatherOS (calculé à part, mis en cache). */
+  /** GatherOS warning (computed separately, cached). */
   gatherosConflict(): boolean
   clientsDto(): SyncStatus['clients']
   log: { info(...a: unknown[]): void; warn(...a: unknown[]): void }
@@ -121,7 +121,7 @@ export class SyncCoordinator {
     this.d = deps
   }
 
-  // ------------------------------------------------------------------ état
+  // ------------------------------------------------------------------ state
 
   private state(lib: LibraryContext, p: BridgePlatform): SyncStateRow {
     return lib.repos.sync.getState(p)
@@ -162,7 +162,7 @@ export class SyncCoordinator {
     return b
   }
 
-  /** Client choisi pour une plateforme : session active, sinon aucun. */
+  /** Client chosen for a platform: active session, otherwise none. */
   pickClient(p: BridgePlatform): ClientView | null {
     const list = this.d.bridge()?.clients() ?? []
     return list.filter((c) => c.loggedIn[p]).sort((a, b) => b.lastSeenAt - a.lastSeenAt)[0] ?? null
@@ -250,7 +250,7 @@ export class SyncCoordinator {
     }
   }
 
-  /** Publie l'état (renderer + popup de l'extension) s'il a changé. */
+  /** Publishes the state (renderer + extension popup) if it changed. */
   publish(): void {
     const s = this.status()
     const json = JSON.stringify(s)
@@ -304,14 +304,14 @@ export class SyncCoordinator {
     this.publish()
   }
 
-  /** « Synchroniser maintenant » : incrémental immédiat (cooldown respecté). */
+  /** « Synchroniser maintenant »: immediate incremental sync (cooldown respected). */
   runNow(p?: BridgePlatform): void {
     const lib = this.d.lib()
     if (!lib) return
     for (const q of p ? [p] : BRIDGE_PLATFORMS) {
       const st = this.state(lib, q)
       if (!st.enabled) continue
-      // Une action de l'utilisateur relève l'interdiction de relance (session refusée…).
+      // A user action lifts the retry ban (session refused…).
       if (st.status === 'auth_required')
         lib.repos.sync.patchState(q, { status: 'idle', lastError: null })
       void this.start(q, st.backfill_done ? 'incremental' : 'backfill', 'manual')
@@ -355,8 +355,8 @@ export class SyncCoordinator {
   // ------------------------------------------------------------------ planning
 
   /**
-   * Démarre un run si les conditions le permettent ; rend l'identifiant ou `null` (état mis à jour :
-   * `no_browser`, `auth_required`, `rate_limited`…). Jamais deux runs pour une même plateforme.
+   * Starts a run if the conditions allow it; returns the identifier or `null` (state updated:
+   * `no_browser`, `auth_required`, `rate_limited`…). Never two runs for the same platform.
    */
   start(p: BridgePlatform, mode: SyncMode, reason: RunReason, maxPages?: number): string | null {
     const lib = this.d.lib()
@@ -431,7 +431,7 @@ export class SyncCoordinator {
     return runId
   }
 
-  /** Évalue le planning (minuterie, `sync.request {schedule}`, changement de clients). */
+  /** Evaluates the schedule (timer, `sync.request {schedule}`, client changes). */
   tick(): void {
     const lib = this.d.lib()
     if (!lib || !this.d.bridge()) return
@@ -457,7 +457,7 @@ export class SyncCoordinator {
     this.publish()
   }
 
-  /** Changement de clients ou de sessions : lève `auth_required` si la session est revenue. */
+  /** Client or session change: lifts `auth_required` if the session has come back. */
   onClientsChanged(): void {
     const lib = this.d.lib()
     if (lib) {
@@ -474,7 +474,7 @@ export class SyncCoordinator {
     this.tick()
   }
 
-  /** Favori natif détecté : une page, 3 s plus tard, si la source est active. */
+  /** Native favorite detected: one page, 3 s later, if the source is active. */
   hint(p: BridgePlatform): void {
     const old = this.hintTimers.get(p)
     if (old) clearTimeout(old)
@@ -488,7 +488,7 @@ export class SyncCoordinator {
 
   // ------------------------------------------------------------------ pages
 
-  /** Analyse + ingestion d'une page ; rend la décision pour l'extension. */
+  /** Parsing + ingestion of a page; returns the decision for the extension. */
   onPage(m: PayloadOf<'sync.page'>): PayloadOf<'sync.ack'> {
     const run = m.runId ? this.runs.get(m.runId) : undefined
     const lib = this.d.lib()
@@ -550,7 +550,7 @@ export class SyncCoordinator {
     }
   }
 
-  /** Capture passive (visite de la page des favoris) : ingérée sans requête supplémentaire. */
+  /** Passive capture (visit to the favorites page): ingested without an extra request. */
   onPassive(m: PayloadOf<'capture.passive'>): number {
     const lib = this.d.lib()
     if (!lib || !this.state(lib, m.platform).enabled) return 0
@@ -591,7 +591,7 @@ export class SyncCoordinator {
     if (ids.length) this.d.renderCards(ids)
   }
 
-  /** Fin de run (message de l'extension, décision de l'app, ou abandon). Idempotent. */
+  /** End of run (extension message, app decision, or abort). Idempotent. */
   finish(
     run: RunCtx,
     outcome: SyncOutcome,
@@ -692,9 +692,9 @@ export class SyncCoordinator {
         .run(m.target, m.runId)
   }
 
-  // ------------------------------------------------------------------ Instagram : URL signées
+  // ------------------------------------------------------------------ Instagram: signed URLs
 
-  /** 403/410 sur une URL Instagram : `item.refresh` dans le budget (1 fois par heure et par élément). */
+  /** 403/410 on an Instagram URL: `item.refresh` within the budget (once per hour and per item). */
   onExpiredUrl(url: string): void {
     const lib = this.d.lib()
     const bridge = this.d.bridge()
@@ -717,7 +717,7 @@ export class SyncCoordinator {
     bridge.send(client.connId, 'item.refresh', { platform: 'instagram', externalId: row.code })
   }
 
-  /** `item.data` : URL fraîches → médias remis en file. */
+  /** `item.data`: fresh URLs → media re-queued. */
   onItemData(m: PayloadOf<'item.data'>): number {
     const lib = this.d.lib()
     if (!lib || m.platform !== 'instagram') return 0
@@ -770,9 +770,9 @@ export class SyncCoordinator {
     if (lib && authorSeen(lib, m, this.d.now())) this.d.kickJobs()
   }
 
-  // ------------------------------------------------------------------ enregistrement d'une publication
+  // ------------------------------------------------------------------ recording a post
 
-  /** `save.create {kind:'post'}` (bouton injecté, popup) : la publication passe par l'ingestion de sync. */
+  /** `save.create {kind:'post'}` (injected button, popup): the post goes through sync ingestion. */
   savePost(
     req: SaveRequest,
     collectionUuid: string | null,
@@ -844,7 +844,7 @@ export class SyncCoordinator {
     this.publish()
   }
 
-  /** Arrêt : runs abandonnés proprement. */
+  /** Shutdown: runs abandoned cleanly. */
   dispose(): void {
     for (const t of this.hintTimers.values()) clearTimeout(t)
     for (const r of [...this.runs.values()]) this.finish(r, 'aborted', 'arrêt de l’app')

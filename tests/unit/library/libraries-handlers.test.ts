@@ -54,8 +54,8 @@ afterEach(async () => {
   vi.clearAllMocks()
 })
 
-describe('handlers libraries.*', () => {
-  it('list / create / switch / rename / remove via le routeur (sorties validées)', async () => {
+describe('libraries.* handlers', () => {
+  it('list / create / switch / rename / remove via the router (validated outputs)', async () => {
     expect(await call('libraries.list')).toEqual({
       ok: true,
       data: {
@@ -82,7 +82,7 @@ describe('handlers libraries.*', () => {
     })
   })
 
-  it('create dans iCloud Drive : synced_folder_refused', async () => {
+  it('create inside iCloud Drive: synced_folder_refused', async () => {
     const icloud = path.join(
       base,
       'home',
@@ -98,7 +98,7 @@ describe('handlers libraries.*', () => {
     expect(emit).not.toHaveBeenCalled()
   })
 
-  it('openFolder : annulé → null ; dossier choisi → bascule', async () => {
+  it('openFolder: cancelled → null; chosen folder → switch', async () => {
     electron.dialog.showOpenDialog.mockResolvedValueOnce({ canceled: true, filePaths: [] })
     expect(await call('libraries.openFolder')).toEqual({ ok: true, data: null })
     const created = (await call('libraries.create', { name: 'X', path: path.join(base, 'x') })) as {
@@ -124,7 +124,7 @@ describe('handlers libraries.*', () => {
     )
   })
 
-  it('reveal : ouvre le dossier ; erreur du Finder remontée', async () => {
+  it('reveal: opens the folder; Finder error surfaced', async () => {
     electron.shell.openPath.mockResolvedValueOnce('')
     expect(await call('libraries.reveal', { id: 'default' })).toEqual({ ok: true, data: undefined })
     expect(electron.shell.openPath).toHaveBeenCalledWith(
@@ -141,7 +141,7 @@ describe('handlers libraries.*', () => {
     })
   })
 
-  it('sans gestionnaire : library_unavailable', async () => {
+  it('without manager: library_unavailable', async () => {
     const m = getLibraryManager()
     setLibraryManager(null)
     expect(await call('libraries.list')).toMatchObject({
@@ -151,7 +151,7 @@ describe('handlers libraries.*', () => {
     setLibraryManager(m)
   })
 
-  it('initLibrary en build packagé : pas de journal des requêtes lentes', async () => {
+  it('initLibrary in packaged build: no slow-query log', async () => {
     await dispose?.()
     resetLibraryContextForTests()
     dispose = await initLibrary(

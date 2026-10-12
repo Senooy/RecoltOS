@@ -1,6 +1,6 @@
 /**
- * Handler du job `ai.enrich` : délègue au service IA (`ai/service.ts`), qui revérifie
- * consentement, fournisseur et exclusions avant tout appel.
+ * Handler for the `ai.enrich` job: delegates to the AI service (`ai/service.ts`), which re-checks
+ * consent, provider and exclusions before any call.
  */
 import { AppError } from '../../../shared/errors'
 import { getAiService } from '../../ai/service'
@@ -12,7 +12,7 @@ export const aiEnrich: JobHandler = (job, ctx) => {
   return s.handleJob(job, ctx)
 }
 
-/** Tentatives épuisées : l'élément passe en `ai_state = 'failed'`. */
+/** Attempts exhausted: the item moves to `ai_state = 'failed'`. */
 export const aiEnrichFailed: JobFailureHook = (job, _error, services) => {
   const s = getAiService()
   if (s) s.onJobFailed(job, services)

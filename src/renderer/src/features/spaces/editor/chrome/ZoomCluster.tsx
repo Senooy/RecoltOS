@@ -1,7 +1,7 @@
 /**
- * Cluster de zoom : bas-gauche, pilule 32 px « − 100 % + » ; clic
- * sur le pourcentage → menu (zoom avant / arrière, 100 % ⌘0, Ajuster tout ⇧1, Ajuster la
- * sélection ⇧2, Molette : défiler / zoomer — réglage `spacesWheel`), puis bouton « Ajuster ».
+ * Zoom cluster: bottom-left, 32 px pill « − 100 % + »; click
+ * on the percentage → menu (zoom in / out, 100 % ⌘0, Fit all ⇧1, Fit
+ * selection ⇧2, Wheel: scroll / zoom — `spacesWheel` setting), then the « Fit » button.
  */
 import { Maximize, Minus, Plus } from 'lucide-react'
 import { Menu, Tooltip } from '../../../../components/ui'

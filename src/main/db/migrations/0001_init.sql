@@ -1,21 +1,21 @@
--- RecoltOS : schéma initial.
--- gelé au tag m1 (ensuite : migrations 0002+).
--- Convention : `id INTEGER PRIMARY KEY` interne (rowid stable, FTS, clés étrangères) et
--- `uuid TEXT UNIQUE` exposé (IPC, noms de fichiers). Horodatages en ms epoch.
--- `PRAGMA user_version` est posé par `db/migrate.ts`, pas par ce fichier.
--- Pas de table d'embeddings (recherche visuelle supprimée de la V1).
+-- RecoltOS: initial schema.
+-- frozen at tag m1 (afterwards: migrations 0002+).
+-- Convention: internal `id INTEGER PRIMARY KEY` (stable rowid, FTS, foreign keys) and
+-- exposed `uuid TEXT UNIQUE` (IPC, file names). Timestamps in ms epoch.
+-- `PRAGMA user_version` is set by `db/migrate.ts`, not by this file.
+-- No embeddings table (visual search removed from V1).
 
--- ===================== AUTEURS (cache d'avatars partagé) =====================
+-- ===================== AUTHORS (shared avatar cache) =====================
 CREATE TABLE authors (
   id                 INTEGER PRIMARY KEY,
   platform           TEXT    NOT NULL,                  -- x|instagram|cosmos|web
-  handle             TEXT    NOT NULL COLLATE NOCASE,   -- sans '@'
+  handle             TEXT    NOT NULL COLLATE NOCASE,   -- without '@'
   name               TEXT,
-  avatar_url         TEXT,                              -- dernière URL distante connue (provenance)
-  avatar_rel         TEXT,                              -- avatars/<platform>/<k>.jpg une fois téléchargé
+  avatar_url         TEXT,                              -- last known remote URL (provenance)
+  avatar_rel         TEXT,                              -- avatars/<platform>/<k>.jpg once downloaded
   avatar_status      TEXT    NOT NULL DEFAULT 'none' CHECK (avatar_status IN ('none','ok','expired','failed')),
-  sample_external_id TEXT,                              -- un id de post de cet auteur, pour item.refresh
-  updated_at         INTEGER NOT NULL,                  -- sert aussi de ?v= pour l'avatar
+  sample_external_id TEXT,                              -- a post id from this author, for item.refresh
+  updated_at         INTEGER NOT NULL,                  -- also serves as ?v= for the avatar
   UNIQUE (platform, handle)
 );
 
@@ -24,21 +24,21 @@ CREATE TABLE items (
   id              INTEGER PRIMARY KEY,
   uuid            TEXT    NOT NULL UNIQUE,
   kind            TEXT    NOT NULL CHECK (kind IN ('image','video','tweet','url')),
-  source          TEXT    NOT NULL DEFAULT 'local',   -- local|capture|web|x|instagram|cosmos (enum zod)
+  source          TEXT    NOT NULL DEFAULT 'local',   -- local|capture|web|x|instagram|cosmos (zod enum)
   external_id     TEXT,
   source_url      TEXT,
   author_id       INTEGER REFERENCES authors(id) ON DELETE SET NULL,
   title           TEXT,
   title_source    TEXT CHECK (title_source IN ('user','ai','source','import')),
-  name_key        TEXT    NOT NULL DEFAULT (char(65535)), -- tri « Nom » ; U+FFFF = sans titre, en dernier
+  name_key        TEXT    NOT NULL DEFAULT (char(65535)), -- "Name" sort; U+FFFF = untitled, last
   notes           TEXT,
   cover_media_id  INTEGER REFERENCES item_media(id) ON DELETE SET NULL,
   media_count     INTEGER NOT NULL DEFAULT 1,
   palette         TEXT CHECK (palette IS NULL OR json_valid(palette)),                 -- ["#rrggbb", …] 1..8
   palette_lab     TEXT CHECK (palette_lab IS NULL OR json_valid(palette_lab)),         -- [[L,a,b], …] D65
-  palette_weights TEXT CHECK (palette_weights IS NULL OR json_valid(palette_weights)), -- parts ; NULL = pondération par rang
+  palette_weights TEXT CHECK (palette_weights IS NULL OR json_valid(palette_weights)), -- parts; NULL = rank-based weighting
   color_l         REAL, color_c REAL, color_h REAL,
-  color_bucket    INTEGER NOT NULL DEFAULT 13,         -- 0..11 teinte, 12 neutre, 13 inconnu
+  color_bucket    INTEGER NOT NULL DEFAULT 13,         -- 0..11 hue, 12 neutral, 13 unknown
   color_key       REAL GENERATED ALWAYS AS (color_bucket * 1000 + (100 - coalesce(color_l, 0))) VIRTUAL,
   post_meta       TEXT CHECK (post_meta IS NULL OR json_valid(post_meta)),             -- PostMetaSchema v1
   posted_at       INTEGER,
@@ -51,11 +51,11 @@ CREATE TABLE items (
   ai_provider     TEXT,                                -- claude|codex|gatheros
   ai_model        TEXT,
   ai_lang         TEXT,
-  ai_excluded     INTEGER NOT NULL DEFAULT 0,          -- « Ne jamais envoyer à l'IA »
+  ai_excluded     INTEGER NOT NULL DEFAULT 0,          -- "Never send to the AI"
   ai_updated_at   INTEGER,
   origin          TEXT NOT NULL DEFAULT 'app',         -- app|extension|sync|capture|gatheros
-  origin_id       TEXT,                                -- ex. id du save GatherOS
-  legacy_hash     TEXT,                                -- content_hash GatherOS (non fiable pour les images)
+  origin_id       TEXT,                                -- e.g. GatherOS save id
+  legacy_hash     TEXT,                                -- GatherOS content_hash (unreliable for images)
   created_at      INTEGER NOT NULL,
   updated_at      INTEGER NOT NULL,
   viewed_at       INTEGER,
@@ -76,7 +76,7 @@ CREATE INDEX ix_items_source_ext          ON items(source, external_id)      WHE
 CREATE INDEX ix_items_ai_pending          ON items(ai_state)                 WHERE ai_state IN ('queued','failed');
 CREATE INDEX ix_items_author              ON items(author_id)                WHERE author_id IS NOT NULL;
 
--- ===================== MÉDIAS (1..n par item, position 0 = principal) =====================
+-- ===================== MEDIA (1..n per item, position 0 = main) =====================
 CREATE TABLE item_media (
   id                INTEGER PRIMARY KEY,
   uuid              TEXT    NOT NULL UNIQUE,
@@ -85,7 +85,7 @@ CREATE TABLE item_media (
   role              TEXT    NOT NULL DEFAULT 'original' CHECK (role IN ('original','render','screenshot')),
   media_type        TEXT    NOT NULL CHECK (media_type IN ('image','video')),
   status            TEXT    NOT NULL DEFAULT 'ok' CHECK (status IN ('ok','processing','remote','missing','failed')),
-  file_rel          TEXT,                 -- items/<ab>/<uuid>.<ext> ; NULL si remote/missing
+  file_rel          TEXT,                 -- items/<ab>/<uuid>.<ext>; NULL if remote/missing
   mime              TEXT,
   width             INTEGER,
   height            INTEGER,
@@ -94,24 +94,24 @@ CREATE TABLE item_media (
   has_audio         INTEGER,
   is_animated       INTEGER NOT NULL DEFAULT 0,
   playable          INTEGER NOT NULL DEFAULT 1,
-  content_hash      TEXT,                 -- sha256 hex des octets stockés
+  content_hash      TEXT,                 -- hex sha256 of the stored bytes
   thumb_rel         TEXT,                 -- thumbs/<ab>/<uuid>.webp (800w q80)
   large_rel         TEXT,                 -- large/<ab>/<uuid>.webp (1440w)
   poster_rel        TEXT,                 -- posters/<ab>/<uuid>.jpg
-  preview_rel       TEXT,                 -- previews/<ab>/<uuid>.mp4 (540p ≤ 8 s muet)
+  preview_rel       TEXT,                 -- previews/<ab>/<uuid>.mp4 (540p ≤ 8 s silent)
   display_rel       TEXT,                 -- display/<ab>/<uuid>.webp (HEIC/HEIF/TIFF/PSD)
-  legacy_thumb_rel  TEXT,                 -- miniature GatherOS copiée, supprimée après media.derive
+  legacy_thumb_rel  TEXT,                 -- GatherOS thumbnail copied, deleted after media.derive
   derive_version    INTEGER NOT NULL DEFAULT 0,
   remote_url        TEXT,
   remote_poster_url TEXT,
-  origin_id         TEXT,                 -- basename du fichier GatherOS
+  origin_id         TEXT,                 -- basename of the GatherOS file
   created_at        INTEGER NOT NULL,
   UNIQUE (item_id, position)
 );
 CREATE INDEX ix_media_hash   ON item_media(content_hash) WHERE content_hash IS NOT NULL;
 CREATE INDEX ix_media_status ON item_media(status)       WHERE status <> 'ok';
 
--- ===================== COLLECTIONS (imbriquées) =====================
+-- ===================== COLLECTIONS (nested) =====================
 CREATE TABLE collections (
   id            INTEGER PRIMARY KEY,
   uuid          TEXT    NOT NULL UNIQUE,
@@ -144,7 +144,7 @@ CREATE INDEX ix_ci_coll_added  ON collection_items(collection_id, added_at DESC)
 CREATE TABLE tags (
   id         INTEGER PRIMARY KEY,
   uuid       TEXT NOT NULL UNIQUE,
-  name       TEXT NOT NULL UNIQUE COLLATE NOCASE,   -- trim, NFC, minuscules, espaces → '-' ; noms de source réservés
+  name       TEXT NOT NULL UNIQUE COLLATE NOCASE,   -- trim, NFC, lowercase, spaces → '-'; source names reserved
   color      TEXT,
   created_at INTEGER NOT NULL
 );
@@ -157,18 +157,18 @@ CREATE TABLE item_tags (
 ) WITHOUT ROWID;
 CREATE INDEX ix_item_tags_tag ON item_tags(tag_id, item_id);
 
--- ===================== SPACES (toiles infinies) =====================
+-- ===================== SPACES (infinite canvases) =====================
 CREATE TABLE spaces (
   id               INTEGER PRIMARY KEY,
   uuid             TEXT    NOT NULL UNIQUE,
   name             TEXT    NOT NULL DEFAULT '',
   viewport         TEXT    NOT NULL DEFAULT '{"x":0,"y":0,"zoom":1}' CHECK (json_valid(viewport)),
   background       TEXT    NOT NULL DEFAULT 'dots' CHECK (background IN ('dots','grid','plain')),
-  thumb_rel        TEXT,                -- réservé (vignette = rendu DOM réduit, aucune image en V1)
-  thumb_updated_at INTEGER,             -- réservé
+  thumb_rel        TEXT,                -- reserved (thumbnail = reduced DOM render, no image in V1)
+  thumb_updated_at INTEGER,             -- reserved
   order_index      REAL    NOT NULL DEFAULT 0,
   origin           TEXT    NOT NULL DEFAULT 'app',
-  origin_id        TEXT,                -- id du board GatherOS
+  origin_id        TEXT,                -- GatherOS board id
   created_at       INTEGER NOT NULL,
   updated_at       INTEGER NOT NULL,
   viewed_at        INTEGER,
@@ -182,7 +182,7 @@ CREATE TABLE space_nodes (
   uuid       TEXT    NOT NULL UNIQUE,
   space_id   INTEGER NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
   type       TEXT    NOT NULL CHECK (type IN ('item','image','note','shape','text')),
-  item_id    INTEGER REFERENCES items(id) ON DELETE SET NULL,  -- purge : « Élément supprimé »
+  item_id    INTEGER REFERENCES items(id) ON DELETE SET NULL,  -- purge: "Item deleted"
   asset_rel  TEXT,                                             -- spaces/assets/<ab>/<sha256>.<ext>
   x          REAL    NOT NULL,
   y          REAL    NOT NULL,
@@ -200,7 +200,7 @@ CREATE INDEX ix_space_nodes_space ON space_nodes(space_id, z);
 CREATE INDEX ix_space_nodes_item  ON space_nodes(item_id)   WHERE item_id   IS NOT NULL;
 CREATE INDEX ix_space_nodes_asset ON space_nodes(asset_rel) WHERE asset_rel IS NOT NULL;
 
--- ===================== IA : lots, journal des appels, Rediscover =====================
+-- ===================== AI: batches, call log, Rediscover =====================
 CREATE TABLE ai_batches (
   id          INTEGER PRIMARY KEY,
   uuid        TEXT    NOT NULL UNIQUE,
@@ -213,12 +213,12 @@ CREATE TABLE ai_batches (
   finished_at INTEGER
 );
 
--- ===================== JOBS PERSISTANTS (file unique, priority DESC) =====================
+-- ===================== PERSISTENT JOBS (single queue, priority DESC) =====================
 CREATE TABLE jobs (
   id           INTEGER PRIMARY KEY,
   type         TEXT    NOT NULL CHECK (type IN ('media.derive','media.preview','media.download','remote.fetch',
                                                 'avatar.fetch','ai.enrich','ai.prompt','purge.files')),
-  item_id      INTEGER REFERENCES items(id) ON DELETE CASCADE,   -- NULL pour avatar.fetch, remote.fetch, purge.files
+  item_id      INTEGER REFERENCES items(id) ON DELETE CASCADE,   -- NULL for avatar.fetch, remote.fetch, purge.files
   dedupe_key   TEXT,                                             -- 'item:<id>', 'media:<id>', 'author:<id>', 'url:<sha1>'
   payload      TEXT    NOT NULL DEFAULT '{}' CHECK (json_valid(payload)),  -- {…, failedOn: []}
   state        TEXT    NOT NULL DEFAULT 'queued' CHECK (state IN ('queued','running','done','failed','cancelled')),
@@ -228,7 +228,7 @@ CREATE TABLE jobs (
   last_error   TEXT,                                             -- JSON {code,message}
   run_after    INTEGER NOT NULL DEFAULT 0,                       -- ≡ not_before
   batch_id     INTEGER REFERENCES ai_batches(id) ON DELETE SET NULL,
-  provider     TEXT,                                             -- claude|codex, fixé à l'exécution
+  provider     TEXT,                                             -- claude|codex, fixed at execution
   created_at   INTEGER NOT NULL,
   updated_at   INTEGER NOT NULL
 );
@@ -237,7 +237,7 @@ CREATE INDEX ix_jobs_running       ON jobs(type) WHERE state = 'running';
 CREATE INDEX ix_jobs_batch         ON jobs(batch_id, state) WHERE batch_id IS NOT NULL;
 CREATE UNIQUE INDEX ux_jobs_active ON jobs(type, dedupe_key) WHERE state IN ('queued','running') AND dedupe_key IS NOT NULL;
 
-CREATE TABLE ai_calls (                         -- journal des envois et base du budget ; rétention 90 j
+CREATE TABLE ai_calls (                         -- send log and basis of the budget; retention 90 d
   id              INTEGER PRIMARY KEY,
   ts              INTEGER NOT NULL,
   job_id          INTEGER REFERENCES jobs(id) ON DELETE SET NULL,
@@ -267,7 +267,7 @@ CREATE TABLE rediscover_log (
 );
 CREATE INDEX ix_rlog_item ON rediscover_log(item_id, shown_at DESC);
 
--- ===================== SYNCHRO (PK `source`) =====================
+-- ===================== SYNC (PK `source`) =====================
 CREATE TABLE sync_state (
   source               TEXT PRIMARY KEY CHECK (source IN ('x','instagram','cosmos')),
   enabled              INTEGER NOT NULL DEFAULT 0,
@@ -309,7 +309,7 @@ CREATE TABLE sync_runs (
 ) WITHOUT ROWID;
 CREATE INDEX ix_sync_runs_source ON sync_runs(source, started_at DESC);
 
-CREATE TABLE sync_items (                             -- « déjà connu » au niveau publication
+CREATE TABLE sync_items (                             -- "already known" at publication level
   source_key    TEXT PRIMARY KEY,                     -- 'x:<id>' | 'ig:<shortcode>' | 'cosmos:<id>'
   source        TEXT NOT NULL CHECK (source IN ('x','instagram','cosmos')),
   external_id   TEXT NOT NULL,
@@ -321,14 +321,14 @@ CREATE TABLE sync_items (                             -- « déjà connu » au n
 ) WITHOUT ROWID;
 CREATE INDEX ix_sync_items_item ON sync_items(item_id) WHERE item_id IS NOT NULL;
 
-CREATE TABLE sync_dismissed (                         -- supprimés par l'utilisateur : jamais ré-importés
+CREATE TABLE sync_dismissed (                         -- deleted by the user: never re-imported
   source       TEXT NOT NULL,
   external_id  TEXT NOT NULL,
   dismissed_at INTEGER NOT NULL,
   PRIMARY KEY (source, external_id)
 ) WITHOUT ROWID;
 
--- ===================== IMPORT / DIVERS =====================
+-- ===================== IMPORT / MISC =====================
 CREATE TABLE import_runs (
   id             INTEGER PRIMARY KEY,
   kind           TEXT NOT NULL,               -- 'gatheros'
@@ -342,11 +342,11 @@ CREATE TABLE import_runs (
   started_at     INTEGER NOT NULL,
   finished_at    INTEGER
 );
--- Ce que l'utilisateur a retiré d'un import : le ré-import ne le recrée jamais.
+-- What the user removed from an import: a re-import never recreates it.
 CREATE TABLE import_tombstones (
   origin     TEXT    NOT NULL,                -- 'gatheros'
   entity     TEXT    NOT NULL CHECK (entity IN ('item','collection','membership')),
-  origin_id  TEXT    NOT NULL,                -- id du save | id de collection | '<collectionId>:<saveId>'
+  origin_id  TEXT    NOT NULL,                -- save id | collection id | '<collectionId>:<saveId>'
   removed_at INTEGER NOT NULL,
   PRIMARY KEY (origin, entity, origin_id)
 ) WITHOUT ROWID;
@@ -377,7 +377,7 @@ CREATE TABLE search_history (
   uses    INTEGER NOT NULL DEFAULT 1
 ) WITHOUT ROWID;
 
--- ===================== RECHERCHE PLEIN TEXTE (FTS5 avec contenu) =====================
+-- ===================== FULL-TEXT SEARCH (FTS5 with content) =====================
 CREATE VIRTUAL TABLE items_fts USING fts5(
   title, notes, post_text, ocr_text, ai_text, tags, url,
   tokenize = 'unicode61 remove_diacritics 2',

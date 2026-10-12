@@ -1,6 +1,6 @@
 /**
- * Régression visuelle : Bibliothèque, onglet Tout, thème clair, bibliothèque de démo
- * déterministe (données factices).
+ * Visual regression: Library, All tab, light theme, demo library
+ * deterministic (fake data).
  */
 import { expect, test } from '../helpers/e2e-fixtures'
 
@@ -13,7 +13,7 @@ test('library-all-light', async ({ page }) => {
   await expect(page.locator('[data-testid="grid"] [data-testid="card"]').first()).toBeVisible()
   await page.evaluate(() => document.fonts.ready)
   await page.mouse.move(1, 1)
-  // Toutes les images visibles chargées (pas de fondu en cours).
+  // All visible images loaded (no fade in progress).
   await page.waitForFunction(() =>
     Array.from(
       document.querySelectorAll<HTMLImageElement>(

@@ -1,6 +1,6 @@
 /**
- * Actions de niveau liste : créer (titre en édition à l'ouverture),
- * dupliquer, supprimer avec confirmation, « Ajouter à un space › » depuis une carte.
+ * List-level actions: create (title in edit mode on opening), duplicate, delete with
+ * confirmation, « Ajouter à un space › » from a card.
  */
 import { toast } from '../../components/ui'
 import { tr } from '../../i18n'
@@ -12,7 +12,7 @@ const fail = (err: unknown) => toast(err instanceof RpcError ? err.message : tr.
 
 const pendingRename = new Set<string>()
 
-/** L'éditeur met le titre en édition une seule fois après une création. */
+/** The editor puts the title in edit mode only once after a creation. */
 export function consumePendingRename(uuid: string): boolean {
   return pendingRename.delete(uuid)
 }
@@ -68,7 +68,7 @@ export async function deleteSpaceWithConfirm(
   }
 }
 
-/** « Ajouter à un space › » (menu contextuel des cartes) : grille à droite du contenu. */
+/** « Ajouter à un space › » (context menu of cards): grid on the right of the content. */
 export async function addItemsToSpace(
   space: { uuid: string; name: string },
   itemUuids: readonly string[],
@@ -87,7 +87,7 @@ export async function addItemsToSpace(
   }
 }
 
-/** « Nouveau space… » depuis le menu d'une carte : crée, ajoute, sans quitter la vue. */
+/** « Nouveau space… » from a card's menu: creates and adds, without leaving the view. */
 export async function addItemsToNewSpace(itemUuids: readonly string[]): Promise<void> {
   const uuid = await newSpace(false)
   if (uuid) await addItemsToSpace({ uuid, name: '' }, itemUuids)

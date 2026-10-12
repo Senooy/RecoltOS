@@ -71,8 +71,8 @@ const readRegistry = () =>
     libraries: { id: string; name: string; path: string | null }[]
   }
 
-describe('ouverture et registre', () => {
-  it('premier lancement : bibliothèque « default », dossiers, base migrée, contexte actif', async () => {
+describe('opening and registry', () => {
+  it('first launch: library "default", folders, migrated database, active context', async () => {
     const m = make()
     expect(() => requireLibrary()).toThrow(expect.objectContaining({ code: 'library_unavailable' }))
     const ctx = await m.open()
@@ -115,7 +115,7 @@ describe('ouverture et registre', () => {
     expect(m.active()).toBe(ctx)
   })
 
-  it('libraries.json corrompu ou invalide : mis de côté, registre par défaut', async () => {
+  it('libraries.json corrupt or invalid: set aside, default registry', async () => {
     fs.mkdirSync(userData, { recursive: true })
     fs.writeFileSync(registryFile(), '{pas du json')
     await make().open()
@@ -127,7 +127,7 @@ describe('ouverture et registre', () => {
     expect(log.warn).toHaveBeenCalledTimes(2)
   })
 
-  it('entrée invalide : seule cette entrée est écartée, les autres bibliothèques sont conservées', async () => {
+  it('invalid entry: only that entry is discarded, the other libraries are kept', async () => {
     const ext = path.join(base, 'ext')
     fs.mkdirSync(ext, { recursive: true })
     fs.mkdirSync(userData, { recursive: true })
@@ -151,7 +151,7 @@ describe('ouverture et registre', () => {
     expect(log.warn).toHaveBeenCalled()
   })
 
-  it('active inconnue → première de la liste ; active indisponible → repli sur default', async () => {
+  it('unknown active → first of the list; unavailable active → fallback to default', async () => {
     const ext = path.join(base, 'ext')
     fs.mkdirSync(userData, { recursive: true })
     fs.writeFileSync(
@@ -170,8 +170,8 @@ describe('ouverture et registre', () => {
   })
 })
 
-describe('création et bascule (library.switched)', () => {
-  it('création → bascule → library.switched ; retour à default', async () => {
+describe('creation and switch (library.switched)', () => {
+  it('creation → switch → library.switched; back to default', async () => {
     const m = make()
     const first = await m.open()
     first.repos.items.insert({ kind: 'image' })
@@ -197,14 +197,14 @@ describe('création et bascule (library.switched)', () => {
     await expect(m.switch('linconnue')).rejects.toMatchObject({ code: 'not_found' })
   })
 
-  it('emplacement par défaut jamais refusé, même si userData est dans un dossier synchronisé', async () => {
+  it('default location never refused, even if userData is in a synced folder', async () => {
     userData = path.join(home, 'Library', 'Mobile Documents', 'com~apple~CloudDocs', 'dev-userData')
     const m = make()
     await m.open()
     await expect(m.create({ name: 'Dev' })).resolves.toMatchObject({ name: 'Dev', path: null })
   })
 
-  it('création dans un dossier choisi : vide accepté, non vide ou déjà bibliothèque refusés', async () => {
+  it('creation in a chosen folder: empty accepted, non-empty or already a library refused', async () => {
     const m = make()
     await m.open()
     const dir = path.join(base, 'choisi')
@@ -226,7 +226,7 @@ describe('création et bascule (library.switched)', () => {
     ['CloudStorage', 'Library/CloudStorage/Dropbox/Libs'],
     ['Dropbox', 'Dropbox/RecoltOS'],
     ['Dropbox (Équipe)', 'Dropbox (Équipe)/RecoltOS'],
-  ])('dossier synchronisé refusé : %s', async (_label, rel) => {
+  ])('synced folder refused: %s', async (_label, rel) => {
     const m = make()
     await m.open()
     emit.mockClear()
@@ -240,7 +240,7 @@ describe('création et bascule (library.switched)', () => {
 })
 
 describe('isSyncedFolder', () => {
-  it('marqueur .dropbox, Bureau / Documents synchronisés par iCloud, dossier local', () => {
+  it('.dropbox marker, Desktop / Documents synced by iCloud, local folder', () => {
     const marked = path.join(base, 'marque')
     fs.mkdirSync(marked)
     fs.writeFileSync(path.join(marked, '.dropbox'), '')
@@ -258,7 +258,7 @@ describe('isSyncedFolder', () => {
     expect(isSyncedFolder(path.join(base, 'local'))).toBe(false)
   })
 
-  it('lien symbolique vers iCloud Drive résolu', () => {
+  it('symlink to iCloud Drive resolved', () => {
     const icloud = path.join(home, 'Library', 'Mobile Documents', 'com~apple~CloudDocs')
     fs.mkdirSync(icloud, { recursive: true })
     const link = path.join(base, 'raccourci')
@@ -267,14 +267,14 @@ describe('isSyncedFolder', () => {
   })
 })
 
-describe('dossier existant, renommage, retrait', () => {
-  it('addExisting : enregistre puis bascule ; idempotent ; dossier sans base refusé', async () => {
+describe('existing folder, rename, removal', () => {
+  it('addExisting: registers then switches; idempotent; folder without a database refused', async () => {
     const m = make()
     await m.open()
     const dir = path.join(base, 'ailleurs')
     const lib = await m.create({ name: 'Ailleurs', path: dir })
     await m.switch('default')
-    // Un second gestionnaire (autre registre) découvre le dossier.
+    // A second manager (other registry) discovers the folder.
     const reg = registryFile()
     const again = await m.addExisting(dir)
     expect(again.id).toBe(lib.id)
@@ -300,7 +300,7 @@ describe('dossier existant, renommage, retrait', () => {
     ).rejects.toMatchObject({ code: 'synced_folder_refused' })
   })
 
-  it('noms vides ou trop longs refusés (validation) ; le registre reste relisible', async () => {
+  it('empty or too long names refused (validation); the registry stays readable', async () => {
     const m = make()
     await m.open()
     await expect(m.create({ name: '   ' })).rejects.toMatchObject({ code: 'validation' })
@@ -310,7 +310,7 @@ describe('dossier existant, renommage, retrait', () => {
     expect(readRegistry().libraries).toHaveLength(1)
   })
 
-  it('renommage, retrait (fichiers conservés), bibliothèque ouverte non retirable', async () => {
+  it('rename, removal (files kept), open library not removable', async () => {
     const m = make()
     await m.open()
     const other = await m.create({ name: 'Autre' })
@@ -328,8 +328,8 @@ describe('dossier existant, renommage, retrait', () => {
   })
 })
 
-describe('cycle de vie : accroches, échecs, remplacement', () => {
-  it('pause / arrêt avant fermeture, afterOpen après ouverture', async () => {
+describe('lifecycle: hooks, failures, replacement', () => {
+  it('pause / stop before close, afterOpen after open', async () => {
     const calls: string[] = []
     const off = registerLibraryLifecycle('jobs', {
       pauseJobs: (ms) => void calls.push(`pause:${ms}`),
@@ -346,7 +346,7 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
     expect(calls).toHaveLength(4)
   })
 
-  it('bascule, repli et reopen relancent les workers puis la file (pause → stop → afterOpen → start → resume)', async () => {
+  it('switch, fallback and reopen restart the workers then the queue (pause → stop → afterOpen → start → resume)', async () => {
     const calls: string[] = []
     registerLibraryLifecycle('all', {
       pauseJobs: () => void calls.push('pause'),
@@ -366,7 +366,7 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
     await m.reopen()
     expect(calls).toEqual(['pause', 'stop', `open:${lib.id}`, 'start', 'resume'])
 
-    // Repli sur la bibliothèque précédente : relancée aussi.
+    // Fallback to the previous library: restarted too.
     const dir = path.join(base, 'amovible')
     const ext = await m.create({ name: 'Disque', path: dir })
     await m.switch('default')
@@ -375,14 +375,14 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
     await expect(m.switch(ext.id)).rejects.toMatchObject({ code: 'library_unavailable' })
     expect(calls).toEqual(['pause', 'stop', 'open:default', 'start', 'resume'])
 
-    // Restauration : closeForReplace puis reopen relance une seule fois.
+    // Restore: closeForReplace then reopen restarts only once.
     calls.length = 0
     await m.closeForReplace()
     await m.reopen()
     expect(calls).toEqual(['pause', 'stop', 'open:default', 'start', 'resume'])
   })
 
-  it('échec d’ouverture de la cible : retour à la bibliothèque précédente', async () => {
+  it('target open failure: back to the previous library', async () => {
     const m = make()
     await m.open()
     const dir = path.join(base, 'amovible')
@@ -396,7 +396,7 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
     expect(readRegistry().active).toBe('default')
   })
 
-  it('closeForReplace bloqué par un lecteur : wal_not_empty, la bibliothèque reste utilisable', async () => {
+  it('closeForReplace blocked by a reader: wal_not_empty, the library stays usable', async () => {
     const m = make()
     const ctx = await m.open()
     for (let i = 0; i < 5; i++) ctx.repos.items.insert({ kind: 'image' })
@@ -416,7 +416,7 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
     expect(emit).toHaveBeenLastCalledWith('library.switched', { libraryId: 'default' })
   })
 
-  it('journal des requêtes lentes transmis aux bases ouvertes', async () => {
+  it('slow query log passed to the open databases', async () => {
     const onSlowQuery = vi.fn()
     const ctx = await make({ onSlowQuery }).open()
     ctx.repos.items.countLive()
@@ -424,8 +424,8 @@ describe('cycle de vie : accroches, échecs, remplacement', () => {
   })
 })
 
-describe('création annulée, réouverture impossible, chemin non dossier', () => {
-  it('create sur un fichier existant : validation, pas d’erreur système brute', async () => {
+describe('creation cancelled, reopening impossible, path not a folder', () => {
+  it('create on an existing file: validation, no raw system error', async () => {
     const m = make()
     await m.open()
     const file = path.join(base, 'fichier.txt')
@@ -434,7 +434,7 @@ describe('création annulée, réouverture impossible, chemin non dossier', () =
     expect(m.list().libraries).toHaveLength(1)
   })
 
-  it('afterOpen en échec : création annulée, dossier créé retiré, nouvel essai possible', async () => {
+  it('afterOpen failure: creation cancelled, created folder removed, retry possible', async () => {
     const m = make()
     await m.open()
     const custom = path.join(base, 'neuve')
@@ -457,7 +457,7 @@ describe('création annulée, réouverture impossible, chemin non dossier', () =
     off()
   })
 
-  it('dossier vide préexistant : seul le contenu créé est retiré, le dossier reste', async () => {
+  it('pre-existing empty folder: only the created content is removed, the folder stays', async () => {
     const m = make()
     await m.open()
     const custom = path.join(base, 'vide')
@@ -478,7 +478,7 @@ describe('création annulée, réouverture impossible, chemin non dossier', () =
     expect(fs.readdirSync(custom)).toEqual(['.DS_Store'])
   })
 
-  it('réouverture impossible après wal_not_empty : aucune bibliothèque active, erreur d’origine', async () => {
+  it('reopening impossible after wal_not_empty: no active library, original error', async () => {
     const m = make()
     const ctx = await m.open()
     for (let i = 0; i < 5; i++) ctx.repos.items.insert({ kind: 'image' })
@@ -487,7 +487,7 @@ describe('création annulée, réouverture impossible, chemin non dossier', () =
     reader.prepare('SELECT count(*) FROM items').get()
     const off = registerLibraryLifecycle('sabotage', {
       stopWorkers: () => {
-        // Fichier remplacé par un dossier pendant la fermeture : la réouverture échoue.
+        // File replaced by a folder during the close: reopening fails.
         fs.rmSync(ctx.paths.db)
         fs.mkdirSync(ctx.paths.db)
       },
@@ -501,7 +501,7 @@ describe('création annulée, réouverture impossible, chemin non dossier', () =
   })
 })
 
-describe('erreurs système et SQLite converties en AppError français', () => {
+describe('system and SQLite errors converted to French AppError', () => {
   const asRoot = process.getuid?.() === 0
   const failure = async (p: Promise<unknown>): Promise<AppError> => {
     try {
@@ -544,7 +544,7 @@ describe('erreurs système et SQLite converties en AppError français', () => {
     }
   })
 
-  it('addExisting sur un faux recolt.db : library_unavailable, entrée retirée du registre', async () => {
+  it('addExisting on a fake recolt.db: library_unavailable, entry removed from the registry', async () => {
     const m = make()
     await m.open()
     const before = m.registry().libraries
@@ -565,7 +565,7 @@ describe('erreurs système et SQLite converties en AppError français', () => {
     expect(requireLibrary().id).toBe('default')
   })
 
-  it('addExisting d’une base de version future : entrée retirée, bibliothèque active inchangée', async () => {
+  it('addExisting of a future-version database: entry removed, active library unchanged', async () => {
     const m = make()
     await m.open()
     const before = m.registry().libraries
@@ -579,7 +579,7 @@ describe('erreurs système et SQLite converties en AppError français', () => {
     expect(m.list().libraries).toHaveLength(1)
   })
 
-  it('addExisting d’une entrée déjà au registre : échec sans la retirer', async () => {
+  it('addExisting of an entry already in the registry: fails without removing it', async () => {
     const m = make()
     await m.open()
     const dir = path.join(base, 'ext')
@@ -590,7 +590,7 @@ describe('erreurs système et SQLite converties en AppError français', () => {
     expect(m.registry().libraries.map((l) => l.id)).toContain(lib.id)
   })
 
-  it('toAppError : codes système, SQLite et inconnus', () => {
+  it('toAppError: system, SQLite and unknown codes', () => {
     const sys = (code: string) => Object.assign(new Error(`${code}: boom`), { code })
     expect(toAppError(sys('EROFS'))).toMatchObject({ code: 'io' })
     expect(toAppError(sys('ENOSPC'))).toMatchObject({ code: 'io' })
@@ -605,8 +605,8 @@ describe('erreurs système et SQLite converties en AppError français', () => {
   })
 })
 
-describe('wal_not_empty : le contexte et les domaines reçoivent la nouvelle connexion', () => {
-  it('un afterOpen qui garde repos retrouve une connexion ouverte avant startWorkers', async () => {
+describe('wal_not_empty: the context and domains receive the new connection', () => {
+  it('an afterOpen that keeps the repos finds an open connection before startWorkers', async () => {
     let kept: { repos: { items: { countLive(): number } }; db: { open: boolean } } | undefined
     const seenAtStart: boolean[] = []
     registerLibraryLifecycle('jobs', {
@@ -632,8 +632,8 @@ describe('wal_not_empty : le contexte et les domaines reçoivent la nouvelle con
   })
 })
 
-describe('isSyncedFolder : casse ignorée, anciens dossiers cloud', () => {
-  it('Documents, iCloud Drive, OneDrive et Google Drive refusés quelle que soit la casse', () => {
+describe('isSyncedFolder: case ignored, legacy cloud folders', () => {
+  it('Documents, iCloud Drive, OneDrive and Google Drive refused whatever the case', () => {
     fs.mkdirSync(
       path.join(home, 'Library', 'Mobile Documents', 'com~apple~CloudDocs', 'Documents'),
       { recursive: true },
@@ -652,8 +652,8 @@ describe('isSyncedFolder : casse ignorée, anciens dossiers cloud', () => {
   })
 })
 
-describe('bibliothèque disparue, dossiers gérés', () => {
-  it('bibliothèque hors default dont le dossier a disparu : refusée, jamais recréée vide', async () => {
+describe('missing library, managed folders', () => {
+  it('non-default library whose folder disappeared: refused, never recreated empty', async () => {
     const m = make()
     await m.open()
     const lib = await m.create({ name: 'A' })
@@ -666,7 +666,7 @@ describe('bibliothèque disparue, dossiers gérés', () => {
     expect(m.list().libraries.find((l) => l.id === lib.id)).toBeDefined()
   })
 
-  it('recolt.db seul disparu (dossier présent) : refusé, pas de base vide recréée', async () => {
+  it('recolt.db alone missing (folder present): refused, no empty database recreated', async () => {
     const m = make()
     await m.open()
     const lib = await m.create({ name: 'B' })
@@ -676,7 +676,7 @@ describe('bibliothèque disparue, dossiers gérés', () => {
     expect(fs.existsSync(path.join(userData, 'libraries', lib.id, 'recolt.db'))).toBe(false)
   })
 
-  it('au démarrage, une bibliothèque active disparue retombe sur default', async () => {
+  it('at startup, a missing active library falls back to default', async () => {
     const m = make()
     await m.open()
     const lib = await m.create({ name: 'C' })
@@ -688,7 +688,7 @@ describe('bibliothèque disparue, dossiers gérés', () => {
     expect(log.error).toHaveBeenCalled()
   })
 
-  it('create sans chemin et première ouverture de default restent automatiques', async () => {
+  it('create without a path and first opening of default remain automatic', async () => {
     const m = make()
     await m.open()
     expect(fs.existsSync(path.join(userData, 'libraries', 'default', 'items'))).toBe(true)
@@ -696,7 +696,7 @@ describe('bibliothèque disparue, dossiers gérés', () => {
     expect(requireLibrary().name).toBe('D')
   })
 
-  it('create refuse un dossier situé dans libraries/ ou dans la racine d’une bibliothèque', async () => {
+  it('create refuses a folder inside libraries/ or at the root of a library', async () => {
     const m = make()
     await m.open()
     const libRoot = path.join(userData, 'libraries', 'default')

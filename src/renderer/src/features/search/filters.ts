@@ -1,5 +1,5 @@
 /**
- * État des filtres de la Recherche et conversion vers `ItemFilters`.
+ * State of the Search filters and conversion to `ItemFilters`.
  */
 import { DEFAULT_COLOR_TOLERANCE, NAMED_COLORS } from '../../../../shared/color'
 import type { ItemKind, Source } from '../../../../shared/enums'
@@ -10,9 +10,9 @@ export type Period = 'all' | '7d' | '30d' | '1y'
 export interface SearchFilters {
   kinds: ItemKind[]
   sources: Source[]
-  /** Couleurs du filtre (intersection), hex. */
+  /** Filter colours (intersection), hex. */
   colors: string[]
-  /** Tolérance ΔE2000 (défaut 18). */
+  /** ΔE2000 tolerance (default 18). */
   tolerance: number
   period: Period
   collectionUuid: string | null
@@ -65,10 +65,10 @@ export function toggle<T>(list: readonly T[], v: T): T[] {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v]
 }
 
-/** 12 pastilles nommées, du rouge au rose puis neutres. */
+/** 12 named swatches, from red to pink, then neutrals. */
 export const SWATCHES = NAMED_COLORS
 
-/** Libellé d'une couleur du filtre : nom si c'est une pastille, sinon l'hex. */
+/** Label of a filter colour: its name if it is a swatch, otherwise the hex. */
 export function colorLabel(hex: string): string {
   return NAMED_COLORS.find((c) => c.hex === hex.toLowerCase())?.label ?? hex
 }

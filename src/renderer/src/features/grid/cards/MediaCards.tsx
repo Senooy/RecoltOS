@@ -1,8 +1,8 @@
 /**
- * Cartes média : `ImageCard`, `VideoCard` (affiche, aperçu muet au survol après
- * 150 ms, une seule vidéo à la fois, jamais l'original), `CarouselCard` (badge « 1/N », chevrons
- * verre au survol), `PageCard` (capture + titre + domaine). Images `thumb` 800w et `large` 1440w
- * en `srcset` : nettes en Retina.
+ * Media cards: `ImageCard`, `VideoCard` (poster, silent preview on hover after
+ * 150 ms, only one video at a time, never the original), `CarouselCard` ("1/N" badge, glass
+ * chevrons on hover), `PageCard` (capture + title + domain). `thumb` 800w and `large` 1440w images
+ * in `srcset`: sharp on Retina.
  */
 import { ChevronLeft, ChevronRight, Globe } from 'lucide-react'
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
@@ -23,7 +23,7 @@ export function CardImage({
 }: {
   thumbUrl: string | null
   largeUrl: string | null
-  /** Largeur affichée (px CSS) : `sizes` du srcset. */
+  /** Displayed width (CSS px): `sizes` of the srcset. */
   width: number
   alt?: string
   className?: string
@@ -32,7 +32,7 @@ export function CardImage({
   const thumb = mediaSrc(thumbUrl)
   const large = mediaSrc(largeUrl)
   if (!thumb && !large) return null
-  // Le srcset n'annonce 800w que pour une vraie vignette dérivée (`thumbs/…webp`).
+  // The srcset only announces 800w for a real derived thumbnail (`thumbs/…webp`).
   const derived = thumb?.includes('/thumbs/') && thumb.includes('.webp')
   const srcSet = large && derived ? `${thumb} 800w, ${large} 1440w` : undefined
   return (
@@ -64,7 +64,7 @@ export function ImageCard({ card, width }: { card: ItemCard; width: number }) {
   )
 }
 
-/** Une seule vidéo de survol à la fois dans toute la grille. */
+/** Only one hover video at a time across the whole grid. */
 let playing: HTMLVideoElement | null = null
 
 export function VideoCard({
@@ -134,7 +134,7 @@ export function VideoCard({
   )
 }
 
-/** Diapositives des carrousels déjà parcourus (borné : 300 carrousels). */
+/** Slides of carousels already browsed (bounded: 300 carousels). */
 const slideCache = new Map<string, Slide[]>()
 const SLIDE_CACHE_MAX = 300
 

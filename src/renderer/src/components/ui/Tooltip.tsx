@@ -1,6 +1,6 @@
 /**
- * `Tooltip` : apparaît après 600 ms, animation `--dur-base`, raccourci optionnel.
- * Chaque instance embarque son `Provider` : aucun montage global requis.
+ * `Tooltip`: appears after 600 ms, `--dur-base` animation, optional shortcut.
+ * Each instance embeds its own `Provider`: no global mount required.
  */
 import { Tooltip as TooltipPrimitive } from 'radix-ui'
 import { useState, type ReactNode } from 'react'
@@ -13,21 +13,21 @@ import './ui.css'
 export const TooltipProvider = TooltipPrimitive.Provider
 
 export interface TooltipProps {
-  /** Texte de l'infobulle (FR). */
+  /** Tooltip text (French). */
   content: ReactNode
-  /** Raccourci affiché à droite du texte. */
+  /** Shortcut shown to the right of the text. */
   shortcut?: readonly string[]
   side?: 'top' | 'right' | 'bottom' | 'left'
   align?: 'start' | 'center' | 'end'
   sideOffset?: number
-  /** Désactive l'infobulle sans changer l'arbre. */
+  /** Disables the tooltip without changing the tree. */
   disabled?: boolean
-  /** Contrôle externe (tests, cas particuliers). */
+  /** External control (tests, special cases). */
   open?: boolean
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
   delayDuration?: number
-  /** Élément déclencheur (un seul enfant, reçoit les props de Radix). */
+  /** Trigger element (a single child, receives the Radix props). */
   children: ReactNode
 }
 
@@ -45,9 +45,9 @@ export function Tooltip({
   children,
 }: TooltipProps) {
   const container = usePortalContainer()
-  // `disabled` ne ferme que l'ouverture : l'arbre Provider > Root > Trigger reste le même, donc
-  // l'enfant n'est jamais démonté (focus et état conservés, menu ancré intact) même si la prop bascule.
-  // Le Root reste toujours contrôlé (état géré ici) : pas d'avertissement contrôlé/non contrôlé.
+  // `disabled` only blocks opening: the Provider > Root > Trigger tree stays the same, so the child
+  // is never unmounted (focus and state kept, anchored menu intact) even if the prop toggles.
+  // The Root always stays controlled (state managed here): no controlled/uncontrolled warning.
   const [innerOpen, setInnerOpen] = useState(defaultOpen)
   const isControlled = open !== undefined
   const isOpen = disabled ? false : (open ?? innerOpen)

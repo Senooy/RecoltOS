@@ -1,19 +1,19 @@
 /**
- * Masonry maison déterministe : colonne la plus courte (à égalité, la plus à gauche),
- * hauteurs par ratio bornées à [0,25 ; 2,2], hauteurs mesurées pour les posts texte, garde-fou
- * `minColW` (140) qui réduit le nombre de colonnes effectives. Fonction pure.
+ * Deterministic in-house masonry: shortest column (on a tie, the leftmost),
+ * heights by ratio bounded to [0.25 ; 2.2], measured heights for text posts, safeguard
+ * `minColW` (140) that reduces the effective number of columns. Pure function.
  */
 export interface MasonryItem {
   id: string
-  /** Hauteur / largeur. */
+  /** Height / width. */
   ratio?: number
-  /** Hauteur fixe ajoutée (pied de carte). */
+  /** Fixed height added (card footer). */
   fixedExtra?: number
-  /** Hauteur mesurée (posts texte) : prioritaire. */
+  /** Measured height (text posts): takes priority. */
   measured?: number
   /**
-   * Hauteur ESTIMÉE servant seulement au choix de la colonne (posts texte : `colW × 0,5`), la
-   * position verticale suivant la hauteur réelle : les posts sont rangés avant leur mesure.
+   * ESTIMATED height used only to choose the column (text posts: `colW × 0.5`), the vertical
+   * position following the real height: posts are placed before being measured.
    */
   placementRatio?: number
 }
@@ -49,7 +49,7 @@ export const RATIO_MAX = 2.2
 export const clampRatio = (r: number): number =>
   Number.isFinite(r) && r > 0 ? Math.min(RATIO_MAX, Math.max(RATIO_MIN, r)) : 1
 
-/** Largeur de colonne et nombre de colonnes effectives. */
+/** Column width and effective number of columns. */
 export function columnGeometry(o: MasonryOptions): { colW: number; columns: number } {
   const minColW = o.minColW ?? MIN_COL_W
   const inner = Math.max(0, o.width - 2 * o.padX)
@@ -65,7 +65,7 @@ export function columnGeometry(o: MasonryOptions): { colW: number; columns: numb
 export function layoutMasonry(items: readonly MasonryItem[], o: MasonryOptions): MasonryLayout {
   const { colW, columns } = columnGeometry(o)
   const heights = new Array<number>(columns).fill(0)
-  /** Hauteurs utilisées pour choisir la colonne (estimées pour les posts). */
+  /** Heights used to choose the column (estimated for posts). */
   const choice = new Array<number>(columns).fill(0)
   const placed: Placed[] = []
   for (const it of items) {
@@ -85,13 +85,13 @@ export function layoutMasonry(items: readonly MasonryItem[], o: MasonryOptions):
   return { placed, height: placed.length > 0 ? height : 0, colW, columns }
 }
 
-/** Index des éléments visibles dans `[top, bottom]` (recherche binaire par colonne). */
+/** Indices of the visible items in `[top, bottom]` (binary search per column). */
 export function visibleIndices(layout: MasonryLayout, top: number, bottom: number): number[] {
   const byCol: number[][] = Array.from({ length: layout.columns }, () => [])
   layout.placed.forEach((p, i) => byCol[p.col]!.push(i))
   const out: number[] = []
   for (const list of byCol) {
-    // Premier élément dont le bas dépasse `top`.
+    // First item whose bottom exceeds `top`.
     let lo = 0
     let hi = list.length
     while (lo < hi) {
@@ -109,7 +109,7 @@ export function visibleIndices(layout: MasonryLayout, top: number, bottom: numbe
   return out.sort((a, b) => a - b)
 }
 
-/** Voisin géométrique le plus proche dans une direction (navigation clavier). */
+/** Closest geometric neighbour in a direction (keyboard navigation). */
 export function neighbor(
   layout: MasonryLayout,
   index: number,

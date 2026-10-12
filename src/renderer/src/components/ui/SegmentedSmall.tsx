@@ -1,7 +1,7 @@
 /**
- * `SegmentedSmall` : petit segmenté pour Réglages (Clair / Sombre / Système) et
- * filtres de période. Radix ToggleGroup `single` (groupe de boutons radio) ; un clic sur le
- * segment actif ne le désélectionne jamais.
+ * `SegmentedSmall`: small segmented control for Settings (Light / Dark / System) and
+ * period filters. Radix ToggleGroup `single` (radio button group); a click on the
+ * active segment never deselects it.
  */
 import { ToggleGroup } from 'radix-ui'
 import type { ReactNode } from 'react'
@@ -17,7 +17,7 @@ export interface SegmentedSmallProps<V extends string> {
   options: readonly SegmentedOption<V>[]
   value: V
   onChange: (value: V) => void
-  /** Nom accessible du groupe (FR). */
+  /** Accessible name of the group (French). */
   label: string
   className?: string
 }

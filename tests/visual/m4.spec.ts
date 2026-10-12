@@ -1,6 +1,6 @@
 /**
- * Régression visuelle : Réglages › IA, état initial (moteur « aucun »). La 2ᵉ ligne à
- * interrupteur est « Décrire et taguer les nouveaux ajouts ».
+ * Visual regression: Settings › AI, initial state (engine "none"). The 2nd toggle row
+ * is "Describe and tag new additions".
  */
 import type { Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

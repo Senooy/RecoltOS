@@ -1,6 +1,6 @@
 /**
- * Contrat `spaces.*` (uuid, `itemUuids`).
- * `exportPng`/`exportCancel` déclarés dès maintenant (extensions incluses en V1).
+ * `spaces.*` contract (uuid, `itemUuids`).
+ * `exportPng`/`exportCancel` declared now (extensions included in V1).
  */
 import { z } from 'zod'
 import { AssetInfo, SpaceDoc, SpaceSummary } from '../dto/spaces'
@@ -42,7 +42,7 @@ export const spacesContract = {
     output: z.object({ uuid: Uuid }),
   },
   'spaces.get': { input: z.object({ uuid: Uuid }), output: SpaceDoc },
-  /** Atomique (une transaction) ; ≤ 5 000 upserts + 5 000 suppressions. */
+  /** Atomic (one transaction); ≤ 5 000 upserts + 5 000 deletions. */
   'spaces.applyBatch': {
     input: ApplyBatchInput,
     output: z.object({ updatedAt: z.number().int() }),
@@ -87,7 +87,7 @@ export const spacesContract = {
     output: z.union([z.object({ path: z.string() }), z.object({ cancelled: z.literal(true) })]),
   },
   'spaces.exportCancel': { input: Empty, output: Void },
-  /** Affiche le dernier PNG exporté dans le Finder (aucun chemin venu du renderer). */
+  /** Shows the last exported PNG in the Finder (no path coming from the renderer). */
   'spaces.revealExport': { input: Empty, output: Void },
 } as const satisfies ContractShape
 

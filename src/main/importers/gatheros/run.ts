@@ -1,9 +1,9 @@
 /**
- * Importeur GatherOS : phases reprenables persistées dans `import_runs`
+ * GatherOS importer: resumable phases persisted in `import_runs`
  * (snapshot → read → plan → files → items → collections → tags → tombstones → jobs → finalize).
- * Politique : « ajouter ce qui manque, ne jamais écraser, ne jamais ressusciter ».
- * Aucun `ai.enrich` : l'enrichissement se propose au résumé.
- * Testable sous Node : hachage et clonage sont injectés (media-worker dans l'app).
+ * Policy: "add what is missing, never overwrite, never revive".
+ * No `ai.enrich`: enrichment is offered in the summary.
+ * Testable under Node: hashing and cloning are injected (media-worker in the app).
  */
 import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -45,20 +45,20 @@ export interface ImportDeps {
   log: JobLogger
   onProgress?: (p: ImportProgress) => void
   signal?: AbortSignal
-  /** Relance la file de jobs. */
+  /** Restarts the job queue. */
   kick?: () => void
   changed?: (uuids: string[], reason: 'created') => void
   collectionsChanged?: (uuids: string[]) => void
-  /** Réglages GatherOS en liste blanche (option `importPrefs`). */
+  /** GatherOS settings on the allowlist (option `importPrefs`). */
   applyPrefs?: () => void
-  /** Concurrence de la copie (défaut 4). */
+  /** Copy concurrency (default 4). */
   concurrency?: number
 }
 
 export interface ImportInput {
   source: GatherosLibrary
   options: ImportOptions
-  /** Reprise d'un run existant. */
+  /** Resume an existing run. */
   runId?: number
 }
 
@@ -117,7 +117,7 @@ export async function runGatherosImport(
   const workDir = join(lib.paths.dir('import'), `gatheros-${runId}`)
 
   try {
-    // 1. snapshot : notre base (si non vide) puis copie cohérente de la base GatherOS.
+    // 1. snapshot: our database (if not empty), then a consistent copy of the GatherOS database.
     setPhase('snapshot')
     if (lib.repos.items.countAll() > 0) {
       vacuumInto(lib.db, snapshotPath(lib.paths.dir('snapshots'), 'pre-import', now()))
@@ -172,7 +172,7 @@ export async function runGatherosImport(
     }
     checkAbort(deps.signal)
 
-    // 4. files : clonage APFS, hachage, reprise (cible déterministe, même taille = déjà copiée).
+    // 4. files: APFS cloning, hashing, resume (deterministic target, same size = already copied).
     const dirs = { images: input.source.imagesDir, thumbs: input.source.thumbsDir }
     const jobsFiles: { f: PlannedFile; repairOnly: boolean; itemUuid: string }[] = []
     for (const m of planned) {
@@ -228,7 +228,7 @@ export async function runGatherosImport(
     lib.db.prepare("UPDATE import_runs SET state = 'files_done' WHERE id = ?").run(runId)
     checkAbort(deps.signal)
 
-    // 5. items (+ auteurs) : lots de 100 par transaction, ordre `created_at` croissant.
+    // 5. items (+ authors): batches of 100 per transaction, `created_at` ascending order.
     const toCreate = planned.filter((m) => !existing.has(m.item.originId))
     const itemIds = new Map<string, number>(existing)
     const createdUuids: string[] = []
@@ -280,7 +280,7 @@ export async function runGatherosImport(
         .get() as { n: number }
     ).n
 
-    // 6. collections : insertion à plat, puis parents et couvertures ; appartenances (hors pierres tombales).
+    // 6. collections: flat insertion, then parents and covers; memberships (excluding tombstones).
     setPhase('collections', 0, data.collections.length)
     const colIds = new Map<string, number>()
     const createdCols: string[] = []
@@ -329,7 +329,7 @@ export async function runGatherosImport(
     })()
     checkAbort(deps.signal)
 
-    // 7. tags : seulement pour les éléments créés (jamais d'écrasement).
+    // 7. tags: only for created items (never overwritten).
     setPhase('tags')
     lib.db.transaction(() => {
       for (const m of toCreate) {
@@ -354,7 +354,7 @@ export async function runGatherosImport(
         .get() as { n: number }
     ).n
 
-    // 8. éléments rejetés (`dismissed_tweets`) et pré-remplissage `sync_items`.
+    // 8. rejected items (`dismissed_tweets`) and `sync_items` pre-fill.
     setPhase('tombstones')
     lib.db.transaction(() => {
       const ins = lib.db.prepare(
@@ -374,7 +374,7 @@ export async function runGatherosImport(
       }
     })()
 
-    // 8 bis. boards → spaces : tolérant, idempotent par `origin_id`.
+    // 8 bis. boards → spaces: tolerant, idempotent per `origin_id`.
     {
       const legacy = new Database(snap.path, { readonly: true, fileMustExist: true })
       try {
@@ -394,7 +394,7 @@ export async function runGatherosImport(
       }
     }
 
-    // 9. jobs (sans IA) : téléchargements distants et avatars en priorité haute, dérivés ensuite.
+    // 9. jobs (no AI): remote downloads and avatars at high priority, derivatives afterwards.
     setPhase('jobs')
     lib.db.transaction(() => {
       const jobs = lib.repos.jobs
@@ -500,7 +500,7 @@ export async function runGatherosImport(
     deps.changed?.(createdUuids, 'created')
     deps.collectionsChanged?.(createdCols)
     log.info(
-      `[import] GatherOS : ${counts.items ?? 0} éléments créés, ${counts.skipped_existing ?? 0} déjà présents`,
+      `[import] GatherOS: ${counts.items ?? 0} items created, ${counts.skipped_existing ?? 0} already present`,
     )
     return report
   } catch (err) {
@@ -527,7 +527,7 @@ export async function runGatherosImport(
   }
 }
 
-/** Dernier rapport (`import.gatheros.lastReport`). */
+/** Last report (`import.gatheros.lastReport`). */
 export function lastImportReport(lib: LibraryContext): ImportReport | null {
   const row = lib.db
     .prepare(
@@ -542,7 +542,7 @@ export function lastImportReport(lib: LibraryContext): ImportReport | null {
   }
 }
 
-/** Import interrompu (crash pendant un run) : `state IN ('running','files_done')`. */
+/** Interrupted import (crash during a run): `state IN ('running','files_done')`. */
 export function pendingImport(
   lib: LibraryContext,
 ): { runId: number; phase: string | null; options: ImportOptions; source: string | null } | null {

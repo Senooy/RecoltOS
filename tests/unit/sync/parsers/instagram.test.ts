@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- fixtures JSON mutées en place (copie `structuredClone` typée `any`) */
 /**
- * Parseur Instagram sur les fixtures synthétiques.
+ * Instagram parser on the synthetic fixtures.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -20,7 +20,7 @@ const igExtra = (e: unknown) => e as InstagramPostExtra
 const OE_MS = 0x6a7b8c9d * 1000
 
 describe('parseInstagramSavedPage — fixtures', () => {
-  it('image : clé ig:<code>, URL /p/<code>/, auteur sans @, légende, date, collections', () => {
+  it('image: ig:<code> key, URL /p/<code>/, author without @, caption, date, collections', () => {
     const r = parse('image.json')
     expect(r.nextCursor).toBeNull()
     const p = r.posts[0]!
@@ -49,7 +49,7 @@ describe('parseInstagramSavedPage — fixtures', () => {
     expect(p.postMeta).toMatchObject({ platform: 'instagram', url: p.sourceUrl, quoted: null })
   })
 
-  it('reel : vidéo à la plus grande variante, poster, durée, URL en /p/', () => {
+  it('reel: video at the largest variant, poster, duration, URL under /p/', () => {
     const p = parse('reel.json').posts[0]!
     expect(p.kind).toBe('video')
     expect(p.sourceUrl).toBe('https://www.instagram.com/p/DSyNtH00002/')
@@ -63,7 +63,7 @@ describe('parseInstagramSavedPage — fixtures', () => {
     })
   })
 
-  it('carrousel : 10 médias ordonnés, la vidéo (index 3) avec poster, kind du 1er', () => {
+  it('carousel: 10 media in order, the video (index 3) with poster, kind of the first', () => {
     const p = parse('carrousel.json').posts[0]!
     expect(p.kind).toBe('image')
     expect(p.media).toHaveLength(10)
@@ -90,7 +90,7 @@ describe('parseInstagramSavedPage — fixtures', () => {
     expect(igExtra(p.extra).mediaType).toBe(8)
   })
 
-  it('pagination : 12 publications et next_max_id ; dernière page et page vide → null', () => {
+  it('pagination: 12 posts and next_max_id; last page and empty page → null', () => {
     const r = parse('page-1.json')
     expect(r.posts).toHaveLength(12)
     expect(r.nextCursor).toBe('QVFDTXN5bnRoZXRpcXVlLXBhZ2Uy')
@@ -99,7 +99,7 @@ describe('parseInstagramSavedPage — fixtures', () => {
     expect(parse('vide.json')).toMatchObject({ posts: [], nextCursor: null, stats: { entries: 0 } })
   })
 
-  it('checkpoint et connexion → auth_required ; « Please wait » → rate_limited', () => {
+  it('checkpoint and login → auth_required; "Please wait" → rate_limited', () => {
     expect(parseInstagramSavedPage(fixture('instagram', 'checkpoint.json'))).toMatchObject({
       ok: false,
       error: { code: 'auth_required', reason: 'checkpoint_required' },
@@ -114,7 +114,7 @@ describe('parseInstagramSavedPage — fixtures', () => {
     })
   })
 
-  it('media/<pk>/info : items sans enveloppe { media }, curseur toujours null', () => {
+  it('media/<pk>/info: items without a { media } wrapper, cursor always null', () => {
     const r = parseInstagramMediaInfo(fixture('instagram', 'media-info.json'))
     checkInvariants(r)
     const ok = expectOk(r)
@@ -124,8 +124,8 @@ describe('parseInstagramSavedPage — fixtures', () => {
   })
 })
 
-describe('parseInstagramSavedPage — robustesse', () => {
-  it('élément de carrousel cassé : écarté et compté, les 9 autres restent dans l’ordre', () => {
+describe('parseInstagramSavedPage — robustness', () => {
+  it('broken carousel item: dropped and counted, the other 9 stay in order', () => {
     const j = mutable('instagram', 'carrousel.json')
     j.items[0].media.carousel_media[5].image_versions2.candidates = []
     const r = expectOk(parseInstagramSavedPage(j))
@@ -134,7 +134,7 @@ describe('parseInstagramSavedPage — robustesse', () => {
     expect(r.stats.mediaDropped).toBe(1)
   })
 
-  it('publication sans code ou sans média : isolée, les autres et le curseur restent', () => {
+  it('post without code or media: isolated, the others and the cursor remain', () => {
     const j = mutable('instagram', 'page-1.json')
     delete j.items[2].media.code
     j.items[4].media.video_versions = []
@@ -147,7 +147,7 @@ describe('parseInstagramSavedPage — robustesse', () => {
     expect(r.nextCursor).toBe('QVFDTXN5bnRoZXRpcXVlLXBhZ2Uy')
   })
 
-  it('more_available sans next_max_id → fin ; légende ou auteur absents tolérés', () => {
+  it('more_available without next_max_id → end; missing caption or author tolerated', () => {
     const j = mutable('instagram', 'image.json')
     j.more_available = true
     j.items[0].media.caption = null
@@ -160,7 +160,7 @@ describe('parseInstagramSavedPage — robustesse', () => {
     expect(r.posts[0]!.authors).toEqual([])
   })
 
-  it('adaptateur GraphQL (edges/node, page_info) : même sortie', () => {
+  it('GraphQL adapter (edges/node, page_info): same output', () => {
     const rest = mutable('instagram', 'page-1.json')
     const gql = {
       data: {
@@ -178,7 +178,7 @@ describe('parseInstagramSavedPage — robustesse', () => {
     expect(r.nextCursor).toBe('R1FMLWN1cnNldXI')
   })
 
-  it('formes inconnues → api_changed sans exception', () => {
+  it('unknown shapes → api_changed without exception', () => {
     for (const bad of [null, 'x', 3, [], {}, { status: 'ok' }, { data: { a: 1 } }]) {
       expect(parseInstagramSavedPage(bad)).toMatchObject({
         ok: false,

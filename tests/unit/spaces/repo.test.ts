@@ -1,6 +1,6 @@
 /**
- * dépôt Spaces sur une vraie base (cascade, SET NULL, atomicité, CHECK, plafonds,
- * sous-lots de 3 000 nœuds, viewport sans `updated_at`, duplication, « Ajouter à un space »).
+ * Spaces repository on a real database (cascade, SET NULL, atomicity, CHECK, limits,
+ * 3,000-node sub-batches, viewport without `updated_at`, duplication, « Ajouter à un space »).
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import { AppError } from '../../../src/shared/errors'
@@ -47,8 +47,8 @@ function item(h: SpacesLib, kind: 'image' | 'tweet' = 'image') {
   return it
 }
 
-describe('spaces : dépôt', () => {
-  it('create / get / list : document vide, aperçu, nodeCount', () => {
+describe('spaces: repository', () => {
+  it('create / get / list: empty document, preview, nodeCount', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib, 'Moodboard', 1000)
     const doc = getSpace(h.lib, uuid)
@@ -61,7 +61,7 @@ describe('spaces : dépôt', () => {
     expect(list[0]!.preview.nodes).toHaveLength(2)
   })
 
-  it('cascade spaces → space_nodes ; ON DELETE SET NULL sur item_id', () => {
+  it('cascade spaces → space_nodes; ON DELETE SET NULL on item_id', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib)
     const it1 = item(h)
@@ -97,7 +97,7 @@ describe('spaces : dépôt', () => {
     expect(getSpace(h.lib, uuid).nodes[0]).toMatchObject({ itemUuid: null })
   })
 
-  it('applyBatch atomique : une ligne invalide (width < 24) annule tout, code validation', () => {
+  it('applyBatch atomic: one invalid row (width < 24) cancels everything, validation code', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib)
     const good = note()
@@ -113,7 +113,7 @@ describe('spaces : dépôt', () => {
     expect(getSpace(h.lib, uuid).nodes).toHaveLength(0)
   })
 
-  it('codes : validation ≠ busy ≠ io (non réessayable vs réessayable)', () => {
+  it('codes: validation ≠ busy ≠ io (non-retryable vs retryable)', () => {
     expect(
       asSpacesError(Object.assign(new Error('x'), { code: 'SQLITE_CONSTRAINT_CHECK' })).code,
     ).toBe('validation')
@@ -123,7 +123,7 @@ describe('spaces : dépôt', () => {
     )
   })
 
-  it('3 000 nœuds en sous-lots, déplacés puis relus sans perte ; suppression', () => {
+  it('3,000 nodes in sub-batches, moved then re-read without loss; deletion', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib)
     const nodes = Array.from({ length: 3000 }, (_, i) =>
@@ -151,7 +151,7 @@ describe('spaces : dépôt', () => {
     expect(getSpace(h.lib, uuid).nodes).toHaveLength(2000)
   })
 
-  it('viewport sans toucher updated_at ; nom et fond le touchent', () => {
+  it('viewport without touching updated_at; name and background do touch it', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib, 'A', 1000)
     const r1 = applyBatch(
@@ -171,10 +171,10 @@ describe('spaces : dépôt', () => {
     })
   })
 
-  it('plafond de 20 000 nœuds : limit_exceeded, rien écrit', () => {
+  it('limit of 20,000 nodes: limit_exceeded, nothing written', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib)
-    // On abaisse artificiellement le plafond en pré-remplissant au plus près.
+    // Artificially lower the limit by pre-filling close to it.
     const fill = Array.from({ length: 19_999 }, (_, i) => note({ x: i }))
     for (let i = 0; i < fill.length; i += 5000)
       applyBatch(h.lib, batch(uuid, fill.slice(i, i + 5000)))
@@ -184,14 +184,14 @@ describe('spaces : dépôt', () => {
     expect(getSpace(h.lib, uuid).nodes).toHaveLength(19_999)
   })
 
-  it('space inconnu → not_found', () => {
+  it('unknown space → not_found', () => {
     h = makeSpacesLib()
     expect(() => getSpace(h!.lib, '99999999-9999-4999-8999-999999999999')).toThrow(
       expect.objectContaining({ code: 'not_found' }) as Error,
     )
   })
 
-  it('duplication : nouveaux uuid, mêmes contenus', () => {
+  it('duplication: new uuids, same contents', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib, 'Source')
     applyBatch(h.lib, batch(uuid, [note({ content: 'a' }), note({ content: 'b', x: 400 })]))
@@ -203,7 +203,7 @@ describe('spaces : dépôt', () => {
     expect(b.nodes.some((n) => a.nodes.some((m) => m.uuid === n.uuid))).toBe(false)
   })
 
-  it('addItems : grille à droite du contenu (x = maxX + 80, y = minY), liste rafraîchie', () => {
+  it('addItems: grid to the right of the content (x = maxX + 80, y = minY), list refreshed', () => {
     h = makeSpacesLib()
     const { uuid } = createSpace(h.lib)
     applyBatch(h.lib, batch(uuid, [note({ x: 100, y: 50, width: 200, height: 200 })]))
@@ -219,9 +219,9 @@ describe('spaces : dépôt', () => {
     expect(added).toHaveLength(3)
     expect(Math.min(...added.map((n) => n.x))).toBe(100 + 200 + 80)
     expect(Math.min(...added.map((n) => n.y))).toBe(50)
-    // L'aperçu de la liste reflète l'ajout sans ouvrir l'éditeur.
+    // The list preview reflects the addition without opening the editor.
     expect(listSpaces(h.lib)[0]!.preview.nodes.filter((n) => n.type === 'item')).toHaveLength(3)
-    // Espace vide : à l'origine.
+    // Empty space: at the origin.
     const empty = createSpace(h.lib)
     addItems(h.lib, empty.uuid, [items[0]!.uuid])
     expect(getSpace(h.lib, empty.uuid).nodes[0]).toMatchObject({

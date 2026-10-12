@@ -1,7 +1,7 @@
 /**
- * IA (sans appel réel) sur une COPIE APFS d'un `userData` RecoltOS réel (jamais l'app installée) :
+ * AI (no real call) on an APFS COPY of a real RecoltOS `userData` (never the installed app):
  * `RECOLT_TEST_IMPORTED_USERDATA=<repo>/.tmp/m3-real pnpm exec vitest run --project real`.
- * Aucun appel IA réel ici : estimation, préparation des médias, aperçu.
+ * No real AI call here: estimation, media preparation, preview.
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -25,7 +25,7 @@ const media: MediaCaller = <O extends MediaOp>(op: O, args: MediaArgs<O>) =>
     MediaResult<O>
   >
 
-describe.skipIf(!SRC)('M4 sur la bibliothèque importée', () => {
+describe.skipIf(!SRC)('M4 on the imported library', () => {
   let base: string
   let ud: string
   let m: LibraryManager
@@ -70,7 +70,7 @@ describe.skipIf(!SRC)('M4 sur la bibliothèque importée', () => {
     if (base) fs.rmSync(base, { recursive: true, force: true })
   })
 
-  it('ai.estimate{missingDescription} = valeur recalculée depuis la base, 0 job créé', () => {
+  it('ai.estimate{missingDescription} = value recomputed from the database, 0 job created', () => {
     const db = m.active()!.db
     const expected = (
       db
@@ -86,7 +86,7 @@ describe.skipIf(!SRC)('M4 sur la bibliothèque importée', () => {
         `SELECT kind, count(*) AS n FROM items WHERE deleted_at IS NULL AND coalesce(ai_description,'') = '' GROUP BY kind ORDER BY kind`,
       )
       .all()
-    console.warn('[m4-real] sans description :', expected, byKind)
+    console.warn('[m4-real] without description:', expected, byKind)
     const jobs0 = (
       db.prepare("SELECT count(*) AS n FROM jobs WHERE type LIKE 'ai.%'").get() as { n: number }
     ).n
@@ -99,7 +99,7 @@ describe.skipIf(!SRC)('M4 sur la bibliothèque importée', () => {
     ).toBe(jobs0)
   })
 
-  it.skipIf(!FFMPEG)('3 vidéos réelles → 3 images clés chacune, ≤ 1024 px, sans EXIF', async () => {
+  it.skipIf(!FFMPEG)('3 real videos → 3 keyframes each, ≤ 1024 px, without EXIF', async () => {
     const lib = m.active()!
     const rows = lib.db
       .prepare(
@@ -124,12 +124,12 @@ describe.skipIf(!SRC)('M4 sur la bibliothèque importée', () => {
         expect(Math.max(meta.width, meta.height)).toBeLessThanOrEqual(1024)
         expect(meta.exif).toBeUndefined()
       }
-      // Jamais l'URL complète : hôte seul.
+      // Never the full URL: host only.
       expect(JSON.stringify(input.context)).not.toMatch(/https?:\/\//)
     }
   })
 
-  it('aperçu : JPEG exacts et prompt complet pour un post texte', async () => {
+  it('preview: exact JPEGs and full prompt for a text post', async () => {
     const lib = m.active()!
     const tweet = lib.db
       .prepare(

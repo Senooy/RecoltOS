@@ -1,4 +1,4 @@
-/** masonry pure. */
+/** Pure masonry. */
 import { describe, expect, it } from 'vitest'
 import {
   columnGeometry,
@@ -10,13 +10,13 @@ import {
 const opts = (width: number, columns: number) => ({ width, columns, gap: 8, padX: 18 })
 
 describe('layoutMasonry', () => {
-  it('largeurs de colonnes de référence', () => {
+  it('reference column widths', () => {
     expect(columnGeometry(opts(1280, 4))).toEqual({ colW: 305, columns: 4 })
     expect(columnGeometry(opts(1280, 8))).toEqual({ colW: 148.5, columns: 8 })
     expect(columnGeometry(opts(1040, 8)).columns).toBe(6)
   })
 
-  it('colonne la plus courte, à égalité la plus à gauche ; ratios bornés ; mesure prioritaire', () => {
+  it('shortest column, leftmost on a tie; bounded ratios; measurement takes priority', () => {
     const l = layoutMasonry(
       [
         { id: 'a', ratio: 1 },
@@ -33,13 +33,13 @@ describe('layoutMasonry', () => {
     expect(l.placed[3]!.h).toBe(200)
     expect(l.placed[4]!.y).toBe(Math.round(305 * 0.25) + 8)
     expect(l.placed[0]!.x).toBe(18)
-    // Déterministe.
+    // Deterministic.
     expect(layoutMasonry([{ id: 'a', ratio: 1 }], opts(1280, 4))).toEqual(
       layoutMasonry([{ id: 'a', ratio: 1 }], opts(1280, 4)),
     )
   })
 
-  it('posts : colonne choisie sur la hauteur estimée, position sur la hauteur mesurée', () => {
+  it('posts: column chosen on the estimated height, position on the measured height', () => {
     const l = layoutMasonry(
       [
         { id: 't1', measured: 217, placementRatio: 0.5 },
@@ -56,7 +56,7 @@ describe('layoutMasonry', () => {
     expect(l.placed[5]!.y).toBe(195 + 8)
   })
 
-  it('fenêtrage et voisin géométrique', () => {
+  it('windowing and geometric neighbor', () => {
     const items = Array.from({ length: 40 }, (_, i) => ({
       id: String(i),
       ratio: 1 + (i % 3) * 0.3,

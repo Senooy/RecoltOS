@@ -1,6 +1,6 @@
 /**
- * M3 : Redécouvrir — ouverture par le menu, exactement 3 cibles, →/←/↑ et glisser à la
- * souris modifient la base, ⌘Z annule, Échap quitte.
+ * M3: Rediscover — opened from the menu, exactly 3 targets, →/←/↑ and mouse drag modify the
+ * database, ⌘Z undoes, Esc quits.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -17,16 +17,16 @@ async function clickMenu(app: ElectronApplication, id: string): Promise<boolean>
   }, id)
 }
 
-/** Carte du haut, une fois la précédente partie (pendant son animation de sortie, deux `rd-card`). */
+/** Top card, once the previous one is gone (during its exit animation, two `rd-card`). */
 const topUuid = async (page: Page) => {
   await expect(page.locator(t('rd-card'))).toHaveCount(1)
   return page.locator(t('rd-card')).getAttribute('data-uuid')
 }
 
-test.describe('Redécouvrir', () => {
+test.describe('Rediscover', () => {
   test.use({ demoLibrary: { count: 30, collections: 3 } })
 
-  test('clavier, souris, annulation et sortie', async ({ app, page, openDbReadonly }) => {
+  test('keyboard, mouse, undo and exit', async ({ app, page, openDbReadonly }) => {
     await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
     expect(await clickMenu(app, 'rediscover')).toBe(true)
     await expect(page.locator(t('rediscover'))).toBeVisible()
@@ -39,13 +39,13 @@ test.describe('Redécouvrir', () => {
         deleted_at: number | null
       }
 
-    // → garder
+    // → keep
     const a = await topUuid(page)
     await page.keyboard.press('ArrowRight')
     await expect.poll(() => row(a).view_count).toBe(1)
     await expect(page.locator(t('rd-counter'))).toHaveText(/^2 \//)
 
-    // ← corbeille, puis ⌘Z (menu) annule
+    // ← trash, then ⌘Z (menu) undoes
     const b = await topUuid(page)
     await page.keyboard.press('ArrowLeft')
     await expect.poll(() => row(b).deleted_at).not.toBeNull()
@@ -53,7 +53,7 @@ test.describe('Redécouvrir', () => {
     await expect.poll(() => row(b).deleted_at).toBeNull()
     await expect.poll(() => topUuid(page)).toBe(b)
 
-    // ↑ collection : le sélecteur s'ouvre sur la cible du haut
+    // ↑ collection: the picker opens on the top target
     await page.keyboard.press('ArrowUp')
     const picker = page.locator(t('collection-picker'))
     await expect(picker).toBeVisible()
@@ -73,7 +73,7 @@ test.describe('Redécouvrir', () => {
       .toBeGreaterThan(0)
     await expect(page.locator(t('rd-counter'))).toHaveText(/^3 \//)
 
-    // Glisser à la souris vers la droite = garder
+    // Drag with the mouse to the right = keep
     const c = await topUuid(page)
     const box = (await page.locator(t('rd-card')).boundingBox())!
     const cx = box.x + box.width / 2
@@ -86,7 +86,7 @@ test.describe('Redécouvrir', () => {
     await expect.poll(() => row(c).view_count).toBe(1)
     await expect(page.locator(t('rd-counter'))).toHaveText(/^4 \//)
 
-    // Relâchée près du centre : rien ne change
+    // Released near the center: nothing changes
     const d = await topUuid(page)
     const box2 = (await page.locator(t('rd-card')).boundingBox())!
     await page.mouse.move(box2.x + box2.width / 2, box2.y + box2.height / 2)

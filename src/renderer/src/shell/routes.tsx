@@ -1,14 +1,14 @@
 /**
- * Registre des routes et calques. Chaque écran est chargé paresseusement depuis son fichier de
- * composant ; tant que ce fichier n'existe pas, un stub s'affiche.
- * Convention : le fichier exporte le composant par défaut (`export default function …`).
+ * Route and layer registry. Each screen is lazily loaded from its component
+ * file; until that file exists, a stub is shown.
+ * Convention: the file exports the default component (`export default function …`).
  */
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react'
 import type { OverlayType, RouteName } from '../state/ui'
 
 type Loader = () => Promise<{ default: ComponentType }>
 
-/** Modules présents au build (aucun si l'écran n'existe pas encore). */
+/** Modules present at build time (none if the screen does not exist yet). */
 const modules = import.meta.glob<{ default: ComponentType }>([
   '../features/library/LibraryPage.tsx',
   '../features/collections/CollectionPage.tsx',
@@ -22,7 +22,7 @@ const modules = import.meta.glob<{ default: ComponentType }>([
   '../features/settings/SettingsDialog.tsx',
 ])
 
-/** Écran → fichier de composant . */
+/** Screen → component file. */
 export const ROUTE_FILES: Readonly<Record<RouteName, string>> = {
   library: '../features/library/LibraryPage.tsx',
   collection: '../features/collections/CollectionPage.tsx',
@@ -58,12 +58,12 @@ export const overlays = Object.fromEntries(
   Object.entries(OVERLAY_FILES).map(([name, file]) => [name, lazy(loaderFor(name, file))]),
 ) as Record<OverlayType, LazyExoticComponent<ComponentType>>
 
-/** Vrai si le fichier de l'écran existe. */
+/** True if the screen's file exists. */
 export function isRouteImplemented(name: RouteName): boolean {
   return ROUTE_FILES[name] in modules
 }
 
-/** Vrai si le fichier du calque existe. */
+/** True if the layer's file exists. */
 export function isOverlayImplemented(name: OverlayType): boolean {
   return OVERLAY_FILES[name] in modules
 }

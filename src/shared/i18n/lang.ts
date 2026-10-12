@@ -1,16 +1,16 @@
 /**
- * Langue de l'interface (français ou anglais), sans dépendance : partagée par main, les workers
- * et le renderer. Chaque processus tient SA langue active (`setLang`) ; le défaut est le français
- * (tests, premiers instants du démarrage).
+ * UI language (French or English), dependency-free: shared by main, the workers
+ * and the renderer. Each process holds ITS active language (`setLang`); the default is French
+ * (tests, first moments of startup).
  *
- * Règle de détection : la première langue préférée du Mac décide. Français (`fr`, `fr-FR`,
- * `fr-CA`…) → français ; toute autre langue → anglais.
+ * Detection rule: the Mac's first preferred language decides. French (`fr`, `fr-FR`,
+ * `fr-CA`…) → French; any other language → English.
  */
 
 export const LANGS = ['fr', 'en'] as const
 export type Lang = (typeof LANGS)[number]
 
-/** Réglage `ui.language` : `system` suit la langue du Mac. */
+/** `ui.language` setting: `system` follows the Mac's language. */
 export const LANGUAGE_PREFS = ['system', 'fr', 'en'] as const
 export type LanguagePref = (typeof LANGUAGE_PREFS)[number]
 
@@ -18,18 +18,18 @@ export function isLang(v: unknown): v is Lang {
   return v === 'fr' || v === 'en'
 }
 
-/** `fr`, `fr-FR`, `fr_CA`… → `fr` ; tout le reste (y compris vide) → `en`. */
+/** `fr`, `fr-FR`, `fr_CA`… → `fr`; everything else (including empty) → `en`. */
 export function langFromLocale(locale: string | null | undefined): Lang {
   return /^fr(?:[-_]|$)/i.test((locale ?? '').trim()) ? 'fr' : 'en'
 }
 
-/** Première locale non vide de la liste (langues préférées du système), sinon `en`. */
+/** First non-empty locale of the list (the system's preferred languages), otherwise `en`. */
 export function langFromLocales(locales: readonly (string | null | undefined)[]): Lang {
   const first = locales.find((l) => typeof l === 'string' && l.trim() !== '')
   return langFromLocale(first)
 }
 
-/** Langue effective : le réglage explicite, sinon celle du système. */
+/** Effective language: the explicit setting, otherwise the system one. */
 export function resolveLang(pref: LanguagePref | undefined, systemLang: Lang): Lang {
   return pref === 'fr' || pref === 'en' ? pref : systemLang
 }
@@ -41,7 +41,7 @@ export function getLang(): Lang {
   return current
 }
 
-/** Change la langue active du processus ; les écouteurs ne sont appelés que si elle change. */
+/** Changes the process's active language; listeners are only called if it changes. */
 export function setLang(lang: Lang): void {
   if (lang === current) return
   current = lang
@@ -53,7 +53,10 @@ export function onLangChange(listener: (lang: Lang) => void): () => void {
   return () => listeners.delete(listener)
 }
 
-/** Choix d'un texte selon la langue active (textes isolés hors catalogue : validation, libellés). */
+/**
+ * Picks a text by the active language (standalone texts outside the catalog: validation,
+ * labels).
+ */
 export function pick(texts: Record<Lang, string>, lang: Lang = current): string {
   return texts[lang]
 }

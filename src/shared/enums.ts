@@ -1,15 +1,15 @@
 /**
- * Énumérations et primitives zod partagées.
- * Aucun import `electron` ni `node:*` dans `src/shared/**`.
+ * Shared enums and zod primitives.
+ * No `electron` nor `node:*` import in `src/shared/**`.
  */
 import { z } from 'zod'
 import './zod-locale'
 
-/** UUID RFC strict : ids GatherOS et `crypto.randomUUID()` sont conformes. */
+/** Strict RFC UUID: GatherOS ids and `crypto.randomUUID()` comply. */
 export const Uuid = z.uuid()
 export type Uuid = z.output<typeof Uuid>
 
-/** Tri de liste. `viewed` = consultés récemment, `mostViewed` = les plus consultés. */
+/** List sort. `viewed` = recently viewed, `mostViewed` = most viewed. */
 export const SORT_MODES = [
   'recent',
   'oldest',
@@ -22,17 +22,17 @@ export const SORT_MODES = [
 export const SortMode = z.enum(SORT_MODES)
 export type SortMode = z.output<typeof SortMode>
 
-/** Onglets de la Bibliothèque. */
+/** Library tabs. */
 export const LIBRARY_TABS = ['all', 'saved', 'unsorted', 'trash', 'hidden'] as const
 export const LibraryTab = z.enum(LIBRARY_TABS)
 export type LibraryTab = z.output<typeof LibraryTab>
 
-/** Provenance d'un élément (`items.source`). */
+/** Origin of an item (`items.source`). */
 export const SOURCES = ['local', 'capture', 'web', 'x', 'instagram', 'cosmos'] as const
 export const Source = z.enum(SOURCES)
 export type Source = z.output<typeof Source>
 
-/** Sources synchronisées par l'extension (chips virtuelles `#x #instagram #cosmos`). */
+/** Sources synced by the extension (virtual chips `#x #instagram #cosmos`). */
 export const SYNC_SOURCES = ['x', 'instagram', 'cosmos'] as const
 export const SyncSource = z.enum(SYNC_SOURCES)
 export type SyncSource = z.output<typeof SyncSource>
@@ -53,22 +53,22 @@ export type AiState = z.output<typeof AiState>
 export const Theme = z.enum(['light', 'dark', 'system'])
 export type Theme = z.output<typeof Theme>
 
-/** Couleur `#rrggbb`. */
+/** Color `#rrggbb`. */
 export const HexColor = z.string().regex(/^#[0-9a-f]{6}$/i, 'couleur #rrggbb attendue')
 export type HexColor = z.output<typeof HexColor>
 
-/** Horodatage en millisecondes epoch. */
+/** Timestamp in epoch milliseconds. */
 export const EpochMs = z.number().int().nonnegative()
 
-/** Identifiant de bibliothèque, compatible avec un nom d'hôte. */
+/** Library identifier, compatible with a host name. */
 export const LibraryId = z
   .string()
   .regex(/^[a-z0-9-]{1,40}$/, 'identifiant de bibliothèque invalide')
 export type LibraryId = z.output<typeof LibraryId>
 
 /**
- * URL média rendue au renderer : toujours `recolt://<libraryId>/<root>/<rel>?v=<n>`.
- * Le renderer ne reçoit JAMAIS d'URL http(s).
+ * Media URL rendered to the renderer: always `recolt://<libraryId>/<root>/<rel>?v=<n>`.
+ * The renderer NEVER receives an http(s) URL.
  */
 export const MEDIA_ROOTS = [
   'items',
@@ -83,10 +83,10 @@ export const MEDIA_ROOTS = [
 ] as const
 export type MediaRoot = (typeof MEDIA_ROOTS)[number]
 /**
- * Forme : `recolt://<libraryId>/<root>/<rel>[?…]`, `root` ∈ MEDIA_ROOTS, sans fragment ni
- * antislash ; la requête ne contient que des caractères sûrs (`?v=<n>` en production, ou les
- * indications `w=&h=&c=` de la maquette). Aucun segment `.` ou `..` (contournement de racine).
- * La revalidation réelle (realpath, racine) reste côté main (handlers).
+ * Shape: `recolt://<libraryId>/<root>/<rel>[?…]`, `root` ∈ MEDIA_ROOTS, no fragment nor
+ * backslash; the query contains only safe characters (`?v=<n>` in production, or the
+ * `w=&h=&c=` hints of the mockup). No `.` or `..` segment (root bypass).
+ * The real revalidation (realpath, root) stays on the main side (handlers).
  */
 const MEDIA_URL_RE = new RegExp(
   `^recolt://[a-z0-9-]{1,40}/(?:${MEDIA_ROOTS.join('|')})/[^?#\\\\\\s]+(?:\\?[A-Za-z0-9=&._-]*)?$`,
@@ -97,8 +97,8 @@ export const MediaUrl = z
   .refine((u) => !(u.split('?')[0] ?? '').split('/').some((seg) => seg === '.' || seg === '..'), {
     message: 'segment de chemin interdit (. ou ..)',
   })
-  // Encodages et segments vides : `%2e%2e`, `..%2f`, `%5c` et `//` contournent le contrôle
-  // littéral. La vraie défense reste côté main (décodage, realpath, racine).
+  // Encodings and empty segments: `%2e%2e`, `..%2f`, `%5c` and `//` bypass the
+  // literal check. The real defense stays on the main side (decoding, realpath, root).
   .refine(
     (u) => {
       const pathPart = (u.split('?')[0] ?? '').slice('recolt://'.length)
@@ -109,5 +109,5 @@ export const MediaUrl = z
   )
 export type MediaUrl = z.output<typeof MediaUrl>
 
-/** URL web saisie par l'utilisateur ou ouverte dans le navigateur (jamais chargée par le renderer). */
+/** Web URL typed by the user or opened in the browser (never loaded by the renderer). */
 export const WebUrl = z.url({ protocol: /^https?$/ })

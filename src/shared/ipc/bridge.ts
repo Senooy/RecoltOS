@@ -1,4 +1,4 @@
-/** Contrat `bridge.*` : clients connectés, navigateurs, extension, GatherOS. */
+/** `bridge.*` contract: connected clients, browsers, extension, GatherOS. */
 import { z } from 'zod'
 import { BridgeClient, BrowserInfo, ExtensionInfo, GatherOSPresence } from '../dto/sync'
 import { Empty, Void, type ContractShape } from './define'

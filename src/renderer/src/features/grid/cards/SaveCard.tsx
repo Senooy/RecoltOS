@@ -1,7 +1,7 @@
 /**
- * `SaveCard` : base commune (rayon 8, fond `palette[0]` ou `--skeleton`, pastille de
- * sélection au survol) et répartition par type : post → `TweetCard`, ≥ 2 slides → `CarouselCard`,
- * vidéo → `VideoCard`, image → `ImageCard`, page → `PageCard`.
+ * `SaveCard`: common base (radius 8, background `palette[0]` or `--skeleton`, selection dot
+ * on hover) and dispatch by type: post → `TweetCard`, ≥ 2 slides → `CarouselCard`,
+ * video → `VideoCard`, image → `ImageCard`, page → `PageCard`.
  */
 import { Check } from 'lucide-react'
 import {

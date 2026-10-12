@@ -1,11 +1,11 @@
 /**
- * Fumée Firefox (hors `verify` : lance Firefox 157 réel sur un profil JETABLE) :
- * build Firefox de test `--selftest` pointé sur un faux serveur local, `web-ext run` (Firefox lancé
- * par LaunchServices : un lancement direct échoue), chargement temporaire, puis l'auto-test
- * de l'arrière-plan pose des cookies factices pour le faux serveur, fait une requête X SANS onglet et
- * rapporte. Bloquant : extension chargée dans Firefox release. Informatif : cookies, `x-csrf-token`
- * et `Origin` réécrit (la boucle locale est refusée par Firefox lancé ainsi, voir plus bas).
- * Ne touche ni au profil de l'utilisateur ni à ses cookies réels.
+ * Firefox smoke test (outside `verify`: launches a real Firefox 157 on a DISPOSABLE profile):
+ * test Firefox build `--selftest` pointed at a fake local server, `web-ext run` (Firefox launched
+ * via LaunchServices: a direct launch fails), temporary load, then the background self-test sets
+ * fake cookies for the fake server, makes an X request WITHOUT a tab and
+ * reports. Blocking: extension loaded in release Firefox. Informative: cookies, `x-csrf-token`
+ * and rewritten `Origin` (the local loop is refused by Firefox launched this way, see below).
+ * Touches neither the user's profile nor their real cookies.
  *
  *   pnpm exec tsx --tsconfig tsconfig.node.json scripts/ext-firefox-smoke.mts
  */
@@ -19,7 +19,7 @@ const ROOT = resolve(import.meta.dirname, '..')
 const work = join(ROOT, '.tmp/ff-smoke')
 rmSync(work, { recursive: true, force: true })
 mkdirSync(work, { recursive: true })
-// Firefox refuse `cookies.set` sur une adresse IP : nom d'hôte `localhost`.
+// Firefox refuses `cookies.set` on an IP address: hostname `localhost`.
 const host = process.env.FF_SMOKE_HOST ?? 'localhost'
 const srv = await startFakePlatforms(0, host)
 await buildExt({
@@ -53,7 +53,7 @@ const run = spawn(
     'devtools.console.stdout.chrome=true',
     '--pref',
     'devtools.console.stdout.content=true',
-    // Nom d'hôte factice résolu vers la boucle locale (jamais de résolution DNS réelle).
+    // Fake hostname resolved to the loopback address (never a real DNS lookup).
     ...(host.endsWith('.test') ? ['--pref', 'network.dns.forceResolve=127.0.0.1'] : []),
   ],
   { cwd: work },
@@ -83,20 +83,20 @@ try {
         .join('\n'),
     )
   }
-  // Critère bloquant : chargement dans Firefox release. La requête d'arrière-plan vers le faux serveur
-  // local est informative : dans ce lanceur (LaunchServices), Firefox refuse les requêtes vers la
-  // boucle locale (« NetworkError ») ; la vérification réelle est dans docs/manual-checklist.md
+  // Blocking criterion: loading in release Firefox. The background request to the fake server
+  // is informative: in this launcher (LaunchServices), Firefox refuses requests to the
+  // loopback (« NetworkError »); the real check is in docs/manual-checklist.md
   const network =
     !!bm &&
     bm.csrf === 'csrf-selftest' &&
     bm.cookie.includes('auth_token=session-selftest') &&
     bm.origin === srv.base
-  console.log(`requête d'arrière-plan vers le faux serveur : ${network ? 'OK' : 'non vérifiée'}`)
+  console.log(`background request to the fake server: ${network ? 'OK' : 'not verified'}`)
   ok = installed
 } finally {
   run.kill()
   if (profile) spawnSync('/usr/bin/pkill', ['-f', profile])
   await srv.close()
 }
-console.log(ok ? 'ext-firefox-smoke : OK' : 'ext-firefox-smoke : ÉCHEC')
+console.log(ok ? 'ext-firefox-smoke : OK' : 'ext-firefox-smoke : FAILED')
 process.exit(ok ? 0 : 1)

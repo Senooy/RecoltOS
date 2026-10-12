@@ -1,4 +1,4 @@
-/** Contrat `items.*` (`items.rediscoverDeck` remplacé par `rediscover.*`). */
+/** `items.*` contract (`items.rediscoverDeck` replaced by `rediscover.*`). */
 import { z } from 'zod'
 import { ItemCard, ItemDetail, ItemsPage, TabCounts } from '../dto/items'
 import { HexColor, ItemKind, LibraryTab, SortMode, Source, Uuid, WebUrl } from '../enums'
@@ -9,11 +9,11 @@ export const ItemFilters = z.object({
   sources: z.array(Source).optional(),
   tagUuids: z.array(Uuid).optional(),
   color: HexColor.optional(),
-  /** Plusieurs couleurs : intersection (ET),. `color` reste accepté (= une couleur). */
+  /** Several colors: intersection (AND),. `color` is still accepted (= one color). */
   colors: z.array(HexColor).max(5).optional(),
-  /** Tolérance ΔE2000 du filtre couleur (défaut 18). */
+  /** ΔE2000 tolerance of the color filter (default 18). */
   colorTolerance: z.number().min(2).max(60).optional(),
-  /** Bornes en ms epoch, incluses. */
+  /** Bounds in ms epoch, inclusive. */
   period: z
     .object({ from: z.number().int().nullable(), to: z.number().int().nullable() })
     .refine((p) => p.from == null || p.to == null || p.from <= p.to, {
@@ -26,9 +26,9 @@ export type ItemFilters = z.output<typeof ItemFilters>
 
 const ListCommon = {
   sort: SortMode.default('recent'),
-  /** Tri aléatoire stable. */
+  /** Stable random sort. */
   seed: z.number().int().optional(),
-  /** Keyset opaque (base64url). */
+  /** Opaque keyset (base64url). */
   cursor: z
     .string()
     .max(512)
@@ -41,7 +41,7 @@ const ListCommon = {
 
 export const ItemsListInput = z.discriminatedUnion('scope', [
   z.object({ scope: z.literal('library'), tab: LibraryTab.default('all'), ...ListCommon }),
-  /** Membres DIRECTS non supprimés ; les masqués y restent visibles. */
+  /** DIRECT non-deleted members; hidden ones remain visible there. */
   z.object({ scope: z.literal('collection'), collectionUuid: Uuid, ...ListCommon }),
 ])
 export type ItemsListInput = z.input<typeof ItemsListInput>

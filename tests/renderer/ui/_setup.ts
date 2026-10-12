@@ -1,5 +1,5 @@
 /**
- * Prothèses happy-dom pour Radix / floating-ui (à importer en tête de chaque test du kit UI) :
+ * happy-dom shims for Radix / floating-ui (to import at the top of each UI kit test):
  * ResizeObserver, pointer capture, scrollIntoView, matchMedia, DOMRect.
  */
 import { cleanup } from '@testing-library/react'

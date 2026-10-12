@@ -1,9 +1,8 @@
 /**
- * Barre de style contextuelle : pilule 36 px ancrée au-dessus de la sélection
- * (dessous si elle sortirait de la vue), masquée pendant les gestes et l'édition. Contenu selon le
- * type : couleurs de note, taille S/M/L/XL, remplissage / contour / épaisseur / pointillés des
- * formes, couleur / taille / gras du texte, opacité, verrou, dupliquer, supprimer ; dès 2 nœuds,
- * alignement (et répartition dès 3).
+ * Contextual style bar: 36 px pill anchored above the selection (below it if it would leave the
+ * view), hidden during gestures and editing. Content depends on the type: note colors, size
+ * S/M/L/XL, fill / stroke / thickness / dashes for shapes, text color / size / bold, opacity,
+ * lock, duplicate, delete; from 2 nodes, alignment (and distribution from 3).
  */
 import {
   AlignCenterHorizontal,
@@ -365,7 +364,7 @@ export function StyleBar() {
   const half = barW / 2 + 8
   const cx = Math.min(Math.max((a.x + b.x) / 2, half), Math.max(half, view.w - half))
   const single0 = sel.length === 1 ? sel[0]! : null
-  // Au-dessus de la poignée de rotation quand elle est affichée (nœud seul, déverrouillé).
+  // Above the rotation handle when it is shown (single node, unlocked).
   const gap = single0 && !single0.locked ? GAP + 22 : GAP
   const above = Math.min(a.y, b.y) - BAR_H - gap
   const top = above >= 8 ? above : Math.min(Math.max(a.y, b.y) + GAP, view.h - BAR_H - 80)

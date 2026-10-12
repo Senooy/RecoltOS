@@ -1,8 +1,8 @@
 /**
- * Règles `declarativeNetRequest` de SESSION : pour les requêtes émises par le script
- * d'arrière-plan (`tabIds: [-1]`) vers les domaines des plateformes, `Origin` et `Referer` sont
- * réécrits vers le site lui-même (une origine `chrome-extension://` / `moz-extension://` serait
- * refusée ou signalée). Les requêtes des onglets ne sont jamais modifiées.
+ * `declarativeNetRequest` rules for SESSION: for requests issued by the background script
+ * (`tabIds: [-1]`) to the platform domains, `Origin` and `Referer` are rewritten to the site
+ * itself (a `chrome-extension://` / `moz-extension://` origin would be refused or flagged).
+ * Tab requests are never modified.
  */
 import { BRIDGE_PLATFORMS } from '../../../../src/shared/bridge/constants'
 import { api } from '../../lib/api'
@@ -42,13 +42,13 @@ export function headerRules(): chrome.declarativeNetRequest.Rule[] {
 
 let installed: Promise<void> | null = null
 
-/** Installe (une fois par démarrage du script d'arrière-plan) les règles d'en-têtes. */
+/** Installs the header rules (once per background script startup). */
 export function ensureHeaderRules(): Promise<void> {
   installed ??= (async () => {
     const dnr = api().declarativeNetRequest
     if (!dnr?.updateSessionRules) return
     const rules = headerRules()
-    // En test, les trois plateformes partagent le même hôte : une seule règle suffit.
+    // In tests, the three platforms share the same host: a single rule is enough.
     const unique = rules.filter(
       (r, i) =>
         rules.findIndex(

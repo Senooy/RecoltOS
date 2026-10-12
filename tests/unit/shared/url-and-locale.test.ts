@@ -8,12 +8,12 @@ import { PostMetaSchema } from '../../../src/shared/post-meta'
 const LIB = 'recolt://default'
 
 describe('MediaUrl (recolt://<libraryId>/<root>/<rel>?v=<n>)', () => {
-  it('accepte les formes légitimes', () => {
+  it('accepts legitimate forms', () => {
     expect(MediaUrl.safeParse(`${LIB}/thumbs/0d/x.webp?v=1`).success).toBe(true)
     expect(MediaUrl.safeParse(`${LIB}/items/ab/9552f1ec.jpg`).success).toBe(true)
     expect(MediaUrl.safeParse(`recolt://mock/large/a.svg?w=1440&h=806&c=a8dadc`).success).toBe(true)
   })
-  it('refuse le traversal et les racines hors MEDIA_ROOTS', () => {
+  it('rejects traversal and roots outside MEDIA_ROOTS', () => {
     expect(MediaUrl.safeParse('recolt://lib/../../etc/passwd').success).toBe(false)
     expect(MediaUrl.safeParse('recolt://lib/items/../../secret.jpg').success).toBe(false)
     expect(MediaUrl.safeParse('recolt://lib/items/./a.jpg').success).toBe(false)
@@ -22,7 +22,7 @@ describe('MediaUrl (recolt://<libraryId>/<root>/<rel>?v=<n>)', () => {
     expect(MediaUrl.safeParse('recolt://lib/items\\..\\x').success).toBe(false)
     expect(MediaUrl.safeParse('recolt://lib/').success).toBe(false)
   })
-  it('refuse les encodages %2e, %2f, %5c (insensible à la casse) et les segments vides', () => {
+  it('rejects %2e, %2f, %5c encodings (case-insensitive) and empty segments', () => {
     for (const bad of [
       'recolt://lib/items/%2e%2e/%2e%2e/etc/passwd',
       'recolt://lib/items/..%2f..%2fetc',
@@ -35,13 +35,13 @@ describe('MediaUrl (recolt://<libraryId>/<root>/<rel>?v=<n>)', () => {
 })
 
 describe('AbsPath', () => {
-  it('accepte un chemin absolu normal et refuse les segments . et ..', () => {
+  it('accepts a normal absolute path and rejects . and .. segments', () => {
     expect(AbsPath.safeParse('/Users/me/Photos/a.jpg').success).toBe(true)
     expect(AbsPath.safeParse('/Users/me/../etc/passwd').success).toBe(false)
     expect(AbsPath.safeParse('/Users/me/./a.jpg').success).toBe(false)
     expect(AbsPath.safeParse('relatif.jpg').success).toBe(false)
   })
-  it('refuse l’octet NUL, « // » et la racine seule', () => {
+  it('rejects the NUL byte, « // » and the bare root', () => {
     expect(AbsPath.safeParse('/a\u0000b').success).toBe(false)
     expect(AbsPath.safeParse('/').success).toBe(false)
     expect(AbsPath.safeParse('//etc').success).toBe(false)
@@ -50,12 +50,12 @@ describe('AbsPath', () => {
 })
 
 describe('URL web (post-meta)', () => {
-  it('WebUrl n’accepte que http(s)', () => {
+  it('WebUrl only accepts http(s)', () => {
     expect(WebUrl.safeParse('https://pbs.twimg.com/media/a.jpg').success).toBe(true)
     expect(WebUrl.safeParse('javascript:alert(1)').success).toBe(false)
     expect(WebUrl.safeParse('file:///etc/passwd').success).toBe(false)
   })
-  it('PostMetaSchema refuse javascript: et file: dans les URL d’avatar', () => {
+  it('PostMetaSchema rejects javascript: and file: in avatar URLs', () => {
     const base = {
       v: 1 as const,
       platform: 'x' as const,
@@ -80,8 +80,8 @@ describe('URL web (post-meta)', () => {
   })
 })
 
-describe('messages de validation en français', () => {
-  it('items.list avec un scope inconnu renvoie un message français', () => {
+describe('validation messages in French', () => {
+  it('items.list with an unknown scope returns a French message', () => {
     const r = contract['items.list'].input.safeParse({ scope: 'nope' })
     expect(r.success).toBe(false)
     if (!r.success) {
@@ -89,7 +89,7 @@ describe('messages de validation en français', () => {
       expect(msg).not.toMatch(/Invalid|expected/)
     }
   })
-  it('libraries.remove refuse deleteFiles:true avec un message français', () => {
+  it('libraries.remove rejects deleteFiles:true with a French message', () => {
     const r = contract['libraries.remove'].input.safeParse({ id: 'default', deleteFiles: true })
     expect(r.success).toBe(false)
     if (!r.success) expect(z.prettifyError(r.error)).not.toMatch(/Invalid input|expected/)

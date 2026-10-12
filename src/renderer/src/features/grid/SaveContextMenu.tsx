@@ -1,7 +1,7 @@
 /**
- * `SaveContextMenu` : contenu du menu contextuel des cartes, variantes
- * bibliothèque / collection / masqués / corbeille / multi-sélection. Sous-menu « Ajouter à une
- * collection » avec filtre au-delà de 8 collections et « Nouvelle collection… ».
+ * `SaveContextMenu`: content of the card context menu, variants for
+ * library / collection / hidden / trash / multi-selection. "Add to a collection" submenu
+ * with a filter beyond 8 collections and "New collection...".
  */
 import {
   ArchiveRestore,
@@ -93,7 +93,7 @@ export function SaveContextMenuContent({
   const uuids = cards.map((c) => c.uuid)
   const n = cards.length
   const one = n === 1 ? cards[0]! : null
-  // « Analyser avec l'IA » seulement quand un moteur est actif (menu de base sinon).
+  // "Analyze with AI" only when an engine is active (basic menu otherwise).
   const aiOn = usePrefs((st) => st.prefs.ai.provider) !== 'off'
   const newCollection = async () => {
     const name = await askName({
@@ -106,7 +106,7 @@ export function SaveContextMenuContent({
       const c = await rpc('collections.create', { name: name.trim() })
       await addToCollection({ uuid: c.uuid, name: c.name }, uuids)
     } catch {
-      // toast affiché par l'action
+      // toast shown by the action
     }
   }
 

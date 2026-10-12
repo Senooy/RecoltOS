@@ -1,6 +1,6 @@
 /**
- * fichiers d'un élément (handlers `system.*`, glisser) sur une vraie base migrée :
- * original de la couverture, poster d'une vidéo pour la copie, médias distants ignorés.
+ * Files of an item (`system.*` handlers, drag) on a real migrated database:
+ * cover original, poster of a video for the copy, remote media ignored.
  */
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -89,20 +89,20 @@ beforeAll(() => {
 afterAll(() => db.close())
 
 describe('item-files', () => {
-  it('original de la couverture (chemin absolu dans la bibliothèque)', () => {
+  it('cover original (absolute path in the library)', () => {
     expect(requireCoverOriginal(lib, ids.image!)).toBe(
       join(lib.paths.root, 'items/11/11111111-1111-4111-8111-111111111111.webp'),
     )
   })
 
-  it('carrousel : originaux locaux dans l’ordre, média distant ignoré', () => {
+  it('carousel: local originals in order, remote media ignored', () => {
     expect(itemOriginals(lib, ids.carousel!).map((p) => p.slice(lib.paths.root.length))).toEqual([
       '/items/33/33333333-3333-4333-8333-333333333331.jpg',
       '/items/33/33333333-3333-4333-8333-333333333333.png',
     ])
   })
 
-  it('post texte, fichier perdu ou uuid inconnu → not_found', () => {
+  it('text post, lost file or unknown uuid → not_found', () => {
     expect(() => requireCoverOriginal(lib, ids.textOnly!)).toThrow(
       expect.objectContaining({ code: 'not_found' }),
     )
@@ -114,7 +114,7 @@ describe('item-files', () => {
     )
   })
 
-  it('copie d’image : original pour une image, poster pour une vidéo', () => {
+  it('image copy: original for an image, poster for a video', () => {
     expect(copyImageSource(lib, ids.image!)).toMatch(/items\/11\/.*\.webp$/)
     expect(copyImageSource(lib, ids.video!)).toMatch(/posters\/22\/.*\.jpg$/)
     expect(() => copyImageSource(lib, ids.textOnly!)).toThrow(
@@ -122,7 +122,7 @@ describe('item-files', () => {
     )
   })
 
-  it('copie d’image : vidéo sans poster ni vignette → vignette héritée', () => {
+  it('image copy: video without poster or thumbnail → inherited thumbnail', () => {
     const uuid = '55555555-5555-4555-8555-555555555555'
     const id = lib.repos.items.insertWithMedia({ kind: 'video' }, [
       {
@@ -137,7 +137,7 @@ describe('item-files', () => {
     expect(copyImageSource(lib, id)).toBe(join(lib.paths.root, `legacy/55/${uuid}.jpg`))
   })
 
-  it('glisser et itemOriginals : un lien symbolique qui sort de la bibliothèque est ignoré', () => {
+  it('drag and itemOriginals: a symbolic link leaving the library is ignored', () => {
     const outside = makeTmpDir('recolt-outside-')
     const uuid = '66666666-6666-4666-8666-666666666666'
     const rel = `items/66/${uuid}.jpg`
@@ -153,7 +153,7 @@ describe('item-files', () => {
     )
   })
 
-  it('glisser : originaux de la sélection, inconnus et posts texte ignorés', () => {
+  it('drag: originals of the selection, unknown and text posts ignored', () => {
     const files = dragFiles(lib, [
       ids.video!,
       ids.textOnly!,

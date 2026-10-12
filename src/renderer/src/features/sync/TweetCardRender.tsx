@@ -1,7 +1,7 @@
 /**
- * Route hors écran `tweet-card` : la carte `TweetCard light` de la grille, 480 px CSS rendus
- * à ×2 (960 px), pour le fichier principal des posts sans média. Données : `?data=<ItemCard base64url>`.
- * Signale `body[data-ready=1]` quand les polices et les images sont chargées.
+ * Off-screen route `tweet-card`: the `TweetCard light` card of the grid, 480 px CSS rendered
+ * at ×2 (960 px), for the main file of posts without media. Data: `?data=<ItemCard base64url>`.
+ * Signals `body[data-ready=1]` when fonts and images are loaded.
  */
 import { useEffect } from 'react'
 import type { ItemCard } from '../../../../shared/dto/items'

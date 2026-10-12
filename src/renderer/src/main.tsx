@@ -1,8 +1,8 @@
 /**
- * Point d'entrée du renderer. Le thème est posé AVANT le premier rendu (couleur de la première
- * image = `backgroundColor` de la fenêtre).
+ * Renderer entry point. The theme is set BEFORE the first render (colour of the first
+ * frame = window `backgroundColor`).
  */
-// Avant tout schéma zod : pas de `new Function` sous la CSP (voir le module).
+// Before any zod schema: no `new Function` under the CSP (see the module).
 import './lib/zod-jitless'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -23,9 +23,9 @@ installVideoGuard()
 
 const el = document.getElementById('root')
 if (!el) throw new Error('#root introuvable')
-// La maquette (dev) est chargée avant le premier rendu : `getApi()` reste synchrone.
+// The mock (dev) is loaded before the first render: `getApi()` stays synchronous.
 void initApi().then(() => {
-  // Langue résolue par main (réglage ou langue du Mac) : premier rendu dans la bonne langue.
+  // Language resolved by main (setting or Mac language): first render in the right language.
   const lang = window.recolt?.flags.lang
   if (lang) setUiLang(lang)
   createRoot(el).render(

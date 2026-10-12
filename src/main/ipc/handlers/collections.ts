@@ -1,6 +1,6 @@
 /**
- * Handlers `collections.*` : arbre avec couvertures, création, édition (cycle refusé),
- * suppression (pierres tombales des descendants), réordonnancement, ajout / retrait d'éléments.
+ * Handlers `collections.*`: tree with covers, creation, editing (cycle refused),
+ * deletion (tombstones for descendants), reordering, adding / removing items.
  */
 import { AppError } from '../../../shared/errors'
 import { collectionNode, collectionTree } from '../../dto/collection-node'

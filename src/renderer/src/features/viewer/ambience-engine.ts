@@ -1,35 +1,35 @@
 /**
- * Ambiance de la vue détail : un champ de couleur flou, plus sombre et plus saturé que le média,
- * tiré de sa vignette (jamais de l'original), et la teinte des surfaces translucides qui en découle.
+ * Ambience of the detail view: a blurred color field, darker and more saturated than the media,
+ * drawn from its thumbnail (never from the original), and the tint of the translucent surfaces that follows.
  *
- * Rendu : la vignette est réduite à 24 × 15 px, puis redessinée floutée et saturée dans un canvas de
- * 96 × 60 px affiché en plein écran (l'agrandissement bilinéaire d'une image déjà floue reste lisse).
- * Deux à trois halos radiaux tirés de la palette donnent de la profondeur, un vignettage assombrit
- * les bords. La luminance est ensuite plafonnée (maximum local et moyenne) : le texte et les icônes
- * blancs restent lisibles quel que soit le média.
+ * Rendering: the thumbnail is reduced to 24 × 15 px, then redrawn blurred and saturated in a canvas of
+ * 96 × 60 px displayed full screen (the bilinear enlargement of an already blurred image stays smooth).
+ * Two to three radial halos taken from the palette add depth, and a vignette darkens the edges.
+ * The luminance is then capped (local maximum and average): white text and icons
+ * stay readable whatever the media.
  *
- * Teinte : la couleur moyenne (pondérée par la saturation) donne une surface sombre dont la luminance
- * est bornée ; les textes du panneau gardent un contraste AA sur le verre teinté.
+ * Tint: the average color (weighted by saturation) gives a dark surface whose luminance
+ * is bounded; the panel texts keep AA contrast on the tinted glass.
  */
 
 export type Rgb = readonly [number, number, number]
 
-/** Résolution du canvas d'ambiance (affiché étiré sur toute la fenêtre). */
+/** Resolution of the ambience canvas (displayed stretched over the whole window). */
 export const AMBIENCE_W = 96
 export const AMBIENCE_H = 60
-/** Échantillon réduit de la vignette. */
+/** Reduced sample of the thumbnail. */
 const SAMPLE_W = 24
 const SAMPLE_H = 15
 
-/** Plafond de luminance relative en tout point de l'ambiance. */
+/** Relative luminance ceiling at every point of the ambience. */
 export const AMBIENCE_MAX_LUMINANCE = 0.13
-/** Plafond de la luminance moyenne de l'ambiance. */
+/** Ceiling of the average luminance of the ambience. */
 export const AMBIENCE_MEAN_LUMINANCE = 0.06
-/** Plafond de luminance de la surface teintée (panneau, verre). */
+/** Luminance ceiling of the tinted surface (panel, glass). */
 export const TINT_MAX_LUMINANCE = 0.028
-/** Opacité du verre teinté (panneau, barre de lecture). */
+/** Opacity of the tinted glass (panel, playback bar). */
 export const GLASS_ALPHA = 0.72
-/** Couleur neutre quand le média ne fournit rien (post sans média ni avatar). */
+/** Neutral color when the media provides nothing (post without media or avatar). */
 export const NEUTRAL: Rgb = [30, 31, 36]
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
@@ -62,19 +62,19 @@ const lin = (c: number) => {
   return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
 }
 
-/** Luminance relative WCAG. */
+/** WCAG relative luminance. */
 export function luminance([r, g, b]: Rgb): number {
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
 }
 
-/** Rapport de contraste WCAG. */
+/** WCAG contrast ratio. */
 export function contrast(a: Rgb, b: Rgb): number {
   const la = luminance(a)
   const lb = luminance(b)
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
 }
 
-/** Mélange `a` sur `b` (composition sRGB, comme le navigateur). */
+/** Blends `a` over `b` (sRGB compositing, as the browser does). */
 export function over(a: Rgb, alpha: number, b: Rgb): Rgb {
   return [0, 1, 2].map((i) => a[i]! * alpha + b[i]! * (1 - alpha)) as unknown as Rgb
 }
@@ -113,8 +113,8 @@ export function hslToRgb(h: number, s: number, l: number): Rgb {
 }
 
 /**
- * Couleur moyenne de pixels RGBA, pondérée par la saturation : les blancs et gris d'une interface
- * pèsent moins que sa couleur dominante.
+ * Average color of RGBA pixels, weighted by saturation: the whites and greys of an interface
+ * weigh less than its dominant color.
  */
 export function averageColor(data: ArrayLike<number>): Rgb | null {
   let r = 0
@@ -138,7 +138,7 @@ export function averageColor(data: ArrayLike<number>): Rgb | null {
   return w > 0 ? [r / w, g / w, b / w] : null
 }
 
-/** Luminance maximale et moyenne de pixels RGBA. */
+/** Maximum and average luminance of RGBA pixels. */
 export function luminanceStats(data: ArrayLike<number>): { max: number; mean: number } {
   let max = 0
   let sum = 0
@@ -153,8 +153,8 @@ export function luminanceStats(data: ArrayLike<number>): { max: number; mean: nu
 }
 
 /**
- * Facteur multiplicatif (sur les composantes sRGB) qui ramène l'ambiance sous ses plafonds de
- * luminance. La luminance suit ≈ k^2,2.
+ * Multiplicative factor (on the sRGB components) that brings the ambience under its
+ * luminance ceilings. Luminance follows ≈ k^2.2.
  */
 export function darkenFactor(stats: { max: number; mean: number }): number {
   const byMax = stats.max > AMBIENCE_MAX_LUMINANCE ? AMBIENCE_MAX_LUMINANCE / stats.max : 1
@@ -163,17 +163,17 @@ export function darkenFactor(stats: { max: number; mean: number }): number {
 }
 
 export interface ViewerTint {
-  /** Surface du verre (panneau, lecteur). */
+  /** Glass surface (panel, player). */
   surface: Rgb
-  /** Champs et cartes posés sur le verre. */
+  /** Fields and cards placed on the glass. */
   strong: Rgb
-  /** Surface opaque (listes de suggestions). */
+  /** Opaque surface (suggestion lists). */
   solid: Rgb
-  /** Halo vif (anneau de focus, survols). */
+  /** Bright halo (focus ring, hovers). */
   glow: Rgb
 }
 
-/** Teinte des surfaces à partir de la couleur du média. `muted` : post sans média (sobre). */
+/** Surface tint from the media color. `muted`: post without media (subdued). */
 export function tintFrom(color: Rgb, muted = false): ViewerTint {
   const [h, s0, l0] = rgbToHsl(color)
   const s = clamp(s0 * (muted ? 0.35 : 1.15), 0, muted ? 0.18 : 0.55)
@@ -191,7 +191,7 @@ export function tintFrom(color: Rgb, muted = false): ViewerTint {
   }
 }
 
-/** Variables CSS locales à la vue détail. */
+/** CSS variables local to the detail view. */
 export function tintVars(t: ViewerTint): Record<string, string> {
   return {
     '--viewer-tint': rgba(t.surface, GLASS_ALPHA),
@@ -201,7 +201,7 @@ export function tintVars(t: ViewerTint): Record<string, string> {
   }
 }
 
-/* ------------------------------------------------------------------ rendu (navigateur) */
+/* ------------------------------------------------------------------ rendering (browser) */
 
 let sampleCanvas: HTMLCanvasElement | null = null
 
@@ -213,7 +213,7 @@ function sampleCtx(): CanvasRenderingContext2D | null {
   return sampleCanvas.getContext('2d', { willReadFrequently: true })
 }
 
-/** Rectangle source pour un recadrage `cover` de `sw × sh` vers `dw × dh`. */
+/** Source rectangle for a `cover` crop of `sw × sh` to `dw × dh`. */
 export function coverCrop(
   sw: number,
   sh: number,
@@ -230,12 +230,12 @@ function readPixels(ctx: CanvasRenderingContext2D, w: number, h: number): Uint8C
   try {
     return ctx.getImageData(0, 0, w, h).data
   } catch {
-    // Source non CORS (canvas « tainted ») : l'image reste affichable, pas mesurable.
+    // Non-CORS source (tainted canvas): the image stays displayable, not measurable.
     return null
   }
 }
 
-/** Positions (fractions) et rayons des halos de palette. */
+/** Positions (fractions) and radii of the palette halos. */
 const GLOWS: readonly [number, number, number][] = [
   [0.12, 0.18, 0.75],
   [0.88, 0.9, 0.7],
@@ -243,16 +243,16 @@ const GLOWS: readonly [number, number, number][] = [
 ]
 
 export interface AmbienceResult {
-  /** Couleur moyenne de la vignette (`null` si illisible). */
+  /** Average color of the thumbnail (`null` if unreadable). */
   color: Rgb | null
-  /** Facteur d'assombrissement appliqué (réutilisable pour une source illisible). */
+  /** Darkening factor applied (reusable for an unreadable source). */
   k: number
 }
 
 /**
- * Dessine l'ambiance de `source` dans `out` (`AMBIENCE_W × AMBIENCE_H`). `palette` : couleurs de
- * l'élément (halos) ; `muted` : désaturation forte (avatar d'un post) ; `fallbackK` : facteur
- * d'assombrissement si la source n'est pas lisible.
+ * Draws the ambience of `source` into `out` (`AMBIENCE_W × AMBIENCE_H`). `palette`: colors of
+ * the element (halos); `muted`: strong desaturation (avatar of a post); `fallbackK`: darkening factor
+ * if the source is unreadable.
  */
 export function drawAmbience(
   out: HTMLCanvasElement,
@@ -280,13 +280,13 @@ export function drawAmbience(
   ctx.filter = 'none'
   ctx.fillStyle = rgba(base)
   ctx.fillRect(0, 0, AMBIENCE_W, AMBIENCE_H)
-  // Débord : le flou ne fait pas entrer de transparence par les bords.
+  // Overflow: the blur does not let transparency in through the edges.
   const bleed = 14
   ctx.filter = opts.muted ? 'blur(7px) saturate(0.35)' : 'blur(7px) saturate(1.45)'
   ctx.drawImage(sampleCanvas!, -bleed, -bleed, AMBIENCE_W + 2 * bleed, AMBIENCE_H + 2 * bleed)
   ctx.filter = 'none'
 
-  // Halos de la palette (profondeur).
+  // Palette halos (depth).
   const glows = palette.slice(1, 1 + GLOWS.length)
   glows.forEach((c, i) => {
     const [fx, fy, fr] = GLOWS[i]!
@@ -305,7 +305,7 @@ export function drawAmbience(
     ctx.fillRect(0, 0, AMBIENCE_W, AMBIENCE_H)
   })
 
-  // Plafond de luminance (multiplication des composantes).
+  // Luminance ceiling (multiplication of the components).
   const pixels = readPixels(ctx, AMBIENCE_W, AMBIENCE_H)
   const k = pixels ? darkenFactor(luminanceStats(pixels)) : (opts.fallbackK ?? 0.6)
   if (k < 1) {
@@ -316,7 +316,7 @@ export function drawAmbience(
     ctx.globalCompositeOperation = 'source-over'
   }
 
-  // Vignettage et voile haut : n'assombrissent que davantage.
+  // Vignetting and top veil: they only darken further.
   const vg = ctx.createRadialGradient(
     AMBIENCE_W * 0.42,
     AMBIENCE_H * 0.55,
@@ -335,14 +335,14 @@ export function drawAmbience(
   ctx.fillStyle = top
   ctx.fillRect(0, 0, AMBIENCE_W, AMBIENCE_H)
 
-  // Échantillon devenu illisible (source non CORS) : un canvas neuf servira la prochaine fois.
+  // Sample now unreadable (non-CORS source): a new canvas will serve next time.
   if (!sample) sampleCanvas = null
   return { color, k }
 }
 
 /**
- * Couleur du pixel de `el` (image ou vidéo affichée en `cover` dans `box`) sous le point client
- * `(x, y)`, ou `null` (hors média, source non lisible).
+ * Color of the pixel of `el` (image or video shown as `cover` in `box`) under the client point
+ * `(x, y)`, or `null` (outside media, unreadable source).
  */
 let pickCanvas: HTMLCanvasElement | null = null
 

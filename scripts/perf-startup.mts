@@ -1,15 +1,15 @@
 /**
- * Démarrage de l'app PACKAGÉE : `process.uptime()` du main à la réception de la
- * marque `grid-painted` (première image de la grille avec des cartes), lue dans
- * `<userData>/logs/perf.jsonl`. Un lancement d'échauffement (caches OS chauds), puis N lancements
- * mesurés ; chaque lancement attend la marque, quitte l'app et attend sa sortie.
+ * Startup of the PACKAGED app: `process.uptime()` of the main process when the
+ * `grid-painted` mark is received (first frame of the grid with cards), read from
+ * `<userData>/logs/perf.jsonl`. One warm-up launch (OS caches warm), then N measured launches;
+ * each launch waits for the mark, quits the app and waits for its exit.
  *
- *   tsx --tsconfig tsconfig.node.json scripts/perf-startup.mts --user-data <dossier> [--runs 5]
+ *   tsx --tsconfig tsconfig.node.json scripts/perf-startup.mts --user-data <dir> [--runs 5]
  *       [--app dist/mac-arm64/RecoltOS.app] [--json <rapport>]
  *
- * `--user-data` : bibliothèque de mesure (ex. clone APFS de `.tmp/m3-real`), jamais le dossier réel
- * de l'utilisateur. `RECOLTOS_HOME` pointe vers un dossier temporaire : aucun manifest natif écrit
- * dans `~/Library`.
+ * `--user-data`: measurement library (e.g. APFS clone of `.tmp/m3-real`), never the user's real
+ * folder. `RECOLTOS_HOME` points to a temporary folder: no native manifest is written
+ * to `~/Library`.
  */
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -93,7 +93,7 @@ export async function measureStartup(options: {
   if (!existsSync(bin)) throw new Error(`${bin} introuvable (pnpm run pack)`)
   const home = mkdtempSync(join(tmpdir(), 'recolt-startup-home-'))
   try {
-    await launchOnce(bin, options.userData, home) // échauffement
+    await launchOnce(bin, options.userData, home) // warm-up
     const runs: number[] = []
     const appMountedMs: number[] = []
     for (let i = 0; i < (options.runs ?? 5); i++) {
@@ -124,7 +124,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     },
   })
   if (!values['user-data']) {
-    console.error('--user-data <dossier> requis (clone de mesure, jamais le dossier réel)')
+    console.error('--user-data <dir> required (measurement clone, never the real folder)')
     process.exit(2)
   }
   const report = await measureStartup({

@@ -1,11 +1,11 @@
 /**
- * Éditeur de space (route `space`) : sous-barre 60 px (retour, nom
- * en ligne, « … » Arrière-plan / Dupliquer / Exporter / Supprimer), toile plein cadre, dock
- * d'outils, cluster de zoom, barre de style, tiroir Bibliothèque, menus contextuels. Clavier :
- * table `SPACES_SHORTCUTS` (keymap AZERTY / QWERTY), commandes du menu natif relayées par le bus
- * (`space.command`), presse-papiers par les événements DOM `copy` / `cut` / `paste`.
- * Persistance : vidage à la sortie, au blur / masquage, au handshake de fermeture (après validation
- * de l'édition en cours) et `applyBatchSync` en `beforeunload`.
+ * Space editor (`space` route): 60 px sub-bar (back, name
+ * inline, "…" Background / Duplicate / Export / Delete), full-frame canvas, dock
+ * of tools, zoom cluster, style bar, Library drawer, context menus. Keyboard:
+ * `SPACES_SHORTCUTS` table (AZERTY / QWERTY keymap), native menu commands relayed by the bus
+ * (`space.command`), clipboard via the DOM `copy` / `cut` / `paste` events.
+ * Persistence: flush on exit, on blur / hide, on the close handshake (after validating
+ * the current edit) and `applyBatchSync` on `beforeunload`.
  */
 import { ChevronLeft, Copy, Download, Ellipsis, Grid3x3, Pencil, Trash } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -80,7 +80,7 @@ configureStore({
   onRetry: () => toast(tr.spaces.saveRetry, { id: 'space-save-retry' }),
 })
 
-// Tests de bout en bout seulement : accès au store de l'éditeur (jamais hors `RECOLTOS_E2E`).
+// End-to-end tests only: access to the editor store (never outside `RECOLTOS_E2E`).
 if (window.recolt?.flags.e2e) {
   ;(window as unknown as { __recoltSpaces?: unknown }).__recoltSpaces = {
     useSpace,
@@ -92,8 +92,8 @@ if (window.recolt?.flags.e2e) {
 }
 
 /**
- * Le clavier (keydown) et le menu natif (accélérateur) peuvent livrer la même commande : le
- * keydown s'exécute toujours ; le menu est ignoré s'il suit de près un keydown identique.
+ * The keyboard (keydown) and the native menu (accelerator) may deliver the same command: the
+ * keydown always runs; the menu is ignored if it closely follows an identical keydown.
  */
 const lastKey = new Map<string, number>()
 let fromMenu = false
@@ -184,7 +184,7 @@ function EditorView({ uuid }: { uuid: string }) {
     nodeId: null,
   })
 
-  // Chargement (après vidage de l'espace précédent).
+  // Loading (after flushing the previous space).
   useEffect(() => {
     let alive = true
     void (async () => {
@@ -200,7 +200,7 @@ function EditorView({ uuid }: { uuid: string }) {
           items: doc.items,
         })
         const vp = doc.space.viewport
-        // La toile se monte après `loadDoc` : on attend sa taille réelle avant d'ajuster.
+        // The canvas mounts after `loadDoc`: wait for its real size before adjusting.
         for (let i = 0; i < 30 && useCamera.getState().view.w <= 1; i++) {
           await new Promise((r) => requestAnimationFrame(() => r(null)))
         }
@@ -227,10 +227,10 @@ function EditorView({ uuid }: { uuid: string }) {
     }
   }, [uuid])
 
-  // Démontage complet de l'éditeur : état vidé.
+  // Full teardown of the editor: state flushed.
   useEffect(() => () => resetStore(), [])
 
-  // Vidage : handshake de fermeture, blur, masquage, beforeunload.
+  // Flush: close handshake, blur, hide, beforeunload.
   useEffect(() => {
     const offFlush = registerFlush(async () => {
       commitEditing()
@@ -259,7 +259,7 @@ function EditorView({ uuid }: { uuid: string }) {
     }
   }, [])
 
-  // Clavier, commandes du menu, presse-papiers.
+  // Keyboard, menu commands, clipboard.
   useEffect(() => {
     let spaceDownAt = 0
     let panned = false
@@ -390,7 +390,7 @@ function EditorView({ uuid }: { uuid: string }) {
             fitSelection()
             return true
           default:
-            // ⌘C / ⌘X / ⌘V : événements DOM `copy` / `cut` / `paste` (rôles du menu Édition).
+            // ⌘C / ⌘X / ⌘V: DOM `copy` / `cut` / `paste` events (Edit menu roles).
             return false
         }
       })()
@@ -450,7 +450,7 @@ function EditorView({ uuid }: { uuid: string }) {
 
   const rename = (next: string) => setName(next)
 
-  // Dépôt : éléments de la bibliothèque (tiroir, glisser natif interne) ou fichiers du Finder.
+  // Drop: library items (drawer, native internal drag) or Finder files.
   const [dropping, setDropping] = useState(false)
   const onDragOver = (e: React.DragEvent) => {
     const types = Array.from(e.dataTransfer.types)

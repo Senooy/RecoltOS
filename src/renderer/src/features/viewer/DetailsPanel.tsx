@@ -1,9 +1,9 @@
 /**
- * Panneau Détails : 300 pt à `right: 18 ; top: 62 ; bottom: 18`, verre teinté par l'ambiance
- * (`--viewer-tint`), rayon 14, défilement interne, sections séparées par `--viewer-line`, dans
- * l'ordre : en-tête, aperçu `large` + `FormatBadge` et pastilles de la palette, Nom, URL, post
- * source, note, Collections, Tags, Description IA, Texte détecté, Infos (post sans média : section
- * Couleurs à part). Texte sélectionnable (`.select-text`).
+ * Details panel: 300 pt at `right: 18 ; top: 62 ; bottom: 18`, glass tinted by the ambience
+ * (`--viewer-tint`), radius 14, internal scrolling, sections separated by `--viewer-line`, in
+ * this order: header, `large` preview + `FormatBadge` and palette swatches, Name, URL, source
+ * post, note, Collections, Tags, AI description, Detected text, Info (post without media: separate
+ * Colors section). Selectable text (`.select-text`).
  */
 import { Copy, ExternalLink, Info, Sparkles, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -52,7 +52,7 @@ function Label({ children }: { children: ReactNode }) {
   return <div className="viewer-label">{children}</div>
 }
 
-/** Champ Nom : enregistré au blur et à Entrée. */
+/** Name field: saved on blur and on Enter. */
 function NameField({ detail }: { detail: ItemDetail }) {
   const [value, setValue] = useState(detail.title ?? '')
   useEffect(() => setValue(detail.title ?? ''), [detail.uuid, detail.title])
@@ -83,7 +83,7 @@ function NameField({ detail }: { detail: ItemDetail }) {
   )
 }
 
-/** Note : « + Ajouter une note » puis zone auto-extensible, enregistrée au blur et après 800 ms. */
+/** Note: "+ Add a note" then an auto-growing area, saved on blur and after 800 ms. */
 export const NOTE_DEBOUNCE_MS = 800
 
 function NoteField({ detail }: { detail: ItemDetail }) {

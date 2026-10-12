@@ -1,6 +1,6 @@
 /**
- * Géométrie Spaces partagée main ↔ renderer : enveloppes AABB de boîtes
- * orientées, tailles par défaut des nœuds, placement en grille. Pur, sans dépendance.
+ * Spaces geometry shared between main and renderer: AABB envelopes of oriented boxes,
+ * default node sizes, grid placement. Pure, no dependencies.
  */
 import { MIN_NODE_SIZE } from './spaces-schema'
 
@@ -15,11 +15,11 @@ export interface Rect {
   height: number
 }
 export interface OrientedBox extends Rect {
-  /** Degrés, autour du centre. */
+  /** Degrees, around the center. */
   rotation: number
 }
 
-/** Enveloppe alignée sur les axes d'une boîte tournée autour de son centre. */
+/** Axis-aligned envelope of a box rotated around its center. */
 export function aabb(b: OrientedBox): Rect {
   const r = ((b.rotation ?? 0) * Math.PI) / 180
   if (r === 0) return { x: b.x, y: b.y, width: b.width, height: b.height }
@@ -32,7 +32,7 @@ export function aabb(b: OrientedBox): Rect {
   return { x: cx - w / 2, y: cy - h / 2, width: w, height: h }
 }
 
-/** Union d'enveloppes ; `null` si la liste est vide. */
+/** Union of envelopes; `null` if the list is empty. */
 export function unionRect(rects: readonly Rect[]): Rect | null {
   if (rects.length === 0) return null
   let minX = Infinity
@@ -52,13 +52,13 @@ export function rectsIntersect(a: Rect, b: Rect): boolean {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 }
 
-/** Côté long d'un élément média posé sur la toile. */
+/** Long side of a media item placed on the canvas. */
 export const ITEM_LONG_SIDE = 320
-/** Largeur d'une carte de post (tweet) ou de page. */
+/** Width of a post (tweet) or page card. */
 export const POST_NODE_WIDTH = 340
-/** Hauteur par défaut d'une carte de post, avant mesure. */
+/** Default height of a post card, before measuring. */
 export const POST_NODE_HEIGHT = 420
-/** Image déposée : côté long au plus 360. */
+/** Dropped image: long side at most 360. */
 export const ASSET_LONG_SIDE = 360
 export const NOTE_SIZE = 200
 export const SHAPE_SIZE = { width: 160, height: 120 } as const
@@ -72,14 +72,14 @@ export interface ItemSizeInput {
 
 const clampSize = (n: number) => Math.max(MIN_NODE_SIZE, Math.round(n))
 
-/** Taille d'un nœud média dont le côté long vaut `long` (ratio du média). */
+/** Size of a media node whose long side is `long` (media ratio). */
 export function fitLongSide(w: number | null, h: number | null, long: number) {
   if (!w || !h || w <= 0 || h <= 0) return { width: long, height: long }
   const k = long / Math.max(w, h)
   return { width: clampSize(w * k), height: clampSize(h * k) }
 }
 
-/** Taille initiale d'un nœud `item`. */
+/** Initial size of an `item` node. */
 export function defaultItemSize(i: ItemSizeInput): { width: number; height: number } {
   if (i.kind === 'tweet') return { width: POST_NODE_WIDTH, height: POST_NODE_HEIGHT }
   if (i.kind === 'url')
@@ -88,8 +88,8 @@ export function defaultItemSize(i: ItemSizeInput): { width: number; height: numb
 }
 
 /**
- * Range des boîtes en grille (`cols = ceil(sqrt(N))`, espace 24). `origin` = coin haut-gauche ;
- * `center: true` centre la grille sur `origin`. Renvoie la position du coin haut-gauche de chacune.
+ * Lays out the boxes in a grid (`cols = ceil(sqrt(N))`, gap 24). `origin` = top-left corner;
+ * `center: true` centers the grid on `origin`. Returns the top-left corner position of each one.
  */
 export function gridPlacement(
   sizes: readonly { width: number; height: number }[],

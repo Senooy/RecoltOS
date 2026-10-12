@@ -1,5 +1,5 @@
 /**
- * Messages de synchronisation en zod.
+ * Sync messages in zod.
  */
 import { z } from 'zod'
 import { MAX_SYNC_PAGES, MAX_WANTED_AUTHORS } from './constants'
@@ -8,7 +8,7 @@ import { Platform, Trigger } from './envelope'
 export const SyncMode = z.enum(['incremental', 'backfill', 'deep'])
 export type SyncMode = z.output<typeof SyncMode>
 
-/** Où le run s'exécute : arrière-plan de l'extension (défaut), onglet existant ou créé (repli). */
+/** Where the run executes: extension background (default), an existing or created tab (fallback). */
 export const SyncTarget = z.enum(['background', 'tab', 'created_tab'])
 export type SyncTarget = z.output<typeof SyncTarget>
 
@@ -20,7 +20,7 @@ export const SyncRunMessage = z.object({
   startCursor: z.string().max(4096).nullable().optional(),
   maxPages: z.number().int().min(1).max(MAX_SYNC_PAGES),
   hintTabId: z.number().int().optional(),
-  /** Repli « Ouvrir un onglet en arrière-plan si besoin » autorisé pour ce run. */
+  /** "Open a background tab if needed" fallback allowed for this run. */
   allowBackgroundTab: z.boolean().optional(),
 })
 export type SyncRunMessage = z.output<typeof SyncRunMessage>
@@ -31,7 +31,7 @@ export const SyncPageMessage = z.object({
   pageIndex: z.number().int().min(0),
   origin: z.enum(['intercept', 'replay', 'assist']),
   status: z.number().int(),
-  /** `x-rate-limit-*` et `content-type` seulement : jamais d'en-tête d'authentification. */
+  /** `x-rate-limit-*` and `content-type` only: never an authentication header. */
   headers: z.record(z.string(), z.string()).optional(),
   json: z.unknown(),
   target: SyncTarget.optional(),
@@ -45,7 +45,7 @@ export const SyncStats = z.object({
   dismissed: z.number().int(),
 })
 
-/** Issue d'un run (`blocked` / `permissions`). */
+/** Outcome of a run (`blocked` / `permissions`). */
 export const SyncOutcome = z.enum([
   'ok',
   'auth_required',
@@ -54,9 +54,9 @@ export const SyncOutcome = z.enum([
   'network',
   'waiting_for_tab',
   'aborted',
-  /** Cookies de session présents mais requête refusée (401/403). */
+  /** Session cookies present but request refused (401/403). */
   'blocked',
-  /** Autorisations d'hôte manquantes (Firefox MV3). */
+  /** Missing host permissions (Firefox MV3). */
   'permissions',
 ])
 export type SyncOutcome = z.output<typeof SyncOutcome>
@@ -67,7 +67,7 @@ export const SyncAckMessage = z.object({
   nextCursor: z.string().nullable().optional(),
   delayMs: z.number().int().min(0).optional(),
   stats: SyncStats.partial().optional(),
-  /** Sur `stop` décidé par l'app (page refusée, plafond, checkpoint…). */
+  /** On `stop` decided by the app (page refused, cap, checkpoint...). */
   outcome: SyncOutcome.optional(),
 })
 export type SyncAckMessage = z.output<typeof SyncAckMessage>
@@ -122,7 +122,7 @@ export const AuthorSeenMessage = z.object({
   avatarUrl: z.string().max(4096).nullable().optional(),
 })
 
-/** État de la sync par plateforme, poussé par l'app (popup de l'extension). */
+/** Sync state per platform, pushed by the app (extension popup). */
 export const SyncSourceState = z.object({
   enabled: z.boolean(),
   status: z.string().max(40),

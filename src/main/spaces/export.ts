@@ -1,8 +1,8 @@
 /**
- * Export PNG d'un space : enregistrement choisi d'abord (`showSaveDialog`,
- * défaut `~/Downloads/<nom>.png`), puis rendu par la fenêtre stage avec progression
- * (`spaces.exportProgress`) et annulation (`spaces.exportCancel` → `AbortController`).
- * Un seul export à la fois. « Afficher dans le Finder » ne montre que le dernier fichier écrit.
+ * PNG export of a space: destination chosen first (`showSaveDialog`,
+ * default `~/Downloads/<name>.png`), then rendering by the stage window with progress
+ * (`spaces.exportProgress`) and cancellation (`spaces.exportCancel` → `AbortController`).
+ * One export at a time. « Afficher dans le Finder » only shows the last file written.
  */
 import { BrowserWindow, app, dialog, nativeTheme, shell } from 'electron'
 import { writeFile } from 'node:fs/promises'

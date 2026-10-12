@@ -5,7 +5,7 @@ import { TMP_ROOT } from './paths'
 import { makeTmpDir, purgeStaleTmpDirs, removeAllTmpDirs, removeTmpDir } from './tmpdir'
 
 describe('tmpdir', () => {
-  it('removeAllTmpDirs supprime tout ce que le processus a créé (hook afterAll de tests/setup/node.ts)', () => {
+  it('removeAllTmpDirs removes everything the process created (afterAll hook of tests/setup/node.ts)', () => {
     const a = makeTmpDir('all-a')
     const b = makeTmpDir('all-b')
     expect(existsSync(a) && existsSync(b)).toBe(true)
@@ -13,13 +13,13 @@ describe('tmpdir', () => {
     expect(existsSync(a) || existsSync(b)).toBe(false)
   })
 
-  it('removeTmpDir supprime un dossier précis', () => {
+  it('removeTmpDir removes one specific folder', () => {
     const a = makeTmpDir('one')
     removeTmpDir(a)
     expect(existsSync(a)).toBe(false)
   })
 
-  it('purgeStaleTmpDirs ne supprime que les dossiers anciens', () => {
+  it('purgeStaleTmpDirs only removes old folders', () => {
     const fresh = makeTmpDir('fresh')
     const old = join(TMP_ROOT, 'tests', `stale-${process.pid}`)
     mkdirSync(old, { recursive: true })

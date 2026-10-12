@@ -1,6 +1,6 @@
 /**
- * Curseur de colonnes : 0..6 avec colonnes = 8 − valeur (vers la droite, les cartes
- * grandissent) ; 4 colonnes par défaut place le pouce aux deux tiers.
+ * Column slider: 0..6 with columns = 8 − value (towards the right, the cards
+ * grow); 4 columns by default places the thumb at two thirds.
  */
 import { Grid2x2, Square } from 'lucide-react'
 import { Slider } from '../../components/ui'

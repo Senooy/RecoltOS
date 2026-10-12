@@ -1,8 +1,8 @@
 /**
- * Réglages › Capture. En haut : titre,
- * description, « Raccourci global » (key caps 24×22), aide, filet, « Dossier de dépôt » (champ de
- * 287 pt + « Choisir… » / « Effacer »), aide. Sous un second filet : mode,
- * notification, masquer l'app, presse-papiers, état de la permission.
+ * Settings › Capture. At the top: title,
+ * description, "Global shortcut" (key caps 24×22), help, rule, "Drop folder" (field of
+ * 287 pt + "Choose…" / "Clear"), help. Under a second rule: mode,
+ * notification, hide the app, clipboard, permission status.
  */
 import { CheckCircle2, CircleAlert } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'

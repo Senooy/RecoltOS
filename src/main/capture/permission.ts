@@ -1,8 +1,8 @@
 /**
- * Permission « Enregistrement de l'écran ». `getMediaAccessStatus('screen')` ne
- * distingue en pratique que `granted` / pas `granted` ; `desktopCapturer.getSources` provoque le
- * prompt système. Développement / tests : `RECOLTOS_SCREEN_ACCESS=granted|denied` force la valeur
- * (refusé dans l'app empaquetée).
+ * "Screen Recording" permission. In practice `getMediaAccessStatus('screen')` only
+ * distinguishes `granted` / not `granted`; `desktopCapturer.getSources` triggers the
+ * system prompt. Development / tests: `RECOLTOS_SCREEN_ACCESS=granted|denied` forces the value
+ * (refused in the packaged app).
  */
 import { app, desktopCapturer, shell, systemPreferences } from 'electron'
 
@@ -21,9 +21,9 @@ export function getScreenAccess(env = process.env): { access: ScreenAccess; raw:
   return { access: raw === 'granted' ? 'granted' : 'denied', raw }
 }
 
-/** Inscrit l'app dans le volet et déclenche le prompt système (une fois). */
+/** Registers the app in the settings pane and triggers the system prompt (once). */
 export async function provokePrompt(env = process.env): Promise<void> {
-  // Accès forcé (tests) : jamais de vrai prompt TCC.
+  // Forced access (tests): never a real TCC prompt.
   if (!app.isPackaged && env.RECOLTOS_SCREEN_ACCESS) return
   await desktopCapturer
     .getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })

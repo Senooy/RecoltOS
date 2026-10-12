@@ -1,6 +1,6 @@
 /**
- * Chemins du pont extension ↔ app. Sans import `electron` : testable sous Node.
- * Tout dépend de `userData` (jamais d'un chemin `~/Library/Application Support/RecoltOS` codé en dur).
+ * Paths of the extension ↔ app bridge. No `electron` import: testable under Node.
+ * Everything depends on `userData` (never a hard-coded `~/Library/Application Support/RecoltOS` path).
  */
 import { createHash } from 'node:crypto'
 import os from 'node:os'
@@ -8,8 +8,8 @@ import path from 'node:path'
 import { SOCKET_PATH_MAX_BYTES, SOCKET_PREFIX } from '../../shared/bridge/constants'
 
 /**
- * `os.tmpdir()/recolt-<sha1(userData)[0:10]>.sock` (< 104 octets, limite `sun_path`). Un `TMPDIR`
- * trop long retombe sur `/tmp` (toujours court) : le chemin reste propre à la bibliothèque.
+ * `os.tmpdir()/recolt-<sha1(userData)[0:10]>.sock` (< 104 bytes, `sun_path` limit). A `TMPDIR`
+ * too long falls back to `/tmp` (always short): the path stays specific to the library.
  */
 export function socketPath(userData: string, tmp: string = os.tmpdir()): string {
   const name = `${SOCKET_PREFIX}${createHash('sha1').update(userData).digest('hex').slice(0, 10)}.sock`
@@ -25,7 +25,7 @@ export const hostJsonPath = (userData: string) => path.join(userData, 'host.json
 export const installedHostsPath = (userData: string) => path.join(userData, 'native-hosts.json')
 export const installedExtensionDir = (userData: string) => path.join(userData, 'extension')
 
-/** Exécutable SEA : `Contents/Resources/native-host/recolt-host` (packagé), `out/native-host/` (dev). */
+/** SEA executable: `Contents/Resources/native-host/recolt-host` (packaged), `out/native-host/` (dev). */
 export function hostExecutablePath(opts: {
   isPackaged: boolean
   resourcesPath: string
@@ -36,7 +36,7 @@ export function hostExecutablePath(opts: {
     : path.join(opts.appRoot, 'out', 'native-host', 'recolt-host')
 }
 
-/** Extension buildée embarquée : `Contents/Resources/extension/<cible>` ou `dist-extension/<cible>`. */
+/** Built embedded extension: `Contents/Resources/extension/<target>` or `dist-extension/<target>`. */
 export function bundledExtensionDir(
   target: 'chromium' | 'firefox',
   opts: { isPackaged: boolean; resourcesPath: string; appRoot: string },

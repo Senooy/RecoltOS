@@ -1,8 +1,8 @@
 /**
- * Dock d'outils flottant : bas-centre, pilule 44 px, fond `--bg`,
- * hairline, ombre de pilule ; boutons 36 px, icônes 18 px ; outil actif = disque noir, icône
- * blanche (comme le segmented). Sélection V, Main H | Note N, Texte T, Formes (R, O, triangle,
- * losange) | Image I, Bibliothèque L. Annuler / Rétablir à droite.
+ * Floating tool dock: bottom-center, 44 px pill, `--bg` background,
+ * hairline, pill shadow; 36 px buttons, 18 px icons; active tool = black disc, icon
+ * white (like the segmented control). Select V, Hand H | Note N, Text T, Shapes (R, O, triangle,
+ * diamond) | Image I, Library L. Undo / Redo on the right.
  */
 import {
   ChevronUp,

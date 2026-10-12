@@ -1,19 +1,20 @@
 /**
- * Vue détail : calque plein écran sur fond en dégradés, barre de
- * 45 pt (retour, « 3 / 408 », zoom 25–300 %, Télécharger, Supprimer, Fermer), scène (média
- * `contain`, pincement / ⌘-molette, déplacement au-delà de 100 %, flèches au survol des bords),
- * lecteur vidéo sous le média, carrousel (⌥←/⌥→, points « 2 / 6 »), post sans média en
- * `TweetCard detail` de 560 pt, panneau Détails (⌘I).
+ * Detail view: full-screen layer over a gradient background, 45 pt bar
+ * (back, "3 / 408", zoom 25–300 %, Download, Delete, Close), stage (media
+ * `contain`, pinch / ⌘-wheel, panning beyond 100 %, arrows on hover at the edges),
+ * video player under the media, carousel (⌥←/⌥→, dots "2 / 6"), post without media in
+ * `TweetCard detail` at 560 pt, Details panel (⌘I).
  *
- * Transitions : FLIP manuel WAAPI
- * depuis la carte de la grille (340 ms `--ease-sheet`) pendant que le voile flouté et le chrome
- * apparaissent en fondu ; à la fermeture, la grille fait défiler la carte courante en vue, le média
- * y revient, le voile se dissipe et les cartes réapparaissent en cascade. Carte non montée : fondu.
- * Mouvement réduit : fondus seuls (≤ 80 ms).
+ * Transitions: manual WAAPI FLIP
+ * from the grid card (340 ms `--ease-sheet`) while the blurred veil and the chrome
+ * fade in; on close, the grid scrolls the current card into view, the media
+ * returns to it, the veil dissipates and the cards reappear in cascade. Unmounted card: fade.
+ * Reduced motion: fades only (≤ 80 ms).
  *
- * Ambiance : le fond est un champ de couleur flou tiré de la vignette du média (`AmbienceLayer`), qui
- * teinte le verre du panneau et des contrôles (`--viewer-tint*`) ; fondu enchaîné à chaque
- * changement d'élément ou de slide. Pipette : prélève la couleur d'un point du média (copie l'hex).
+ * Ambience: the background is a blurred colour field drawn from the media thumbnail
+ * (`AmbienceLayer`), which tints the glass of the panel and controls (`--viewer-tint*`);
+ * cross-fades on each change of item or slide. Eyedropper: samples the colour of a point of
+ * the media (copies the hex).
  */
 import { useGesture } from '@use-gesture/react'
 import { ChevronLeft, ChevronRight, Download, Pipette, Trash2, X } from 'lucide-react'
@@ -71,7 +72,7 @@ export const FADE_MS = 200
 const PANEL_KEY = 'recolt.viewer.panel.v1'
 const DOTS_H = 28
 
-/** Mouvement réduit, ou e2e (animations coupées) : fondus courts, aucun FLIP. */
+/** Reduced motion, or e2e (animations off): short fades, no FLIP. */
 export function motionOff(): boolean {
   return isReducedMotion() || document.documentElement.dataset.e2e === '1'
 }
@@ -88,11 +89,11 @@ function writePanelOpen(open: boolean): void {
   try {
     globalThis.localStorage?.setItem(PANEL_KEY, open ? '1' : '0')
   } catch {
-    // sans conséquence
+    // no consequence
   }
 }
 
-/** Élément média de la carte de la grille (pour le FLIP), s'il est monté et visible. */
+/** Media element of the grid card (for the FLIP), if mounted and visible. */
 function gridMediaEl(uuid: string): HTMLElement | null {
   const card = document.querySelector<HTMLElement>(
     `[data-testid="grid"] [data-uuid="${CSS.escape(uuid)}"]`,
@@ -173,8 +174,8 @@ function stageMedia(card: ItemCard, detail: ItemDetail | null, slide: number): S
 }
 
 /**
- * Source de l'ambiance : petite vignette de la slide affichée (ou de l'élément), affiche d'une
- * vidéo. Post : avatar de l'auteur (sinon le rendu du post), fortement désaturé.
+ * Ambience source: small thumbnail of the displayed slide (or of the item), poster of a
+ * video. Post: the author's avatar (otherwise the rendered post), heavily desaturated.
  */
 function ambienceSource(
   card: ItemCard,
@@ -190,7 +191,7 @@ function ambienceSource(
   return { url: own, muted: false }
 }
 
-/** Image : la grande vignette s'affiche tout de suite, l'original la remplace une fois décodé. */
+/** Image: the large thumbnail shows right away, the original replaces it once decoded. */
 function StageImage({ media }: { media: StageMedia }) {
   const [loaded, setLoaded] = useState<string | null>(null)
   return (
@@ -250,7 +251,7 @@ export default function Viewer() {
   const stageRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const closing = useRef(false)
-  // Ref stable : libère le flux de l'élément à son démontage ou à tout changement de `key`.
+  // Stable ref: releases the element's stream on unmount or on any change of `key`.
   const setVideoEl = useCallback((el: HTMLVideoElement | null) => {
     videoRef.current = el
     if (!el) return
@@ -263,7 +264,7 @@ export default function Viewer() {
   const card: ItemCard | null = detail && detail.uuid === uuid ? detail : (sourceCard(uuid) ?? null)
   const currentDetail = detail && detail.uuid === uuid ? detail : null
 
-  // Détail complet (et rafraîchi sur `items.changed`) ; vue marquée.
+  // Full detail (and refreshed on `items.changed`); view marked.
   useEffect(() => {
     if (!uuid) return
     let alive = true
@@ -312,12 +313,12 @@ export default function Viewer() {
   const box = zoomRect(fit, zoom, pan)
   const ambience = card ? ambienceSource(card, currentDetail, slide) : null
 
-  // Ouverture : FLIP depuis la carte (ou fondu), voile et chrome en fondu.
+  // Opening: FLIP from the card (or fade), veil and chrome fade in.
   useLayoutEffect(() => {
     rootRef.current?.focus({ preventScroll: true })
     const reduced = motionOff()
     const fade = reduced ? 80 : FADE_MS
-    // Flou de la grille pendant le fondu seulement (voir `.viewer-backdrop` dans viewer.css).
+    // Grid blur only during the fade (see `.viewer-backdrop` in viewer.css).
     const backdrop = backdropRef.current
     backdrop?.classList.add('is-fading')
     const veil = backdrop?.animate([{ opacity: 0 }, { opacity: 1 }], {
@@ -369,7 +370,7 @@ export default function Viewer() {
       veil?.cancel()
       backdrop?.classList.remove('is-fading')
     }
-    // Une seule fois, au montage.
+    // Once only, on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -383,7 +384,7 @@ export default function Viewer() {
   const close = useCallback(() => {
     if (closing.current) return
     closing.current = true
-    // Dès le début de la fermeture : la vidéo se tait (le flux est libéré à la fin / au démontage).
+    // From the start of closing: the video goes silent (the stream is released at the end / on unmount).
     rootRef.current?.setAttribute('data-closing', '')
     pauseVideo(videoRef.current)
     const reduced = motionOff()
@@ -508,7 +509,7 @@ export default function Viewer() {
       .catch((err: unknown) => toast(err instanceof RpcError ? err.message : tr.errors.generic))
   }, [uuid])
 
-  // Commandes du menu natif (⌘I, ⌘+, ⌘−, ⌘0, Aperçu rapide).
+  // Native menu commands (⌘I, ⌘+, ⌘−, ⌘0, Quick Look).
   useEffect(
     () =>
       on('overlay.command', ({ cmd }) => {
@@ -524,7 +525,7 @@ export default function Viewer() {
     [togglePanel, setZoomTo, zoom, uuid],
   )
 
-  // Clavier : Échap, ←/→ (éléments), ⌥←/⌥→ (slides), Maj+←/→ (±5 s), Espace, ⌘⌫.
+  // Keyboard: Escape, ←/→ (items), ⌥←/⌥→ (slides), Shift+←/→ (±5 s), Space, ⌘⌫.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented) return
@@ -560,7 +561,7 @@ export default function Viewer() {
     return () => window.removeEventListener('keydown', onKey)
   }, [close, go, goSlide, remove, picking])
 
-  // Pincement / ⌘-molette = zoom ; glisser = déplacement au-delà de 100 %.
+  // Pinch / ⌘-wheel = zoom; drag = panning beyond 100 %.
   useGesture(
     {
       onWheel: ({ event, delta: [, dy] }) => {
@@ -585,7 +586,7 @@ export default function Viewer() {
     },
   )
 
-  // Pipette : couleur du média sous le curseur (image décodée la plus haute, ou vidéo).
+  // Eyedropper: colour of the media under the cursor (highest decoded image, or video).
   const sampleAt = useCallback((x: number, y: number): string | null => {
     const host = mediaRef.current
     if (!host) return null

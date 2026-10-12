@@ -1,6 +1,6 @@
 /**
- * Sync côté app : ordre, budgets, ingestion d'une page (post_meta v1, aucune URL http(s)
- * dans `ItemCard`), règle d'arrêt, éléments écartés, publication de l'extension, téléchargeur, import.
+ * App-side sync: order, budgets, page ingestion (post_meta v1, no http(s) URL
+ * in `ItemCard`), stop rule, discarded items, extension publication, downloader, import.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -47,10 +47,10 @@ afterEach(() => t.cleanup())
 
 const svc = () => ({ lib, prefs: () => DEFAULT_PREFS, now: () => t.clock.now })
 
-describe('ordre (order.ts)', () => {
+describe('order (order.ts)', () => {
   const k = (map: Record<string, Known>) => (key: string) => map[key] ?? { state: 'new' as const }
 
-  it('incrémental : nouveautés en tête dans l’ordre de la plateforme, ancre fixe', () => {
+  it('incremental: new items first in the platform order, fixed anchor', () => {
     const cur = startOrder('incremental', { backfill_anchor_at: null, backfill_pos: 0 }, 10_000)
     const out = assignCreatedAt(
       'incremental',
@@ -65,7 +65,7 @@ describe('ordre (order.ts)', () => {
     ])
   })
 
-  it('backfill : recalage 1 ms sous le voisin connu, ancre persistée entre tranches, marque recovered', () => {
+  it('backfill: re-anchored 1 ms under the known neighbor, anchor persisted across slices, marked recovered', () => {
     const st = { backfill_anchor_at: null as number | null, backfill_pos: 0 }
     const cur = startOrder('backfill', st, 50_000)
     const lookup = k({
@@ -81,7 +81,7 @@ describe('ordre (order.ts)', () => {
     )
     expect(t1.map((o) => o.createdAt)).toEqual([19_999, 19_998])
     expect(t1.every((o) => o.recovered)).toBe(true)
-    // Tranche suivante : reprise depuis l'ancre persistée.
+    // Next slice: resume from the persisted anchor.
     const cur2 = startOrder(
       'backfill',
       { backfill_anchor_at: cur.anchorAt, backfill_pos: cur.pos },
@@ -100,7 +100,7 @@ describe('ordre (order.ts)', () => {
     ])
   })
 
-  it('voisins importés à 1 s d’écart : les rattrapés s’intercalent dans l’ordre', () => {
+  it('imported neighbors 1 s apart: the caught-up ones are interleaved in order', () => {
     const cur = startOrder('backfill', { backfill_anchor_at: null, backfill_pos: 0 }, 99_000)
     const out = assignCreatedAt(
       'backfill',
@@ -113,7 +113,7 @@ describe('ordre (order.ts)', () => {
     expect([...times].sort((a, b) => b - a)).toEqual(times)
   })
 
-  it('remise en favori d’un ancien (connu) : n’entraîne pas les suivants en incrémental', () => {
+  it('re-favoriting an old (known) item: does not pull the following ones into incremental', () => {
     const cur = startOrder('incremental', { backfill_anchor_at: null, backfill_pos: 0 }, 5_000)
     const out = assignCreatedAt(
       'incremental',
@@ -126,8 +126,8 @@ describe('ordre (order.ts)', () => {
   })
 })
 
-describe('budget Instagram', () => {
-  it('21e page du run refusée ; cooldown partagé bloque aussi le refresh ; plafond du jour', () => {
+describe('Instagram budget', () => {
+  it('21st page of the run refused; shared cooldown also blocks the refresh; daily cap', () => {
     let saved = null as unknown
     const b = new PlatformBudget(
       'instagram',
@@ -159,7 +159,7 @@ describe('budget Instagram', () => {
     expect(day.check('refresh', T0 + 10_000)).toEqual({ ok: false, reason: 'day' })
   })
 
-  it('écart de 3 à 6 s entre deux appels', () => {
+  it('gap of 3 to 6 s between two calls', () => {
     const b = new PlatformBudget(
       'instagram',
       { budgetDay: null, budgetUsed: 0, cooldownUntil: null, cooldowns: 0 },
@@ -171,8 +171,8 @@ describe('budget Instagram', () => {
   })
 })
 
-describe('ingestion d’une page', () => {
-  it('20 tweets : items + post_meta v1 valides, médias distants, jobs, aucune URL http(s) dans ItemCard', () => {
+describe('page ingestion', () => {
+  it('20 tweets: valid items + post_meta v1, remote media, jobs, no http(s) URL in ItemCard', () => {
     const page = posts('x', 'x/curseur-page1.json')
     expect(page).toHaveLength(20)
     const r = ingestPage(svc(), {
@@ -214,7 +214,7 @@ describe('ingestion d’une page', () => {
         }
       ).n,
     ).toBe(15)
-    // Ordre : le premier de la page est le plus récent.
+    // Order: the first one on the page is the most recent.
     expect(r.createdUuids).toHaveLength(20)
     const again = ingestPage(svc(), {
       platform: 'x',
@@ -227,7 +227,7 @@ describe('ingestion d’une page', () => {
     expect(again.stopIncremental).toBe(true)
   })
 
-  it('carrousel Instagram de 10 : un élément, 10 médias (badge 1/10)', () => {
+  it('Instagram carousel of 10: one item, 10 media (1/10 badge)', () => {
     ingestPage(svc(), {
       platform: 'instagram',
       mode: 'incremental',
@@ -241,7 +241,7 @@ describe('ingestion d’une page', () => {
     expect(it).toEqual({ media_count: 10, kind: 'image' })
   })
 
-  it('suppression définitive (écarté) : jamais réimporté, même par le backfill', () => {
+  it('permanent deletion (discarded): never re-imported, even by the backfill', () => {
     const page = posts('x', 'x/simple.json')
     ingestPage(svc(), {
       platform: 'x',
@@ -266,7 +266,7 @@ describe('ingestion d’une page', () => {
     ).toBe(0)
   })
 
-  it('élément importé de GatherOS (même external_id) : reconnu, pas de doublon', () => {
+  it('item imported from GatherOS (same external_id): recognized, no duplicate', () => {
     const p = posts('x', 'x/simple.json')[0]!
     t.repos.items.insert({
       kind: 'tweet',
@@ -287,8 +287,8 @@ describe('ingestion d’une page', () => {
   })
 })
 
-describe('publication enregistrée depuis l’extension', () => {
-  it('donnée brute X → publication normalisée ; repli DOM partiel', () => {
+describe('post saved from the extension', () => {
+  it('raw X data → normalized post; partial DOM fallback', () => {
     const page = fx('x/simple.json') as {
       data: {
         bookmark_timeline_v2: {
@@ -325,8 +325,8 @@ describe('publication enregistrée depuis l’extension', () => {
   })
 })
 
-describe('téléchargeur', () => {
-  it('Referer par CDN, aucun cookie ; HLS confié à ffmpeg ; 403 Instagram → refresh', () => {
+describe('downloader', () => {
+  it('Referer per CDN, no cookie; HLS handed to ffmpeg; Instagram 403 → refresh', () => {
     expect(refererFor(new URL('https://pbs.twimg.com/media/a.jpg'))).toBe('https://x.com/')
     expect(refererFor(new URL('https://scontent-cdg4-1.cdninstagram.com/x.jpg'))).toBe(
       'https://www.instagram.com/',
@@ -345,8 +345,8 @@ describe('téléchargeur', () => {
   })
 })
 
-describe('import GatherOS', () => {
-  it('backfill programmé pour chaque plateforme, réglages notés sans activation', () => {
+describe('GatherOS import', () => {
+  it('backfill scheduled for each platform, settings noted without activation', () => {
     t.repos.sync.patchState('x', { backfillDone: true, backfillCursor: 'C' })
     prefillAfterImport(lib, { x: true, instagram: false }, T0)
     expect(t.repos.sync.getState('x')).toMatchObject({

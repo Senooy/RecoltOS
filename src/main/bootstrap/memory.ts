@@ -1,16 +1,16 @@
 /**
- * Budgets mémoire GPU de Chromium : par défaut AUCUN plafond (`0` = valeur de Chromium, qui
- * s'adapte à la taille de l'écran : ≈ 625 Mo de tuiles pour un écran Retina 3024 × 1890).
+ * Chromium GPU memory budgets: by default NO cap (`0` = Chromium's value, which
+ * adapts to the screen size: ≈ 625 MB of tiles for a Retina 3024 × 1890 screen).
  *
- * Un plafond de 96 Mo de tuiles (`force-gpu-mem-available-mb`) et de 64 Mo d'images décodées
- * (`force-gpu-mem-discardable-limit-mb`) avait été posé pour la toile Spaces. Il ne tenait pas la vue
- * détail : ambiance plein écran, verre flouté, média et panneau dépassent 96 Mo de tuiles en Retina,
- * le gestionnaire de tuiles restait en manque de mémoire (`did_oom_on_last_assign`) et le compositeur
- * dessinait des tuiles absentes, en aplats sombres, à chaque navigation. Ces commutateurs valent
- * pour tout le processus (impossible de les limiter à une vue) : la fluidité prime.
+ * A cap of 96 MB of tiles (`force-gpu-mem-available-mb`) and 64 MB of decoded images
+ * (`force-gpu-mem-discardable-limit-mb`) had been set for the Spaces canvas. It did not hold for the
+ * detail view: full-screen ambience, frosted glass, media and panel exceed 96 MB of tiles on Retina,
+ * the tile manager kept running out of memory (`did_oom_on_last_assign`) and the compositor
+ * drew missing tiles, as dark flat areas, on every navigation. These switches apply
+ * to the whole process (impossible to limit them to one view): smoothness wins.
  *
- * Doit être appelé AVANT `ready`. `RECOLTOS_GPU_TILE_MB` / `RECOLTOS_GPU_DISCARDABLE_MB` posent un
- * plafond (mesures A/B) ; `0` ou absent laisse la valeur de Chromium.
+ * Must be called BEFORE `ready`. `RECOLTOS_GPU_TILE_MB` / `RECOLTOS_GPU_DISCARDABLE_MB` set a
+ * cap (A/B measurements); `0` or absent keeps Chromium's value.
  */
 export const GPU_TILE_MB = 0
 export const GPU_DISCARDABLE_MB = 0
@@ -25,7 +25,7 @@ function budget(raw: string | undefined, fallback: number): number {
   return Number.isInteger(n) && n >= 0 && n <= 65_536 ? n : fallback
 }
 
-/** Pose les commutateurs ; renvoie ceux qui ont été posés (pour les tests et le journal). */
+/** Sets the switches; returns those that were set (for tests and the log). */
 export function applyMemoryBudgets(
   cl: SwitchSink,
   env: NodeJS.ProcessEnv = process.env,

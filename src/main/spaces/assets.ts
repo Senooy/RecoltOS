@@ -1,10 +1,10 @@
 /**
- * Assets des Spaces : fichiers déposés depuis le Finder ou le presse-papiers,
- * copiés par empreinte (SHA-256 des octets source) dans `spaces/assets/<ab>/<sha>.<ext>`, sans
- * jamais toucher l'original ni polluer la bibliothèque. Type vérifié par les octets magiques ;
- * HEIC/HEIF → JPEG et TIFF → PNG par `sips` (Chromium ne les décode pas), original gardé en
- * `<sha>.orig.<ext>` seulement si `keepOriginals`. Vignette : `<sha>.thumb.webp` (image, 800 px,
- * media-worker) ou `<sha>.thumb.jpg` (poster vidéo). Pas d'import `electron`.
+ * Spaces assets: files dropped from the Finder or the clipboard,
+ * copied by fingerprint (SHA-256 of the source bytes) into `spaces/assets/<ab>/<sha>.<ext>`,
+ * without ever touching the original or polluting the library. Type checked by magic bytes;
+ * HEIC/HEIF → JPEG and TIFF → PNG via `sips` (Chromium does not decode them), original kept as
+ * `<sha>.orig.<ext>` only if `keepOriginals`. Thumbnail: `<sha>.thumb.webp` (image, 800 px,
+ * media-worker) or `<sha>.thumb.jpg` (video poster). No `electron` import.
  */
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
@@ -21,11 +21,11 @@ import { assetUrl, assetUrlOrNull } from '../protocol/urls'
 import { assetThumbRel } from './repo'
 import { mt } from '../i18n'
 
-/** Fichiers par dépôt. */
+/** Files per drop. */
 export const MAX_ASSET_FILES = 200
-/** Taille maximale d'un asset (4 Gio). */
+/** Maximum size of an asset (4 GiB). */
 export const MAX_ASSET_BYTES = 4 * 1024 ** 3
-/** Vidéos acceptées (lecture Chromium). */
+/** Accepted videos (Chromium playback). */
 const VIDEO_EXT = new Set(['mp4', 'mov', 'm4v', 'webm'])
 
 export interface AssetDeps {
@@ -59,7 +59,7 @@ async function exists(abs: string): Promise<boolean> {
   }
 }
 
-/** Chemin reçu du renderer : réel, fichier régulier, taille bornée. */
+/** Path received from the renderer: real, regular file, bounded size. */
 async function checkSource(input: string): Promise<{ abs: string; size: number }> {
   if (!path.isAbsolute(input) || input.includes('\0')) {
     throw new AppError('validation', mt().errors.invalidPath)
@@ -89,7 +89,7 @@ async function copyAtomic(src: string, dst: string): Promise<void> {
   }
 }
 
-/** Importe un fichier comme asset de space ; idempotent (même octets → même asset). */
+/** Imports a file as a space asset; idempotent (same bytes → same asset). */
 export async function importAssetFile(deps: AssetDeps, input: string): Promise<AssetInfo> {
   const { abs } = await checkSource(input)
   const t = await detectType(await readHead(abs))
@@ -173,7 +173,7 @@ export async function importAssetFile(deps: AssetDeps, input: string): Promise<A
   }
 }
 
-/** Plusieurs fichiers ; les échecs sont rendus à part (le dépôt continue). */
+/** Several files; failures are reported separately (the drop continues). */
 export async function importAssetFiles(
   deps: AssetDeps,
   paths: readonly string[],
@@ -193,7 +193,7 @@ export async function importAssetFiles(
   return { assets, failed }
 }
 
-/** Octets (presse-papiers, fichier d'un autre navigateur) → fichier temporaire → asset. */
+/** Bytes (clipboard, file from another browser) → temporary file → asset. */
 export async function importAssetBuffer(deps: AssetDeps, bytes: Uint8Array): Promise<AssetInfo> {
   if (bytes.byteLength === 0) throw new AppError('validation', mt().errors.emptyContent)
   const tmpDir = deps.lib.paths.abs('tmp/spaces')

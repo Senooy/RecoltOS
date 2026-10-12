@@ -1,11 +1,11 @@
 /**
- * Palette, sans dépendance :
- * 1. sharp → 64×64 max, RGBA brut ; pixels d'alpha < 128 ignorés ; conversion Lab (D65).
- * 2. k-means++ (k = 8, graine 42, 12 itérations max).
- * 3. Tri par population décroissante, fusion des clusters à ΔE76 < 8, rejet des < 1 %.
- * 4. Sortie dans l'ordre de dominance : `hex` (`labToHex`), `lab` = `hexToLab(hex)` arrondi à
- *    4 décimales (cohérent avec l'hex quantifié, comme les palettes importées), `share` (Σ = 1).
- * Déterministe : même fichier → même palette.
+ * Palette, dependency-free:
+ * 1. sharp → 64×64 max, raw RGBA; pixels with alpha < 128 ignored; Lab conversion (D65).
+ * 2. k-means++ (k = 8, seed 42, 12 iterations max).
+ * 3. Sort by descending population, merge clusters at ΔE76 < 8, reject those < 1 %.
+ * 4. Output in dominance order: `hex` (`labToHex`), `lab` = `hexToLab(hex)` rounded to
+ *    4 decimals (consistent with the quantized hex, like imported palettes), `share` (Σ = 1).
+ * Deterministic: same file → same palette.
  */
 import sharp, { type OutputInfo } from 'sharp'
 import { deltaE76, hexToLab, labToHex, rgbToLab, type Lab } from '../../../shared/color'
@@ -24,7 +24,7 @@ export const PALETTE = {
   minShare: 0.01,
 } as const
 
-/** PRNG mulberry32 : reproductible, indépendant de `Math.random`. */
+/** PRNG mulberry32: reproducible, independent of `Math.random`. */
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0
   return () => {
@@ -41,7 +41,7 @@ interface Cluster {
   count: number
 }
 
-const round4 = (v: number): number => Math.round(v * 1e4) / 1e4 + 0 // `+ 0` : pas de -0
+const round4 = (v: number): number => Math.round(v * 1e4) / 1e4 + 0 // `+ 0`: no -0
 
 function dist2(p: Float64Array, i: number, c: readonly number[]): number {
   const dl = (p[i * 3] ?? 0) - (c[0] ?? 0)
@@ -51,8 +51,8 @@ function dist2(p: Float64Array, i: number, c: readonly number[]): number {
 }
 
 /**
- * k-means++ sur des points Lab (`points` = [L,a,b]×n). Retourne les clusters non vides,
- * triés par population décroissante (égalité : L, a, b croissants, pour la stabilité).
+ * k-means++ on Lab points (`points` = [L,a,b]×n). Returns the non-empty clusters,
+ * sorted by descending population (ties: L, a, b ascending, for stability).
  */
 export function kmeansLab(
   points: Float64Array,
@@ -75,7 +75,7 @@ export function kmeansLab(
   while (centers.length < k) {
     let sum = 0
     for (let i = 0; i < n; i++) sum += d2[i] ?? 0
-    if (sum <= 1e-12) break // moins de couleurs distinctes que k
+    if (sum <= 1e-12) break // fewer distinct colors than k
     let r = rand() * sum
     let pick = n - 1
     for (let i = 0; i < n; i++) {
@@ -123,7 +123,7 @@ export function kmeansLab(
     }
     for (let c = 0; c < kk; c++) {
       const m = counts[c] ?? 0
-      // Cluster vide : le centre reste en place (il sera écarté à la sortie).
+      // Empty cluster: the centre stays in place (it will be dropped at output).
       if (m > 0)
         centers[c] = [
           (sums[c * 3] ?? 0) / m,
@@ -149,7 +149,7 @@ function sortClusters(cs: Cluster[]): Cluster[] {
   )
 }
 
-/** Fusion ΔE76 < seuil (dans l'ordre de dominance), puis rejet des clusters < `minShare`. */
+/** Merge ΔE76 < threshold (in dominance order), then reject clusters < `minShare`. */
 export function mergeClusters(
   sorted: readonly Cluster[],
   mergeDeltaE: number = PALETTE.mergeDeltaE,
@@ -175,7 +175,7 @@ export function mergeClusters(
   return sortClusters(big.length > 0 ? big : kept.slice(0, 1))
 }
 
-/** Palette à partir de clusters : hex, Lab cohérent avec l'hex, parts normalisées. */
+/** Palette from clusters: hex, Lab consistent with the hex, normalized shares. */
 export function toPalette(clusters: readonly Cluster[]): MediaResult<'palette'> {
   const total = clusters.reduce((s, c) => s + c.count, 0)
   const hex: string[] = []
@@ -184,7 +184,7 @@ export function toPalette(clusters: readonly Cluster[]): MediaResult<'palette'> 
   for (const c of clusters) {
     const h = labToHex(c.lab)
     if (hex.includes(h)) {
-      // Deux clusters quantifiés sur le même hex : on cumule la part.
+      // Two clusters quantized to the same hex: their shares are summed.
       const i = hex.indexOf(h)
       share[i] = (share[i] ?? 0) + c.count / total
       continue
@@ -197,7 +197,7 @@ export function toPalette(clusters: readonly Cluster[]): MediaResult<'palette'> 
   return { hex, lab, share: share.map(round4) }
 }
 
-/** Palette d'un tableau RGBA (exporté pour les tests). */
+/** Palette of an RGBA array (exported for tests). */
 export function paletteFromRgba(
   data: Uint8Array,
   channels: number,

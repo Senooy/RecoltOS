@@ -1,6 +1,6 @@
 /**
- * Régression visuelle sur la bibliothèque de démo déterministe : vue détail (image),
- * Redécouvrir (graine fixe 42 sous e2e), Réglages › Capture, menu contextuel.
+ * Visual regression on the deterministic demo library: detail view (image),
+ * Rediscover (fixed seed 42 under e2e), Settings › Capture, context menu.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'

@@ -1,8 +1,8 @@
 /**
- * M5 : Réglages › Synchronisation et sync de bout en bout CÔTÉ APP, avec un FAUX hôte
- * natif branché sur le socket de l'app (`RECOLTOS_BRIDGE=1`) qui rejoue les fixtures synthétiques :
- * activation (feuille de risques), `sync.run` → pages → `sync.ack`, ingestion, ligne d'état, carte de
- * post rendue en WebP 960 px, pilule « nouveaux favoris ». Aucun réseau, aucun compte.
+ * M5: Settings › Sync and end-to-end sync on the APP SIDE, with a FAKE native host
+ * plugged into the app socket (`RECOLTOS_BRIDGE=1`) that replays the synthetic fixtures:
+ * activation (risk sheet), `sync.run` → pages → `sync.ack`, ingestion, status line, post card
+ * rendered in WebP 960 px, "new favorites" pill. No network, no account.
  */
 import { readFileSync } from 'node:fs'
 import net from 'node:net'
@@ -20,7 +20,7 @@ const id = () => globalThis.crypto.randomUUID()
 
 type Msg = { v: 1; id: string; re?: string; type: string; payload?: Record<string, unknown> }
 
-/** Faux hôte : parle NDJSON au socket de l'app comme `recolt-host` le ferait. */
+/** Fake host: speaks NDJSON to the app socket the way `recolt-host` would. */
 class FakeHost {
   sock: net.Socket
   got: Msg[] = []
@@ -61,15 +61,15 @@ const invoke = (page: Page, channel: string, input: unknown) =>
     [channel, input] as const,
   ) as Promise<{ ok: boolean; data?: unknown }>
 
-test.describe('synchronisation (faux hôte)', () => {
+test.describe('sync (fake host)', () => {
   test.use({ appLaunch: { env: { RECOLTOS_BRIDGE: '1' } } })
 
-  test('Réglages › Synchronisation, activation, run de 2 pages, ingestion et carte de post', async ({
+  test('Settings › Sync, activation, 2-page run, ingestion and post card', async ({
     page,
     userData,
     openDbReadonly,
   }) => {
-    // Aucun téléchargement réel des médias synthétiques.
+    // No real download of the synthetic media.
     expect(
       (await invoke(page, 'prefs.set', { patch: { storage: { downloadRemoteMedia: false } } })).ok,
     ).toBe(true)
@@ -81,7 +81,7 @@ test.describe('synchronisation (faux hôte)', () => {
     await expect(page.locator(t('sync-line-x'))).toHaveText('Désactivé')
     await expect(page.locator(t('sync-ext-state'))).toContainText('Non détectée')
 
-    // L'« extension » se connecte (Firefox, sessions X et Cosmos présentes).
+    // The "extension" connects (Firefox, X and Cosmos sessions present).
     const host = new FakeHost(socketPath(userData))
     await new Promise<void>((r) => host.sock.once('connect', () => r()))
     host.send('host.hello', {
@@ -108,7 +108,7 @@ test.describe('synchronisation (faux hôte)', () => {
     expect(ack.payload).toMatchObject({ protocol: 1, needsReload: false })
     await expect(page.locator(t('sync-ext-state'))).toContainText('Connectée — Firefox')
 
-    // Première activation : feuille de risques, option onglet DÉCOCHÉE.
+    // First activation: risk sheet, tab option UNCHECKED.
     await page.locator(t('sync-switch-x')).click()
     await expect(page.locator(t('sync-activate'))).toBeVisible()
     await expect(page.locator(t('sync-activate-tab'))).not.toBeChecked()
@@ -165,7 +165,7 @@ test.describe('synchronisation (faux hôte)', () => {
       )
       .toBe('background')
 
-    // Posts texte : carte rendue (WebP 960 px, rôle render).
+    // Text posts: card rendered (WebP 960 px, render role).
     await expect
       .poll(
         () =>
@@ -178,7 +178,7 @@ test.describe('synchronisation (faux hôte)', () => {
       )
       .toBe(5)
 
-    // Journal : cible arrière-plan.
+    // Log: background target.
     await page.locator(t('sync-row-x')).hover()
     await page.locator(t('sync-more-x')).click()
     await page.getByRole('menuitem', { name: 'Voir le journal' }).click()

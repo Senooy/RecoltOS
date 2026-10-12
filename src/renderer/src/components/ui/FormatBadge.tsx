@@ -1,6 +1,6 @@
 /**
- * `FormatBadge` : « MP4 », « JPG », « WEBP », « GIF », « PAGE », « POST ».
- * 11 px, graisse 700, blanc sur `--viewer-chip`, rayon 6, padding 3 7.
+ * `FormatBadge`: "MP4", "JPG", "WEBP", "GIF", "PAGE", "POST".
+ * 11 px, weight 700, white on `--viewer-chip`, radius 6, padding 3 7.
  */
 import { cn } from '../../lib/cn'
 

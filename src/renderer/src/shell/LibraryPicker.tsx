@@ -1,6 +1,6 @@
 /**
- * `LibraryPicker` : logo 28 px à `left: 18`, nom de la bibliothèque (ellipse à
- * 160 px), menu de 260 px : une ligne par bibliothèque (coche sur l'active), « Nouvelle
+ * `LibraryPicker`: 28 px logo at `left: 18`, library name (ellipsis at
+ * 160 px), 260 px menu: one line per library (check mark on the active one), « Nouvelle
  * bibliothèque… », « Gérer les bibliothèques… ».
  */
 import { Check, ChevronsUpDown, FolderCog, Plus } from 'lucide-react'
@@ -29,7 +29,7 @@ export function useLibraries() {
       void rpc('libraries.list')
         .then((r) => setState({ active: r.active, libraries: r.libraries }))
         .catch((err: unknown) => {
-          if (!isNotImplemented(err)) console.warn('[libraries] lecture impossible', err)
+          if (!isNotImplemented(err)) console.warn('[libraries] could not read', err)
         })
     load()
     const offs = [

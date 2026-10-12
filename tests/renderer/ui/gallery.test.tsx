@@ -10,7 +10,7 @@ import { Toaster, toast } from '../../../src/renderer/src/components/ui/Toaster'
 
 const COMPONENTS_DIR = resolve(process.cwd(), 'src/renderer/src/components')
 
-/** Palette Tailwind par défaut (désactivée par `--color-*: initial`) : interdite, tokens seulement. */
+/** Default Tailwind palette (disabled by `--color-*: initial`): forbidden, tokens only. */
 const PALETTE_CLASS =
   /\b(?:bg|text|border|ring|fill|stroke|from|to|via|divide|outline|shadow|accent|caret|decoration|placeholder)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/
 const HEX_CLASS = /\b(?:bg|text|border|fill|stroke|ring|from|to|via)-\[#[0-9a-fA-F]{3,8}\]/
@@ -25,15 +25,15 @@ function walk(dir: string): string[] {
 
 const sources = walk(COMPONENTS_DIR).filter((f) => /\.(tsx?|css)$/.test(f))
 
-describe('galerie : tokens uniquement', () => {
-  it('rend chaque composant en clair et en sombre', () => {
+describe('gallery: tokens only', () => {
+  it('renders each component in light and dark', () => {
     const { container } = render(<Gallery />)
     expect(container.querySelector('[data-gallery-theme="light"]')).toBeTruthy()
     expect(container.querySelector('[data-gallery-theme="dark"]')).toBeTruthy()
     for (const theme of ['light', 'dark']) {
       const block = container.querySelector(`[data-gallery-theme="${theme}"]`) as HTMLElement
       expect(block.getAttribute('data-theme')).toBe(theme)
-      // un représentant de chaque famille de composants
+      // one representative of each component family
       expect(block.querySelector('[role="switch"]')).toBeTruthy()
       expect(block.querySelector('[role="slider"]')).toBeTruthy()
       expect(block.querySelector('[role="radiogroup"]')).toBeTruthy()
@@ -45,7 +45,7 @@ describe('galerie : tokens uniquement', () => {
     }
   })
 
-  it('aucune classe de palette Tailwind (bg-gray = 0) ni couleur hexadécimale dans le DOM rendu', () => {
+  it('no Tailwind palette class (bg-gray = 0) nor hex colour in the rendered DOM', () => {
     const { container } = render(<Gallery />)
     const classes = [...container.querySelectorAll('[class]')]
       .map((e) => e.getAttribute('class') ?? '')
@@ -56,7 +56,7 @@ describe('galerie : tokens uniquement', () => {
     expect(HEX_CLASS.test(classes)).toBe(false)
   })
 
-  it('aucune classe de palette, hex ou variant `focus:` dans les sources des composants', () => {
+  it('no palette class, hex or `focus:` variant in the component sources', () => {
     expect(sources.length).toBeGreaterThan(20)
     for (const file of sources) {
       const text = readFileSync(file, 'utf8')
@@ -69,7 +69,7 @@ describe('galerie : tokens uniquement', () => {
     }
   })
 
-  it('aucun style inline en couleur hexadécimale (tokens seulement)', () => {
+  it('no inline style in hex colour (tokens only)', () => {
     const { container } = render(<Gallery />)
     const inline = [...container.querySelectorAll('[style]')].map(
       (e) => e.getAttribute('style') ?? '',
@@ -80,7 +80,7 @@ describe('galerie : tokens uniquement', () => {
     expect(/#[0-9a-fA-F]{3,8}\b/.test(gallerySource)).toBe(false)
   })
 
-  it('tous les boutons sans texte ont un aria-label FR non vide ; tout slider est nommé', () => {
+  it('all buttons without text have a non-empty French aria-label; every slider is named', () => {
     const { container } = render(<Gallery />)
     const iconOnly = [...container.querySelectorAll('button')].filter(
       (b) => (b.textContent ?? '').trim() === '',
@@ -92,14 +92,14 @@ describe('galerie : tokens uniquement', () => {
     for (const s of container.querySelectorAll('[role="slider"]')) {
       expect((s.getAttribute('aria-label') ?? '').trim()).not.toBe('')
     }
-    // Aucun nom accessible en anglais courant dans les contrôles d'icône.
+    // No common English accessible name in the icon controls.
     const names = iconOnly.map((b) => b.getAttribute('aria-label') ?? '')
     expect(names.join('|')).not.toMatch(/\b(Close|Settings|Delete|Search)\b/)
   })
 })
 
-describe('Toaster : pilule', () => {
-  it('affiche un toast avec action « Annuler »', async () => {
+describe('Toaster: pill', () => {
+  it('shows a toast with the "Annuler" action', async () => {
     render(<Toaster />)
     act(() => {
       toast('Ajouté à Gaming', { action: { label: 'Annuler', onClick: () => undefined } })
@@ -115,15 +115,15 @@ describe('Toaster : pilule', () => {
   })
 })
 
-describe('isGalleryRequested : ?gallery=1 en développement seulement', () => {
-  it('vrai uniquement avec ?gallery=1 en dev', () => {
+describe('isGalleryRequested: ?gallery=1 in development only', () => {
+  it('true only with ?gallery=1 in dev', () => {
     expect(isGalleryRequested('?gallery=1', true)).toBe(true)
     expect(isGalleryRequested('?foo=1&gallery=1', true)).toBe(true)
   })
-  it('faux en production, même avec ?gallery=1', () => {
+  it('false in production, even with ?gallery=1', () => {
     expect(isGalleryRequested('?gallery=1', false)).toBe(false)
   })
-  it('faux sans paramètre, avec une autre valeur ou sans le paramètre', () => {
+  it('false without parameter, with another value or without the parameter', () => {
     expect(isGalleryRequested('', true)).toBe(false)
     expect(isGalleryRequested('?gallery=0', true)).toBe(false)
     expect(isGalleryRequested('?gallery=true', true)).toBe(false)

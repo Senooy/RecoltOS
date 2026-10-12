@@ -1,8 +1,8 @@
 /**
- * Domaine Spaces côté main : liste avec aperçu DOM
- * (20 premiers nœuds), document complet, `applyBatch` atomique, duplication, ajout d'éléments en
- * grille à droite du contenu. Erreurs : `validation` (non réessayable), `busy`, `io`,
- * `limit_exceeded`, `not_found`. Pas d'import `electron` : testable sous Node.
+ * Spaces domain on the main side: list with DOM preview
+ * (first 20 nodes), full document, atomic `applyBatch`, duplication, adding items as a
+ * grid to the right of the content. Errors: `validation` (not retryable), `busy`, `io`,
+ * `limit_exceeded`, `not_found`. No `electron` import: testable under Node.
  */
 import { existsSync } from 'node:fs'
 import type { ItemCard } from '../../shared/dto/items'
@@ -32,14 +32,14 @@ type Lib = Pick<LibraryContext, 'id' | 'root' | 'db' | 'repos' | 'paths'>
 export type ApplyBatch = z.output<typeof ApplyBatchInput>
 
 export const UNTITLED_SPACE = 'Space sans titre'
-/** Écart entre le contenu existant et les éléments ajoutés par « Ajouter à un space › ». */
+/** Gap between the existing content and the items added by "Add to a space ›". */
 export const ADD_ITEMS_GAP = 80
 
 interface JoinedRow extends SpaceNodeRow {
   item_uuid: string | null
 }
 
-/** Convertit une erreur SQLite en `AppError` (codes du contrat). */
+/** Converts a SQLite error into an `AppError` (contract codes). */
 export function asSpacesError(err: unknown): AppError {
   if (err instanceof AppError) return err
   const raw = (err as { code?: unknown } | null)?.code
@@ -68,7 +68,7 @@ function guard<T>(fn: () => T): T {
   }
 }
 
-/** Vignette dérivée d'un asset : `<sha>.thumb.webp` (image) ou `.thumb.jpg` (poster vidéo). */
+/** Thumbnail derived from an asset: `<sha>.thumb.webp` (image) or `.thumb.jpg` (video poster). */
 export function assetThumbRel(assetRel: string, kind: 'image' | 'video'): string {
   return assetRel.replace(/\.[a-z0-9]+$/, kind === 'video' ? '.thumb.jpg' : '.thumb.webp')
 }
@@ -84,12 +84,12 @@ function parseViewport(v: string): Camera {
     const r = Camera.safeParse(JSON.parse(v))
     if (r.success) return r.data
   } catch {
-    // viewport illisible : défaut
+    // unreadable viewport: default
   }
   return { x: 0, y: 0, zoom: 1 }
 }
 
-/** Ligne → nœud du contrat (`null` si la ligne est irrécupérable : journalisée par l'appelant). */
+/** Row → contract node (`null` if the row is unrecoverable: logged by the caller). */
 export function rowToNode(lib: Pick<Lib, 'id' | 'paths'>, r: JoinedRow): SpaceNode | null {
   let style: unknown
   try {
@@ -163,7 +163,7 @@ function nodesOf(lib: Lib, rows: readonly JoinedRow[], log?: (m: string) => void
   for (const r of rows) {
     const n = rowToNode(lib, r)
     if (n) out.push(n)
-    else log?.(`[spaces] nœud ${r.uuid} illisible, ignoré`)
+    else log?.(`[spaces] node ${r.uuid} unreadable, skipped`)
   }
   return out
 }
@@ -213,7 +213,7 @@ export function getSpace(lib: Lib, uuid: string, log?: (m: string) => void): Spa
   }
 }
 
-/** Nœud du contrat → ligne (élément inconnu → `itemId: null`, « Élément supprimé »). */
+/** Contract node → row (unknown item → `itemId: null`, "Item deleted"). */
 function toInput(n: SpaceNode, itemIds: Map<string, number>): SpaceNodeInput {
   const common = {
     uuid: n.uuid,
@@ -242,8 +242,8 @@ export interface ApplyBatchOptions {
 }
 
 /**
- * Une transaction : suppressions, upserts, plafond de 20 000 nœuds, nom / fond (qui touchent
- * `updated_at`), viewport (qui ne le touche pas : panoter ne réordonne pas la liste).
+ * One transaction: deletions, upserts, cap of 20,000 nodes, name / background (which touch
+ * `updated_at`), viewport (which does not touch it: panning does not reorder the list).
  */
 export function applyBatch(
   lib: Lib,
@@ -311,7 +311,7 @@ export function setBackground(
   guard(() => lib.repos.spaces.update(s.id, { background }, at))
 }
 
-/** Copie l'espace et ses nœuds (nouveaux uuid) ; les assets sont partagés. */
+/** Copies the space and its nodes (new uuids); the assets are shared. */
 export function duplicateSpace(lib: Lib, uuid: string, at = Date.now()): { uuid: string } {
   const s = spaceRow(lib, uuid)
   return guard(() =>
@@ -351,8 +351,8 @@ export function deleteSpace(lib: Lib, uuid: string): void {
 }
 
 /**
- * « Ajouter à un space › » : grille à `x = bbox.maxX + 80`, `y = bbox.minY`
- * (ou 0,0 si l'espace est vide). Éléments inconnus ignorés.
+ * "Add to a space ›": grid at `x = bbox.maxX + 80`, `y = bbox.minY`
+ * (or 0,0 if the space is empty). Unknown items ignored.
  */
 export function addItems(
   lib: Lib,
@@ -398,7 +398,7 @@ export function addItems(
   )
 }
 
-/** Uuid des espaces qui contiennent ces éléments (pastille ✓ du tiroir, rafraîchissement). */
+/** Uuids of the spaces that contain these items (✓ badge of the drawer, refresh). */
 export function spaceUuidsOfItems(lib: Lib, itemIds: readonly number[]): string[] {
   if (itemIds.length === 0) return []
   return (

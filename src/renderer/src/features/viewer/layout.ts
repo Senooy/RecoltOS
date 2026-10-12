@@ -1,8 +1,8 @@
 /**
- * Géométrie de la vue détail : barre du haut de 45 pt,
- * panneau Détails de 300 pt à `right: 18 ; top: 62 ; bottom: 18`, scène de `x = 0` à `W − 288`
- * (média centré à x ≈ 496 pour W = 1280), média en `contain` avec une marge de 54 × 40 et, pour une
- * vidéo, 48 pt réservés au lecteur placé 4 pt sous le média (le média seul reste centré).
+ * Geometry of the detail view: 45 pt top bar,
+ * 300 pt Details panel at `right: 18 ; top: 62 ; bottom: 18`, scene from `x = 0` to `W − 288`
+ * (media centered at x ≈ 496 for W = 1280), media in `contain` with a 54 × 40 margin and, for a
+ * video, 48 pt reserved for the player placed 4 pt below the media (the media alone stays centered).
  */
 
 export const TOPBAR_H = 45
@@ -10,15 +10,15 @@ export const PANEL_W = 300
 export const PANEL_RIGHT = 18
 export const PANEL_TOP = 62
 export const PANEL_BOTTOM = 18
-/** Largeur retirée à droite de la scène quand le panneau est affiché. */
+/** Width removed from the right of the scene when the panel is shown. */
 export const STAGE_RIGHT_INSET = 288
 export const STAGE_PAD_X = 54
 export const STAGE_PAD_Y = 40
 export const PLAYER_H = 44
 export const PLAYER_GAP = 4
-/** Retrait du lecteur de chaque côté du média. */
+/** Player inset on each side of the media. */
 export const PLAYER_INSET = 12
-/** Largeur d'un post sans média dans la scène. */
+/** Width of a post without media in the scene. */
 export const TWEET_DETAIL_W = 560
 
 export interface Rect {
@@ -34,8 +34,8 @@ export function stageRect(winW: number, winH: number, panelOpen: boolean): Rect 
 }
 
 /**
- * Rectangle du média ajusté (`contain`) dans la scène, à 100 % de zoom. `reserve` = hauteur gardée
- * sous le média (lecteur vidéo, indicateur de slides) : elle limite la taille sans décentrer le média.
+ * Rectangle of the media fitted (`contain`) in the scene, at 100 % zoom. `reserve` = height kept
+ * below the media (video player, slide indicator): it limits the size without off-centering the media.
  */
 export function fitMedia(
   stage: Rect,
@@ -60,7 +60,7 @@ export function fitMedia(
   }
 }
 
-/** Rectangle zoomé (facteur `zoom`, 1 = ajusté) autour du centre, décalé de `pan`. */
+/** Zoomed rectangle (`zoom` factor, 1 = fitted) around the center, offset by `pan`. */
 export function zoomRect(fit: Rect, zoom: number, pan: { x: number; y: number }): Rect {
   const w = fit.w * zoom
   const h = fit.h * zoom
@@ -71,7 +71,7 @@ export const ZOOM_MIN = 0.25
 export const ZOOM_MAX = 3
 export const clampZoom = (z: number): number => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z))
 
-/** Paliers de ⌘+ / ⌘− (en fraction). */
+/** Steps of ⌘+ / ⌘− (as a fraction). */
 const STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.25, 1.5, 2, 2.5, 3]
 
 export function zoomStep(z: number, dir: 1 | -1): number {
@@ -79,7 +79,7 @@ export function zoomStep(z: number, dir: 1 | -1): number {
   return [...STEPS].reverse().find((s) => s < z - 0.001) ?? ZOOM_MIN
 }
 
-/** Le déplacement est borné pour qu'au moins la moitié de la scène reste couverte. */
+/** Panning is bounded so that at least half of the scene stays covered. */
 export function clampPan(fit: Rect, zoom: number, pan: { x: number; y: number }) {
   if (zoom <= 1) return { x: 0, y: 0 }
   const mx = (fit.w * zoom - fit.w) / 2 + fit.w / 4

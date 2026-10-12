@@ -1,6 +1,6 @@
 /**
- * ⌘V dans la bibliothèque : écouteur `paste` racine, ignoré dans un champ éditable
- * ou sous un calque ; le MAIN lit le presse-papiers (fichiers du Finder, image, URL).
+ * ⌘V in the library: root `paste` listener, ignored in an editable field or under an overlay;
+ * the main process reads the clipboard (Finder files, image, URL).
  */
 import { useEffect } from 'react'
 import { isEditableTarget } from '../../lib/shortcuts'

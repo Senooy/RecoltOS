@@ -1,7 +1,7 @@
 /**
- * Tuilage de l'export PNG, pur et testable sans Electron : échelle bornée
- * (≤ 8 192 px de côté, ≤ 40 Mpx), marge de 48 unités, tuiles de 1 280 × 800 px CSS dont les
- * caméras sont décalées de multiples entiers de la tuile, copie ligne à ligne dans le tampon final.
+ * Tiling for the PNG export, pure and testable without Electron: bounded scale
+ * (≤ 8 192 px per side, ≤ 40 Mpx), margin of 48 units, tiles of 1 280 × 800 CSS px whose
+ * cameras are offset by whole multiples of the tile, row-by-row copy into the final buffer.
  */
 import type { Rect } from '../../shared/spaces-geometry'
 
@@ -13,13 +13,13 @@ export interface TilePlan {
   i: number
   j: number
   camera: { x: number; y: number; zoom: number }
-  /** Coin haut-gauche de la tuile dans l'image finale (px). */
+  /** Top-left corner of the tile in the final image (px). */
   ox: number
   oy: number
 }
 
 export interface ExportPlan {
-  /** Pixels de sortie par unité monde (≤ échelle demandée). */
+  /** Output pixels per world unit (≤ requested scale). */
   scale: number
   reduced: boolean
   width: number
@@ -61,7 +61,7 @@ export function planExport(
   return { scale: s, reduced: s < requested - 1e-9, width, height, tilePx: { w: tw, h: th }, tiles }
 }
 
-/** Copie la partie utile d'une tuile BGRA (`tileW` px de large) dans l'image finale. */
+/** Copies the useful part of a BGRA tile (`tileW` px wide) into the final image. */
 export function placeTile(
   out: Buffer,
   width: number,

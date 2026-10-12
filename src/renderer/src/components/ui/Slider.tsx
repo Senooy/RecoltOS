@@ -1,9 +1,9 @@
 /**
- * `Slider`, variantes :
- * - `columns` : piste fine sans remplissage, pouce Ø 14 (sous-barre, 2 à 8 colonnes) ;
- * - `zoom` : sur fond sombre du viewer, piste `--viewer-track`, remplissage clair, 110 px ;
- * - `settings` : piste + remplissage `--accent`, pouce Ø 16 (Réglages).
- * Valeur unique (number). Le pouce porte le nom accessible.
+ * `Slider`, variants:
+ * - `columns`: thin track without fill, Ø 14 thumb (sub-bar, 2 to 8 columns);
+ * - `zoom`: on the viewer's dark background, `--viewer-track` track, light fill, 110 px;
+ * - `settings`: track + `--accent` fill, Ø 16 thumb (Settings).
+ * Single value (number). The thumb carries the accessible name.
  */
 import { cva } from 'class-variance-authority'
 import { Slider as SliderPrimitive } from 'radix-ui'
@@ -53,14 +53,14 @@ export interface SliderProps {
   max: number
   step?: number
   variant?: SliderVariant
-  /** Nom accessible FR (obligatoire : un slider sans nom est inutilisable au lecteur d'écran). */
+  /** Accessible name (required: a slider without a name is unusable for screen readers). */
   label: string
-  /** Texte annoncé pour la valeur (« 4 colonnes », « 100 % »). */
+  /** Text announced for the value (e.g. « 4 colonnes », « 100 % »). */
   valueText?: string
   onValueChange?: (value: number) => void
-  /** Fin du geste (clavier ou relâchement du pouce). */
+  /** End of the gesture (keyboard or thumb release). */
   onValueCommit?: (value: number) => void
-  /** Piste inversée (le minimum à droite). */
+  /** Inverted track (minimum on the right). */
   inverted?: boolean
   disabled?: boolean
   className?: string

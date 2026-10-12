@@ -1,15 +1,15 @@
 /**
- * Banc de performance : 10 000 éléments synthétiques par défaut.
+ * Performance bench: 10,000 synthetic items by default.
  *
  *   tsx --tsconfig tsconfig.node.json scripts/seed-bench.mts --out <userData> [--count 10000] [--no-files]
  *       [--force]
  *
- * SÉCURITÉ : `--out` est supprimé avant d'être régénéré ; mêmes refus que `make-fixtures.mts`
- * (`tests/helpers/safe-out.ts`) : dossier non vide sans marqueur, `$HOME`, dépôt, Application Support…
+ * SECURITY: `--out` is deleted before being regenerated; same refusals as `make-fixtures.mts`
+ * (`tests/helpers/safe-out.ts`): non-empty folder without a marker, `$HOME`, repository, Application Support...
  *
- * Même `userData` que `make-fixtures.mts` (libraries.json + libraries/default/recolt.db), mais les
- * fichiers sont des CLONES APFS (`COPYFILE_FICLONE`) de 50 échantillons : presque aucun octet écrit.
- * Distribution = celle de `tests/helpers/synthetic-items.ts` (408 éléments), mise à l'échelle.
+ * Same `userData` as `make-fixtures.mts` (libraries.json + libraries/default/recolt.db), but the
+ * files are APFS CLONES (`COPYFILE_FICLONE`) of 50 samples: almost no bytes written.
+ * Distribution is that of `tests/helpers/synthetic-items.ts` (408 items), scaled up.
  */
 import { copyFileSync, constants, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -42,7 +42,7 @@ export async function seedBench(
 ): Promise<SeedBenchResult> {
   const count = options.count ?? 10_000
   const withFiles = options.files ?? true
-  // Contrôle AVANT toute suppression : dossier vide ou fabriqué par ces scripts, en zone temporaire.
+  // Check BEFORE any deletion: empty folder or one created by these scripts, in a temporary area.
   const userData = assertSafeOutDir(out, { force: options.force })
   rmSync(userData, { recursive: true, force: true })
   const libraryDir = join(userData, 'libraries', 'default')
@@ -127,7 +127,7 @@ export async function seedBench(
   }
 }
 
-/** Entier ≥ 0 d'une option numérique. Refus explicite (sortie 2) plutôt que `NaN` silencieux. */
+/** Integer ≥ 0 for a numeric option. Explicit refusal (exit 2) rather than a silent `NaN`. */
 function parseCount(flag: string, raw: string | undefined): number | undefined {
   if (raw === undefined) return undefined
   const n = raw.trim() === '' ? Number.NaN : Number(raw)
@@ -136,7 +136,7 @@ function parseCount(flag: string, raw: string | undefined): number | undefined {
   return n
 }
 
-/** Analyse des options : une exception de `parseArgs` (option inconnue, valeur absente) devient une erreur d'usage. */
+/** Parses options: an exception from `parseArgs` (unknown option, missing value) becomes a usage error. */
 function parseOptions(argv: readonly string[]) {
   return parseArgs({
     args: [...argv],
@@ -175,7 +175,7 @@ async function main(argv: readonly string[]): Promise<number> {
     return 2
   }
   console.log(
-    `seed-bench : ${res.items} éléments, ${res.media} médias, ${res.files} fichiers (clones) → ${res.userData} (base ${res.ms.db} ms, fichiers ${res.ms.files} ms)`,
+    `seed-bench : ${res.items} items, ${res.media} media, ${res.files} files (clones) → ${res.userData} (db ${res.ms.db} ms, files ${res.ms.files} ms)`,
   )
   return existsSync(join(res.userData, 'libraries.json')) ? 0 : 1
 }

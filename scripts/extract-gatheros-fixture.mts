@@ -1,10 +1,10 @@
 /**
- * Fixture GatherOS anonymisée : `tsx scripts/extract-gatheros-fixture.mts --db <copie>`.
- * Lit une COPIE de `moodmark.db` en lecture seule, sélectionne 10 saves par prédicats, remplace TOUT
- * texte par des valeurs synthétiques déterministes (structure conservée : clés, longueurs de tableaux,
- * nature des URL `moodmark-file://` / http), puis écrit `tests/fixtures/gatheros/seed.json` et
- * `legacy-schema.sql`. Garde anti-fuite : échec si une chaîne de 8 caractères ou plus de la source
- * apparaît dans la sortie. Aucune base ni aucun média n'entre dans git.
+ * Anonymized GatherOS fixture: `tsx scripts/extract-gatheros-fixture.mts --db <copy>`.
+ * Reads a COPY of `moodmark.db` read-only, selects 10 saves by predicates, replaces ALL
+ * text with deterministic synthetic values (structure kept: keys, array lengths, kind of
+ * `moodmark-file://` / http URLs), then writes `tests/fixtures/gatheros/seed.json` and
+ * `legacy-schema.sql`. Leak guard: fails if a string of 8 characters or more from the source
+ * appears in the output. No database and no media ever goes into git.
  */
 import Database from 'better-sqlite3'
 import { createHash } from 'node:crypto'
@@ -17,11 +17,11 @@ const OUT = join(ROOT, 'tests/fixtures/gatheros')
 
 const { values } = parseArgs({ options: { db: { type: 'string' } } })
 if (!values.db) {
-  console.error('usage : extract-gatheros-fixture.mts --db <copie de moodmark.db>')
+  console.error('usage: extract-gatheros-fixture.mts --db <copy of moodmark.db>')
   process.exit(2)
 }
 if (/application support\/gatheros/i.test(values.db)) {
-  console.error('refusé : passe une COPIE de la base, jamais le dossier GatherOS')
+  console.error('refused: pass a COPY of the database, never the GatherOS folder')
   process.exit(2)
 }
 
@@ -58,7 +58,7 @@ for (const [label, where] of PREDICATES) {
   picked.push(r)
 }
 
-// --- Anonymisation déterministe -------------------------------------------------------------
+// --- Deterministic anonymization -------------------------------------------------------------
 const sources = new Set<string>()
 const remember = (v: unknown) => {
   if (typeof v === 'string' && v.length >= 8) sources.add(v)
@@ -161,7 +161,7 @@ function anonTweetMeta(raw: unknown): unknown {
   return JSON.stringify(out)
 }
 
-/** URL source synthétique qui garde la forme utile à l'importeur (identifiant externe, hôte). */
+/** Synthetic source URL that keeps the shape useful to the importer (external id, host). */
 function synthSourceUrl(source: string, kind: string, i: number): string {
   if (kind === 'url') return `https://www.example.test/page/${i}`
   if (source === 'instagram') return `https://www.instagram.com/p/code${i}/`
@@ -200,7 +200,7 @@ const seedSaves = picked.map((s, i) => {
   }
 })
 
-// Palettes : couleurs (non identifiantes) conservées telles quelles.
+// Palettes: colors (not identifying) kept as they are.
 const seed = {
   doc: 'Fixture GatherOS anonymisée, générée par scripts/extract-gatheros-fixture.mts. Aucune donnée réelle.',
   userVersion: Number(db.pragma('user_version', { simple: true })),
@@ -214,7 +214,7 @@ const schema = (
     )
     .all() as { type: string; name: string; sql: string }[]
 )
-  // Tables fantômes de FTS5 : recréées par `CREATE VIRTUAL TABLE`.
+  // FTS5 shadow tables: recreated by `CREATE VIRTUAL TABLE`.
   .filter((r) => !/_fts_(data|idx|content|docsize|config)$/.test(r.name))
   .sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9) || a.name.localeCompare(b.name))
   .map((r) => `${r.sql};`)
@@ -233,12 +233,10 @@ const leaks = [...sources].filter(
     json.includes(s),
 )
 if (leaks.length > 0) {
-  console.error(
-    `fuite détectée (${leaks.length} chaîne(s) de la source dans seed.json) : génération annulée`,
-  )
+  console.error(`leak detected (${leaks.length} source string(s) in seed.json): generation aborted`)
   process.exit(1)
 }
 mkdirSync(OUT, { recursive: true })
 writeFileSync(join(OUT, 'seed.json'), `${json}\n`)
 writeFileSync(join(OUT, 'legacy-schema.sql'), `${schema}\n`)
-console.log(`seed.json : ${seedSaves.length} saves`)
+console.log(`seed.json: ${seedSaves.length} saves`)

@@ -1,12 +1,12 @@
 /**
- * Contrôles de l'environnement utilisés par `doctor.mts`
- * (`pnpm run check:env`). Trois niveaux : `ok`, `warn` (jamais bloquant : outils optionnels,
- * mauvais pnpm) et `fail` (natifs qui ne chargent pas, FTS5 absent, plateforme/Node non supportés).
+ * Environment checks used by `doctor.mts`
+ * (`pnpm run check:env`). Three levels: `ok`, `warn` (never blocking: optional tools,
+ * wrong pnpm) and `fail` (natives that do not load, FTS5 missing, unsupported platform/Node).
  *
- * Limite connue : avec pnpm 9 (p. ex. `/opt/homebrew/bin/pnpm` 9.15.0), `pnpm run check:env` échoue
- * avant d'atteindre le script (`ERROR packages field missing or empty`, dû à `pnpm-workspace.yaml`
- * de pnpm 12). L'avertissement « pnpm/9.15.0 détecté » n'est alors visible qu'avec
- * `corepack pnpm run check:env` ou `tsx --tsconfig tsconfig.node.json scripts/doctor.mts`.
+ * Known limitation: with pnpm 9 (e.g. `/opt/homebrew/bin/pnpm` 9.15.0), `pnpm run check:env` fails
+ * before reaching the script (`ERROR packages field missing or empty`, due to `pnpm-workspace.yaml`
+ * of pnpm 12). The warning « pnpm/9.15.0 détecté » is then only visible with
+ * `corepack pnpm run check:env` or `tsx --tsconfig tsconfig.node.json scripts/doctor.mts`.
  */
 import { spawnSync } from 'node:child_process'
 import { accessSync, constants, existsSync, statfsSync } from 'node:fs'
@@ -35,9 +35,9 @@ const mk = (id: string, level: Level, label: string, detail: string): Check => (
 })
 
 // ---------------------------------------------------------------------------------------------
-// Fonctions pures (testées)
+// Pure functions (tested)
 
-/** `pnpm/12.6.0 npm/? node/v22.22.3 darwin arm64` → `12.6.0` (`null` si absent ou autre gestionnaire). */
+/** `pnpm/12.6.0 npm/? node/v22.22.3 darwin arm64` → `12.6.0` (`null` if absent or another package manager). */
 export function parsePnpmUserAgent(ua: string | undefined): string | null {
   const m = /^pnpm\/(\d+\.\d+\.\d+(?:-[\w.]+)?)\b/.exec(ua ?? '')
   return m?.[1] ?? null
@@ -89,7 +89,7 @@ export function checkPlatform(platform = process.platform, arch = process.arch):
 }
 
 // ---------------------------------------------------------------------------------------------
-// Effets de bord
+// Side effects
 
 const NATIVE_PROBE = `
 const D = require('better-sqlite3')
@@ -182,7 +182,7 @@ export function checkNativesInElectron(root: string): Check {
     : check
 }
 
-/** Même ordre de résolution que `platform/binaries.ts`, plus les emplacements d'outils CLI. */
+/** Same resolution order as `platform/binaries.ts`, plus the CLI tool locations. */
 export function candidateDirs(): string[] {
   return [
     '/opt/homebrew/bin',
@@ -205,7 +205,7 @@ export function findExecutable(
       accessSync(p, constants.X_OK)
       return p
     } catch {
-      /* suivant */
+      /* next */
     }
   }
   return null
@@ -318,8 +318,8 @@ export function runChecks(root: string): Check[] {
     parsePnpmUserAgent(process.env.npm_config_user_agent) === EXPECTED_PNPM ? [] : whichAllPnpm(),
   )
   const out: Check[] = [checkNodeVersion(), checkPlatform(), pm]
-  // Les natifs sont sondés dans tous les cas, y compris hors plateforme supportée : un échec de
-  // chargement se lit alors dans leur détail, il n'est pas écarté.
+  // Natives are probed in all cases, including outside a supported platform: a loading failure
+  // is then read from their detail; it is not discarded.
   out.push(checkNativesInNode(root), checkNativesInElectron(root))
   out.push(...checkOptionalTools(), checkDisk(root), checkXcode())
   const sign = checkSignIdentity()

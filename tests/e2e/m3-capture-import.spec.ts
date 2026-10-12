@@ -1,7 +1,7 @@
 /**
- * M3 : capture avec le faux `screencapture` (élément, dossier de dépôt, Échap,
- * doublon, permission refusée → guide), Réglages › Capture (raccourci appliqué, conflit, réservé),
- * import (50 fichiers + 1 dossier, ⌘V image et URL), « Ouvrir avec » fenêtre fermée.
+ * M3: capture with the fake `screencapture` (element, drop folder, Esc,
+ * duplicate, permission denied → guide), Settings › Capture (shortcut applied, conflict, reserved),
+ * import (50 files + 1 folder, ⌘V image and URL), "Open with" with the window closed.
  */
 import fs from 'node:fs'
 import os from 'node:os'
@@ -56,7 +56,7 @@ test.describe('capture', () => {
     },
   })
 
-  test('menu « Capturer l’écran » : élément, dépôt, doublon, Échap, permission', async ({
+  test('"Capture screen" menu: element, drop, duplicate, Esc, permission', async ({
     app,
     page,
     openDbReadonly,
@@ -77,18 +77,18 @@ test.describe('capture', () => {
       .poll(() => fs.readdirSync(drop).filter((f) => f.startsWith('Capture RecoltOS')).length)
       .toBe(1)
 
-    // Même image : « Déjà dans la bibliothèque », aucun nouvel élément.
+    // Same image: "Already in the library", no new item.
     await clickMenu(app, 'capture')
     await expect(page.getByText('Déjà dans la bibliothèque')).toBeVisible()
     expect(captures()).toBe(1)
 
-    // Échap pendant la sélection : rien.
+    // Esc during the selection: nothing.
     await setMainEnv(app, 'FAKE_SCREENCAPTURE_MODE', 'cancel')
     const r = await invoke(page, 'capture.run', {})
     expect(r.data).toEqual({ status: 'cancelled' })
     expect(captures()).toBe(1)
 
-    // Permission refusée : guide, screencapture jamais lancé.
+    // Permission denied: guide, screencapture never launched.
     const log = path.join(drop, 'calls.log')
     await setMainEnv(app, 'FAKE_SCREENCAPTURE_LOG', log)
     await setMainEnv(app, 'FAKE_SCREENCAPTURE_MODE', null)
@@ -100,7 +100,7 @@ test.describe('capture', () => {
     fs.rmSync(drop, { recursive: true, force: true })
   })
 
-  test('Réglages › Capture : raccourci appliqué, conflit (ancien conservé), réservé', async ({
+  test('Settings › Capture: shortcut applied, conflict (old one kept), reserved', async ({
     page,
   }) => {
     await page.locator(t('btn-settings')).click()
@@ -135,7 +135,7 @@ test.describe('capture', () => {
 test.describe('import', () => {
   test.use({ demoLibrary: { count: 6, collections: 1 } })
 
-  test('50 fichiers + 1 dossier, ⌘V image et URL', async ({ app, page, openDbReadonly }) => {
+  test('50 files + 1 folder, ⌘V image and URL', async ({ app, page, openDbReadonly }) => {
     await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-import-'))
     const files: string[] = []
@@ -174,7 +174,7 @@ test.describe('import', () => {
     const count = () => (db.prepare('SELECT count(*) n FROM items').get() as { n: number }).n
     const before = count()
 
-    // ⌘V d'une image (presse-papiers lu par main).
+    // ⌘V of an image (clipboard read by main).
     const png = await makeImage({ width: 50, height: 50, color: '#a03050', format: 'png' })
     await app.evaluate(async ({ clipboard, ClipboardItem }, b64) => {
       const buf = Buffer.from(b64, 'base64')
@@ -185,7 +185,7 @@ test.describe('import', () => {
     await page.evaluate(() => document.dispatchEvent(new Event('paste', { bubbles: true })))
     await expect.poll(count).toBe(before + 1)
 
-    // ⌘V d'une URL de média.
+    // ⌘V of a media URL.
     const server = await startRemoteServer()
     try {
       await app.evaluate(
@@ -200,10 +200,7 @@ test.describe('import', () => {
     fs.rmSync(dir, { recursive: true, force: true })
   })
 
-  test('« Ouvrir avec » fenêtre fermée : fenêtre recréée, élément ouvert', async ({
-    app,
-    page,
-  }) => {
+  test('"Open with" with window closed: window recreated, item opened', async ({ app, page }) => {
     await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-open-'))
     const file = path.join(dir, 'ouvert.png')

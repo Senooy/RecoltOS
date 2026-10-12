@@ -1,6 +1,6 @@
 /**
- * Libellés internes du kit UI (accessibilité : noms accessibles, infobulles), dans la langue
- * active : chaque libellé est relu à l'usage (accesseurs), jamais figé à l'import.
+ * Internal labels of the UI kit (accessibility: accessible names, tooltips), in the active
+ * language: each label is re-read at use (getters), never frozen at import.
  */
 import { tr } from '../../i18n'
 

@@ -1,16 +1,16 @@
 /**
- * Calque d'ambiance de la vue détail (dans `.viewer-backdrop`, dont il suit les fondus d'ouverture
- * et de fermeture). L'ambiance est calculée dans un canvas hors écran de 96 × 60 px puis copiée dans
- * deux canvas visibles de même taille, étirés en plein écran par le compositeur (une texture
- * minuscule agrandie : ni tuiles à rastériser, ni PNG à encoder puis décoder). Ordre fixe : le canvas
- * du dessus reçoit la nouvelle ambiance et apparaît en fondu (450 ms ; instantané en mouvement
- * réduit) ; juste avant, l'image visible (fondu en cours compris) est figée dans celui du dessous.
- * Les deux canvas restent des calques composités stables pendant toute la vue. Avant, deux fonds
- * étirés plus le grain étaient promus en calques plein écran à chaque fondu puis rétrogradés (≈ 23 Mo
- * de tuiles chacun en Retina, re-rastérisés à chaque navigation) : c'était l'essentiel de la mémoire
- * de tuiles de la vue et de son travail de rastérisation. Avant le premier dessin, un dégradé
- * tiré de la couleur dominante de la carte occupe le fond. Vidéo en lecture : l'ambiance suit
- * l'image courante toutes les 2 s.
+ * Ambience layer of the detail view (inside `.viewer-backdrop`, whose opening and closing fades it
+ * follows). The ambience is computed in an off-screen canvas of 96 × 60 px, then copied into
+ * two visible canvases of the same size, stretched full-screen by the compositor (a tiny texture
+ * enlarged: no tiles to rasterise, no PNG to encode then decode). Fixed order: the top canvas
+ * receives the new ambience and fades it in (450 ms; instant with reduced motion); just before,
+ * the visible image (fade in progress included) is frozen into the one below.
+ * Both canvases remain stable composited layers for the whole view. Before, two stretched
+ * backgrounds plus the grain were promoted to full-screen layers on every fade, then demoted
+ * (≈ 23 MB of tiles each on Retina, re-rasterised at each navigation): that was most of the
+ * view's tile memory and rasterisation work. Before the first draw, a gradient drawn from
+ * the card's dominant colour fills the background. Video playing: the ambience follows the
+ * current frame every 2 s.
  */
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import {
@@ -31,7 +31,7 @@ export const VIDEO_REFRESH_MS = 2000
 
 let grainUrl: string | null = null
 
-/** Grain très léger, en tuile (évite les bandes des dégradés sombres agrandis). */
+/** Very light grain, as a tile (avoids banding in enlarged dark gradients). */
 function grain(): string | null {
   if (grainUrl !== null) return grainUrl || null
   try {
@@ -39,7 +39,7 @@ function grain(): string | null {
     const ctx = c.getContext('2d')
     if (!ctx) throw new Error('2d')
     const img = ctx.createImageData(96, 96)
-    // Pseudo-aléatoire à graine fixe : le grain est identique d'une ouverture à l'autre.
+    // Fixed-seed pseudo-random: the grain is identical from one opening to the next.
     let seed = 0x2f6b1d
     const rand = () => {
       seed = (seed * 1664525 + 1013904223) >>> 0
@@ -63,16 +63,16 @@ function grain(): string | null {
 let scratch: HTMLCanvasElement | null = null
 
 export interface AmbienceProps {
-  /** Vignette `recolt://` (CORS) d'où tirer l'ambiance ; `undefined` : couleur seule. */
+  /** `recolt://` thumbnail (CORS) to draw the ambience from; `undefined`: colour only. */
   url: string | undefined
-  /** Couleur dominante (disponible avant tout décodage). */
+  /** Dominant colour (available before any decoding). */
   dominant: string | null
   palette: readonly string[] | null
-  /** Post : ambiance sobre, désaturée. */
+  /** Post: subdued, desaturated ambience. */
   muted?: boolean
-  /** Vidéo en cours : l'ambiance suit l'image affichée. */
+  /** Video playing: the ambience follows the displayed frame. */
   videoRef?: RefObject<HTMLVideoElement | null>
-  /** Animations coupées (mouvement réduit, e2e). */
+  /** Animations disabled (reduced motion, e2e). */
   still: boolean
   onTint: (tint: ViewerTint) => void
 }
@@ -105,7 +105,7 @@ export function AmbienceLayer({
   const base = parseHex(dominant) ?? colors[0] ?? NEUTRAL
   const baseKey = base.join(',')
 
-  // Teinte immédiate depuis la couleur dominante, affinée une fois la vignette lue.
+  // Immediate tint from the dominant colour, refined once the thumbnail is read.
   useEffect(() => {
     onTintRef.current(tintFrom(base, muted))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,7 +117,7 @@ export function AmbienceLayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseKey, muted])
 
-  /** Dessine l'ambiance et la fait apparaître au-dessus de l'actuelle. */
+  /** Draws the ambience and fades it in above the current one. */
   const present = (source: CanvasImageSource, sw: number, sh: number): AmbienceResult | null => {
     const front = frontRef.current
     const back = backRef.current
@@ -127,14 +127,14 @@ export function AmbienceLayer({
     scratch ??= document.createElement('canvas')
     const r = drawAmbience(scratch, source, sw, sh, colors, { muted, fallbackK: lastK.current })
     try {
-      // Source non CORS : le canvas de calcul est « tainted » (lecture impossible).
+      // Non-CORS source: the scratch canvas is "tainted" (reading impossible).
       scratch.getContext('2d')?.getImageData(0, 0, 1, 1)
     } catch {
-      // On repart d'un canvas neuf la prochaine fois ; l'ambiance actuelle reste affichée.
+      // Start from a fresh canvas next time; the current ambience stays displayed.
       scratch = null
       return null
     }
-    // Fige ce qui est visible (fond + dessus à son opacité courante, fondu en cours compris).
+    // Freeze what is visible (background + top at its current opacity, fade in progress included).
     const alpha = Number(getComputedStyle(front).opacity) || 0
     front.getAnimations().forEach((a) => a.cancel())
     if (alpha > 0) {
@@ -155,7 +155,7 @@ export function AmbienceLayer({
     return r
   }
 
-  // Vignette (et halos de palette) : chargement CORS puis dessin.
+  // Thumbnail (and palette halos): CORS load, then draw.
   useEffect(() => {
     let alive = true
     const paint = (img: HTMLImageElement) => {
@@ -166,7 +166,7 @@ export function AmbienceLayer({
       if (r.color) onTintRef.current(tintFrom(r.color, muted))
     }
     if (!url) {
-      // Pas d'image : uniquement la couleur.
+      // No image: colour only.
       const c = Object.assign(document.createElement('canvas'), { width: 4, height: 4 })
       const ctx = c.getContext('2d')
       if (ctx) {
@@ -198,11 +198,11 @@ export function AmbienceLayer({
     return () => {
       alive = false
     }
-    // `present` lit `colors`, `muted` et `still` du rendu courant.
+    // `present` reads `colors`, `muted` and `still` from the current render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, paletteKey, muted, baseKey])
 
-  // Vidéo en lecture : l'ambiance suit l'image courante (teinte inchangée).
+  // Video playing: the ambience follows the current frame (tint unchanged).
   useEffect(() => {
     if (!videoRef || still) return
     const id = window.setInterval(() => {

@@ -1,6 +1,6 @@
 /**
- * Caches bornés du renderer : une `Map` garde l'ordre d'insertion, l'entrée la plus
- * ancienne part la première. Écrire une clé existante la remet en tête.
+ * Bounded renderer caches: a `Map` keeps insertion order, the oldest entry
+ * leaves first. Writing an existing key moves it to the front.
  */
 export function lruSet<K, V>(map: Map<K, V>, key: K, value: V, max: number): void {
   map.delete(key)

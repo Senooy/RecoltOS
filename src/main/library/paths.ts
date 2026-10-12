@@ -1,7 +1,7 @@
 /**
- * Disposition sur disque. Tous les chemins stockés en base sont
- * RELATIFS à la racine de la bibliothèque (déplaçable sans migration).
- * Pas d'import `electron` : pur, testable sous Node.
+ * On-disk layout. Every path stored in the database is RELATIVE to the
+ * library root (movable without a migration).
+ * No `electron` import: pure, testable under Node.
  */
 import { createHash } from 'node:crypto'
 import path from 'node:path'
@@ -9,7 +9,7 @@ import { AppError } from '../../shared/errors'
 import { shard } from '../../shared/ids'
 import { DB_FILE } from '../db/open'
 
-/** Racines servies par `recolt://<libraryId>/<root>/<rel>`. */
+/** Roots served by `recolt://<libraryId>/<root>/<rel>`. */
 export const LIBRARY_DIRS = [
   'items',
   'thumbs',
@@ -32,7 +32,7 @@ export interface LibraryPaths {
   wal: string
   shm: string
   dir(name: LibraryDir): string
-  /** Chemin absolu d'un chemin relatif stocké en base (refuse toute sortie de la racine). */
+  /** Absolute path of a relative path stored in the database (refuses any escape from the root). */
   abs(rel: string): string
 }
 
@@ -50,8 +50,8 @@ export function libraryPaths(root: string): LibraryPaths {
 }
 
 /**
- * Résout `rel` sous `root` ; refuse les chemins absolus, `..`, l'octet NUL et toute sortie de la
- * racine (défense en profondeur, la vraie barrière du protocole reste realpath).
+ * Resolves `rel` under `root`; refuses absolute paths, `..`, the NUL byte and any escape from the
+ * root (defense in depth; the protocol's real barrier remains realpath).
  */
 export function resolveInside(root: string, rel: string): string {
   if (!rel || rel.includes('\0') || path.isAbsolute(rel) || rel.includes('\\')) {
@@ -75,7 +75,7 @@ const cleanExt = (ext: string) => {
   return e
 }
 
-/** Chemins relatifs canoniques (`<root>/<ab>/<uuid>.<ext>`, ab = 2 premiers caractères). */
+/** Canonical relative paths (`<root>/<ab>/<uuid>.<ext>`, ab = first 2 characters). */
 export const rel = {
   original: (uuid: string, ext: string) => `items/${shard(uuid)}/${uuid}.${cleanExt(ext)}`,
   thumb: (uuid: string) => `thumbs/${shard(uuid)}/${uuid}.webp`,
@@ -83,10 +83,10 @@ export const rel = {
   poster: (uuid: string) => `posters/${shard(uuid)}/${uuid}.jpg`,
   preview: (uuid: string) => `previews/${shard(uuid)}/${uuid}.mp4`,
   display: (uuid: string) => `display/${shard(uuid)}/${uuid}.webp`,
-  /** k = sha1(lower(handle)) sur 16 hex. */
+  /** k = sha1(lower(handle)) over 16 hex chars. */
   avatar: (platform: string, handle: string) =>
     `avatars/${platform}/${sha1(handle.replace(/^@+/, '').toLowerCase()).slice(0, 16)}.jpg`,
-  /** Médias distants (images citées, slides) : `remote/<sha1(url)>.<ext>`. */
+  /** Remote media (quoted images, slides): `remote/<sha1(url)>.<ext>`. */
   remote: (url: string, ext: string) => `remote/${sha1(url)}.${cleanExt(ext)}`,
   spaceAsset: (sha256: string, ext: string) =>
     `spaces/assets/${sha256.slice(0, 2).toLowerCase()}/${sha256}.${cleanExt(ext)}`,
@@ -95,7 +95,7 @@ export const rel = {
   tmp: (name: string) => `tmp/${name}`,
 } as const
 
-/** Dossiers de `userData`. */
+/** Folders of `userData`. */
 export function userDataPaths(userData: string) {
   const u = path.resolve(userData)
   return {
@@ -112,7 +112,7 @@ export function userDataPaths(userData: string) {
   }
 }
 
-/** Emplacement par défaut d'une bibliothèque (`path: null` dans `libraries.json`). */
+/** Default location of a library (`path: null` in `libraries.json`). */
 export function defaultLibraryRoot(userData: string, id: string): string {
   return path.join(userDataPaths(userData).librariesDir, id)
 }

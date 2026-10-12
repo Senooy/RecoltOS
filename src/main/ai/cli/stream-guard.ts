@@ -1,17 +1,17 @@
 /**
- * Garde-fous de flux (comportements constatés des CLI).
+ * Stream guards (behaviors observed from the CLIs).
  *
- * claude `--output-format stream-json --verbose` :
- * - `system/init` : `tools` ⊆ {Read, StructuredOutput}, `mcp_servers` vide, sinon TOOL_VIOLATION ;
- * - `system/api_retry` : RATE_LIMITED / NOT_AUTHENTICATED (on tue : le CLI réessaierait seul) ;
- * - `rate_limit_event` dont `status` ≠ `allowed` : RATE_LIMITED (`resetsAt`) ;
- * - `assistant` : `tool_use` autre que Read (chemin sous `jobs/<id>/`) ou StructuredOutput →
- *   TOOL_VIOLATION ;
- * - `result` : conservé pour la lecture finale.
+ * claude `--output-format stream-json --verbose`:
+ * - `system/init`: `tools` ⊆ {Read, StructuredOutput}, `mcp_servers` empty, otherwise TOOL_VIOLATION;
+ * - `system/api_retry`: RATE_LIMITED / NOT_AUTHENTICATED (we kill it: the CLI would retry on its own);
+ * - `rate_limit_event` whose `status` ≠ `allowed`: RATE_LIMITED (`resetsAt`);
+ * - `assistant`: `tool_use` other than Read (path under `jobs/<id>/`) or StructuredOutput →
+ *   TOOL_VIOLATION;
+ * - `result`: kept for the final read.
  *
- * codex `exec --json` : liste blanche des `item.type` (`agent_message`, `reasoning`) ; tout autre
- * type (dont `command_execution`, `mcp_tool_call`, `web_search`, `file_change`) → TOOL_VIOLATION ;
- * `error` / `turn.failed` = seul canal d'erreur ; usage dans `turn.completed`.
+ * codex `exec --json`: allowlist of `item.type` (`agent_message`, `reasoning`); any other
+ * type (including `command_execution`, `mcp_tool_call`, `web_search`, `file_change`) → TOOL_VIOLATION;
+ * `error` / `turn.failed` are the only error channels; usage is in `turn.completed`.
  */
 import { resolve, sep } from 'node:path'
 import { AiError } from '../../../shared/ai-types'
@@ -139,7 +139,7 @@ export function createCodexStreamGuard(): CodexGuard {
     onLine(line, stream) {
       if (g.error) return
       if (stream === 'stderr') {
-        // En-tête informatif « model: … » (jamais interprété comme une erreur).
+        // Informational header "model: …" (never interpreted as an error).
         const m = /^model:\s*(\S+)/i.exec(line.trim())
         if (m) g.model = m[1]
         return
@@ -188,7 +188,7 @@ export function createCodexStreamGuard(): CodexGuard {
   return g
 }
 
-/** Tokens sur stderr quand le flux n'a pas d'usage : `tokens used\n16 661`. */
+/** Tokens on stderr when the stream has no usage: `tokens used\n16 661`. */
 export function parseTokensUsed(stderr: string): number | undefined {
   const m = /tokens used\s+([\d\s .,]+)/i.exec(stderr)
   if (!m) return undefined

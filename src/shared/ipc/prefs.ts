@@ -1,16 +1,16 @@
-/** Contrat `prefs.*` : patch profond, strict, validé aux deux bouts (entrée IPC, puis après fusion). */
+/** `prefs.*` contract: deep patch, strict, validated at both ends (IPC input, then after merge). */
 import { z } from 'zod'
 import { PrefsSchema, type PrefsPatch } from '../prefs'
 import { Empty, type ContractShape, type EventShape } from './define'
 
 /**
- * Réglages que le renderer ne peut PAS écrire par `prefs.set` :
- * - `version` ;
- * - `ai.consentVersion` / `ai.consentAt` : canal dédié `ai.consent{version}` ;
- * - `ai.lastSeenVersions` : posé par la détection des CLI côté main ;
- * - `tools.*` : chemins d'exécutables lancés par main, posés par `system.redetectTools`.
- * `ai.claude.path` / `ai.codex.path` (surcharge manuelle) restent écrivables mais main DOIT
- * vérifier que le fichier existe et est exécutable avant de les utiliser.
+ * Settings the renderer can NOT write through `prefs.set`:
+ * - `version`;
+ * - `ai.consentVersion` / `ai.consentAt`: dedicated channel `ai.consent{version}`;
+ * - `ai.lastSeenVersions`: set by the CLI detection on the main side;
+ * - `tools.*`: executable paths launched by main, set by `system.redetectTools`.
+ * `ai.claude.path` / `ai.codex.path` (manual override) remain writable, but main MUST
+ * check that the file exists and is executable before using them.
  */
 export const PREFS_PATCH_DENIED = {
   top: ['version', 'tools'],
@@ -25,8 +25,8 @@ export type UserPrefsPatch = Omit<PrefsPatch, 'version' | 'tools' | 'ai'> & {
 type AnyZod = z.ZodType
 
 /**
- * Schéma de patch : tout est optionnel, SANS les défauts (un `.default()` réécrirait les réglages
- * absents du patch), les objets sont `.strict()` (clé inconnue ou réservée = rejet).
+ * Patch schema: everything is optional, WITHOUT the defaults (a `.default()` would overwrite the settings
+ * missing from the patch), objects are `.strict()` (unknown or reserved key = rejection).
  */
 function toPatchSchema(schema: AnyZod, denied: readonly string[] = []): AnyZod {
   if (schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault) {

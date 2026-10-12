@@ -1,6 +1,6 @@
 /**
- * Initialisation du domaine `library` (registre `bootstrap/services.ts`) :
- * gestionnaire de bibliothèques, ouverture de la bibliothèque active, fermeture propre à la sortie.
+ * Initialization of the `library` domain (registry `bootstrap/services.ts`):
+ * library manager, opening of the active library, clean shutdown on exit.
  */
 import type { Disposer, ServiceContext } from '../bootstrap/context'
 import { SLOW_QUERY_MS } from '../db/open'
@@ -8,7 +8,7 @@ import { createLibraryManager, type LibraryManager } from './library-manager'
 
 let manager: LibraryManager | null = null
 
-/** Gestionnaire initialisé par `initLibrary` (handlers `libraries.*`, restauration). */
+/** Manager initialized by `initLibrary` (handlers `libraries.*`, restore). */
 export function getLibraryManager(): LibraryManager | null {
   return manager
 }
@@ -27,7 +27,7 @@ export async function initLibrary(ctx: ServiceContext): Promise<Disposer> {
       ? {}
       : {
           onSlowQuery: (sql: string, ms: number) =>
-            ctx.log.warn(`[db] requête lente (${ms.toFixed(1)} ms > ${SLOW_QUERY_MS}) : ${sql}`),
+            ctx.log.warn(`[db] slow query (${ms.toFixed(1)} ms > ${SLOW_QUERY_MS}) : ${sql}`),
         }),
   })
   setLibraryManager(m)

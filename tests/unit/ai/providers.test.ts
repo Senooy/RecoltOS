@@ -101,8 +101,8 @@ async function expectCode(p: Promise<unknown>, code: string) {
   return err as AiError
 }
 
-describe('claude (faux CLI)', () => {
-  it('succès : valeur, méta, argv exact, env minimal', async () => {
+describe('claude (fake CLI)', () => {
+  it('success: value, meta, exact argv, minimal env', async () => {
     mode = 'ok'
     const reg = registry()
     const jobDir = join(reg.sandboxDir('claude'), 'jobs', '1')
@@ -143,7 +143,7 @@ describe('claude (faux CLI)', () => {
     expect(run.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC).toBe('1')
   })
 
-  it('OCR contenant « 429 Too Many Requests » et « authentication failed » : succès', async () => {
+  it('OCR containing "429 Too Many Requests" and "authentication failed": success', async () => {
     mode = 'ok_429'
     const reg = registry()
     const jobDir = join(reg.sandboxDir('claude'), 'jobs', '2')
@@ -151,7 +151,7 @@ describe('claude (faux CLI)', () => {
     expect(r.value.ocr).toContain('429 Too Many Requests')
   })
 
-  it('JSON invalide → BAD_OUTPUT ; 2ᵉ essai renforcé → succès', async () => {
+  it('invalid JSON → BAD_OUTPUT; 2nd attempt, reinforced → success', async () => {
     mode = 'bad_json'
     const reg = registry()
     const jobDir = join(reg.sandboxDir('claude'), 'jobs', '3')
@@ -170,7 +170,7 @@ describe('claude (faux CLI)', () => {
     ['mcp', 'TOOL_VIOLATION'],
     ['is_error_limit', 'RATE_LIMITED'],
     ['crash', 'PROCESS'],
-  ])('mode %s → %s (sans attendre le délai)', async (m, code) => {
+  ])('mode %s → %s (without waiting for the delay)', async (m, code) => {
     mode = m
     const reg = registry()
     const jobDir = join(reg.sandboxDir('claude'), 'jobs', `e-${m}`)
@@ -181,14 +181,14 @@ describe('claude (faux CLI)', () => {
       expect(e.opts?.resetAt).toBe(1791800000000)
   })
 
-  it('délai dépassé → TIMEOUT (groupe tué)', async () => {
+  it('timeout exceeded → TIMEOUT (group killed)', async () => {
     mode = 'slow'
     const reg = registry()
     const jobDir = join(reg.sandboxDir('claude'), 'jobs', 'slow')
     await expectCode(reg.get('claude').analyze(await input(jobDir), opts(jobDir, 400)), 'TIMEOUT')
   })
 
-  it('binaire absent → NOT_INSTALLED', async () => {
+  it('binary missing → NOT_INSTALLED', async () => {
     current = prefs({
       claude: {
         path: join(ud, 'absent'),
@@ -212,7 +212,7 @@ describe('claude (faux CLI)', () => {
     }
   })
 
-  it('status : abonnement, plan, jamais e-mail ni organisation ; clé API → avertissement', async () => {
+  it('status: subscription, plan, never email nor organization; API key → warning', async () => {
     mode = 'ok'
     const s = await registry().get('claude').status()
     expect(s).toMatchObject({
@@ -230,8 +230,8 @@ describe('claude (faux CLI)', () => {
   })
 })
 
-describe('codex (faux CLI)', () => {
-  it('succès isolé : stdin fermé, `--` puis prompt, --disable calculés', async () => {
+describe('codex (fake CLI)', () => {
+  it('isolated success: stdin closed, `--` then prompt, --disable computed', async () => {
     mode = 'ok'
     const reg = registry()
     const jobDir = join(reg.sandboxDir('codex'), 'jobs', '1')
@@ -270,7 +270,7 @@ describe('codex (faux CLI)', () => {
     await expectCode(reg.get('codex').analyze(await input(jobDir), opts(jobDir)), code)
   })
 
-  it('login status : ChatGPT ; clé API → avertissement', async () => {
+  it('login status: ChatGPT; API key → warning', async () => {
     mode = 'ok'
     expect(await registry().get('codex').status()).toMatchObject({
       loggedIn: true,
@@ -284,8 +284,8 @@ describe('codex (faux CLI)', () => {
   })
 })
 
-describe('classification et outils', () => {
-  it('seulement sur les canaux d’erreur', () => {
+describe('classification and tools', () => {
+  it('only on error channels', () => {
     expect(classifyError('claude-retry', 'rate_limit').code).toBe('RATE_LIMITED')
     expect(classifyError('claude-retry', 'authentication_failed').code).toBe('NOT_AUTHENTICATED')
     expect(classifyError('claude-result', 'Please run /login').code).toBe('NOT_AUTHENTICATED')
@@ -295,7 +295,7 @@ describe('classification et outils', () => {
     expect(parseResetAt('limit reached|1791800000')).toBe(1791800000000)
   })
 
-  it('features list : stables actives seulement', () => {
+  it('features list: only stable active ones', () => {
     expect(
       parseFeaturesList(
         'shell_tool   stable  true\napply_patch_freeform removed false\nmemories stable false\nhooks experimental true\nfoo stable true',
@@ -303,7 +303,7 @@ describe('classification et outils', () => {
     ).toEqual(['shell_tool', 'hooks'])
   })
 
-  it('buildCliEnv : jamais process.env', () => {
+  it('buildCliEnv: never process.env', () => {
     const env = buildCliEnv('/a:/b:/a', ['/bin-dir'])
     expect(Object.keys(env).sort()).toEqual(
       [
@@ -322,7 +322,7 @@ describe('classification et outils', () => {
     expect(env.PATH!.split(':').slice(0, 3)).toEqual(['/bin-dir', '/a', '/b'])
   })
 
-  it('runCli : stdin fermé, garde-fou qui tue le groupe', async () => {
+  it('runCli: stdin closed, safeguard that kills the group', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'recolt-run-'))
     const script = join(dir, 's.sh')
     writeFileSync(script, '#!/bin/sh\necho un\necho deux\nsleep 30\n', { mode: 0o755 })

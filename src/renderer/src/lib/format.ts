@@ -1,35 +1,35 @@
 /**
- * Typographie de la langue active (`shared/i18n/lang`) : pourcentages, dates, durées relatives,
- * tailles, nombres, pluriels, guillemets. Source unique : aucun composant ne formate à la main.
+ * Typography of the active language (`shared/i18n/lang`): percentages, dates, relative durations,
+ * sizes, numbers, plurals, quotation marks. Single source: no component formats by hand.
  *
- * Anglais : pas d'espace avant « % », guillemets “ ”, `Intl` en `en-US` (« 1,234 », « 4.2 MB »,
- * « Sep 24, 2026 », « 4 min. ago »). Français : règles ci-dessous.
+ * English: no space before "%", quotation marks “ ”, `Intl` in `en-US` (« 1,234 », « 4.2 MB »,
+ * « Sep 24, 2026 », « 4 min. ago »). French: rules below.
  *
- * Espaces (vérifiées sous Node 22 / ICU) :
- * - `pct` : U+202F (écrit à la main : `Intl` style `percent` produit U+00A0) ;
- * - `dateShort` : les U+0020 d'`Intl` deviennent U+00A0 ;
- * - `relative` : `Intl.RelativeTimeFormat` (U+00A0 avant « min », « h », « s ») ;
- * - `bytes` et `count` : U+202F d'`Intl` (unité, séparateur de milliers).
+ * Spaces (verified under Node 22 / ICU):
+ * - `pct`: U+202F (hand-written: `Intl` style `percent` produces U+00A0);
+ * - `dateShort`: `Intl`'s U+0020 become U+00A0;
+ * - `relative`: `Intl.RelativeTimeFormat` (U+00A0 before « min », « h », « s »);
+ * - `bytes` and `count`: `Intl`'s U+202F (unit, thousands separator).
  */
 import { getLang, type Lang } from '../../../shared/i18n/lang'
 import { count as countWord, countEn, plural, pluralEn } from '../i18n/plural'
 
-export const NNBSP = ' ' // espace fine insécable
-export const NBSP = ' ' // espace insécable
+export const NNBSP = ' ' // narrow no-break space
+export const NBSP = ' ' // no-break space
 
 export { plural }
 
-/** Pluriel de la langue active (français : 0 et 1 au singulier ; anglais : seul 1). */
+/** Plural of the active language (French: 0 and 1 are singular; English: only 1). */
 export function pluralFor(n: number, one: string, many: string): string {
   return getLang() === 'fr' ? plural(n, one, many) : pluralEn(n, one, many)
 }
 
-/** Locale `Intl` de la langue active. */
+/** `Intl` locale of the active language. */
 export function intlLocale(lang: Lang = getLang()): string {
   return lang === 'fr' ? 'fr-FR' : 'en-US'
 }
 
-/** Formateurs `Intl` mis en cache par langue : créés à la première utilisation. */
+/** `Intl` formatters cached per language: created on first use. */
 function cached<T>(make: (lang: Lang) => T): () => T {
   const byLang = new Map<Lang, T>()
   return () => {
@@ -46,15 +46,15 @@ function cached<T>(make: (lang: Lang) => T): () => T {
 const fmtNumber = cached((lang) => new Intl.NumberFormat(intlLocale(lang)))
 
 /**
- * Entier (ou décimal) localisé : `1234` → « 1 234 » (U+202F) ou « 1,234 ». Non fini → « 0 ».
- * `-0` (ex. `Math.round(-0.4)`) est ramené à « 0 » : `Intl` écrirait « -0 ».
+ * Localized integer (or decimal): `1234` → « 1 234 » (U+202F) or « 1,234 ». Non-finite → « 0 ».
+ * `-0` (e.g. `Math.round(-0.4)`) is brought back to « 0 »: `Intl` would write « -0 ».
  */
 export function count(n: number): string {
   const v = Number.isFinite(n) ? n : 0
   return fmtNumber().format(v === 0 ? 0 : v)
 }
 
-/** Pourcentage d'une fraction : `pct(1)` → « 100 % » (U+202F avant le signe) ou « 100% ». */
+/** Percentage of a fraction: `pct(1)` → « 100 % » (U+202F before the sign) or « 100% ». */
 export function pct(fraction: number): string {
   const v = Number.isFinite(fraction) ? Math.round(fraction * 100) : 0
   return getLang() === 'fr' ? `${count(v)}${NNBSP}%` : `${count(v)}%`
@@ -79,7 +79,7 @@ function dateFormatter(timeZone: string | undefined): Intl.DateTimeFormat {
   return f
 }
 
-/** « 24 sept. 2026 » (espaces U+00A0) ou « Sep 24, 2026 ». Date invalide → « ». */
+/** « 24 sept. 2026 » (U+00A0 spaces) or « Sep 24, 2026 ». Invalid date → « ». */
 export function dateShort(input: DateInput, opts: { timeZone?: string } = {}): string {
   const d = input instanceof Date ? input : new Date(input)
   if (Number.isNaN(d.getTime())) return ''
@@ -91,7 +91,7 @@ const timeFormatter = cached(
   (lang) => new Intl.DateTimeFormat(intlLocale(lang), { hour: 'numeric', minute: '2-digit' }),
 )
 
-/** Heure courte : « 14 h 05 » (U+202F) en français, « 2:05 PM » en anglais. */
+/** Short time: « 14 h 05 » (U+202F) in French, « 2:05 PM » in English. */
 export function hourMinute(input: DateInput): string {
   const d = input instanceof Date ? input : new Date(input)
   if (Number.isNaN(d.getTime())) return ''
@@ -104,7 +104,7 @@ export function hourMinute(input: DateInput): string {
 const rtfShort = cached(
   (lang) => new Intl.RelativeTimeFormat(lang, { style: 'short', numeric: 'auto' }),
 )
-// Le style court abrège « mois » en « m. » et « ans » en « a » : illisible, on passe en long.
+// The short style abbreviates « mois » to « m. » and « ans » to « a »: unreadable, so use long.
 const rtfLong = cached(
   (lang) => new Intl.RelativeTimeFormat(lang, { style: 'long', numeric: 'auto' }),
 )
@@ -117,7 +117,7 @@ const WEEK = 7 * DAY
 const MONTH = 30 * DAY
 const YEAR = 365 * DAY
 
-/** Nombre de jours calendaires entre deux instants, jours locaux (`now` − `t`, arrondi). */
+/** Number of calendar days between two instants, local days (`now` − `t`, rounded). */
 function calendarDays(t: number, n: number): number {
   const a = new Date(n)
   const b = new Date(t)
@@ -127,14 +127,15 @@ function calendarDays(t: number, n: number): number {
 }
 
 /**
- * « il y a 4 min », « hier », « avant-hier », « dans 3 min »… (style court pour le temps court).
- * `now` est injectable pour les tests. Moins de 5 s d'écart : « maintenant ».
+ * « il y a 4 min », « hier », « avant-hier », « dans 3 min »… (short style for short durations).
+ * `now` is injectable for tests. Less than 5 s apart: « maintenant ».
  *
- * Choix volontaires :
- * - mois et années passent en style long (`style: 'long'`) : le style court d'`Intl` écrit « m. »
- *   et « a », illisible ; d'où « le mois dernier » ou « il y a 2 mois » ;
- * - « hier » et « avant-hier » suivent le jour calendaire local (et non un écart en heures) :
- *   22 h 30 la veille, vu à 21 h le lendemain, donne « hier ». Sous 1 h, on reste en minutes.
+ * Deliberate choices:
+ * - months and years use the long style (`style: 'long'`): the short style of `Intl` writes « m. »
+ *   and « a », which is unreadable; hence « le mois dernier » or « il y a 2 mois »;
+ * - « hier » and « avant-hier » follow the local calendar day (not an hour gap):
+ *   22:30 the evening before, seen at 21:00 the next day, gives « hier ». Under 1 h, we stay in
+ *   minutes.
  */
 export function relative(input: DateInput, now: number | Date = Date.now()): string {
   const t = input instanceof Date ? input.getTime() : new Date(input).getTime()
@@ -172,8 +173,8 @@ const byteFormatters = cached((lang) =>
 )
 
 /**
- * Tailles décimales comme le Finder : `4_200_000` → « 4,2 Mo » (U+202F) ou « 4.2 MB » ;
- * `512` → « 512 o » ou « 512 bytes ».
+ * Decimal sizes like the Finder: `4_200_000` → « 4,2 Mo » (U+202F) or « 4.2 MB »;
+ * `512` → « 512 o » or « 512 bytes ».
  */
 export function bytes(n: number): string {
   let v = Number.isFinite(n) && n > 0 ? n : 0
@@ -182,7 +183,7 @@ export function bytes(n: number): string {
     v /= 1000
     i++
   }
-  // 999,96 ko s'arrondit à « 1 000 ko » : on passe à l'unité du dessus.
+  // 999,96 ko rounds to « 1 000 ko »: switch to the next unit up.
   if (i > 0 && i < BYTE_UNITS.length - 1 && Math.round(v * 10) / 10 >= 1000) {
     v /= 1000
     i++
@@ -191,7 +192,7 @@ export function bytes(n: number): string {
   return (byteFormatters()[i] as Intl.NumberFormat).format(v)
 }
 
-/** « 0 élément », « 1 élément », « 36 éléments », « 1 234 éléments » ; « 0 items », « 1 item ». */
+/** Examples: « 0 élément », « 1 élément », « 36 éléments », « 1 234 éléments » (French); « 0 items », « 1 item » (English). */
 export function items(n: number): string {
   return getLang() === 'fr'
     ? countWord(n, 'élément', 'éléments', count)
@@ -199,19 +200,19 @@ export function items(n: number): string {
 }
 
 /**
- * Pluriel générique avec nombre formaté, règle de la langue active : `counted(3, 'tag', 'tags')`
- * → « 3 tags ». Les mots passés doivent être ceux de la langue active.
+ * Generic plural with a formatted number, following the active language's rule:
+ * `counted(3, 'tag', 'tags')` → « 3 tags ». The words passed must be those of the active language.
  */
 export function counted(n: number, one: string, many: string): string {
   return getLang() === 'fr' ? countWord(n, one, many, count) : countEn(n, one, many, count)
 }
 
-/** « texte » avec espaces insécables intérieures (U+00A0) ; “text” en anglais. */
+/** « texte » with inner no-break spaces (U+00A0); “text” in English. */
 export function guillemets(text: string): string {
   return getLang() === 'fr' ? `«${NBSP}${text}${NBSP}»` : `“${text}”`
 }
 
-/** Séparateur « libellé : valeur » : « : » précédé d'une espace en français, « : » collé en anglais. */
+/** « label : value » separator: « : » preceded by a space in French, « : » attached in English. */
 export function colonSep(): string {
   return getLang() === 'fr' ? ' : ' : ': '
 }
@@ -221,12 +222,12 @@ export function labelled(label: string, value: string): string {
   return `${label}${colonSep()}${value}`
 }
 
-/** Séparateur de liste « ; » (espace avant en français). */
+/** List separator « ; » (space before it in French). */
 export function listSep(): string {
   return getLang() === 'fr' ? ' ; ' : '; '
 }
 
-/** Code temporel « 0:35 » / « 1:02:03 » (lecteur vidéo, durées), tabulaire. */
+/** Time code « 0:35 » / « 1:02:03 » (video player, durations), tabular. */
 export function clock(totalSeconds: number): string {
   const s = Number.isFinite(totalSeconds) && totalSeconds > 0 ? Math.floor(totalSeconds) : 0
   const h = Math.floor(s / 3600)

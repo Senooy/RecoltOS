@@ -1,5 +1,5 @@
 /**
- * Capture Electron de la carte de post (fenêtre hors écran) pour `tweet-card-renderer`.
+ * Electron capture of the post card (off-screen window) for `tweet-card-renderer`.
  */
 import { offscreenUrl, withOffscreenWindow } from '../windows/offscreen'
 import { CARD_CSS_WIDTH, type CardCapture } from './tweet-card-renderer'

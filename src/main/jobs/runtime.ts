@@ -1,6 +1,6 @@
 /**
- * Accès partagé à la file et aux services de jobs (handlers IPC `ingest.*`, `jobs.*`, import).
- * Renseigné par `jobs/init.ts` ; vide hors Electron (tests du registre).
+ * Shared access to the queue and job services (IPC handlers `ingest.*`, `jobs.*`, import).
+ * Filled in by `jobs/init.ts`; empty outside Electron (registry tests).
  */
 import { AppError } from '../../shared/errors'
 import type { PageCapture } from '../ingest/ingest'
@@ -25,7 +25,7 @@ export function setJobRuntime(
 let ingestProgress: ((p: { done: number; total: number; current: string | null }) => void) | null =
   null
 
-/** `ingest.progress` (branché par `jobs/init.ts`). */
+/** `ingest.progress` (plugged in by `jobs/init.ts`). */
 export function setIngestProgressEmitter(fn: typeof ingestProgress): void {
   ingestProgress = fn
 }
@@ -55,8 +55,8 @@ export function getPageCapture() {
 type Emit = (payload: { uuids: string[]; reason: ChangeReason }) => void
 
 /**
- * `items.changed` regroupé par raison : une émission toutes les `delayMs` au plus (un import ou
- * 700 dérivés n'inondent pas le renderer).
+ * `items.changed` grouped by reason: at most one emission every `delayMs` (an import or
+ * 700 derived items do not flood the renderer).
  */
 export function createChangeBatcher(emit: Emit, delayMs = 300) {
   const pending = new Map<ChangeReason, Set<string>>()

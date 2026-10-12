@@ -1,14 +1,14 @@
 /**
- * Filtre par couleur : ΔE2000 via `differenceCiede2000()` de culori (fabrique ; objets
- * `{mode:'lab65'}`, jamais des tableaux), tolérance 18 par défaut, entrées de poids ≥ 0,05,
- * classement par `d_eff = d − 8·min(1, w/0,30)` (une couleur dominante pèse plus). Pré-filtre ΔE76
- * sur le `Float32Array` (borne large : ΔE76 ≤ 3·tolérance + 10) pour tenir < 2 ms sur 10 000
- * palettes. Plusieurs couleurs : intersection (ET), score = somme.
+ * Color filter: ΔE2000 via `differenceCiede2000()` from culori (factory; objects
+ * `{mode:'lab65'}`, never arrays), default tolerance 18, entries with weight ≥ 0.05,
+ * ranking by `d_eff = d − 8·min(1, w/0.30)` (a dominant color weighs more). ΔE76 pre-filter
+ * on the `Float32Array` (loose bound: ΔE76 ≤ 3·tolerance + 10) to stay < 2 ms over 10,000
+ * palettes. Several colors: intersection (AND), score = sum.
  *
- * Boucle chaude : `de2000Num` (même formule CIEDE2000, sur nombres, sans objets) — vérifiée égale à
- * culori à 1e-4 près sur les paires de Sharma et 20 000 paires aléatoires (tests) ; le wrapper culori
- * `deltaE2000` reste la référence publique. Raison : culori reconvertit ses arguments à chaque
- * appel (≈ 4 ms pour 10 000 palettes, critère < 2 ms).
+ * Hot loop: `de2000Num` (same CIEDE2000 formula, on numbers, without objects) — checked equal to
+ * culori within 1e-4 on Sharma's pairs and 20,000 random pairs (tests); the culori wrapper
+ * `deltaE2000` remains the public reference. Reason: culori converts its arguments again at
+ * each call (≈ 4 ms for 10,000 palettes, criterion < 2 ms).
  */
 import { differenceCiede2000 } from 'culori'
 import { hexToLab, type Lab } from '../../shared/color'
@@ -27,10 +27,10 @@ const COS63 = Math.cos(63 * RAD)
 const SIN63 = Math.sin(63 * RAD)
 
 /**
- * CIEDE2000 (Sharma 2005, kL = kC = kH = 1) sur nombres, sans `atan2` pour les teintes : ΔH' par
- * produits vectoriels, teinte moyenne h̄' par la bissectrice des vecteurs (a', b') unitaires (équivalent
- * à la règle ±360° de Sharma). Δθ (terme de rotation des bleus) n'est calculé que pour h̄' ∈ ]180°, 360°[ :
- * ailleurs il vaut < 2·10⁻⁵°, écart < 10⁻⁴ sur ΔE (tests contre culori).
+ * CIEDE2000 (Sharma 2005, kL = kC = kH = 1) on numbers, without `atan2` for hues: ΔH' by
+ * cross products, mean hue h̄' by the bisector of the unit (a', b') vectors (equivalent to
+ * Sharma's ±360° rule). Δθ (blue rotation term) is only computed for h̄' ∈ ]180°, 360°[:
+ * elsewhere it is < 2·10⁻⁵°, deviation < 10⁻⁴ on ΔE (tests against culori).
  */
 export function de2000Num(
   l1: number,
@@ -54,7 +54,7 @@ export function de2000Num(
   const dC = cp2 - cp1
   const cpm = (cp1 + cp2) / 2
   const prod = cp1 * cp2
-  // ΔH' = 2·√(C'1C'2)·sin(Δh'/2) ; |ΔH'|² = 2(C'1C'2 − a'1a'2 − b1b2), signe = produit vectoriel.
+  // ΔH' = 2·√(C'1C'2)·sin(Δh'/2) ; |ΔH'|² = 2(C'1C'2 − a'1a'2 − b1b2), sign = cross product.
   let dH = 0
   let ux = 1
   let uy = 0
@@ -72,7 +72,7 @@ export function de2000Num(
   }
   let n = Math.sqrt(ux * ux + uy * uy)
   if (n === 0) {
-    // Teintes opposées (180°) : bissectrice perpendiculaire, côté de Sharma (somme < 360 → +180).
+    // Opposite hues (180°): perpendicular bisector, Sharma's side (sum < 360 → +180).
     ux = -b1
     uy = ap1
     n = Math.sqrt(ux * ux + uy * uy) || 1
@@ -111,7 +111,7 @@ export function de2000Num(
   return Math.sqrt(x * x + y * y + z * z + rt * y * z)
 }
 
-/** ΔE2000 entre deux couleurs Lab D65 (wrapper culori testé sur les paires de Sharma 2005). */
+/** ΔE2000 between two Lab D65 colors (culori wrapper tested on the Sharma 2005 pairs). */
 export function deltaE2000(p: Lab, q: Lab): number {
   return de2000Fn(
     { mode: 'lab65', l: p[0], a: p[1], b: p[2] },
@@ -121,9 +121,9 @@ export function deltaE2000(p: Lab, q: Lab): number {
 
 export interface ColorQuery {
   lab: Lab
-  /** ΔE2000 maximal (défaut 18). */
+  /** Maximum ΔE2000 (default 18). */
   tolerance?: number
-  /** Poids minimal d'une entrée de palette (défaut 0,05). */
+  /** Minimum weight of a palette entry (default 0.05). */
   minWeight?: number
 }
 
@@ -134,7 +134,7 @@ export function queryFromHex(hex: string, tolerance?: number): ColorQuery {
   return { lab: hexToLab(hex), ...(tolerance !== undefined ? { tolerance } : {}) }
 }
 
-/** Score `d_eff` du meilleur appariement de l'élément `k`, ou `null` s'il ne correspond pas. */
+/** `d_eff` score of the best match for item `k`, or `null` if it does not match. */
 function scoreAt(idx: PaletteIndex, k: number, q: ColorQuery): number | null {
   const tol = q.tolerance ?? DEFAULT_TOLERANCE
   const minW = q.minWeight ?? DEFAULT_MIN_WEIGHT
@@ -148,7 +148,7 @@ function scoreAt(idx: PaletteIndex, k: number, q: ColorQuery): number | null {
     const w = idx.w[s]!
     if (w < minW) continue
     const bonus = 8 * Math.min(1, w / 0.3)
-    // Cette entrée ne peut pas battre le meilleur score déjà trouvé (d ≥ 0).
+    // This entry cannot beat the best score already found (d ≥ 0).
     if (best !== null && best <= -bonus) continue
     const o = s * 3
     const l = idx.lab[o]!
@@ -156,7 +156,7 @@ function scoreAt(idx: PaletteIndex, k: number, q: ColorQuery): number | null {
     const da = idx.lab[o + 1]! - ta
     const db = idx.lab[o + 2]! - tb
     if (dl * dl + da * da + db * db > pre2) continue
-    // Borne stricte : ΔE2000 ≥ |ΔL| / SL (|RT| < 2).
+    // Strict bound: ΔE2000 ≥ |ΔL| / SL (|RT| < 2).
     const lm50 = ((l + tl) / 2 - 50) ** 2
     if (Math.abs(dl) / (1 + (0.015 * lm50) / Math.sqrt(20 + lm50)) > tol) continue
     const d = de2000Num(l, idx.lab[o + 1]!, idx.lab[o + 2]!, tl, ta, tb)
@@ -173,16 +173,16 @@ export interface ColorMatch {
 }
 
 /**
- * Éléments de l'index correspondant à TOUTES les couleurs, triés par score croissant. `among` :
- * restreint aux ids donnés (résultats FTS) ; les ids absents de l'index (sans palette) sont
- * comptés dans `noPalette`.
+ * Index items matching ALL the colors, sorted by increasing score. `among`:
+ * restricted to the given ids (FTS results); ids missing from the index (no palette) are
+ * counted in `noPalette`.
  */
 export function searchColors(
   idx: PaletteIndex,
   queries: readonly ColorQuery[],
   among?: readonly number[],
 ): { matches: ColorMatch[]; noPalette: number } {
-  // Scores dans des tableaux typés (pas d'objet par candidat), objets créés pour les seuls résultats.
+  // Scores in typed arrays (no object per candidate), objects created for the results only.
   const cap = among ? among.length : idx.n
   const ks = new Int32Array(cap)
   const scores = new Float64Array(idx.n)

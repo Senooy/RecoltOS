@@ -1,14 +1,14 @@
 /**
- * `PillBar` : pilule flottante des toasts et de la barre de sélection. 40 px de
- * haut, `rounded-full`, fond `--surface`, `--shadow-toast`, padding `0 6 0 16`, texte 13 px.
- * `PillBar.Action` : pilule noire de 28 px ; `PillBar.Ghost` : action discrète (« Masquer »…).
+ * `PillBar`: floating pill for toasts and the selection bar. 40 px high,
+ * `rounded-full`, `--surface` background, `--shadow-toast`, padding `0 6 0 16`, 13 px text.
+ * `PillBar.Action`: 28 px black pill; `PillBar.Ghost`: subtle action ("Hide"...).
  */
 import { cva } from 'class-variance-authority'
 import type { ComponentProps } from 'react'
 import { cn } from '../../lib/cn'
 import './ui.css'
 
-/** Classes de la pilule, partagées avec `Toaster` (sonner en mode `unstyled`). */
+/** Pill classes, shared with `Toaster` (sonner in `unstyled` mode). */
 export const PILL_CLASS =
   'flex h-10 items-center gap-2 rounded-full bg-surface pl-4 pr-1.5 text-small text-fg shadow-[var(--shadow-toast)]'
 
@@ -32,9 +32,9 @@ export const pillActionVariants = cva(
 )
 
 export interface PillBarProps extends ComponentProps<'div'> {
-  /** Centrée en bas de la fenêtre (`fixed`, bottom 24) ; sinon en flux normal. */
+  /** Centered at the bottom of the window (`fixed`, bottom 24); otherwise in normal flow. */
   floating?: boolean
-  /** Nom accessible du groupe (recommandé : la barre porte un message annoncé aux lecteurs d'écran). */
+  /** Accessible name of the group (recommended: the bar carries a message announced to screen readers). */
   'aria-label'?: string
 }
 

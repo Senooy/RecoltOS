@@ -1,6 +1,6 @@
 /**
- * Boutons « Enregistrer dans RecoltOS » injectés sur un DOM synthétique de x.com et
- * d'instagram.com : un bouton par publication, idempotent, identifiant et repli DOM corrects.
+ * "Save to RecoltOS" buttons injected into a synthetic DOM of x.com and
+ * instagram.com: one button per post, idempotent, correct identifier and DOM fallback.
  */
 import { beforeAll, describe, expect, it } from 'vitest'
 import { extFr, setExtLang } from '../../../extension/src/lib/i18n'
@@ -9,7 +9,7 @@ import { buttonLabel, injectInto, type PostRef } from '../../../extension/src/li
 beforeAll(() => setExtLang('fr'))
 
 describe('injection X', () => {
-  it('un bouton par tweet, à côté du groupe d’actions ; idempotent', async () => {
+  it('one button per tweet, next to the actions group; idempotent', async () => {
     document.body.innerHTML = `
       <article data-testid="tweet">
         <div data-testid="User-Name">Studio Lumen@studiolumen</div>
@@ -44,7 +44,7 @@ describe('injection X', () => {
 })
 
 describe('injection Instagram', () => {
-  it('bouton dans la barre de l’icône Enregistrer, code court du lien', () => {
+  it('button in the Save icon bar, short link code', () => {
     document.body.innerHTML = `
       <article>
         <a href="/p/DSyNtH00001/"><img src="https://scontent.cdninstagram.com/a.jpg"></a>
@@ -63,8 +63,8 @@ describe('injection Instagram', () => {
   })
 })
 
-describe('langue des boutons', () => {
-  it('libellé en anglais quand l’app (ou le navigateur) est en anglais', () => {
+describe('button language', () => {
+  it('English label when the app (or the browser) is in English', () => {
     setExtLang('en')
     try {
       document.body.innerHTML = `

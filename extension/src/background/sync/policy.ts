@@ -1,9 +1,9 @@
 /**
- * Choix de la cible d'exécution (remplace). L'ARRIÈRE-PLAN est toujours la
- * cible principale, pour les trois plateformes et tous les déclencheurs. Replis, seulement si la
- * requête d'arrière-plan est REFUSÉE (`blocked`) : un onglet de la plateforme déjà ouvert (jamais
- * rechargé ni mis au premier plan), puis un onglet créé en arrière-plan UNIQUEMENT si l'option
- * « Ouvrir un onglet en arrière-plan si besoin » est active (désactivée par défaut).
+ * Choice of the execution target (replaces the previous one). The BACKGROUND is always the
+ * primary target, for all three platforms and all triggers. Fallbacks, only if the background
+ * request is REFUSED (`blocked`): an already-open tab of the platform (never reloaded nor
+ * brought to the foreground), then a tab created in the background ONLY if the option
+ * « Open a background tab if needed » is enabled (disabled by default).
  */
 import type { Trigger } from '../../../../src/shared/bridge/envelope'
 
@@ -12,12 +12,12 @@ export type ExecTarget =
 
 export interface PolicyInput {
   trigger: Trigger
-  /** Onglet de la plateforme déjà ouvert et chargé, s'il y en a un. */
+  /** Already-open, loaded tab of the platform, if any. */
   existingTabId: number | null
   allowBackgroundTab: boolean
 }
 
-/** Cibles à essayer, dans l'ordre. */
+/** Targets to try, in order. */
 export function targetsFor(p: PolicyInput): ExecTarget[] {
   const out: ExecTarget[] = [{ kind: 'background' }]
   if (p.existingTabId !== null) out.push({ kind: 'tab', tabId: p.existingTabId })

@@ -1,6 +1,6 @@
 /**
  * `items.post_meta` = `PostMetaSchema` v1.
- * Forme stockée en base. Le renderer ne la voit jamais : il reçoit `PostView` (dto/items.ts).
+ * Stored form in the database. The renderer never sees it: it receives `PostView` (dto/items.ts).
  */
 import { z } from 'zod'
 import { WebUrl } from './enums'
@@ -10,9 +10,9 @@ export type PostPlatform = z.output<typeof PostPlatform>
 
 export const PostAuthor = z.object({
   name: z.string().nullable(),
-  /** Handle SANS '@'. */
+  /** Handle WITHOUT '@'. */
   handle: z.string().nullable(),
-  /** Provenance seulement ; l'affichage passe par `authors` (cache local). */
+  /** Provenance only; display goes through `authors` (local cache). */
   avatarUrl: WebUrl.nullable(),
 })
 export type PostAuthor = z.output<typeof PostAuthor>
@@ -21,7 +21,7 @@ export const PostMedia = z.object({
   type: z.enum(['image', 'video']),
   remoteUrl: WebUrl.nullable(),
   posterUrl: WebUrl.nullable(),
-  /** Lien vers `item_media.uuid` si le média est local. */
+  /** Link to `item_media.uuid` if the media is local. */
   mediaUuid: z.uuid().nullable(),
 })
 export type PostMedia = z.output<typeof PostMedia>
@@ -54,8 +54,8 @@ export type PostMeta = z.output<typeof PostMetaSchema>
 export type PostMetaInput = z.input<typeof PostMetaSchema>
 
 /**
- * Lecture tolérante d'un JSON stocké (`safeParse`). Un échec renvoie `null` : la carte
- * s'affiche alors sans les données du post. `onError` permet de journaliser.
+ * Tolerant reading of a stored JSON (`safeParse`). A failure returns `null`: the card is then
+ * displayed without the post data. `onError` allows logging.
  */
 export function parsePostMeta(
   raw: string | null | undefined,
@@ -77,5 +77,5 @@ export function parsePostMeta(
   return r.data
 }
 
-/** Longueur maximale du texte de post envoyé dans `ItemCard.post.text`. */
+/** Maximum length of the post text sent in `ItemCard.post.text`. */
 export const POST_VIEW_TEXT_MAX = 600

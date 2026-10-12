@@ -1,7 +1,7 @@
 /**
- * Repo de synchronisation : `sync_state` (une ligne par source),
- * `sync_items` (« déjà connu » au niveau publication), `sync_dismissed` (jamais ré-importés),
- * `sync_runs` (journal). La logique de sync vit dans `src/main/sync/`.
+ * Sync repo: `sync_state` (one row per source),
+ * `sync_items` ("already known" at publication level), `sync_dismissed` (never re-imported),
+ * `sync_runs` (log). The sync logic lives in `src/main/sync/`.
  */
 import type Database from 'better-sqlite3'
 import { buildSet, repoBase, type ColumnSpec, type RepoOptions } from './util'
@@ -89,7 +89,7 @@ export function createSyncRepo(db: Database.Database, opts: RepoOptions = {}) {
   }
 
   return {
-    /** État d'une source (ligne créée avec les défauts si absente). */
+    /** State of a source (row created with defaults if missing). */
     getState,
 
     patchState(source: SyncSourceValue, patch: SyncStatePatch): SyncStateRow {
@@ -105,7 +105,7 @@ export function createSyncRepo(db: Database.Database, opts: RepoOptions = {}) {
       })()
     },
 
-    /** Marque une publication comme connue (et la relie à son item). */
+    /** Marks a publication as known (and links it to its item). */
     upsertItem(
       i: {
         source: SyncSourceValue
@@ -136,7 +136,7 @@ export function createSyncRepo(db: Database.Database, opts: RepoOptions = {}) {
       })
     },
 
-    /** Sous-ensemble de `externalIds` déjà connus pour cette source. */
+    /** Subset of `externalIds` already known for this source. */
     knownExternalIds(source: SyncSourceValue, externalIds: readonly string[]): Set<string> {
       const rows = q(
         `SELECT external_id FROM sync_items WHERE source = ?

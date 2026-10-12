@@ -4,8 +4,8 @@ import { makeSyntheticLibrary } from './synthetic-items'
 import { makeTmpDir } from './tmpdir'
 import { join } from 'node:path'
 
-describe('nameKeyOf (tri « Nom »)', () => {
-  it('NFD sans accents et minuscules, comme la production', () => {
+describe('nameKeyOf (« Nom » sort)', () => {
+  it('NFD without accents and lowercase, like production', () => {
     expect(nameKeyOf('Lumière')).toBe('lumiere')
     expect(nameKeyOf('Récolte BRUME')).toBe('recolte brume')
     expect(nameKeyOf('Œuvre')).toBe('œuvre')
@@ -13,7 +13,7 @@ describe('nameKeyOf (tri « Nom »)', () => {
 })
 
 describe('openTestDb', () => {
-  it('applique 0001 et pose user_version ; FTS5 disponible', () => {
+  it('applies 0001 and sets user_version; FTS5 available', () => {
     const db = openTestDb()
     const last = listMigrations().at(-1)?.version
     expect(db.pragma('user_version', { simple: true })).toBe(last)
@@ -28,7 +28,7 @@ describe('openTestDb', () => {
     db.close()
   })
 
-  it('base fichier : dossier parent créé, ré-ouverture idempotente', () => {
+  it('file database: parent folder created, idempotent reopening', () => {
     const file = join(makeTmpDir('db'), 'sous', 'dossier', 'recolt.db')
     openTestDb({ file }).close()
     const again = openTestDb({ file })
@@ -36,7 +36,7 @@ describe('openTestDb', () => {
     again.close()
   })
 
-  it('seedSyntheticLibrary : 408 éléments, collections, FTS alimentée', () => {
+  it('seedSyntheticLibrary: 408 items, collections, FTS populated', () => {
     const db = openTestDb()
     const lib = makeSyntheticLibrary({ trashed: 9, hidden: 1 })
     const { itemIds, collectionIds } = seedSyntheticLibrary(db, lib)
@@ -50,7 +50,7 @@ describe('openTestDb', () => {
     expect(count("SELECT count(*) n FROM items WHERE kind='tweet'")).toBe(54)
     expect(count('SELECT count(*) n FROM collection_items')).toBeGreaterThan(200)
     expect(count('SELECT count(*) n FROM items_fts')).toBe(418)
-    // Un texte de post est retrouvé par la recherche plein texte.
+    // A post's text is found by full-text search.
     const hit = db.prepare("SELECT rowid FROM items_fts WHERE items_fts MATCH 'cadrage'").all()
     expect(hit.length).toBeGreaterThan(0)
     expect(db.pragma('foreign_key_check')).toEqual([])

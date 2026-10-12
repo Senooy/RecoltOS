@@ -1,22 +1,22 @@
 /**
- * Fixture e2e `demoLibrary` + `openDbReadonly()` et import des helpers sous Playwright (CJS) :
- * le barrel `../helpers` et `demo-library` doivent se charger sans `import.meta`.
+ * `demoLibrary` e2e fixture + `openDbReadonly()` and import of the helpers under Playwright (CJS):
+ * the `../helpers` barrel and `demo-library` must load without `import.meta`.
  */
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { FAKE_BIN_DIR, REPO_ROOT, makeDemoLibrary } from '../helpers'
 import { expect, test } from '../helpers/e2e-fixtures'
 
-test('le barrel des helpers se charge sous Playwright (CJS)', () => {
+test('the helpers barrel loads under Playwright (CJS)', () => {
   expect(FAKE_BIN_DIR).toBe(join(REPO_ROOT, 'tests/helpers/fake-bin'))
   expect(existsSync(FAKE_BIN_DIR)).toBe(true)
   expect(typeof makeDemoLibrary).toBe('function')
 })
 
-test.describe('bibliothèque de démo', () => {
+test.describe('demo library', () => {
   test.use({ demoLibrary: { count: 20, collections: 3 } })
 
-  test('userData pré-rempli et base relue en lecture seule', async ({
+  test('pre-filled userData and database reread read-only', async ({
     page,
     userData,
     openDbReadonly,

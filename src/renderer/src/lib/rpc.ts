@@ -1,6 +1,6 @@
 /**
- * Appels IPC typés de bout en bout : `rpc('items.list', {...})` → `Out<'items.list'>`.
- * Le renderer n'utilise jamais `window.recolt.invoke` directement.
+ * Typed IPC calls end to end: `rpc('items.list', {...})` → `Out<'items.list'>`.
+ * The renderer never uses `window.recolt.invoke` directly.
  */
 import type { AppErrorCode } from '../../../shared/errors'
 import type { Channel, EventName, EventPayload, In, Out } from '../../../shared/ipc'
@@ -30,7 +30,7 @@ export function isNotImplemented(err: unknown): boolean {
   return err instanceof RpcError && err.code === 'not_implemented'
 }
 
-/** Abonnement typé à `evt:<event>`. */
+/** Typed subscription to `evt:<event>`. */
 export function subscribe<E extends EventName>(
   event: E,
   cb: (payload: EventPayload<E>) => void,

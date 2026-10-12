@@ -1,7 +1,7 @@
 /**
- * Boutons « Enregistrer dans RecoltOS » injectés à côté du bouton d'enregistrement natif
- * sur x.com et instagram.com. Traitement par lots (MutationObserver), repli DOM si la donnée brute
- * n'est pas en cache (`partial`). Jamais de clic simulé ni d'action sur le compte.
+ * "Save to RecoltOS" buttons injected next to the native save button
+ * on x.com and instagram.com. Batch processing (MutationObserver), DOM fallback when the raw data
+ * is not cached (`partial`). Never a simulated click or action on the account.
  */
 import type { BridgePlatform } from '../../../src/shared/bridge/constants'
 import { showToast } from '../background/page-functions'
@@ -14,7 +14,7 @@ export interface PostRef {
   dom: { text?: string; authorName?: string; authorHandle?: string; imageUrls?: string[] }
 }
 
-/** Libellé du bouton injecté (langue active à l'injection). */
+/** Label of the injected button (active language at injection time). */
 export const buttonLabel = (): string => xt().menu.save
 const MARK = 'data-recoltos'
 
@@ -27,7 +27,7 @@ function button(doc: Document, onClick: () => void): HTMLButtonElement {
   b.setAttribute(MARK, '1')
   b.style.cssText =
     'all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;color:inherit;opacity:.75'
-  // Glyphe simple (carré arrondi + flèche vers le bas), sans ressource externe.
+  // Simple glyph (rounded square + down arrow), with no external resource.
   const ns = 'http://www.w3.org/2000/svg'
   const svg = doc.createElementNS(ns, 'svg')
   svg.setAttribute('viewBox', '0 0 24 24')
@@ -50,7 +50,7 @@ function button(doc: Document, onClick: () => void): HTMLButtonElement {
   return b
 }
 
-/** Publication X d'un `article` (identifiant par le lien horodaté). */
+/** X post of an `article` (identified by its timestamped link). */
 export function xPostOf(article: Element, origin: string): PostRef | null {
   const link = [...article.querySelectorAll<HTMLAnchorElement>('a[href*="/status/"]')].find((a) =>
     a.querySelector('time'),
@@ -77,7 +77,7 @@ export function xPostOf(article: Element, origin: string): PostRef | null {
   }
 }
 
-/** Publication Instagram d'un `article` (code court par le lien `/p/` ou `/reel/`). */
+/** Instagram post of an `article` (short code from the `/p/` or `/reel/` link). */
 export function igPostOf(article: Element, origin: string): PostRef | null {
   const a = article.querySelector<HTMLAnchorElement>('a[href^="/p/"], a[href^="/reel/"]')
   const m = a ? /^\/(?:p|reel)\/([\w-]+)/.exec(a.getAttribute('href') ?? '') : null
@@ -95,7 +95,7 @@ export function igPostOf(article: Element, origin: string): PostRef | null {
 
 const IG_SAVE_LABELS = ['Save', 'Enregistrer', 'Remove', 'Supprimer', 'Retirer']
 
-/** Ajoute les boutons dans `root` ; rend le nombre ajouté (idempotent). */
+/** Adds the buttons in `root`; returns the number added (idempotent). */
 export function injectInto(
   root: ParentNode,
   hostname: string,

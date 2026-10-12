@@ -1,7 +1,7 @@
 /**
- * API maquette (dev uniquement) : 60 `ItemCard` fictifs (`mock-items.json`) servis sans main,
- * images factices via le middleware Vite `/__mock/media`. Couvre les lectures utiles à la
- * coque ; les autres canaux répondent `not_implemented` comme les stubs de main.
+ * Mock API (dev only): 60 fictitious `ItemCard`s (`mock-items.json`) served without main,
+ * dummy images via the Vite middleware `/__mock/media`. Covers the reads useful to the shell;
+ * the other channels respond `not_implemented` like main's stubs.
  */
 import type { RecoltApi } from '../../../preload/api'
 import type { CollectionNode } from '../../../shared/dto/collections'
@@ -14,7 +14,7 @@ import fixture from './mock-items.json'
 
 export const MOCK_ITEMS = fixture as ItemCard[]
 
-/** Collections fictives : membres pris dans la fixture (déterministe). */
+/** Fictitious collections: members taken from the fixture (deterministic). */
 const MOCK_COLLECTIONS: { uuid: string; name: string; members: string[] }[] = [
   {
     uuid: '0f6b5a52-1c1e-4a8e-9a51-3f2a1b7c9d01',
@@ -219,7 +219,7 @@ export function createMockApi(): RecoltApi {
     flags: {
       theme: dark ? 'dark' : 'light',
       e2e: false,
-      // Maquette dans un navigateur : la langue suit celle du navigateur.
+      // Mock in a browser: the language follows the browser's.
       lang: langFromLocale(navigator.language),
       systemLang: langFromLocale(navigator.language),
     },

@@ -1,6 +1,6 @@
 /**
- * M2 : palette ⌘K — ouverture par le menu natif seulement, géométrie, modes, commandes,
- * « Récemment consultés » = `viewed_at` les plus récents.
+ * M2: ⌘K palette: opened via the native menu only, geometry, modes, commands,
+ * "Recently viewed" = the most recent `viewed_at`.
  */
 import type { ElectronApplication } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -20,14 +20,14 @@ async function clickMenu(app: ElectronApplication, id: string): Promise<boolean>
 test.describe('palette ⌘K', () => {
   test.use({ demoLibrary: { count: 60, collections: 6 } })
 
-  test('ouverture par le menu, géométrie, modes, création de collection', async ({
+  test('opened via the menu, geometry, modes, collection creation', async ({
     app,
     page,
     openDbReadonly,
   }) => {
     await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
-    // Aucun écouteur ⌘K côté renderer : la touche synthétique (qui ne passe pas par le menu) ne
-    // l'ouvre pas ; seul l'item de menu « palette » le fait.
+    // No ⌘K listener on the renderer side: the synthetic key (which does not go through the menu) does not
+    // open it; only the "palette" menu item does.
     await page.keyboard.press('Meta+k')
     await page.waitForTimeout(200)
     await expect(page.locator(t('palette'))).toHaveCount(0)
@@ -40,7 +40,7 @@ test.describe('palette ⌘K', () => {
     const item = await page.locator(t('palette-command')).first().boundingBox()
     expect(Math.abs(item!.height - 33)).toBeLessThanOrEqual(1)
     const footer = await page.locator(t('palette-footer')).boundingBox()
-    // Pied de 30 pt.
+    // 30 pt footer.
     expect(footer!.height).toBe(30)
     await expect(page.locator(t('palette-command')).first()).toHaveAttribute(
       'aria-selected',
@@ -52,17 +52,17 @@ test.describe('palette ⌘K', () => {
     )
     await expect(page.locator(t('palette-command'))).toHaveCount(15)
 
-    // `>` : commandes seules.
+    // `>`: commands only.
     const input = page.locator(t('palette-input'))
     await input.fill('>')
     await expect(page.locator(t('palette-recent'))).toHaveCount(0)
     await expect(page.locator(t('palette-command'))).toHaveCount(15)
 
-    // Échap ferme.
+    // Escape closes.
     await page.keyboard.press('Escape')
     await expect(palette).toHaveCount(0)
 
-    // « nouv » puis ↵ : « Nouvelle collection » demande un nom et crée la collection.
+    // "nouv" then ↵: "New collection" asks for a name and creates the collection.
     await clickMenu(app, 'palette')
     await input.fill('nouv')
     await expect(page.locator(t('palette-command')).first()).toHaveAttribute(
@@ -82,7 +82,7 @@ test.describe('palette ⌘K', () => {
       .toEqual({ n: 1 })
   })
 
-  test('« Récemment consultés » suit viewed_at (7 vignettes au plus)', async ({
+  test('"Recently viewed" follows viewed_at (7 thumbnails at most)', async ({
     app,
     page,
     openDbReadonly,
@@ -100,7 +100,7 @@ test.describe('palette ⌘K', () => {
       await page.evaluate((u) => window.recolt!.invoke('items.markViewed', { uuid: u }), uuid)
       await page.waitForTimeout(30)
     }
-    // markViewed est débouncé à 1 s par élément.
+    // markViewed is debounced to 1 s per item.
     await expect
       .poll(
         () =>
@@ -127,7 +127,7 @@ test.describe('palette ⌘K', () => {
     expect(await thumbs.evaluateAll((els) => els.map((e) => e.getAttribute('data-uuid')))).toEqual(
       expected,
     )
-    // ↑ depuis la 1re commande entre dans la rangée ; →/← s'y déplacent.
+    // ↑ from the 1st command enters the row; →/← move within it.
     await page.keyboard.press('ArrowUp')
     await expect(thumbs.first()).toHaveAttribute('aria-selected', 'true')
     await page.keyboard.press('ArrowRight')

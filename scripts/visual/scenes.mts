@@ -1,13 +1,13 @@
 /**
- * Scènes des captures d'écran de l'app (`pnpm run shots`) : 13 scènes par défaut plus des scènes
- * complémentaires. Navigation DÉCLARATIVE par `data-testid` : une scène dont les composants sont
- * absents est signalée « indisponible » au lieu d'échouer.
+ * Scenes for the app screenshots (`pnpm run shots`): 13 default scenes plus extra scenes.
+ * DECLARATIVE navigation by `data-testid`: a scene whose components are missing is reported
+ * as "unavailable" instead of failing.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 
 export type Step =
   | { click: string; optional?: boolean }
-  /** Clique la première cible présente parmi `clickFirst` (ex. « Dev », sinon la 1re collection). */
+  /** Clicks the first target present among `clickFirst` (e.g. "Dev", otherwise the 1st collection). */
   | { clickFirst: string[] }
   | { clickNth: string; nth: number }
   | { rightClick: string }
@@ -22,7 +22,7 @@ export interface Scene {
   id: string
   title: string
   steps: Step[]
-  /** Fenêtre de test à laisser sans bibliothèque (état vide). */
+  /** Test window to leave without a library (empty state). */
   empty?: boolean
 }
 
@@ -33,7 +33,7 @@ const settings = (section: string): Step[] => [
   { click: t(`settings-nav-${section}`) },
 ]
 
-/** Les 13 scènes par défaut. */
+/** The 13 default scenes. */
 export const START_SCENES: Scene[] = [
   {
     id: 'library-all',
@@ -108,7 +108,7 @@ export const START_SCENES: Scene[] = [
   { id: 'settings-ai', title: 'Réglages › IA', steps: settings('ai') },
 ]
 
-/** Scènes complémentaires (sur demande : `--scene a,b`). */
+/** Extra scenes (on demand: `--scene a,b`). */
 export const EXTRA_SCENES: Scene[] = [
   {
     id: 'detail-image',
@@ -144,7 +144,7 @@ export const EXTRA_SCENES: Scene[] = [
   {
     id: 'library-picker',
     title: 'Sélecteur de bibliothèque',
-    // La grille d'abord : sinon le menu s'ouvre avant le montage de l'écran (fond vide).
+    // Grid first: otherwise the menu opens before the screen is mounted (empty background).
     steps: [
       { wait: t('grid') },
       { click: t('library-picker') },
@@ -176,7 +176,7 @@ async function waitFor(page: Page, selector: string): Promise<boolean> {
   }
 }
 
-/** Joue les étapes ; s'arrête à la première cible absente (`ok: false` + raison). */
+/** Plays the steps; stops at the first missing target (`ok: false` + reason). */
 export async function playScene(
   scene: Scene,
   page: Page,
@@ -214,12 +214,12 @@ export async function playScene(
     } else if ('key' in step) {
       await page.keyboard.press(step.key)
     } else if ('menu' in step) {
-      // Les accélérateurs de menu ne reçoivent pas les événements CDP synthétiques :
-      // on déclenche l'item de menu par son id.
+      // Menu accelerators do not receive synthetic CDP events:
+      // so we trigger the menu item by its id.
       const clicked = await app.evaluate(({ Menu }, id) => {
         const item = Menu.getApplicationMenu()?.getMenuItemById(id)
         if (!item) return false
-        // MenuItem.click est typé `Function` dans electron.d.ts.
+        // MenuItem.click is typed `Function` in electron.d.ts.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         item.click()
         return true
@@ -239,7 +239,7 @@ export async function playScene(
   return { ok: true }
 }
 
-/** Gèle la page avant capture : polices chargées, vidéos figées sur leur poster, curseur hors champ. */
+/** Freezes the page before capture: fonts loaded, videos frozen on their poster, cursor out of frame. */
 export async function freezePage(page: Page): Promise<void> {
   await page.evaluate('document.fonts.ready.then(() => true)')
   await page.evaluate(

@@ -17,7 +17,7 @@ describe('tags', () => {
     expect(normalizeTag('a'.repeat(40))).toHaveLength(32)
   })
 
-  it('au plus 2 tags hors vocabulaire, 6 au total, sans mots vides ni sources', () => {
+  it('at most 2 tags outside the vocabulary, 6 in total, no stop words or sources', () => {
     const vocab = ['affiche', 'typographie', 'retro', 'interface', 'logo', '3d', 'mode']
     expect(filterTags(['Affiche', 'neuf-1', 'neuf-2', 'neuf-3', 'retro'], vocab)).toEqual([
       'affiche',
@@ -31,12 +31,12 @@ describe('tags', () => {
     expect(filterTags(vocab, vocab)).toHaveLength(6)
   })
 
-  it('TAG_MAP_EN_FR couvre les 16 singletons', () => {
+  it('TAG_MAP_EN_FR covers the 16 singletons', () => {
     expect(Object.keys(TAG_MAP_EN_FR)).toHaveLength(16)
     expect(TAG_MAP_EN_FR['graphic-design']).toBe('design-graphique')
   })
 
-  it('vocabulaire = graines + tags les plus utilisés, 60 au plus', () => {
+  it('vocabulary = seeds + most used tags, 60 at most', () => {
     const t = openTestLib()
     try {
       const { id } = t.repos.items.insert({ kind: 'image' })
@@ -52,8 +52,8 @@ describe('tags', () => {
   })
 })
 
-describe('schémas de sortie', () => {
-  it('schéma strict sans bornes', () => {
+describe('output schemas', () => {
+  it('strict schema without bounds', () => {
     const s = analysisSchema()
     expect(s.required).toEqual(['title', 'description', 'tags', 'ocr'])
     expect(s.additionalProperties).toBe(false)
@@ -61,7 +61,7 @@ describe('schémas de sortie', () => {
     expect(analysisSchema(['title']).required).toEqual(['title'])
   })
 
-  it('zod borne au lieu de rejeter', () => {
+  it('zod clamps instead of rejecting', () => {
     const v = AnalysisZ.parse({
       title: '« Un titre. »',
       description: 'd'.repeat(500),
@@ -78,7 +78,7 @@ describe('schémas de sortie', () => {
     expect(analysisZ(['title']).parse({ title: 'Seul' }).title).toBe('Seul')
   })
 
-  it('décodage tolérant', () => {
+  it('tolerant decoding', () => {
     expect(decodeTolerant('```json\n{"a":1}\n```')).toEqual({ a: 1 })
     expect(decodeTolerant('Voici : {"a":"}{"} merci')).toEqual({ a: '}{' })
     expect(decodeTolerant('{"a":')).toBeUndefined()

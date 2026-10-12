@@ -1,6 +1,6 @@
 /**
- * Erreurs applicatives transportées par l'IPC sous la forme `{ code, message }`.
- * Pas de propriétés de paramètre (`erasableSyntaxOnly`).
+ * Application errors carried over IPC as `{ code, message }`.
+ * No parameter properties (`erasableSyntaxOnly`).
  */
 import { getLang } from './i18n/lang'
 
@@ -27,12 +27,12 @@ export const APP_ERROR_CODES = [
   'limit_exceeded',
 ] as const
 export type KnownAppErrorCode = (typeof APP_ERROR_CODES)[number]
-/** Les domaines peuvent introduire des codes propres à leur domaine (préfixés), d'où `string`. */
+/** Domains may introduce codes specific to them (prefixed), hence `string`. */
 export type AppErrorCode = KnownAppErrorCode | (string & {})
 
 /**
- * Message lisible d'une liste d'anomalies zod, dans la langue de l'interface. Remplace
- * `z.prettifyError`, qui insère « at » et des libellés anglais dans les toasts.
+ * Readable message for a list of zod issues, in the interface language. Replaces
+ * `z.prettifyError`, which inserts "at" and English labels into the toasts.
  */
 export function formatIssues(
   issues: readonly { message: string; path: readonly PropertyKey[] }[],
@@ -81,5 +81,5 @@ export function isAppErrorShape(v: unknown): v is AppErrorShape {
   )
 }
 
-/** Enveloppe de réponse du canal `rpc` (le routeur ne lève jamais vers le renderer). */
+/** Response envelope of the `rpc` channel (the router never throws to the renderer). */
 export type RpcResult<T> = { ok: true; data: T } | { ok: false; error: AppErrorShape }

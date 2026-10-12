@@ -1,4 +1,4 @@
-/** Contenu d'un nœud selon son type (partagé par l'éditeur, la vignette de liste et le stage). */
+/** Content of a node according to its type (shared by the editor, the list thumbnail and the stage). */
 import type { ItemCard } from '../../../../../../shared/dto/items'
 import type { SpaceNode } from '../../../../../../shared/spaces-schema'
 import { ImageNodeView, ItemNodeView } from './MediaNodes'

@@ -1,5 +1,5 @@
 /**
- * DTO `CollectionNode` : arbre, `count` = membres directs non supprimés, `covers` ≤ 3.
+ * DTO `CollectionNode`: tree, `count` = direct non-deleted members, `covers` ≤ 3.
  */
 import type Database from 'better-sqlite3'
 import type { CollectionNode } from '../../shared/dto/collections'
@@ -43,7 +43,7 @@ export function collectionTree(lib: DtoLib, db: Database.Database): CollectionNo
   return roots
 }
 
-/** Nœud d'une collection (avec ses enfants). */
+/** Node of a collection (with its children). */
 export function collectionNode(
   lib: DtoLib,
   db: Database.Database,

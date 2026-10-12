@@ -1,8 +1,8 @@
 /**
- * Calque écran de la sélection : contour 1,5 px bleu, 8 poignées 8×8
- * blanches bordées de bleu, poignée de rotation, cadre pointillé sans poignées pour une
- * sélection multiple, marquee (fond bleu 8 %), guides d'alignement roses. Épaisseurs constantes
- * à l'écran : seul ce calque suit la caméra à chaque image.
+ * Screen overlay for the selection: 1.5 px blue outline, 8 white 8×8 handles edged in blue,
+ * rotation handle, dotted frame without handles for a multiple selection, marquee (8 % blue fill),
+ * pink alignment guides. Constant thickness on screen: only this overlay follows the camera
+ * on every frame.
  */
 import type { SpaceNode } from '../../../../../../shared/spaces-schema'
 import { aabb, unionRect } from '../../../../../../shared/spaces-geometry'

@@ -1,18 +1,19 @@
 /**
- * Fluidité de la vue détail et de l'étagère — projet Playwright `perf` (hors `verify`).
- *   V1 : vue détail, ouverture puis 6 navigations ←/→ sur images et vidéos. Passe 1 : sonde rAF et
- *        `longtask` (sans capture) : aucune image > 50 ms hors première ouverture. Passe 2 : captures
- *        du compositeur (`Page.startScreencast`) pendant les fondus d'ambiance, échantillonnées : aucun
- *        aplat sombre (fond nu ou noir, tuile non rastérisée) là où l'image stable montre une ambiance
- *        colorée, hors média et panneau ; et, par trace `cc`, aucune tuile absente dessinée ni
- *        mémoire de tuiles insuffisante.
- *   E1 : étagère des collections, 3 entrées en cascade + survol de 5 tranches : p95 ≤ 20 ms, aucune
- *        `longtask` ; passe de contrôle tracée : aucune tuile absente dessinée.
- * Animations RÉELLES : l'attribut `data-e2e` (qui les coupe) est retiré avant d'ouvrir les vues.
- * Bibliothèque : `RECOLTOS_PERF_USERDATA` (clone APFS de la bibliothèque réelle), sinon démo.
- * Densité : 2 (Retina) par défaut, `RECOLTOS_PERF_DSF=1` sinon. Captures (si
- * `RECOLTOS_PERF_SHOTS=dossier` : pire image trouée et une image en plein fondu par pas) et rapport :
- * `.tmp/m8-perf-gfx.json` (clé `RECOLTOS_PERF_LABEL`, mémoire résidente et empreinte par processus).
+ * Smoothness of the detail view and the shelf — Playwright project `perf` (outside `verify`).
+ *   V1: detail view, open then 6 ←/→ navigations over images and videos. Pass 1: rAF probe and
+ *        `longtask` (no capture): no frame > 50 ms except the first opening. Pass 2: captures
+ *        from the compositor (`Page.startScreencast`) during the ambient fades, sampled: no
+ *        dark flat area (bare or black background, unrasterized tile) where the stable frame
+ *        shows a colored ambiance, excluding media and panel; and, via a `cc` trace, no missing
+ *        tile drawn nor insufficient tile memory.
+ *   E1: collections shelf, 3 cascading entries + hover over 5 slices: p95 ≤ 20 ms, no
+ *        `longtask`; traced control pass: no missing tile drawn.
+ * REAL animations: the `data-e2e` attribute (which disables them) is removed before opening
+ * the views.
+ * Library: `RECOLTOS_PERF_USERDATA` (APFS clone of the real library), otherwise demo.
+ * Density: 2 (Retina) by default, `RECOLTOS_PERF_DSF=1` otherwise. Captures (if
+ * `RECOLTOS_PERF_SHOTS=folder`: worst holed frame and one full-fade frame per step) and report:
+ * `.tmp/m8-perf-gfx.json` (key `RECOLTOS_PERF_LABEL`, resident memory and footprint per process).
  */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -55,14 +56,14 @@ const pct = (v: number[], p: number) => {
   return Math.round(s[Math.min(s.length - 1, Math.floor(s.length * p))]! * 10) / 10
 }
 
-/** Animations réelles : sans `data-e2e`, les vues lisent le mouvement au montage. */
+/** Real animations: without `data-e2e`, the views read the motion on mount. */
 async function enableMotion(page: Page) {
   await page.evaluate(() => {
     delete document.documentElement.dataset.e2e
   })
 }
 
-/** Sonde rAF + `longtask` : démarre maintenant, `stop()` renvoie les durées d'images. */
+/** rAF + `longtask` probe: starts now, `stop()` returns the frame durations. */
 async function startProbe(page: Page) {
   await page.evaluate(() => {
     const w = window as unknown as {
@@ -105,8 +106,8 @@ function frameStats(f: number[]) {
   }
 }
 
-/** Mémoire par type de processus (Mo, résident). */
-/** Empreinte physique (Mo) de chaque processus, lue par `top` (colonne MEM, textures GPU comprises). */
+/** Memory per process type (MB, resident). */
+/** Physical footprint (MB) of each process, read by `top` (MEM column, GPU textures included). */
 function footprintMb(pids: number[]): Map<number, number> {
   const out = execFileSync(
     'top',
@@ -122,7 +123,7 @@ function footprintMb(pids: number[]): Map<number, number> {
   return mb
 }
 
-/** Mémoire par type de processus (Mo) : résidente et empreinte physique (`fp…`). */
+/** Memory per process type (MB): resident and physical footprint (`fp…`). */
 async function memory(app: ElectronApplication) {
   const metrics = await app.evaluate(({ app: a }) =>
     a.getAppMetrics().map((m) => ({ type: m.type, pid: m.pid, kb: m.memory.workingSetSize })),
@@ -139,8 +140,8 @@ async function memory(app: ElectronApplication) {
 }
 
 /**
- * Trace du compositeur pendant `action()` : tuiles absentes dessinées (`AppendQuads checkerboard`,
- * peintes en aplat) et attributions de mémoire de tuiles en échec (budget GPU dépassé).
+ * Compositor trace during `action()`: missing tiles drawn (`AppendQuads checkerboard`,
+ * painted as flat fill) and tile-memory allocation failures (GPU budget exceeded).
  */
 async function tileTrace(page: Page, action: () => Promise<void>) {
   const cdp = await page.context().newCDPSession(page)
@@ -176,7 +177,7 @@ interface Rect {
   height: number
 }
 
-/** Fond nu de la vue détail (`--viewer-base`, #0e0c0d) tel que le restitue la capture. */
+/** Bare background of the detail view (`--viewer-base`, #0e0c0d) as rendered by the capture. */
 const BASE = [14, 12, 13] as const
 
 const nearBase = (d: Buffer, i: number, tol: number) =>
@@ -186,10 +187,10 @@ const nearBase = (d: Buffer, i: number, tol: number) =>
     Math.abs(d[i + 2]! - BASE[2]) <= tol)
 
 /**
- * Trous d'une capture : cellules de 16 × 16 px CSS où ne reste que le fond nu de la vue
- * (`--viewer-base`, ou noir pur) alors que l'image stable de fin de pas (`ref`) y montre une ambiance
- * colorée (écart ≥ 10 sur un canal). Une tuile non rastérisée laisse voir ce fond plat. Renvoie le
- * nombre de cellules trouées hors `exclude` (média, panneau).
+ * Holes in a capture: 16 × 16 px CSS cells where only the bare background of the view remains
+ * (`--viewer-base`, or pure black) while the stable end-of-step frame (`ref`) shows a colored
+ * ambiance there (difference ≥ 10 on a channel). An unrasterized tile reveals this flat
+ * background. Returns the number of holed cells outside `exclude` (media, panel).
  */
 function holeCells(png: PNG, ref: PNG, scale: number, exclude: Rect[]): number {
   const cell = Math.round(16 * scale)
@@ -205,7 +206,7 @@ function holeCells(png: PNG, ref: PNG, scale: number, exclude: Rect[]): number {
           css.y < r.y + r.height + 8,
       )
       if (hit) continue
-      // Ambiance colorée attendue ici ?
+      // Colored ambiance expected here?
       const ci = ((cy + (cell >> 1)) * ref.width + cx + (cell >> 1)) * 4
       if (nearBase(ref.data, ci, 9)) continue
       let hole = true
@@ -224,8 +225,8 @@ function holeCells(png: PNG, ref: PNG, scale: number, exclude: Rect[]): number {
 }
 
 /**
- * Captures présentées par le compositeur pendant `action()`, en UNE session (relancer la capture
- * à chaque pas forcerait une image de plus). Chaque image est étiquetée par `tag()` à son arrivée.
+ * Frames presented by the compositor during `action()`, in ONE session (restarting the capture
+ * at each step would force one extra frame). Each frame is labeled by `tag()` on arrival.
  */
 async function screencast(page: Page, tag: () => number, action: () => Promise<void>) {
   const cdp = await page.context().newCDPSession(page)
@@ -261,9 +262,9 @@ const lum = (hex: string | null) => {
 }
 
 /**
- * Point de départ dans l'ordre de la bibliothèque (celui de la navigation ←/→) : une image suivie,
- * dans les 3 suivants, d'au moins une vidéo et d'une autre image, toutes de couleur dominante non
- * noire (ambiance colorée attendue). Renvoie l'uuid de départ et le type de chaque élément.
+ * Starting point in the library order (that of ←/→ navigation): an image followed, within the
+ * next 3, by at least one video and another image, all with a non-black dominant color
+ * (colored ambiance expected). Returns the starting uuid and the type of each item.
  */
 async function pickStart(page: Page): Promise<{ uuid: string; kinds: Map<string, string> }> {
   await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
@@ -296,7 +297,7 @@ async function pickStart(page: Page): Promise<{ uuid: string; kinds: Map<string,
     )
       return { uuid: list[i]!.uuid, kinds }
   }
-  // Repli (démo) : premier média.
+  // Fallback (demo): first media.
   return { uuid: (list.find((c) => media(c) && mounted.has(c.uuid)) ?? list[0]!).uuid, kinds }
 }
 
@@ -317,7 +318,7 @@ async function closeViewer(page: Page) {
   await page.waitForTimeout(400)
 }
 
-test('V1 : vue détail, 6 navigations ←/→ fluides, ambiance sans aplat noir', async ({
+test('V1: detail view, 6 smooth ←/→ navigations, ambient glow without black areas', async ({
   app,
   page,
 }) => {
@@ -328,7 +329,7 @@ test('V1 : vue détail, 6 navigations ←/→ fluides, ambiance sans aplat noir'
   await enableMotion(page)
   const before = await memory(app)
 
-  // Passe 1 : fluidité (aucune capture pendant la mesure).
+  // Pass 1: smoothness (no capture during measurement).
   await openViewer(page, start)
   const kinds: string[] = []
   const stop = await startProbe(page)
@@ -341,7 +342,7 @@ test('V1 : vue détail, 6 navigations ←/→ fluides, ambiance sans aplat noir'
   const during = await memory(app)
   await closeViewer(page)
 
-  // Passe 2 : captures du compositeur pendant les fondus.
+  // Pass 2: compositor captures during the fades.
   await openViewer(page, start)
   const exclude = async () => {
     const boxes: Rect[] = []
@@ -363,7 +364,7 @@ test('V1 : vue détail, 6 navigations ←/→ fluides, ambiance sans aplat noir'
       height: Math.max(a.y + a.height, b.y + b.height) - y,
     }
   }
-  // Cadres du média et du panneau à chaque frontière de pas (le média s'anime de l'un à l'autre).
+  // Media and panel frames at each step boundary (the media animates from one to the other).
   const bounds: Rect[][] = [await exclude()]
   let step = -1
   let frames: { tag: number; buf: Buffer }[] = []
@@ -383,7 +384,7 @@ test('V1 : vue détail, 6 navigations ←/→ fluides, ambiance sans aplat noir'
     )
   })
   const results = NAV.map((_, i) => ({ step: i, frames: 0, black: 0, worst: 0 }))
-  // Image stable de référence : la dernière de chaque pas.
+  // Stable reference frame: the last one of each step.
   const refs = new Map<number, PNG>()
   for (const { tag, buf } of frames) if (tag >= 0) refs.set(tag, PNG.sync.read(buf))
   for (const [j, { tag, buf }] of frames.entries()) {
@@ -403,7 +404,7 @@ test('V1 : vue détail, 6 navigations ←/→ fluides, ambiance sans aplat noir'
         fs.writeFileSync(path.join(shots, `viewer-${label}-step${tag}-f${j}-n${n}.png`), buf)
       }
     }
-    // Une image en plein fondu par pas (3e image du pas), pour comparer à l'œil.
+    // One full-fade frame per step (3rd frame of the step), for visual comparison.
     if (shots && r.frames === 3) {
       fs.mkdirSync(shots, { recursive: true })
       fs.writeFileSync(path.join(shots, `viewer-${label}-step${tag}-mid.png`), buf)
@@ -433,7 +434,7 @@ test('V1 : vue détail, 6 navigations ←/→ fluides, ambiance sans aplat noir'
   expect(tiles.oom, 'mémoire de tuiles insuffisante').toBe(0)
 })
 
-test('E1 : étagère, entrée en cascade et survol de 5 tranches fluides', async ({ app, page }) => {
+test('E1: shelf, cascading entry and hover over 5 slices smooth', async ({ app, page }) => {
   test.setTimeout(150_000)
   await expect(page.locator(t('app-shell'))).toBeVisible()
   await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
@@ -449,7 +450,7 @@ test('E1 : étagère, entrée en cascade et survol de 5 tranches fluides', async
     const stop = await startProbe(page)
     await page.locator(t('seg-collections')).click()
     await expect(page.locator(t('shelf-cover')).first()).toBeVisible()
-    // Cascade : 18 × 45 ms de décalage + 560 ms de chute.
+    // Cascade: 18 × 45 ms offset + 560 ms fall.
     await page.waitForTimeout(1600)
     const entry = await stop()
     const covers = page.locator(t('shelf-cover'))
@@ -475,7 +476,7 @@ test('E1 : étagère, entrée en cascade et survol de 5 tranches fluides', async
     await page.waitForTimeout(600)
   }
   const during = await memory(app)
-  // Passe de contrôle (hors mesure de fluidité) : aucune tuile absente pendant entrée et survol.
+  // Control pass (outside smoothness measurement): no missing tile during entry and hover.
   const tiles = await tileTrace(page, async () => {
     await page.locator(t('seg-collections')).click()
     await expect(page.locator(t('shelf-cover')).first()).toBeVisible()

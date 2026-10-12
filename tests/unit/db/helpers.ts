@@ -1,4 +1,4 @@
-/** Bibliothèque temporaire (fichier réel : WAL et `VACUUM INTO` exigent un chemin). */
+/** Temporary library (real file: WAL and `VACUUM INTO` require a path). */
 import type Database from 'better-sqlite3'
 import fs from 'node:fs'
 import os from 'node:os'

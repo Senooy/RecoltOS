@@ -1,6 +1,6 @@
 /**
- * Enveloppe des messages `{ v: 1, id, re?, type, ts, payload }`.
- * Utilisé par l'app, l'hôte natif (bundle) et l'extension : aucune dépendance hors zod.
+ * Message envelope `{ v: 1, id, re?, type, ts, payload }`.
+ * Used by the app, the native host (bundle) and the extension: no dependency besides zod.
  */
 import { z } from 'zod'
 import { BRIDGE_ERROR_CODES, BRIDGE_PLATFORMS, BRIDGE_PROTOCOL_VERSION } from './constants'
@@ -9,7 +9,7 @@ export const Platform = z.enum(BRIDGE_PLATFORMS)
 export const Trigger = z.enum(['schedule', 'hint', 'manual', 'toggle', 'import'])
 export type Trigger = z.output<typeof Trigger>
 
-/** Types de messages connus (`ext.status`, `app.status`, `host.hello`). */
+/** Known message types (`ext.status`, `app.status`, `host.hello`). */
 export const MESSAGE_TYPES = [
   'host.hello',
   'app.status',
@@ -59,19 +59,19 @@ export type Envelope = z.output<typeof Envelope>
 export const BridgeErrorPayload = z.object({
   code: z.enum(BRIDGE_ERROR_CODES),
   message: z.string().max(2000).optional(),
-  /** `PROTOCOL_MISMATCH` : version de l'app. */
+  /** `PROTOCOL_MISMATCH`: app version. */
   appProtocol: z.number().int().optional(),
-  /** `MESSAGE_TOO_LARGE` : type du message refusé. */
+  /** `MESSAGE_TOO_LARGE`: type of the refused message. */
   type: z.string().max(64).optional(),
 })
 export type BridgeErrorPayload = z.output<typeof BridgeErrorPayload>
 
-/** UUID v4 (navigateur, Node ≥ 19, SW). */
+/** UUID v4 (browser, Node ≥ 19, SW). */
 export function newMessageId(): string {
   return globalThis.crypto.randomUUID()
 }
 
-/** Construit une enveloppe (le `payload` n'est pas validé ici). */
+/** Builds an envelope (the `payload` is not validated here). */
 export function envelope(
   type: MessageType,
   payload?: unknown,

@@ -1,10 +1,10 @@
 /**
- * Liste des spaces (route `spaces`). État vide :
- * `ChartPie` 32 px `--fg-faint`, 14 px, « Aucun space pour l'instant » 17/22 500, 8 px, texte 13/18
- * `--fg-subtle` (360 px max), 20 px, pilule noire 36 px « Créer ton premier space » ; aucun FAB.
- * Liste : cartes de 240 px, « Nouveau space » en tirets d'abord, puis `SpaceCard` (vignette 16:10 =
- * rendu DOM réduit des 20 premiers nœuds, nom 14/600, « Modifié avant-hier »), triées par
- * modification. Menu « … » / clic droit : Renommer, Dupliquer, Supprimer (confirmation).
+ * Spaces list (`spaces` route). Empty state:
+ * `ChartPie` 32 px `--fg-faint`, 14 px, "No space yet" 17/22 500, 8 px, text 13/18
+ * `--fg-subtle` (360 px max), 20 px, black 36 px pill "Create your first space"; no FAB.
+ * List: 240 px cards, "New space" dashed first, then `SpaceCard` (16:10 thumbnail =
+ * reduced DOM render of the first 20 nodes, name 14/600, "Edited the day before yesterday"),
+ * sorted by modification. "…" menu / right click: Rename, Duplicate, Delete (confirmation).
  */
 import { ChartPie, Copy, Ellipsis, Pencil, Plus, Trash } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -24,7 +24,7 @@ const CARD_W = 240
 const THUMB_H = 150
 const PAD = 16
 
-/** Vignette : rendu DOM réduit des nœuds d'aperçu, inerte. */
+/** Thumbnail: reduced DOM rendering of the preview nodes, inert. */
 export function SpaceThumb({ preview }: { preview: SpaceSummary['preview'] }) {
   const box = useMemo(() => unionRect(preview.nodes.map(aabb)), [preview.nodes])
   if (!box || preview.nodes.length === 0) {

@@ -1,30 +1,30 @@
 /**
- * M7 (7, 10, 12) : PARCOURS COMPLET et SÉCURITÉ, en un seul lancement.
+ * M7 (7, 10, 12): FULL JOURNEY and SECURITY, in a single launch.
  *
- * Bibliothèque : clone APFS (`cp -c`) de la vraie bibliothèque importée `.tmp/m7-real` (sinon
- * `.tmp/m3-real`, ou `RECOLTOS_E2E_REAL=<dossier>`), jamais un dossier de données vivant
- * (`~/Library/Application Support/…`) ; à défaut, bibliothèque de démo (60 éléments). Le clone
- * reçoit avant lancement : `storage.downloadRemoteMedia = false`, faux CLI `claude` / `codex`
- * (`tests/helpers/fake-bin`, aussi en tête du PATH), capture sans masquage de l'app.
+ * Library: APFS clone (`cp -c`) of the real imported library `.tmp/m7-real` (otherwise
+ * `.tmp/m3-real`, or `RECOLTOS_E2E_REAL=<folder>`), never a live data folder
+ * (`~/Library/Application Support/…`); failing that, the demo library (60 items). Before launch,
+ * the clone receives: `storage.downloadRemoteMedia = false`, fake CLIs `claude` / `codex`
+ * (`tests/helpers/fake-bin`, also at the head of PATH), capture without hiding the app.
  *
- * Parcours : lancement, grille, 5 onglets, menu contextuel (Masquer puis ⌘Z), étagère et vue
- * Collection, Recherche, ⌘K (menu), vue détail image / vidéo (lecture et seek) / post / carrousel
- * (⌥→), Redécouvrir, Réglages (9 sections), menus de l'app (tous les ids présents, entrées sans
- * dialogue cliquées), capture (faux `screencapture`), import par glisser (fichiers réels avec chemin),
- * sync X (faux hôte natif sur le socket de l'app), Spaces (création, note, élément, export PNG),
- * IA (faux CLI uniquement).
+ * Journey: launch, grid, 5 tabs, context menu (Hide then ⌘Z), shelf and Collection view,
+ * Search, ⌘K (menu), detail view for image / video (playback and seek) / post / carousel
+ * (⌥→), Rediscover, Settings (9 sections), app menus (all ids present, entries without a
+ * dialog clicked), capture (fake `screencapture`), import by drag (real files with a path),
+ * X sync (fake native host on the app socket), Spaces (creation, note, item, PNG export),
+ * AI (fake CLIs only).
  *
- * Sécurité, mesurée sur tout le parcours :
- *  - 0 requête externe : `webRequest.onBeforeRequest` posé depuis le test sur la session par défaut
- *    et sur toute session créée ensuite (partitions hors écran) ; est « externe » tout ce qui n'est
- *    ni `file:`, `recolt:`, `data:`, `blob:`, `devtools:`, `chrome:`, `about:`, ni la boucle locale ;
- *    renderer (webContentsId connu) ET main (net.fetch) ;
- *  - 0 violation CSP : la fixture d'erreurs console (y compris celles retenues avant la pose des
- *    écouteurs) et un compteur `securitypolicyviolation` injecté avant chaque chargement ;
- *  - après fermeture : aucun `ct0=`, `sessionid=`, `Bearer <jeton>`, ni jeton d'extension GatherOS
- *    dans les fichiers texte de l'app (journaux, prefs, host.json, extension recopiée, spaces) ni
- *    dans les lignes de la base (tables lues par SQLite, WAL compris) ; les manifests
- *    `co.gatheros.host.json` plantés dans le HOME de test sont intacts (octet pour octet).
+ * Security, measured across the whole journey:
+ *  - 0 external request: `webRequest.onBeforeRequest` set from the test on the default session
+ *    and on any session created afterwards (off-screen partitions); "external" is anything that is
+ *    neither `file:`, `recolt:`, `data:`, `blob:`, `devtools:`, `chrome:`, `about:`, nor the local loop;
+ *    renderer (known webContentsId) AND main (net.fetch);
+ *  - 0 CSP violation: the console error fixture (including those captured before the listeners
+ *    were attached) and a `securitypolicyviolation` counter injected before each load;
+ *  - after closing: no `ct0=`, `sessionid=`, `Bearer <token>`, nor GatherOS extension token
+ *    in the app's text files (logs, prefs, host.json, copied extension, spaces) nor
+ *    in the database rows (tables read by SQLite, WAL included); the `co.gatheros.host.json`
+ *    manifests planted in the test HOME are intact (byte for byte).
  */
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -47,7 +47,7 @@ const FAKE_BIN = path.join(REPO_ROOT, 'tests/helpers/fake-bin')
 const fx = (p: string) =>
   JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'tests/fixtures/sync', p), 'utf8')) as unknown
 
-/** Littéral assemblé (clé du jeton de l'ancienne app, jamais recopiée par l'import). */
+/** Assembled literal (key of the old app's token, never copied by the import). */
 const GATHEROS_TOKEN = 'extension' + 'Token'
 const SECRET_RE = new RegExp(`ct0=|sessionid=|Bearer [A-Za-z0-9]|${GATHEROS_TOKEN}`)
 
@@ -59,7 +59,7 @@ function realSource(): string | null {
   ]
   for (const c of candidates) {
     if (!c) continue
-    // Jamais la bibliothèque GatherOS ni le dossier réel de l'app.
+    // Never the GatherOS library nor the app's real folder.
     if (/GatherOS|Application Support\/RecoltOS/.test(c)) continue
     if (fs.existsSync(path.join(c, 'libraries/default/recolt.db'))) return c
   }
@@ -69,7 +69,7 @@ function realSource(): string | null {
 type Json = Record<string, unknown>
 const asObj = (v: unknown): Json => (v && typeof v === 'object' ? (v as Json) : {})
 
-/** Prefs du clone : aucun média distant, faux CLI, capture sans masquage de l'app. */
+/** Clone prefs: no remote media, fake CLIs, capture without hiding the app. */
 function patchPrefs(userData: string, dropFolder: string): void {
   const file = path.join(userData, 'prefs.json')
   const prefs = fs.existsSync(file) ? asObj(JSON.parse(fs.readFileSync(file, 'utf8'))) : {}
@@ -112,7 +112,7 @@ interface NetHit {
   partition: string
 }
 
-/** Pose le compteur de requêtes dans main (session par défaut + sessions créées ensuite). */
+/** Installs the request counter in main (default session + sessions created afterwards). */
 async function installNetProbe(app: ElectronApplication): Promise<void> {
   await app.evaluate(({ app: electronApp, session }) => {
     const g = globalThis as unknown as { __recoltNet?: NetHit[] }
@@ -135,7 +135,7 @@ async function installNetProbe(app: ElectronApplication): Promise<void> {
 const netHits = (app: ElectronApplication) =>
   app.evaluate(() => (globalThis as unknown as { __recoltNet?: NetHit[] }).__recoltNet ?? [])
 
-/** Compteur `securitypolicyviolation`, posé avant tout script de la page (puis rechargement). */
+/** `securitypolicyviolation` counter, installed before any page script (then reload). */
 async function installCspProbe(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const w = window as unknown as { __csp?: string[] }
@@ -150,7 +150,7 @@ async function installCspProbe(page: Page): Promise<void> {
 const cspHits = (page: Page) =>
   page.evaluate(() => (window as unknown as { __csp?: string[] }).__csp ?? null)
 
-/** Fichiers texte de l'app (sans octet NUL dans les 8 premiers Ko), hors dossiers de médias. */
+/** App text files (no NUL byte in the first 8 KB), excluding media folders. */
 function textFiles(dir: string, skip: Set<string>, out: string[] = []): string[] {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name)
@@ -171,7 +171,7 @@ function textFiles(dir: string, skip: Set<string>, out: string[] = []): string[]
   return out
 }
 
-/** Lignes de la base contenant un secret (`table: extrait`). */
+/** Database rows containing a secret (`table: excerpt`). */
 function secretsInDb(db: TestDb): string[] {
   const hits: string[] = []
   const tables = db
@@ -189,7 +189,7 @@ function secretsInDb(db: TestDb): string[] {
   return hits
 }
 
-/** Faux hôte natif : NDJSON sur le socket de l'app, comme `recolt-host`. */
+/** Fake native host: NDJSON on the app socket, like `recolt-host`. */
 class FakeHost {
   sock: net.Socket
   got: { type: string; re?: string; payload?: Json }[] = []
@@ -228,8 +228,8 @@ interface Card {
   mediaCount: number
 }
 
-test.describe('parcours complet et sécurité', () => {
-  test('parcours de bout en bout, 0 requête externe, 0 secret', async () => {
+test.describe('full journey and security', () => {
+  test('end-to-end journey, 0 external request, 0 secret', async () => {
     test.setTimeout(240_000)
     const src = realSource()
     const root = makeTmpDir('parcours')
@@ -240,7 +240,7 @@ test.describe('parcours complet et sécurité', () => {
     fs.mkdirSync(drop, { recursive: true })
     fs.mkdirSync(files, { recursive: true })
     if (src) {
-      // Clone APFS : quasi instantané, aucun octet de la source n'est modifié.
+      // APFS clone: near-instant, no byte of the source is modified.
       execFileSync('cp', ['-c', '-R', src, userData])
       for (const f of ['window-state.json', 'host.json'])
         fs.rmSync(path.join(userData, f), { force: true })
@@ -250,7 +250,7 @@ test.describe('parcours complet et sécurité', () => {
     }
     patchPrefs(userData, drop)
 
-    // Manifests GatherOS plantés dans le HOME de test : ils doivent rester intacts.
+    // GatherOS manifests planted in the test HOME: they must stay intact.
     const support = path.join(home, 'Library/Application Support')
     const decoys = ['Mozilla/NativeMessagingHosts', 'Google/Chrome/NativeMessagingHosts'].map(
       (d) => {
@@ -279,14 +279,14 @@ test.describe('parcours complet et sécurité', () => {
       let page = h.page
       await installNetProbe(app)
       await installCspProbe(page)
-      // Rechargement : le compteur CSP et la sonde réseau voient le chargement complet.
+      // Reload: the CSP counter and the network probe see the full load.
       await page.reload()
       page = app.windows().find((w) => !w.isClosed()) ?? page
       const db = openDbReadonly(libraryDbPath(userData))
       const count = (sql: string, ...args: unknown[]) =>
         (db.prepare(sql).get(...args) as { n: number }).n
 
-      await test.step('lancement et grille', async () => {
+      await test.step('launch and grid', async () => {
         expect(await app.evaluate(({ app: a }) => a.getName())).toBe('RecoltOS')
         expect(await app.evaluate(({ app: a }) => a.getPath('userData'))).toBe(userData)
         const cards = page.locator(`${t('grid')} ${t('card')}`)
@@ -294,7 +294,7 @@ test.describe('parcours complet et sécurité', () => {
         const total = count(
           'SELECT count(*) n FROM items WHERE deleted_at IS NULL AND hidden_at IS NULL',
         )
-        // Fenêtrage : bien moins de nœuds que d'éléments sur une vraie bibliothèque.
+        // Windowing: far fewer nodes than items on a real library.
         if (total > 200) expect(await cards.count()).toBeLessThan(total / 2)
         await expect
           .poll(() =>
@@ -305,7 +305,7 @@ test.describe('parcours complet et sécurité', () => {
             ),
           )
           .toBe(true)
-        // Aucune URL http(s) dans le DOM des médias (DTO sans URL distante).
+        // No http(s) URL in the media DOM (DTOs without remote URL).
         const remote = await page.evaluate(() =>
           Array.from(document.querySelectorAll('img, video, source'))
             .map((e) => e.getAttribute('src') ?? '')
@@ -314,7 +314,7 @@ test.describe('parcours complet et sécurité', () => {
         expect(remote).toEqual([])
       })
 
-      await test.step('onglets de la Bibliothèque', async () => {
+      await test.step('Library tabs', async () => {
         const counts = (await invoke<Record<string, number>>(page, 'items.counts', {})).data
         for (const tab of ['saved', 'unsorted', 'trash', 'hidden', 'all'] as const) {
           await page.locator(t(`tab-${tab}`)).click()
@@ -325,7 +325,7 @@ test.describe('parcours complet et sécurité', () => {
         }
       })
 
-      await test.step('menu contextuel : Masquer puis ⌘Z', async () => {
+      await test.step('context menu: Hide then ⌘Z', async () => {
         const card = page.locator(`${t('grid')} ${t('card')}[data-kind="image"]`).first()
         const uuid = await card.getAttribute('data-uuid')
         await card.click({ button: 'right' })
@@ -342,7 +342,7 @@ test.describe('parcours complet et sécurité', () => {
         await expect.poll(hidden).toBeNull()
       })
 
-      await test.step('étagère et vue Collection', async () => {
+      await test.step('shelf and Collection view', async () => {
         await page.locator(t('seg-collections')).click()
         await expect(page.locator(t('shelf'))).toBeVisible()
         await page.locator(t('shelf-cover')).first().click()
@@ -353,7 +353,7 @@ test.describe('parcours complet et sécurité', () => {
         await page.locator(t('seg-library')).click()
       })
 
-      await test.step('Recherche', async () => {
+      await test.step('Search', async () => {
         await page.locator(t('seg-search')).click()
         const input = page.locator(t('search-input'))
         await expect(input).toBeVisible()
@@ -373,7 +373,7 @@ test.describe('parcours complet et sécurité', () => {
         await expect(page.locator(t('palette'))).toHaveCount(0)
       })
 
-      await test.step('vue détail : image, vidéo (seek), post, carrousel', async () => {
+      await test.step('detail view: image, video (seek), post, carousel', async () => {
         const byUuid = new Map<string, Card>()
         let cursor: string | null = null
         do {
@@ -404,7 +404,7 @@ test.describe('parcours complet et sécurité', () => {
             if (card.kind === 'video') {
               const video = page.locator(`${t('viewer-video')} video, video${t('viewer-video')}`)
               await expect(video.first()).toBeVisible()
-              // Lecture et seek : le protocole `recolt:` sert les plages (Range).
+              // Playback and seek: the `recolt:` protocol serves ranges (Range).
               const seeked = await video.first().evaluate(async (v: HTMLVideoElement) => {
                 if (v.readyState < 1)
                   await new Promise((r) => v.addEventListener('loadedmetadata', r, { once: true }))
@@ -433,13 +433,13 @@ test.describe('parcours complet et sécurité', () => {
           await page.keyboard.press('ArrowRight')
           await expect(detail).not.toHaveAttribute('data-uuid', before)
         }
-        // Démo : pas de carrousel garanti ; bibliothèque réelle : les quatre sont vus.
+        // Demo: no carousel guaranteed; real library: all four are seen.
         if (src) expect([...want]).toEqual([])
         await page.keyboard.press('Escape')
         await expect(detail).toHaveCount(0)
       })
 
-      await test.step('Redécouvrir', async () => {
+      await test.step('Rediscover', async () => {
         await page.locator(t('btn-rediscover')).click()
         await expect(page.locator(t('rediscover'))).toBeVisible()
         await expect(page.locator(t('rd-counter'))).toHaveText(/^1 \/ \d+$/)
@@ -449,7 +449,7 @@ test.describe('parcours complet et sécurité', () => {
         await expect(page.locator(t('rediscover'))).toHaveCount(0)
       })
 
-      await test.step('Réglages : les 9 sections', async () => {
+      await test.step('Settings: the 9 sections', async () => {
         await page.locator(t('btn-settings')).click()
         await expect(page.locator(t('settings'))).toBeVisible()
         for (const key of [
@@ -470,14 +470,14 @@ test.describe('parcours complet et sécurité', () => {
         await expect(page.locator(t('settings'))).toHaveCount(0)
       })
 
-      await test.step('menus de l’app', async () => {
-        // Tous les ids de commande existent dans le menu natif.
+      await test.step('app menus', async () => {
+        // All command ids exist in the native menu.
         const missing = await app.evaluate(
           ({ Menu }, ids) => ids.filter((id) => !Menu.getApplicationMenu()?.getMenuItemById(id)),
           [...MENU_COMMANDS].filter((id) => id !== 'pasteUrl'),
         )
         expect(missing).toEqual([])
-        // Dialogues natifs neutralisés : « Annuler » partout.
+        // Native dialogs neutralised: "Cancel" everywhere.
         await app.evaluate(({ dialog }) => {
           const d = dialog as unknown as Record<string, unknown>
           d.showOpenDialog = () => Promise.resolve({ canceled: true, filePaths: [] })
@@ -506,7 +506,7 @@ test.describe('parcours complet et sécurité', () => {
         await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
       })
 
-      await test.step('capture (faux screencapture)', async () => {
+      await test.step('capture (fake screencapture)', async () => {
         const before = count("SELECT count(*) n FROM items WHERE source = 'capture'")
         expect(await clickMenu(app, 'capture')).toBe(true)
         await expect
@@ -517,7 +517,7 @@ test.describe('parcours complet et sécurité', () => {
           .toBe(1)
       })
 
-      await test.step('import par glisser (fichiers avec chemin)', async () => {
+      await test.step('import by drag (files with a path)', async () => {
         const paths: string[] = []
         for (const [i, color] of ['#c0392b', '#2e86c1'].entries()) {
           const f = path.join(files, `glisse-${i}.png`)
@@ -525,8 +525,8 @@ test.describe('parcours complet et sécurité', () => {
           paths.push(f)
         }
         const before = count('SELECT count(*) n FROM items')
-        // Des `File` adossés à de vrais fichiers (sélecteur de fichiers de Chromium) : le preload
-        // retrouve leur chemin (`webUtils.getPathForFile`), comme pour un glisser depuis le Finder.
+        // `File`s backed by real files (Chromium file picker): the preload recovers their path
+        // (`webUtils.getPathForFile`), as for a drag from the Finder.
         await page.evaluate(() => {
           const input = document.createElement('input')
           input.type = 'file'
@@ -561,7 +561,7 @@ test.describe('parcours complet et sécurité', () => {
         await expect.poll(() => count('SELECT count(*) n FROM items')).toBe(before + 2)
       })
 
-      await test.step('synchronisation X (faux hôte natif)', async () => {
+      await test.step('X sync (fake native host)', async () => {
         host = new FakeHost(socketPath(userData))
         const sock = host.sock
         await new Promise<void>((r) => sock.once('connect', () => r()))
@@ -614,7 +614,7 @@ test.describe('parcours complet et sécurité', () => {
         await expect(page.locator(t('settings'))).toHaveCount(0)
       })
 
-      await test.step('Spaces : création, nœuds, export PNG', async () => {
+      await test.step('Spaces: creation, nodes, PNG export', async () => {
         await page.locator(t('seg-spaces')).click()
         const cta = page.locator(t('space-empty-cta'))
         await expect(cta.or(page.locator(t('space-new-card'))).first()).toBeVisible()
@@ -634,7 +634,7 @@ test.describe('parcours complet et sécurité', () => {
         await expect(page.locator('.space-node[data-type="note"]')).toContainText(
           'Note du parcours',
         )
-        // Un élément de la bibliothèque, par le tiroir (type de glisser interne).
+        // A library item, from the drawer (internal drag type).
         await page.locator(t('tool-library')).click()
         const drawerCard = page.locator(t('drawer-card')).first()
         await expect(drawerCard).toBeVisible()
@@ -686,7 +686,7 @@ test.describe('parcours complet et sécurité', () => {
         await page.locator(t('seg-library')).click()
       })
 
-      await test.step('IA (faux CLI uniquement)', async () => {
+      await test.step('AI (fake CLIs only)', async () => {
         const set = await invoke(page, 'prefs.set', {
           patch: {
             ai: {
@@ -701,8 +701,8 @@ test.describe('parcours complet et sécurité', () => {
         expect(set.ok, set.error?.message).toBe(true)
         const consent = await invoke(page, 'ai.consent', { version: 1 })
         expect(consent.ok, consent.error?.message).toBe(true)
-        // Une image dont le fichier est local (les images synchronisées restent distantes ici :
-        // `downloadRemoteMedia` coupé) ; l'UI de génération est couverte par m4-ai.spec.ts.
+        // An image whose file is local (synced images stay remote here: `downloadRemoteMedia`
+        // turned off); the generation UI is covered by m4-ai.spec.ts.
         const { uuid } = db
           .prepare(
             `SELECT i.uuid FROM items i JOIN item_media m ON m.item_id = i.id AND m.position = 0
@@ -734,7 +734,7 @@ test.describe('parcours complet et sécurité', () => {
         await invoke(page, 'prefs.set', { patch: { ai: { provider: 'off' } } })
       })
 
-      await test.step('sécurité : 0 requête externe, 0 violation CSP, 0 erreur console', async () => {
+      await test.step('security: 0 external request, 0 CSP violation, 0 console error', async () => {
         const hits = await netHits(app)
         expect(
           hits.filter((x) => x.wc !== null),
@@ -755,7 +755,7 @@ test.describe('parcours complet et sécurité', () => {
       if (h) await h.app.close().catch(() => undefined)
     }
 
-    // Après fermeture (base consolidée) : aucun secret, manifests GatherOS intacts.
+    // After closing (database consolidated): no secret, GatherOS manifests intact.
     const media = new Set([
       'items',
       'large',

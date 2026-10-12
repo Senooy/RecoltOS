@@ -1,13 +1,13 @@
 /**
- * Requête de recherche (`search/fts-query`) : texte saisi → expression FTS5 +
- * filtres. Partagé : main l’exécute, le renderer s’en sert pour convertir la syntaxe en chips.
- *  - mots nus → `"mot"*` (ET implicite, guillemets doublés) ; `"une phrase"` → `"une phrase"` ;
- *  - `#x #instagram #cosmos` (et l'alias `#bookmark` → `x`) → filtre `sources`, pas un terme FTS ;
- *  - autres `#tag` → `tags:"tag"*` (+ nom gardé pour la chip) ; `@handle` → `post_text:"handle"` ;
- *  - `type:video|image|post|page` (et `tweet`, `url`), `source:x`, `couleur:#ff3b30` → filtres ;
- *  - un mot nu égal à une source (`instagram`, `cosmos`, `twitter`) est noté dans `sourceWords` :
- *    la recherche met les éléments de cette source en tête, puis les résultats plein texte.
- * Pur (sans base) : testable.
+ * Search query (`search/fts-query`): typed text → FTS5 expression + filters.
+ * Shared: main runs it, the renderer uses it to convert the syntax into chips.
+ *  - bare words → `"word"*` (implicit AND, doubled quotes); `"a phrase"` → `"a phrase"`;
+ *  - `#x #instagram #cosmos` (and the `#bookmark` alias → `x`) → `sources` filter, not FTS;
+ *  - other `#tag` → `tags:"tag"*` (+ name kept for the chip); `@handle` → `post_text:"handle"`;
+ *  - `type:video|image|post|page` (and `tweet`, `url`), `source:x`, `couleur:#ff3b30` → filters;
+ *  - a bare word equal to a source (`instagram`, `cosmos`, `twitter`) is noted in `sourceWords`:
+ *    the search puts that source's items first, then the full-text results.
+ * Pure (no database): testable.
  */
 import type { ItemKind, Source } from './enums'
 
@@ -15,14 +15,14 @@ import { NAMED_COLORS } from './color'
 
 const foldName = (v: string): string => v.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
-/** Hex d'une couleur nommée (« rouge », « Bleu »…), sinon `null`. */
+/** Hex of a named colour ("rouge", "Bleu"…), otherwise `null`. */
 export function namedColorHex(value: string): string | null {
   const v = foldName(value)
   return NAMED_COLORS.find((c) => c.id === v || foldName(c.label) === v)?.hex ?? null
 }
 
 export interface ParsedQuery {
-  /** Expression FTS5, `null` si aucun terme plein texte. */
+  /** FTS5 expression, `null` if there is no full-text term. */
   match: string | null
   sources: Source[]
   kinds: ItemKind[]
@@ -30,7 +30,7 @@ export interface ParsedQuery {
   handles: string[]
   color: string | null
   sourceWords: Source[]
-  /** Termes nus (pour la surbrillance, l'historique). */
+  /** Bare terms (for highlighting and history). */
   terms: string[]
 }
 
@@ -42,7 +42,7 @@ const SOURCE_TAGS: Record<string, Source> = {
   cosmos: 'cosmos',
 }
 
-/** Mots nus qui désignent une source (union du filtre de source). */
+/** Bare words that name a source (union of the source filter). */
 const SOURCE_WORDS: Record<string, Source> = {
   instagram: 'instagram',
   cosmos: 'cosmos',
@@ -80,12 +80,12 @@ const KIND_NAMES: Record<string, ItemKind> = {
   lien: 'url',
 }
 
-/** Échappe un terme pour une chaîne FTS5 entre guillemets. */
+/** Escapes a term for an FTS5 quoted string. */
 export function quote(term: string): string {
   return `"${term.replace(/"/g, '""')}"`
 }
 
-/** Découpe en jetons, en gardant les segments entre guillemets d'un seul tenant. */
+/** Splits into tokens, keeping quoted segments in one piece. */
 export function tokenize(raw: string): { text: string; quoted: boolean }[] {
   const out: { text: string; quoted: boolean }[] = []
   const re = /"([^"]*)"?|(\S+)/g
@@ -99,7 +99,7 @@ export function tokenize(raw: string): { text: string; quoted: boolean }[] {
   return out
 }
 
-/** Retire la ponctuation de bord qui n'a pas de sens pour l'index (`unicode61`). */
+/** Removes edge punctuation that is meaningless for the index (`unicode61`). */
 function clean(word: string): string {
   return word.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '')
 }
@@ -140,7 +140,7 @@ export function toFtsQuery(raw: string): ParsedQuery {
         color = value.startsWith('#') ? value : `#${value}`
         continue
       }
-      // `couleur:rouge` : une des 12 couleurs nommées.
+      // `couleur:rouge`: one of the 12 named colours.
       const named = (key === 'couleur' || key === 'color') && namedColorHex(value)
       if (named) {
         color = named

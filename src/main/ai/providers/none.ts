@@ -1,4 +1,4 @@
-/** Fournisseur « Aucun » : toute méthode lève `DISABLED` ; la file n'enfile rien. */
+/** "None" provider: every method throws `DISABLED`; the queue enqueues nothing. */
 import {
   AiError,
   type AiCallOptions,

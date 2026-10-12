@@ -1,7 +1,7 @@
 /**
- * `initProtocol` (Electron simulé) : `recolt:` enregistré sur la session par défaut et sur
- * chaque session hors écran, canal `drag`, bibliothèque active
- * relue à chaque requête, tout retiré au `dispose`. Hors Electron : aucun enregistrement, pas d'échec.
+ * `initProtocol` (simulated Electron): `recolt:` registered on the default session and on
+ * each off-screen session, `drag` channel, active library
+ * re-read at each request, everything removed on `dispose`. Outside Electron: no registration, no failure.
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -85,7 +85,7 @@ afterEach(() => {
 })
 
 describe('initProtocol', () => {
-  it('session par défaut + sessions hors écran + canal drag ; dispose retire tout', async () => {
+  it('default session + off-screen sessions + drag channel; dispose removes everything', async () => {
     const root = makeTmpDir('recolt-init-')
     mkdirSync(join(root, 'thumbs', 'ab'), { recursive: true })
     writeFileSync(join(root, 'thumbs', 'ab', 'x.webp'), 'webp')
@@ -102,7 +102,7 @@ describe('initProtocol', () => {
     expect(await ok.text()).toBe('webp')
     expect((await h(new Request('recolt://autre/thumbs/ab/x.webp'))).status).toBe(404)
 
-    // Session hors écran : même handler, lecture seule.
+    // Off-screen session: same handler, read-only.
     expect(state.setups).toHaveLength(1)
     const offHandled = new Map<string, Handler>()
     const ses = {
@@ -114,7 +114,7 @@ describe('initProtocol', () => {
     state.setups[0]!(ses)
     state.setups[0]!(ses)
     const off = offHandled.get('recolt')!
-    // Page interne : servie.
+    // Internal page: served.
     state.pages.push({
       session: ses,
       url: 'file:///app/out/renderer/offscreen.html?render=tweet-card',
@@ -124,7 +124,7 @@ describe('initProtocol', () => {
       (await off(new Request('recolt://default/thumbs/ab/x.webp', { method: 'POST' }))).status,
     ).toBe(405)
 
-    // Bascule : la bibliothèque est relue à chaque requête.
+    // Switch: the library is re-read at each request.
     resetLibraryContextForTests()
     expect((await h(new Request('recolt://default/thumbs/ab/x.webp'))).status).toBe(404)
 
@@ -133,7 +133,7 @@ describe('initProtocol', () => {
     expect(state.ipcOff).toEqual(['drag'])
   })
 
-  it('session hors écran : une page http(s) capturée ou aucune page → 403, page interne → 200', async () => {
+  it('off-screen session: a captured http(s) page or no page → 403, internal page → 200', async () => {
     const root = makeTmpDir('recolt-init-guard-')
     mkdirSync(join(root, 'avatars', 'x'), { recursive: true })
     writeFileSync(join(root, 'avatars', 'x', 'a.jpg'), 'jpg')
@@ -154,21 +154,21 @@ describe('initProtocol', () => {
     const off = offHandled.get('recolt')!
     const probe = () => off(new Request('recolt://default/avatars/x/a.jpg'))
 
-    // Aucune fenêtre identifiable : fail closed.
+    // No identifiable window: fail closed.
     expect((await probe()).status).toBe(403)
 
-    // Page distante (fetch / <img> : le handler ne voit que la requête, pas ses en-têtes).
+    // Remote page (fetch / <img>: the handler only sees the request, not its headers).
     state.pages.push({ session: ses, url: 'https://evil.example/page.html' })
     expect((await probe()).status).toBe(403)
     expect(
       (await off(new Request('recolt://default/avatars/x/a.jpg', { method: 'OPTIONS' }))).status,
     ).toBe(403)
 
-    // Une fenêtre d'une autre session ne compte pas ; la page distante bloque toujours.
+    // A window from another session does not count; the remote page still blocks.
     state.pages.push({ session: {}, url: 'file:///app/out/renderer/offscreen.html' })
     expect((await probe()).status).toBe(403)
 
-    // Page interne seule (serveur Vite de dev) : servie.
+    // Internal page only (Vite dev server): served.
     state.pages.length = 0
     state.pages.push({
       session: ses,
@@ -176,7 +176,7 @@ describe('initProtocol', () => {
     })
     expect((await probe()).status).toBe(200)
 
-    // Même origine de dev mais autre page : refus.
+    // Same dev origin but another page: refused.
     state.pages.length = 0
     state.pages.push({ session: ses, url: 'http://localhost:5173/index.html' })
     expect((await probe()).status).toBe(403)
@@ -184,7 +184,7 @@ describe('initProtocol', () => {
     await (dispose as () => Promise<void>)()
   })
 
-  it('hors Electron : avertit et ne branche rien', () => {
+  it('outside Electron: warns and wires nothing', () => {
     state.electronAvailable = false
     const warn = vi.fn()
     const c = { ...ctx(), log: { debug: vi.fn(), info: vi.fn(), warn, error: vi.fn() } }

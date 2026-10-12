@@ -1,5 +1,5 @@
 /**
- * Protocole extension ↔ app : schémas zod, JSON Schema v1, constantes, identifiant fixe.
+ * Extension ↔ app protocol: zod schemas, JSON Schema v1, constants, fixed identifier.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -25,11 +25,11 @@ describe('JSON Schema v1', () => {
   const generated = bridgeJsonSchema()
   const defs = generated.$defs as Record<string, Def>
 
-  it('le fichier livré est à jour', () => {
+  it('the shipped file is up to date', () => {
     expect(JSON.parse(readFileSync(SCHEMA_FILE, 'utf8'))).toEqual(generated)
   })
 
-  it('SaveRequest : champs et exclusivité du protocole', () => {
+  it('SaveRequest: protocol fields and exclusivity', () => {
     const s = defs.SaveRequest as Def & { not?: unknown; additionalProperties?: unknown }
     expect(s.required).toEqual(['kind', 'pageUrl'])
     expect(Object.keys(s.properties ?? {}).sort()).toEqual(
@@ -53,7 +53,7 @@ describe('JSON Schema v1', () => {
     expect(s.additionalProperties).toBe(false)
   })
 
-  it('SyncRun, SyncPage, SyncAck : champs requis et énumérations du protocole', () => {
+  it('SyncRun, SyncPage, SyncAck: required fields and protocol enums', () => {
     expect(defs.SyncRun?.required).toEqual(['runId', 'platform', 'mode', 'trigger', 'maxPages'])
     expect(defs.SyncRun?.properties?.mode?.enum).toEqual(['incremental', 'backfill', 'deep'])
     expect(defs.SyncRun?.properties?.trigger?.enum).toEqual([
@@ -76,13 +76,13 @@ describe('JSON Schema v1', () => {
     expect(defs.SyncAck?.properties?.decision?.enum).toEqual(['continue', 'stop'])
   })
 
-  it('un schéma de payload pour chaque type de message', () => {
+  it('one payload schema for each message type', () => {
     expect(Object.keys(MESSAGE_SCHEMAS).sort()).toEqual([...MESSAGE_TYPES].sort())
   })
 })
 
-describe('identifiant d’extension', () => {
-  it('déterministe : 32 lettres a–p dérivées de la clé publique', () => {
+describe('extension identifier', () => {
+  it('deterministic: 32 letters a–p derived from the public key', () => {
     const der = Buffer.from(EXTENSION_KEY, 'base64')
     expect(extensionIdFromPublicKey(der)).toBe(EXTENSION_ID)
     expect(EXTENSION_ID).toMatch(/^[a-p]{32}$/)
@@ -92,7 +92,7 @@ describe('identifiant d’extension', () => {
 
 describe('SaveRequest', () => {
   const base = { kind: 'image', pageUrl: 'https://example.com/a' }
-  it('inlineMedia et upload mutuellement exclusifs', () => {
+  it('inlineMedia and upload mutually exclusive', () => {
     expect(
       SaveRequest.safeParse({ ...base, inlineMedia: { mime: 'image/png', dataBase64: 'AA==' } })
         .success,
@@ -111,13 +111,13 @@ describe('SaveRequest', () => {
       }).success,
     ).toBe(false)
   })
-  it('inline ≤ 8 Mio de binaire', () => {
+  it('inline ≤ 8 MiB of binary', () => {
     expect(MAX_INLINE_BASE64_CHARS).toBe(Math.ceil(MAX_INLINE_MEDIA_BYTES / 3) * 4)
   })
 })
 
 describe('parseMessage', () => {
-  it('valide enveloppe et payload', () => {
+  it('validates envelope and payload', () => {
     const m = envelope('sync.page', {
       runId: 'r1',
       platform: 'x',
@@ -130,7 +130,7 @@ describe('parseMessage', () => {
     expect(r.ok).toBe(true)
     if (r.ok) expect(r.message.type).toBe('sync.page')
   })
-  it('refuse un type inconnu ou un payload invalide sans lever', () => {
+  it('rejects an unknown type or an invalid payload without throwing', () => {
     expect(parseMessage(envelope('ping')).ok).toBe(true)
     const bad = { ...envelope('sync.run', { runId: 'r', platform: 'facebook' }) }
     const r = parseMessage(bad)
@@ -138,7 +138,7 @@ describe('parseMessage', () => {
     if (!r.ok) expect(r.id).toBe(bad.id)
     expect(parseMessage({ ...envelope('ping'), type: 'inconnu' }).ok).toBe(false)
   })
-  it('ne lève jamais sur une entrée arbitraire (fast-check)', () => {
+  it('never throws on arbitrary input (fast-check)', () => {
     fc.assert(
       fc.property(fc.anything(), (v) => {
         const r = parseMessage(v)

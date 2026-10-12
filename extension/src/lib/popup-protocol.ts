@@ -1,5 +1,5 @@
 /**
- * Messages popup ↔ arrière-plan (`runtime.sendMessage`). Internes à l'extension.
+ * Popup ↔ background messages (`runtime.sendMessage`). Internal to the extension.
  */
 import type { BridgePlatform } from '../../../src/shared/bridge/constants'
 import type { PlatformsState } from '../../../src/shared/bridge/messages'
@@ -23,7 +23,7 @@ export interface PopupState {
   platforms: PlatformsState | null
   sync: SyncStateMessage['sources'] | null
   pending: boolean
-  /** Langue de l'interface (celle de l'app connectée, sinon du navigateur). */
+  /** Interface language (that of the connected app, otherwise the browser's). */
   lang: 'fr' | 'en'
 }
 

@@ -1,6 +1,6 @@
 /**
- * État IA côté renderer : instantané de la file (`evt:ai.queue`), état des fournisseurs
- * (`ai.detect`, à la demande), dialogues IA (feuille « Changer », « Enrichir », aperçu).
+ * AI state on the renderer side: queue snapshot (`evt:ai.queue`), provider status
+ * (`ai.detect`, on demand), AI dialogs (the "Change" sheet, "Enrich", preview).
  */
 import { create } from 'zustand'
 import type { ProviderStatus } from '../../../../shared/ai-types'
@@ -42,7 +42,7 @@ export const useAi = create<AiState>()((set, get) => ({
       const s = await rpc('ai.status')
       set({ queue: s.queue, consentVersion: s.consentVersion })
     } catch (err) {
-      if (!isNotImplemented(err)) console.warn('[ai] état', err)
+      if (!isNotImplemented(err)) console.warn('[ai] status', err)
     }
   },
   async runDetect() {
@@ -52,7 +52,7 @@ export const useAi = create<AiState>()((set, get) => ({
       const d = await rpc('ai.detect')
       set({ detect: d })
     } catch (err) {
-      if (!isNotImplemented(err)) console.warn('[ai] détection', err)
+      if (!isNotImplemented(err)) console.warn('[ai] detection', err)
     } finally {
       set({ detecting: false })
     }
@@ -65,7 +65,7 @@ export const useAi = create<AiState>()((set, get) => ({
   closePreview: () => set({ preview: null }),
 }))
 
-/** Abonnement aux événements IA (monté une fois par `AiDialogs`). */
+/** Subscription to AI events (mounted once by `AiDialogs`). */
 export function followAiEvents(): () => void {
   void useAi.getState().refresh()
   const offQueue = subscribe('ai.queue', (queue) => useAi.setState({ queue }))
@@ -89,7 +89,7 @@ export function aiFail(err: unknown): void {
   toast(tr.errors.generic)
 }
 
-/** Vrai si un appel peut partir : fournisseur choisi et consentement donné. */
+/** True if a call can go out: provider chosen and consent given. */
 export function aiReady(provider: string, consentVersion: number | null): boolean {
   return provider !== 'off' && consentVersion !== null
 }

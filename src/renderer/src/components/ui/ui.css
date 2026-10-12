@@ -1,24 +1,24 @@
 /*
- * Kit UI : animations des primitives Radix et jetons propres aux composants.
- * Importé par chaque composant qui en dépend ; les couleurs par thème (--ui-accent-hover,
- * --ui-menu-highlight, --ui-avatar-*) sont dans `tokens.css`.
+ * UI kit: animations of the Radix primitives and tokens specific to the components.
+ * Imported by each component that depends on it; the per-theme colors (--ui-accent-hover,
+ * --ui-menu-highlight, --ui-avatar-*) are in `tokens.css`.
  *
- * Mouvement réduit (`prefers-reduced-motion` OU `<html data-reduce-motion="1">`) : durées ≤ 80 ms,
- * ni translation ni mise à l'échelle (fondus seulement). Miroir CSS de `motion.ts`.
+ * Reduced motion (`prefers-reduced-motion` OR `<html data-reduce-motion="1">`): durations ≤ 80 ms,
+ * no translation nor scaling (fades only). CSS mirror of `motion.ts`.
  */
 :root {
-  /* échelle de départ des popovers / dialogues, translation de la modale */
+  /* starting scale of popovers / dialogs, translation of the modal */
   --ui-scale-from: 0.97;
   --ui-dialog-scale-from: 0.98;
   --ui-dialog-y-from: -6px;
-  /* menus : 140 ms à l'ouverture, 100 ms à la fermeture ; modale : 240 ms ; voile : 160 ms */
+  /* menus: 140 ms on open, 100 ms on close; modal: 240 ms; scrim: 160 ms */
   --ui-menu-in: 140ms;
   --ui-menu-out: 100ms;
   --ui-dialog-in: 240ms;
   --ui-dialog-out: 160ms;
   --ui-fade: 160ms;
   --ui-tooltip: var(--dur-base, 180ms);
-  /* survol du bouton rond du viewer (--viewer-btn plus soutenu) */
+  /* hover of the round viewer button (--viewer-btn is stronger) */
   --ui-viewer-btn-hover: rgba(255, 255, 255, 0.2);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -46,7 +46,7 @@
   --ui-tooltip: 80ms;
 }
 
-/* ---- Popovers : menus, popover, tooltip --------------------------------------------------- */
+/* ---- Popovers: menus, popover, tooltip ----------------------------------------------- */
 @keyframes ui-pop-in {
   from {
     opacity: 0;
@@ -84,7 +84,7 @@
   animation-duration: var(--ui-tooltip);
 }
 
-/* ---- Dialogues : voile en fondu, panneau opacity + scale + y ------------------------------ */
+/* ---- Dialogs: fading scrim, panel opacity + scale + y -------------------------------- */
 @keyframes ui-fade-in {
   from {
     opacity: 0;
@@ -135,7 +135,7 @@
   background: var(--scrim-palette);
 }
 .ui-dialog {
-  /* centrage par la propriété `translate` : `transform` reste libre pour l'animation */
+  /* centering via the `translate` property: `transform` stays free for the animation */
   translate: -50% -50%;
 }
 .ui-dialog[data-state='open'] {
@@ -145,7 +145,7 @@
   animation: ui-dialog-out var(--ui-dialog-out) var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
 
-/* ---- Menus : surlignage ------------------------------------------------------------------- */
+/* ---- Menus: highlight ---------------------------------------------------------------- */
 .ui-menu-item[data-highlighted],
 .ui-menu-item[data-state='open'] {
   background: var(--ui-menu-highlight);
@@ -177,12 +177,12 @@
   animation: none !important;
 }
 
-/* ---- Avatar : teinte de repli par hash du handle ------------------------------------------ */
+/* ---- Avatar: fallback tint by hash of the handle ------------------------------------- */
 .ui-avatar-tint {
   background: hsl(var(--avatar-hue, 0) var(--ui-avatar-s) var(--ui-avatar-l));
 }
 
-/* ---- Toasts (sonner) : mouvement réduit = fondu seul ------------------------------------- */
+/* ---- Toasts (sonner): reduced motion = fade only ------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   [data-sonner-toast] {
     transition: opacity 80ms linear !important;
@@ -192,11 +192,11 @@
   transition: opacity 80ms linear !important;
 }
 
-/* ---- Focus : conteneurs non interactifs ---------------------------------------------------
- * `globals.css` (non layered) donne l'anneau `:focus-visible` à tout élément. Les conteneurs que
- * Radix focalise par programmation (panneau de dialogue, contenu de menu/popover) et les items de
- * menu (déjà surlignés par `data-highlighted`) n'affichent pas d'anneau ; boutons, champs et
- * pouces de slider gardent l'anneau clavier. */
+/* ---- Focus: non-interactive containers ----------------------------------------------
+ * `globals.css` (not layered) gives the `:focus-visible` ring to every element. The containers that
+ * Radix focuses programmatically (dialog panel, menu/popover content) and the menu items
+ * (already highlighted by `data-highlighted`) show no ring; buttons, fields and
+ * slider thumbs keep the keyboard ring. */
 .ui-dialog:focus-visible,
 .ui-pop:focus-visible,
 .ui-menu-item:focus-visible {

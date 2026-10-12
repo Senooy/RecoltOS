@@ -1,7 +1,7 @@
 /**
- * DTO des éléments. Construits par main ; les URL média sont déjà résolues
- * (`recolt://`, repli `thumb ?? legacyThumb ?? display ?? original`).
- * Aucune URL http(s) de ressource : `sourceUrl` est un lien affiché/ouvert, jamais chargé.
+ * Item DTOs. Built by main; media URLs are already resolved
+ * (`recolt://`, fallback `thumb ?? legacyThumb ?? display ?? original`).
+ * No http(s) resource URL: `sourceUrl` is a link shown/opened, never loaded.
  */
 import { z } from 'zod'
 import {
@@ -18,9 +18,9 @@ import { POST_VIEW_TEXT_MAX } from '../post-meta'
 
 export const PostAuthorView = z.object({
   name: z.string().nullable(),
-  /** Sans '@'. */
+  /** Without '@'. */
   handle: z.string().nullable(),
-  /** `null` → monogramme (avatars Instagram expirés). */
+  /** `null` → monogram (expired Instagram avatars). */
   avatarUrl: MediaUrl.nullable(),
 })
 export type PostAuthorView = z.output<typeof PostAuthorView>
@@ -32,7 +32,7 @@ export const QuotedPostView = z.object({
 })
 export type QuotedPostView = z.output<typeof QuotedPostView>
 
-/** Vue de post pour une carte de grille. */
+/** Post view for a grid card. */
 export const PostView = z.object({
   author: PostAuthorView,
   text: z.string().max(POST_VIEW_TEXT_MAX).nullable(),
@@ -41,7 +41,7 @@ export const PostView = z.object({
 })
 export type PostView = z.output<typeof PostView>
 
-/** Vue complète pour le détail (fil et post cité en entier). */
+/** Full view for the detail (thread and quoted post in full). */
 export const PostDetailView = PostView.extend({
   text: z.string().nullable(),
   postedAt: z.number().int().nullable(),
@@ -60,21 +60,21 @@ export const ItemCard = z.object({
   mime: z.string().nullable(),
   isAnimated: z.boolean(),
   durationMs: z.number().int().nullable(),
-  /** `palette[0]` (fond de chargement), sinon `null` → `--skeleton`. */
+  /** `palette[0]` (loading background), otherwise `null` → `--skeleton`. */
   dominant: HexColor.nullable(),
   hasNotes: z.boolean(),
   createdAt: z.number().int(),
-  /** = `createdAt` (l'UI affiche la date d'ajout). */
+  /** = `createdAt` (the UI shows the date added). */
   displayDate: z.number().int(),
   viewCount: z.number().int().min(0),
   thumbUrl: MediaUrl.nullable(),
   largeUrl: MediaUrl.nullable(),
   posterUrl: MediaUrl.nullable(),
-  /** `null` tant que le dérivé manque. */
+  /** `null` while the derivative is missing. */
   previewUrl: MediaUrl.nullable(),
   originalUrl: MediaUrl.nullable(),
   post: PostView.nullable(),
-  /** Hôte de `source_url` (« reddit.com ») pour `PageCard` : un nom d'hôte, jamais une URL. */
+  /** Host of `source_url` ("reddit.com") for `PageCard`: a host name, never a URL. */
   sourceHost: z.string().max(253).nullable().default(null),
 })
 export type ItemCard = z.output<typeof ItemCard>
@@ -96,7 +96,7 @@ export type NamedRef = z.output<typeof NamedRef>
 
 export const ItemDetail = ItemCard.extend({
   notes: z.string().nullable(),
-  /** Lien d'origine (affiché, ouvert via `system.openExternal`), jamais chargé par le renderer. */
+  /** Original link (shown, opened via `system.openExternal`), never loaded by the renderer. */
   sourceUrl: z.string().nullable(),
   externalId: z.string().nullable(),
   post: PostDetailView.nullable(),
@@ -115,25 +115,25 @@ export const ItemDetail = ItemCard.extend({
   hiddenAt: z.number().int().nullable(),
   deletedAt: z.number().int().nullable(),
   aiExcluded: z.boolean(),
-  /** Job IA actif le plus récent (scintillement du panneau Détails). */
+  /** Most recent active AI job (shimmer in the Details panel). */
   aiJob: z
     .object({ type: z.enum(['ai.enrich', 'ai.prompt']), state: z.enum(['queued', 'running']) })
     .nullable()
     .default(null),
-  /** Dernière erreur IA (élément en `failed`, ou job en attente d'un fournisseur). */
+  /** Last AI error (item in `failed`, or job waiting on a provider). */
   aiError: z.object({ code: z.string(), message: z.string() }).nullable().default(null),
 })
 export type ItemDetail = z.output<typeof ItemDetail>
 
 export const ItemsPage = z.object({
   items: z.array(ItemCard),
-  /** Curseur keyset opaque (base64url), `null` en fin de liste. */
+  /** Opaque keyset cursor (base64url), `null` at the end of the list. */
   nextCursor: z.string().nullable(),
   total: z.number().int().min(0),
 })
 export type ItemsPage = z.output<typeof ItemsPage>
 
-/** Comptes par onglet (servent ailleurs que dans les onglets). */
+/** Counts per tab (also used outside the tabs). */
 export const TabCounts = z.object({
   all: z.number().int(),
   saved: z.number().int(),

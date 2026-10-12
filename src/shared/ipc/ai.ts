@@ -1,5 +1,5 @@
 /**
- * Contrat `ai.*`. Aucun appel sans `consentVersion` ni avec `provider = 'off'`.
+ * `ai.*` contract. No call without `consentVersion` nor with `provider = 'off'`.
  */
 import { z } from 'zod'
 import { AI_FIELDS, AI_TASKS, ProviderStatus, ProviderTestResult } from '../ai-types'
@@ -14,7 +14,7 @@ const Task = z.enum(AI_TASKS)
 
 export const AiFilter = z.object({
   missingDescription: z.boolean().optional(),
-  /** Descriptions existantes qui ne sont pas en français (« Régénérer en français »). */
+  /** Existing descriptions that are not in French (« Régénérer en français »). */
   regenerateFr: z.boolean().optional(),
   importRunId: z.number().int().optional(),
   collectionUuid: Uuid.optional(),
@@ -38,12 +38,12 @@ export const aiContract = {
   'ai.test': { input: z.object({ provider: Cli, live: z.boolean() }), output: ProviderTestResult },
   'ai.consent': { input: z.object({ version: z.number().int().min(1) }), output: Void },
   'ai.previewPayload': {
-    /** Sans `itemUuid` : le premier élément éligible sans description (sinon le plus récent). */
+    /** Without `itemUuid`: the first eligible item without a description (otherwise the most recent). */
     input: z.object({ itemUuid: Uuid.optional(), task: Task }),
     output: z.object({
       provider: Cli,
       itemUuid: Uuid,
-      /** Prompt système, envoyé avant `prompt`. */
+      /** System prompt, sent before `prompt`. */
       system: z.string(),
       prompt: z.string(),
       files: z.array(
@@ -52,7 +52,7 @@ export const aiContract = {
           bytes: z.number(),
           width: z.number(),
           height: z.number(),
-          /** JPEG exact envoyé (`data:image/jpeg;base64,…`). */
+          /** Exact JPEG sent (`data:image/jpeg;base64,…`). */
           dataUrl: z.string().startsWith('data:image/jpeg;base64,'),
         }),
       ),

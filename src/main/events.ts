@@ -1,7 +1,7 @@
 /**
- * Émission des événements métier depuis les handlers et la file (`items.changed`,
- * `collections.changed`) : invalide aussi le cache des compteurs d'onglets. L'émetteur réel
- * (`ServiceContext.emit`) est branché par `jobs/init.ts` ; hors Electron, rien n'est émis.
+ * Emission of business events from the handlers and the queue (`items.changed`,
+ * `collections.changed`): also invalidates the tab counter cache. The real emitter
+ * (`ServiceContext.emit`) is wired by `jobs/init.ts`; outside Electron, nothing is emitted.
  */
 import type { EventName, EventPayload } from '../shared/ipc'
 import { invalidatePaletteIndex } from './color/palette-index'
@@ -30,7 +30,7 @@ export function emitItemsChanged(uuids: readonly string[], reason: ItemsChangedR
 
 const collectionsListeners = new Set<(uuids: readonly string[]) => void>()
 
-/** Abonnement interne au main (menus de l'extension) ; rend la fonction de retrait. */
+/** Internal subscription in main (extension menus); returns the unsubscribe function. */
 export function onCollectionsChanged(fn: (uuids: readonly string[]) => void): () => void {
   collectionsListeners.add(fn)
   return () => collectionsListeners.delete(fn)
@@ -44,12 +44,12 @@ export function emitCollectionsChanged(uuids: readonly string[]): void {
     try {
       fn(uuids)
     } catch {
-      // un abonné défaillant n'empêche pas les autres
+      // a failing subscriber does not prevent the others
     }
   }
 }
 
-/** Émission d'un autre événement métier (`export.progress`…) ; sans effet hors Electron. */
+/** Emits another business event (`export.progress`…); no effect outside Electron. */
 export function emitEvent<E extends EventName>(event: E, payload: EventPayload<E>): void {
   emitFn?.(event, payload)
 }

@@ -1,9 +1,9 @@
 /**
- * Fournisseur Claude : `claude --safe-mode -p … --output-format stream-json --verbose
+ * Claude provider: `claude --safe-mode -p … --output-format stream-json --verbose
  * --json-schema … --system-prompt … --tools Read --allowedTools Read --permission-mode dontAsk
  * --permission-prompts none --strict-mcp-config --disable-slash-commands --no-session-persistence
- * --restricted --model … --effort …`, cwd FIXE `<userData>/ai-sandbox/claude/`.
- * JAMAIS `--bare` (il ne lit pas l'abonnement). Résultat : `structured_output` de la ligne `result`.
+ * --restricted --model … --effort …`, fixed cwd `<userData>/ai-sandbox/claude/`.
+ * NEVER `--bare` (it does not read the subscription). Result: `structured_output` of the `result` line.
  */
 import { realpathSync } from 'node:fs'
 import { dirname } from 'node:path'
@@ -84,7 +84,7 @@ export class ClaudeCliProvider extends CliProviderBase {
     try {
       real = realpathSync(bin)
     } catch {
-      // lien cassé : le lancement échouera proprement
+      // broken link: the launch will fail cleanly
     }
     return buildCliEnv(await this.rt.loginPath(), [dirname(bin), dirname(real)])
   }
@@ -136,7 +136,7 @@ export class ClaudeCliProvider extends CliProviderBase {
     } catch {
       return { ...base, loggedIn: false, authKind: 'unknown' }
     }
-    // Champs d'identité (e-mail, organisation) jamais lus ni renvoyés.
+    // Identity fields (email, organization) are never read or returned.
     const loggedIn = auth.loggedIn === true
     const sub = auth.authMethod === 'claude.ai' && auth.apiProvider === 'firstParty'
     if (loggedIn && !sub) warnings.push(mt().ai.apiKey)

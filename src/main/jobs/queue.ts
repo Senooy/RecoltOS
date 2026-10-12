@@ -1,9 +1,9 @@
 /**
- * File de jobs persistante : une boucle par type, chacune avec son
- * plafond ; un type saturé ou en pause ne bloque jamais les autres. Nouvelle tentative à
- * `2^attempts × 30 s` ; 4xx et erreurs définitives non réessayées ; `provider_rate_limited` remet
- * le job en file sans consommer de tentative et met le type en pause ; pauses par type persistées
- * dans `settings['jobs.paused']`. Aucune dépendance à Electron.
+ * Persistent job queue: one loop per type, each with its own
+ * cap; a saturated or paused type never blocks the others. Retry at
+ * `2^attempts × 30 s`; 4xx and permanent errors are not retried; `provider_rate_limited` puts
+ * the job back in the queue without consuming an attempt and pauses the type; per-type pauses persisted
+ * in `settings['jobs.paused']`. No dependency on Electron.
  */
 import {
   JOB_TYPES,
@@ -29,7 +29,7 @@ export const BACKOFF_BASE_MS = 30_000
 export const RATE_LIMIT_DEFAULT_MS = 3_600_000
 export const PAUSED_SETTING = 'jobs.paused'
 
-/** Codes d'erreur définitifs : aucune nouvelle tentative. */
+/** Permanent error codes: no retry. */
 export const FATAL_CODES: ReadonlySet<string> = new Set([
   'not_found',
   'validation',
@@ -45,7 +45,7 @@ export const FATAL_CODES: ReadonlySet<string> = new Set([
   'disabled',
 ])
 
-/** Codes qui remettent le job en file sans consommer de tentative. */
+/** Codes that put the job back in the queue without consuming an attempt. */
 const REFUND_CODES: ReadonlySet<string> = new Set(['cancelled', 'worker_crashed'])
 
 export interface PauseEntry {
@@ -54,17 +54,17 @@ export interface PauseEntry {
 }
 
 export interface JobQueueDeps {
-  /** Services de la bibliothèque active, ou `null` (aucune bibliothèque). */
+  /** Services of the active library, or `null` (no library). */
   services(): JobServices | null
   handlers: Readonly<Record<JobType, JobHandler>>
   failureHooks?: Partial<Record<JobType, JobFailureHook>>
   now?: () => number
   concurrency?: Partial<Record<JobType, number>>
-  /** Plafond dynamique (ex. `prefs.ai.concurrency`) ; prime sur `concurrency`. */
+  /** Dynamic cap (e.g. `prefs.ai.concurrency`); takes precedence over `concurrency`. */
   concurrencyOf?: (type: JobType) => number | undefined
-  /** Période du réveil (jobs différés, pauses expirées). */
+  /** Wake-up period (deferred jobs, expired pauses). */
   tickMs?: number
-  /** Appelé (au plus toutes les `statusThrottleMs`) quand l'état de la file change. */
+  /** Called (at most every `statusThrottleMs`) when the queue state changes. */
   onStatus?: (s: JobsStatus) => void
   statusThrottleMs?: number
 }
@@ -114,7 +114,7 @@ export class JobQueue {
     return this.deps.concurrencyOf?.(type) ?? this.deps.concurrency?.[type] ?? JOB_CONCURRENCY[type]
   }
 
-  /** Démarre la boucle (idempotent). Au premier démarrage : relit les pauses persistées. */
+  /** Starts the loop (idempotent). On first start: re-reads the persisted pauses. */
   start(): void {
     if (!this.started) {
       this.started = true
@@ -127,7 +127,7 @@ export class JobQueue {
     this.kick()
   }
 
-  /** Arrêt complet : annule les jobs en cours (remis en file) et attend leur fin. */
+  /** Full stop: cancels running jobs (put back in the queue) and waits for them to end. */
   async stop(): Promise<void> {
     this.paused = true
     if (this.timer) clearInterval(this.timer)
@@ -140,8 +140,8 @@ export class JobQueue {
   }
 
   /**
-   * Plus aucune prise de job ; attend la fin des jobs en cours pendant `ms` au plus, puis les
-   * annule (ils repassent en `queued` sans consommer de tentative). Pour `closeLibrary`.
+   * No more job pickup; waits for running jobs to finish for at most `ms`, then
+   * cancels them (they go back to `queued` without consuming an attempt). For `closeLibrary`.
    */
   async pause(ms = 5_000): Promise<void> {
     this.paused = true
@@ -167,7 +167,7 @@ export class JobQueue {
     return this.paused
   }
 
-  /** Pause d'un type (ou de tous) ; `until = null` = jusqu'à reprise manuelle. */
+  /** Pauses a type (or all); `until = null` = until manually resumed. */
   pauseType(type: JobType | null, until: number | null, reason: string): void {
     const types = type ? [type] : [...JOB_TYPES]
     for (const t of types) this.pauses[t] = { until, reason }
@@ -206,7 +206,7 @@ export class JobQueue {
     else s.lib.repos.settings.set(PAUSED_SETTING, this.pauses)
   }
 
-  /** Relance la sélection (après un `enqueue`, la fin d'un job ou le réveil périodique). */
+  /** Re-runs the selection (after an `enqueue`, the end of a job or the periodic wake-up). */
   kick(): void {
     if (this.pumping) {
       this.pumpAgain = true
@@ -241,7 +241,7 @@ export class JobQueue {
         try {
           job = services.lib.repos.jobs.claimNext(type, this.now())
         } catch (err) {
-          services.log.error('[jobs] sélection impossible', err)
+          services.log.error('[jobs] selection impossible', err)
           return
         }
         if (!job) break
@@ -304,7 +304,7 @@ export class JobQueue {
     try {
       this.deps.failureHooks?.[job.type]?.(job, error, services)
     } catch (err) {
-      services.log.error(`[jobs] échec du crochet ${job.type}`, err)
+      services.log.error(`[jobs] hook failure ${job.type}`, err)
     }
   }
 
@@ -340,7 +340,7 @@ export class JobQueue {
     jobs.retry(job.id, now + delay, { code: e.code, message: e.message }, { at: now })
   }
 
-  /** État par type (`jobs.status`, `jobs.progress`). */
+  /** State per type (`jobs.status`, `jobs.progress`). */
   status(): JobsStatus {
     const services = this.deps.services()
     const counts = services?.lib.repos.jobs.countsByType() ?? {}
@@ -365,13 +365,13 @@ export class JobQueue {
       try {
         this.deps.onStatus?.(this.status())
       } catch {
-        // bibliothèque fermée entre-temps
+        // library closed in the meantime
       }
     }, this.deps.statusThrottleMs ?? 500)
     this.statusTimer.unref?.()
   }
 
-  /** Nombre de jobs en cours (tous types). */
+  /** Number of running jobs (all types). */
   runningCount(): number {
     return this.running.size
   }
@@ -396,7 +396,7 @@ export class JobQueue {
     for (const w of waiters) w()
   }
 
-  /** Tests et outils : résout quand plus aucun job prêt ni en cours. */
+  /** Tests and tools: resolves when no job is ready or running anymore. */
   whenIdle(): Promise<void> {
     return new Promise((resolve) => {
       this.idleWaiters.push(resolve)

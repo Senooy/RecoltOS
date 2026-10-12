@@ -1,9 +1,9 @@
 /**
- * Détection de GatherOS : bibliothèques de `libraries.json`, verrou `SingletonLock`
- * (`<hôte>-<pid>`, pid après le DERNIER tiret, contrôle `kill(pid, 0)` + `ps -p <pid> -o comm=`,
- * puis `pgrep -x GatherOS`), copie cohérente de la base et aperçu des comptes.
- * Lecture seule : rien n'est jamais écrit dans le dossier GatherOS ; `prefs.json` n'est lu que par
- * liste blanche (jamais le jeton de l'extension GatherOS).
+ * GatherOS detection: libraries from `libraries.json`, `SingletonLock` lock
+ * (`<host>-<pid>`, pid after the LAST dash, check `kill(pid, 0)` + `ps -p <pid> -o comm=`,
+ * then `pgrep -x GatherOS`), consistent copy of the database and preview of the counts.
+ * Read-only: nothing is ever written to the GatherOS folder; `prefs.json` is only read via
+ * the allowlist (never the GatherOS extension token).
  */
 import Database from 'better-sqlite3'
 import { execFile } from 'node:child_process'
@@ -84,7 +84,7 @@ export function pickLibrary(root: string, id?: string): GatherosLibrary {
   return lib
 }
 
-/** `macbook-pro-de-test.home-26365` → hôte et pid (après le DERNIER tiret). */
+/** `macbook-pro-de-test.home-26365` → host and pid (after the LAST dash). */
 export function parseSingletonLock(target: string): { host: string; pid: number } | null {
   const i = target.lastIndexOf('-')
   if (i <= 0) return null
@@ -106,7 +106,7 @@ export interface RunningState {
   pid: number | null
 }
 
-/** GatherOS tourne-t-il ? Le verrou seul ne suffit pas (pid réutilisé) : on vérifie le processus. */
+/** Is GatherOS running? The lock alone is not enough (pid reused): the process is checked. */
 export async function detectRunning(root: string, deps: LockDeps = {}): Promise<RunningState> {
   const readlink = deps.readlink ?? ((p: string) => readlinkSync(p))
   const kill = deps.kill ?? ((pid: number) => process.kill(pid, 0))
@@ -132,8 +132,8 @@ export async function detectRunning(root: string, deps: LockDeps = {}): Promise<
       if (/gatheros/i.test(comm)) return { running: true, host: lock.host, pid: lock.pid }
     }
   }
-  // Sans `SingletonLock`, ce profil GatherOS n'est pas ouvert (Chromium le crée toujours) : le
-  // contrôle `pgrep` global ne sert qu'à départager un verrou dont le pid a été réutilisé.
+  // Without `SingletonLock`, this GatherOS profile is not open (Chromium always creates it): the
+  // global `pgrep` check only serves to break a tie for a lock whose pid was reused.
   if (!lock) return { running: false, host: null, pid: null }
   const viaPgrep = await (deps.pgrep ?? (() => isGatherOSRunning()))().catch(() => false)
   return viaPgrep
@@ -142,9 +142,9 @@ export async function detectRunning(root: string, deps: LockDeps = {}): Promise<
 }
 
 /**
- * Copie cohérente : `moodmark.db` et `-wal` copiés ensemble dans `workDir`, la COPIE
- * est ouverte en écriture (SQLite rejoue le WAL), `wal_checkpoint(TRUNCATE)`, `quick_check`.
- * Aucune connexion n'est ouverte sur la source : ses octets (db, wal, shm) restent identiques.
+ * Consistent copy: `moodmark.db` and `-wal` copied together into `workDir`, the COPY
+ * is opened for writing (SQLite replays the WAL), `wal_checkpoint(TRUNCATE)`, `quick_check`.
+ * No connection is opened on the source: its bytes (db, wal, shm) remain identical.
  */
 export function snapshotGatherosDb(
   dbPath: string,
@@ -175,16 +175,16 @@ function dirBytes(dir: string): number {
         const st = statSync(join(dir, name))
         if (st.isFile()) total += st.size
       } catch {
-        // ignoré
+        // ignored
       }
     }
   } catch {
-    // dossier absent
+    // folder missing
   }
   return total
 }
 
-/** Comptes de la carte de détection, calculés sur une copie (jamais sur la source). */
+/** Counts for the detection card, computed on a copy (never on the source). */
 export function previewGatheros(
   lib: GatherosLibrary,
   workDir: string,
@@ -215,7 +215,7 @@ export function previewGatheros(
   }
 }
 
-/** Liste blanche des réglages GatherOS : le jeton de l'extension n'est jamais lu. */
+/** Allowlist of GatherOS settings: the extension token is never read. */
 export const PREFS_WHITELIST = [
   'theme',
   'defaultSort',

@@ -1,22 +1,22 @@
 /**
- * Parseur X : page GraphQL `Bookmarks` (et `BookmarkFolderTimeline`) → `NormalizedPost[]`.
- * Fonction pure, jamais d'exception.
+ * X parser: GraphQL `Bookmarks` page (and `BookmarkFolderTimeline`) → `NormalizedPost[]`.
+ * Pure function, never throws.
  *
- * Deux formes acceptées :
- *  - ancien client (`responsive-web`) : `entryId`, `sortIndex`, `content.itemContent.tweet_results`,
- *    tweet `legacy.{full_text, entities, extended_entities, created_at…}` ;
- *  - client x-web (requête Relay persistée `bookmarksQuery`, depuis l'automne 2026) : `entry_id`,
- *    `sort_index`, `content.__typename` + `content.content.tweet_results`, curseur `cursor_type`, tweet
+ * Two accepted shapes:
+ *  - legacy client (`responsive-web`): `entryId`, `sortIndex`, `content.itemContent.tweet_results`,
+ *    tweet `legacy.{full_text, entities, extended_entities, created_at…}`;
+ *  - x-web client (persisted Relay query `bookmarksQuery`, since autumn 2026): `entry_id`,
+ *    `sort_index`, `content.__typename` + `content.content.tweet_results`, cursor `cursor_type`, tweet
  *    `details.{full_text, display_text_range, created_at_ms}`, `media_entities2`, `url_entities`,
- *    `quoted_tweet_results`, `legacy.retweeted_status_results`, `reply_to_results`. Chaque entrée et
- *    chaque tweet x-web sont d'abord ramenés à la forme ancienne (`normalizeEntry`, `fromXWeb`).
+ *    `quoted_tweet_results`, `legacy.retweeted_status_results`, `reply_to_results`. Each entry and
+ *    each x-web tweet is first brought back to the legacy shape (`normalizeEntry`, `fromXWeb`).
  *
- * Choix (documentés dans le rapport) :
- *  - repost en favori : contenu, clé et URL de l'ORIGINAL ; le reposteur va dans `extra.retweetedBy` ;
- *  - fil : la page ne contient que le tweet mis en favori, pas son parent. Le lien de réponse est
- *    exposé (`extra.selfReply`, `inReplyToId`, `conversationId`) et `post_meta.thread` reste `[]` ;
- *  - curseur : `null` si la page ne contient aucune entrée tweet (même s'il y a des curseurs). Une page
- *    faite uniquement de tweets supprimés garde son curseur (sinon la pagination s'arrêterait à tort).
+ * Choices (documented in the report):
+ *  - repost of a liked post: content, key and URL of the ORIGINAL; the reposter goes in `extra.retweetedBy`;
+ *  - thread: the page only contains the liked tweet, not its parent. The reply link is
+ *    exposed (`extra.selfReply`, `inReplyToId`, `conversationId`) and `post_meta.thread` stays `[]`;
+ *  - cursor: `null` if the page contains no tweet entry (even if there are cursors). A page
+ *    made only of deleted tweets keeps its cursor (otherwise pagination would stop wrongly).
  */
 import type { QuotedPost } from '../../../shared/post-meta'
 import {
@@ -59,12 +59,12 @@ import type {
 
 const DIGITS = /^\d+$/
 const SCREEN_NAME = /^[A-Za-z0-9_]{1,50}$/
-/** Époque des snowflakes X (ms). */
+/** Epoch of X snowflakes (ms). */
 const TWITTER_EPOCH = 1288834974657n
 
-// ------------------------------------------------------------------------------------ erreurs
+// ------------------------------------------------------------------------------------ errors
 
-/** Codes d'erreur X liés à l'authentification (jeton, session, CSRF). */
+/** X error codes related to authentication (token, session, CSRF). */
 const AUTH_CODES = new Set([32, 89, 99, 135, 215, 220, 239, 326, 353])
 
 function classifyErrors(errors: unknown): PageParseResult | null {
@@ -99,7 +99,7 @@ function findInstructions(data: Json): unknown[] | null {
     const tl = obj(obj(data[key]).timeline)
     if (Array.isArray(tl.instructions)) return tl.instructions as unknown[]
   }
-  // Renommage éventuel de la racine : premier `data.<clé>.timeline.instructions` trouvé.
+  // Possible renaming of the root: first `data.<key>.timeline.instructions` found.
   for (const v of Object.values(data)) {
     const tl = obj(obj(v).timeline)
     if (Array.isArray(tl.instructions)) return tl.instructions as unknown[]
@@ -108,8 +108,8 @@ function findInstructions(data: Json): unknown[] | null {
 }
 
 /**
- * Entrée x-web (`entry_id`, `sort_index`, `content.__typename`) → forme ancienne (`entryId`,
- * `sortIndex`, `content.itemContent` / curseur `cursorType`). Une entrée ancienne est rendue telle quelle.
+ * x-web entry (`entry_id`, `sort_index`, `content.__typename`) → legacy shape (`entryId`,
+ * `sortIndex`, `content.itemContent` / cursor `cursorType`). A legacy entry is returned as is.
  */
 export function normalizeEntry(e: Json): Json {
   if (e.entry_id === undefined && e.sort_index === undefined) return e
@@ -126,7 +126,7 @@ function normalizeContent(c: Json): Json {
     return { __typename: 'TimelineTimelineCursor', cursorType: c.cursor_type, value: c.value }
   }
   if (Array.isArray(c.items)) {
-    // Module x-web : `items[].{entry_id, item.content}`.
+    // x-web module: `items[].{entry_id, item.content}`.
     return {
       items: c.items.map((it) => {
         const io = obj(it)
@@ -143,7 +143,7 @@ function normalizeContent(c: Json): Json {
   return c
 }
 
-/** Contenu d'élément x-web (`TimelineTweet`) → `itemContent` ancien. */
+/** x-web item content (`TimelineTweet`) → legacy `itemContent`. */
 function itemContentOf(ic: Json): Json {
   if (ic.itemType !== undefined || ic.tweetResult !== undefined) return ic
   return {
@@ -153,7 +153,7 @@ function itemContentOf(ic: Json): Json {
   }
 }
 
-/** Entrées à plat : `TimelineAddEntries`, `TimelineReplaceEntry`, modules et `AddToModule`. */
+/** Flattened entries: `TimelineAddEntries`, `TimelineReplaceEntry`, modules and `AddToModule`. */
 function flattenEntries(instructions: unknown[]): Json[] {
   const out: Json[] = []
   const push = (raw: unknown) => {
@@ -162,7 +162,7 @@ function flattenEntries(instructions: unknown[]): Json[] {
     const content = obj(e.content)
     const items = content.items
     if (Array.isArray(items)) {
-      // Module (conversation) : chaque élément devient une entrée.
+      // Module (conversation): each item becomes an entry.
       for (const it of items) {
         const io = obj(it)
         push({
@@ -217,7 +217,7 @@ function bottomCursor(entryId: string | null, content: Json): string | null | un
 
 type Unwrapped = { tweet: Json } | { unavailable: string } | null
 
-/** `TweetWithVisibilityResults` → tweet ; tombstone / indisponible → raison ; sinon tweet. */
+/** `TweetWithVisibilityResults` → tweet; tombstone / unavailable → reason; otherwise tweet. */
 function unwrap(r: unknown, depth = 0): Unwrapped {
   if (!isObj(r) || depth > 3) return null
   const tn = str(r.__typename)
@@ -235,7 +235,7 @@ function unwrap(r: unknown, depth = 0): Unwrapped {
   return { tweet: fromXWeb(r) }
 }
 
-/** Tweet du client x-web ? (`details`, `media_entities2` ou `url_entities`, sans `legacy.full_text`). */
+/** x-web client tweet? (`details`, `media_entities2` or `url_entities`, without `legacy.full_text`). */
 function isXWebTweet(t: Json): boolean {
   const legacy = obj(t.legacy)
   return (
@@ -246,9 +246,10 @@ function isXWebTweet(t: Json): boolean {
 }
 
 /**
- * Tweet x-web → forme ancienne (`legacy.full_text`, `entities.urls`, `extended_entities.media`,
- * `created_at_ms`, réponse, repost, citation). Le lien `t.co` d'un média (absent de `media_entities2`)
- * est relu dans le texte par ses `indices` (points de code) pour être retiré comme avant.
+ * x-web tweet → legacy shape (`legacy.full_text`, `entities.urls`, `extended_entities.media`,
+ * `created_at_ms`, reply, repost, quote). The `t.co` link of a media (missing from
+ * `media_entities2`) is read back from the text via its `indices` (code points) so it is removed
+ * as before.
  */
 export function fromXWeb(t: Json): Json {
   if (!isXWebTweet(t)) return t
@@ -294,7 +295,7 @@ function tweetId(t: Json): string | null {
   return idStr(t.rest_id, DIGITS) ?? idStr(obj(t.legacy).id_str, DIGITS)
 }
 
-/** Avatar X agrandi : `_normal` / `_bigger` / `_mini` / `_200x200` → `_400x400`. */
+/** Enlarged X avatar: `_normal` / `_bigger` / `_mini` / `_200x200` → `_400x400`. */
 export function xAvatar400(url: string | null): string | null {
   if (url === null) return null
   const u = new URL(url)
@@ -333,13 +334,13 @@ export function parseXDate(v: unknown): number | null {
   return Number.isFinite(t) ? t - offset : null
 }
 
-/** `created_at_ms` du client x-web (nombre, ou chaîne de chiffres). */
+/** `created_at_ms` from the x-web client (number, or digit string). */
 function msOf(v: unknown): number | null {
   if (typeof v === 'string' && /^\d{10,16}$/.test(v)) return Number(v)
   return posInt(v)
 }
 
-/** Date d'un identifiant snowflake (repli si `created_at` manque). */
+/** Date of a snowflake ID (fallback if `created_at` is missing). */
 export function snowflakeMs(id: string): number | null {
   if (!DIGITS.test(id) || id.length < 15 || id.length > 20) return null
   const ms = Number((BigInt(id) >> 22n) + TWITTER_EPOCH)
@@ -351,8 +352,8 @@ function decodeEntities(s: string): string {
 }
 
 /**
- * Texte nettoyé : `note_tweet` prioritaire, `t.co` remplacés par leur URL d'origine, `t.co` des
- * médias retirés, mentions de réponse en tête retirées, permalien du tweet cité retiré en fin.
+ * Cleaned text: `note_tweet` takes priority, `t.co` replaced by their original URL, `t.co` of
+ * media removed, leading reply mentions removed, permalink of the quoted tweet removed at the end.
  */
 function xText(t: Json, quotedId: string | null): { text: string | null; note: boolean } {
   const legacy = obj(t.legacy)
@@ -368,7 +369,7 @@ function xText(t: Json, quotedId: string | null): { text: string | null; note: b
     const full = str(legacy.full_text) ?? str(legacy.text)
     if (full === null) return { text: null, note: false }
     text = full
-    // Mentions de réponse en tête (`display_text_range[0]`, en points de code).
+    // Leading reply mentions (`display_text_range[0]`, in code points).
     const start = num(arr(legacy.display_text_range)[0])
     if (start !== null && start > 0) {
       const cps = Array.from(text)
@@ -397,7 +398,7 @@ function xText(t: Json, quotedId: string | null): { text: string | null; note: b
   return { text: cleanText(text.replace(/[ \t]+$/gm, '')), note: noteText !== null }
 }
 
-/** URL `name=orig` d'une photo `pbs.twimg.com/media/<clé>.<ext>`. */
+/** `name=orig` URL of a photo `pbs.twimg.com/media/<key>.<ext>`. */
 export function xPhotoOrig(url: string): string {
   const u = new URL(url)
   if (u.hostname !== 'pbs.twimg.com') return u.href
@@ -419,7 +420,7 @@ function resolutionOf(url: string): number {
   return m ? Number(m[1]) * Number(m[2]) : 0
 }
 
-/** Meilleure variante mp4 (débit, puis résolution lue dans le chemin). */
+/** Best mp4 variant (bitrate, then resolution read from the path). */
 export function bestMp4(variants: unknown): string | null {
   let best: { url: string; bitrate: number; res: number } | null = null
   for (const v of arr(variants)) {
@@ -677,7 +678,7 @@ function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
       posts.push(post)
       log.stats.parsed += 1
     } catch (err) {
-      // Toute erreur d'une entrée l'isole (forme inattendue) ; la page continue.
+      // Any error in an entry isolates it (unexpected shape); the page continues.
       log.note(
         'malformed',
         index,
@@ -697,8 +698,8 @@ function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
 }
 
 /**
- * Page `Bookmarks` → publications normalisées + curseur. Accepte l'objet JSON ou sa chaîne.
- * Ne lève jamais : une forme inconnue donne `{ ok: false, error }`.
+ * `Bookmarks` page → normalized posts + cursor. Accepts the JSON object or its string.
+ * Never throws: an unknown shape yields `{ ok: false, error }`.
  */
 export function parseXBookmarksPage(json: unknown, opts: PageParseOptions = {}): PageParseResult {
   try {

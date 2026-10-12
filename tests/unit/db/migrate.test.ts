@@ -32,8 +32,8 @@ afterEach(() => {
 
 const extra = (sql: string, version = 2, name = 'extra'): Migration => ({ version, name, sql })
 
-describe('migrations embarquées', () => {
-  it('chargées par import.meta.glob, triées et contiguës (0001 = init)', () => {
+describe('bundled migrations', () => {
+  it('loaded by import.meta.glob, sorted and contiguous (0001 = init)', () => {
     const migs = bundledMigrations()
     expect(migs.length).toBeGreaterThanOrEqual(1)
     expect(migs[0]).toMatchObject({ version: 1, name: 'init' })
@@ -41,7 +41,7 @@ describe('migrations embarquées', () => {
     expect(bundledMigrations()).toBe(migs)
   })
 
-  it('base neuve : dernière user_version, pragmas, intégrité, FTS5, JSON', () => {
+  it('new database: latest user_version, pragmas, integrity, FTS5, JSON', () => {
     const root = dir()
     const { db, migration } = openLibraryDb(root)
     track(db)
@@ -66,11 +66,11 @@ describe('migrations embarquées', () => {
     )
     expect(opts).toContain('ENABLE_FTS5')
     expect(db.prepare(`SELECT json_extract('{"a":2}', '$.a') AS v`).get()).toEqual({ v: 2 })
-    // Aucun snapshot pour une base vide.
+    // No snapshot for an empty database.
     expect(fs.existsSync(path.join(root, 'snapshots'))).toBe(false)
   })
 
-  it('idempotent : une seconde ouverture n’applique rien', () => {
+  it('idempotent: a second open applies nothing', () => {
     const root = dir()
     track(openLibraryDb(root).db).close()
     const again = openLibraryDb(root)
@@ -81,7 +81,7 @@ describe('migrations embarquées', () => {
 })
 
 describe('migrate()', () => {
-  it('snapshot VACUUM INTO -pre-vN avant de migrer une base non vide', () => {
+  it('VACUUM INTO -pre-vN snapshot before migrating a non-empty database', () => {
     const root = dir()
     const db = track(openDatabase(path.join(root, 'recolt.db')))
     const base = bundledMigrations().slice(0, 1)
@@ -102,7 +102,7 @@ describe('migrate()', () => {
     expect(db.pragma('user_version', { simple: true })).toBe(2)
   })
 
-  it('échec en cours de migration : rollback, version inchangée', () => {
+  it('failure during migration: rollback, version unchanged', () => {
     const root = dir()
     const db = track(openDatabase(path.join(root, 'recolt.db')))
     const base = bundledMigrations().slice(0, 1)
@@ -113,13 +113,13 @@ describe('migrate()', () => {
     expect(db.prepare("SELECT 1 FROM sqlite_master WHERE name = 't2'").get()).toBeUndefined()
   })
 
-  it('base plus récente que l’app : library_unavailable', () => {
+  it('database newer than the app: library_unavailable', () => {
     const db = track(openDatabase(path.join(dir(), 'recolt.db')))
     db.pragma('user_version = 99')
     expect(() => migrate(db)).toThrow(expect.objectContaining({ code: 'library_unavailable' }))
   })
 
-  it('parseMigrations : noms invalides et trous refusés', () => {
+  it('parseMigrations: invalid names and gaps refused', () => {
     expect(() => parseMigrations({ './migrations/init.sql': '' })).toThrow(/invalide/)
     expect(() =>
       parseMigrations({ './migrations/0001_a.sql': '', './migrations/0003_c.sql': '' }),
@@ -129,7 +129,7 @@ describe('migrate()', () => {
     ).toEqual(['a', 'b'])
   })
 
-  it('snapshotPath : suffixe en cas de collision', () => {
+  it('snapshotPath: suffix on collision', () => {
     const d = dir()
     const at = new Date(2026, 0, 2, 3, 4, 5).getTime()
     expect(snapshotStamp(at)).toBe('20260102-030405')
@@ -139,8 +139,8 @@ describe('migrate()', () => {
   })
 })
 
-describe('openDatabase / préparées', () => {
-  it('lecture seule : pas de WAL forcé, base inexistante refusée', () => {
+describe('openDatabase / prepared statements', () => {
+  it('read-only: no forced WAL, non-existent database refused', () => {
     const root = dir()
     track(openLibraryDb(root).db).close()
     const ro = track(openDatabase(path.join(root, 'recolt.db'), { readonly: true }))
@@ -149,14 +149,14 @@ describe('openDatabase / préparées', () => {
     expect(() => openDatabase(path.join(root, 'absent.db'), { readonly: true })).toThrow()
   })
 
-  it('cache : une requête préparée une seule fois par connexion', () => {
+  it('cache: a prepared query prepared only once per connection', () => {
     const db = track(openDatabase(path.join(dir(), 'a.db')))
     const q = preparedFor(db)
     expect(q('SELECT 1 AS one')).toBe(q('SELECT 1 AS one'))
     expect(preparedFor(db)('SELECT 1 AS one')).toBe(q('SELECT 1 AS one'))
   })
 
-  it('journal des requêtes lentes (dev) au-delà du seuil', () => {
+  it('slow query log (dev) above the threshold', () => {
     const onSlowQuery = vi.fn()
     const db = track(openDatabase(path.join(dir(), 'a.db'), { onSlowQuery, slowQueryMs: -1 }))
     const q = preparedFor(db)
@@ -168,29 +168,29 @@ describe('openDatabase / préparées', () => {
     expect(onSlowQuery).toHaveBeenCalledWith('SELECT x FROM t', expect.any(Number))
   })
 
-  it('sans journal : aucun chronométrage, seuil par défaut 16 ms', () => {
+  it('without log: no timing, default threshold 16 ms', () => {
     const onSlowQuery = vi.fn()
     const db = track(openDatabase(path.join(dir(), 'b.db'), { onSlowQuery }))
     preparedFor(db)('SELECT 1').get()
     expect(onSlowQuery).not.toHaveBeenCalled()
   })
 
-  it('applyPragmas sur une connexion existante', () => {
+  it('applyPragmas on an existing connection', () => {
     const db = track(new Database(path.join(dir(), 'c.db')))
     applyPragmas(db, 123)
     expect(db.pragma('busy_timeout', { simple: true })).toBe(123)
   })
 
-  it('openLibraryDb ferme la base si la migration échoue', () => {
+  it('openLibraryDb closes the database if the migration fails', () => {
     const root = dir()
     expect(() => openLibraryDb(root, { migrations: [extra('SYNTAX ERROR;', 1, 'bad')] })).toThrow()
-    // Le fichier n'est plus verrouillé : on peut le rouvrir et l'écrire.
+    // The file is no longer locked: we can reopen and write it.
     const db = track(openDatabase(path.join(root, 'recolt.db')))
     expect(db.pragma('user_version', { simple: true })).toBe(0)
   })
 })
 
-describe('en-tête -- recolt:foreign_keys=off', () => {
+describe('header -- recolt:foreign_keys=off', () => {
   const base: Migration[] = [
     {
       version: 1,
@@ -207,14 +207,14 @@ describe('en-tête -- recolt:foreign_keys=off', () => {
   const childCount = (db: Database.Database) =>
     (db.prepare('SELECT count(*) AS n FROM child').get() as { n: number }).n
 
-  it('détection de l’en-tête (ligne seule uniquement)', () => {
+  it('header detection (own line only)', () => {
     expect(needsForeignKeysOff('-- recolt:foreign_keys=off\nSELECT 1;')).toBe(true)
     expect(needsForeignKeysOff('--   recolt:foreign_keys = off  \nSELECT 1;')).toBe(true)
     expect(needsForeignKeysOff('SELECT 1; -- recolt:foreign_keys=off')).toBe(false)
     expect(needsForeignKeysOff('SELECT 1;')).toBe(false)
   })
 
-  it('procédure de migration (créer, copier, supprimer, renommer) : les tables filles survivent', () => {
+  it('migration procedure (create, copy, drop, rename): child tables survive', () => {
     const db = track(openDatabase(path.join(dir(), 'recolt.db')))
     migrate(db, { migrations: base })
     const rebuild: Migration = {
@@ -236,7 +236,7 @@ describe('en-tête -- recolt:foreign_keys=off', () => {
     expect(db.pragma('foreign_key_check')).toEqual([])
   })
 
-  it('contrôle final : une migration qui orpheline des lignes est annulée, clés rétablies', () => {
+  it('final check: a migration that orphans rows is cancelled, keys restored', () => {
     const db = track(openDatabase(path.join(dir(), 'recolt.db')))
     migrate(db, { migrations: base })
     const orphan: Migration = {
@@ -250,7 +250,7 @@ describe('en-tête -- recolt:foreign_keys=off', () => {
     expect(db.pragma('foreign_keys', { simple: true })).toBe(1)
   })
 
-  it('sans en-tête, un PRAGMA foreign_keys=OFF dans le SQL est sans effet (cascade)', () => {
+  it('without header, a PRAGMA foreign_keys=OFF in the SQL has no effect (cascade)', () => {
     const db = track(openDatabase(path.join(dir(), 'recolt.db')))
     migrate(db, { migrations: base })
     const naive: Migration = {

@@ -1,13 +1,13 @@
 /**
- * e2e (projet Playwright `e2e`, motif `e2e/*.spec.ts`) : le protocole `recolt://` vu par le
- * VRAI renderer de l'app (CSP de production, origine `file://`), sur la bibliothèque de démo
- * (mp4 synthétiques de 3 s, webp) :
- *  - fetch avec Range : 206 + `Content-Range`, `bytes=-500`, 416 hors plage, 403 hors racines ;
- *  - seek vidéo : `<video src="recolt://…">`, `currentTime = 2` → `seeked`, image décodée ;
- *  - canvas non « tainted » après dessin d'une vignette `recolt://` en `crossorigin="anonymous"` ;
- *  - `system.copyImage` d'un webp : le presse-papiers contient une image PNG non vide.
- *    ATTENTION : ce test écrit dans le presse-papiers du système ; il restaure son contenu ensuite.
- * Le glisser vers le Finder et l'ouverture visible de Quick Look restent vérifiés à la main.
+ * e2e (Playwright `e2e` project, pattern `e2e/*.spec.ts`): the `recolt://` protocol as seen by the
+ * REAL renderer of the app (production CSP, `file://` origin), on the demo library
+ * (3 s synthetic mp4s, webp):
+ *  - fetch with Range: 206 + `Content-Range`, `bytes=-500`, 416 out of range, 403 outside roots;
+ *  - video seek: `<video src="recolt://…">`, `currentTime = 2` → `seeked`, decoded image;
+ *  - canvas not "tainted" after drawing a `recolt://` thumbnail with `crossorigin="anonymous"`;
+ *  - `system.copyImage` of a webp: the clipboard contains a non-empty PNG image.
+ *    WARNING: this test writes to the system clipboard; it restores its content afterwards.
+ * Dragging to the Finder and the visible opening of Quick Look remain checked by hand.
  */
 import { assetUrl } from '../../../../src/main/protocol/urls'
 import { findFfmpeg } from '../../../helpers/synthetic-media'
@@ -22,14 +22,14 @@ interface MediaPick {
 
 test.use({
   demoLibrary: { count: 24, collections: 1 },
-  // Le test provoque volontairement un 403 (racine `tmp/`) et un 416 (plage hors fichier) :
-  // Chromium les journalise en `console.error` « Failed to load resource ».
+  // The test deliberately causes a 403 (`tmp/` root) and a 416 (range outside the file):
+  // Chromium logs them as `console.error` "Failed to load resource".
   allowErrors: [/Failed to load resource: .*status of (403|416)\b/],
 })
 
 test.skip(!findFfmpeg(), 'ffmpeg absent : la démo n’a pas de mp4 lisible')
 
-test('recolt:// dans le renderer : Range, seek vidéo, canvas CORS, copie d’image', async ({
+test('recolt:// in the renderer: Range, video seek, CORS canvas, image copy', async ({
   app,
   page,
   openDbReadonly,
@@ -54,7 +54,7 @@ test('recolt:// dans le renderer : Range, seek vidéo, canvas CORS, copie d’im
   const videoUrl = assetUrl('default', video.file_rel, video.derive_version)
   const thumbUrl = assetUrl('default', image.thumb_rel!, image.derive_version)
 
-  // 1. Range depuis le renderer (fetch, connect-src recolt:).
+  // 1. Range from the renderer (fetch, connect-src recolt:).
   const ranges = await page.evaluate(async (url) => {
     const probe = async (range?: string) => {
       const r = await fetch(url, range ? { headers: { Range: range } } : {})
@@ -93,7 +93,7 @@ test('recolt:// dans le renderer : Range, seek vidéo, canvas CORS, copie d’im
   expect(ranges.outside).toMatchObject({ status: 416, contentRange: `bytes */${size}` })
   expect(ranges.forbidden).toBe(403)
 
-  // 2. Seek vidéo sur le mp4 synthétique de 3 s.
+  // 2. Video seek on the 3 s synthetic mp4.
   const seek = await page.evaluate(async (url) => {
     const v = document.createElement('video')
     v.muted = true
@@ -129,7 +129,7 @@ test('recolt:// dans le renderer : Range, seek vidéo, canvas CORS, copie d’im
     expect(s.readyState, `seek ${s.target}`).toBeGreaterThanOrEqual(2)
   }
 
-  // 3. Canvas : CORS → non « tainted » (témoin : sans crossorigin, l'image reste opaque).
+  // 3. Canvas: CORS → not "tainted" (control: without crossorigin, the image stays opaque).
   const canvas = await page.evaluate(async (url) => {
     const draw = async (crossOrigin: string | null) => {
       const img = new Image()
@@ -155,7 +155,7 @@ test('recolt:// dans le renderer : Range, seek vidéo, canvas CORS, copie d’im
   expect(canvas.anonymous.dataUrlLength).toBeGreaterThan(200)
   expect(canvas.control.tainted).toBe(true)
 
-  // 4. system.copyImage d'un webp → image PNG non vide dans le presse-papiers (restauré ensuite).
+  // 4. system.copyImage of a webp → non-empty PNG image in the clipboard (restored afterwards).
   await app.evaluate(async ({ clipboard }) => {
     const g = globalThis as unknown as { __savedClipboard?: unknown }
     g.__savedClipboard = await clipboard.read().catch(() => null)
@@ -190,7 +190,7 @@ test('recolt:// dans le renderer : Range, seek vidéo, canvas CORS, copie d’im
       if (g.__savedClipboard && g.__savedClipboard.length > 0) {
         await clipboard.write(g.__savedClipboard).catch(() => undefined)
       } else {
-        // Presse-papiers vide à l'origine : on n'y laisse pas le PNG du test.
+        // Clipboard was empty originally: do not leave the test's PNG in it.
         clipboard.clear()
       }
     })

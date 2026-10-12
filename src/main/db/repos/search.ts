@@ -1,7 +1,7 @@
 /**
- * Repo de recherche : exécution d'une requête FTS5 déjà construite
- * (`search/fts-query.ts`), maintenance de l'index et historique.
- * Pondération bm25 : title 8, notes 3, post_text 4, ocr 2, ai 2, tags 6, url 0,5.
+ * Search repo: execution of an already-built FTS5 query
+ * (`search/fts-query.ts`), index maintenance and history.
+ * bm25 weighting: title 8, notes 3, post_text 4, ocr 2, ai 2, tags 6, url 0.5.
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
@@ -28,8 +28,8 @@ export function createSearchRepo(db: Database.Database, opts: RepoOptions = {}) 
   const { q, now } = repoBase(db, opts)
   return {
     /**
-     * Items vivants (non supprimés, non masqués) qui correspondent à `match`, triés par bm25.
-     * `sources` (chips `#x #instagram #cosmos`) restreint `items.source`. Syntaxe FTS invalide →
+     * Live items (not deleted, not hidden) that match `match`, sorted by bm25.
+     * `sources` (chips `#x #instagram #cosmos`) restricts `items.source`. Invalid FTS syntax →
      * `AppError('validation')`.
      */
     match(
@@ -54,7 +54,7 @@ export function createSearchRepo(db: Database.Database, opts: RepoOptions = {}) 
       }
     },
 
-    /** Reconstruit l'index depuis la vue source (« Reconstruire l'index », restauration). */
+    /** Rebuilds the index from the source view (« Reconstruire l'index », restore). */
     rebuild(): number {
       return db.transaction(() => {
         q('DELETE FROM items_fts').run()
@@ -65,12 +65,12 @@ export function createSearchRepo(db: Database.Database, opts: RepoOptions = {}) 
       })()
     },
 
-    /** Après un import. */
+    /** After an import. */
     optimize(): void {
       q("INSERT INTO items_fts (items_fts) VALUES ('optimize')").run()
     },
 
-    /** Nombre de lignes de l'index (contrôle d'absence de ligne fantôme). */
+    /** Number of index rows (check that no ghost row exists). */
     indexedCount(): number {
       return (q('SELECT count(*) AS n FROM items_fts').get() as { n: number }).n
     },

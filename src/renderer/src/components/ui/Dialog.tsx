@@ -1,8 +1,8 @@
 /**
- * `Dialog` : modale Radix. Voile `modal` (--scrim-modal + flou 3 px,
- * Réglages) ou `palette` (--scrim-palette, sans flou), tous deux en no-drag. Panneau : opacity,
- * scale .98→1 et y −6→0 (240 ms) ; fondu seul en mouvement réduit. Le titre est obligatoire
- * (`title`), masquable visuellement (`hideTitle`) mais toujours annoncé.
+ * `Dialog`: Radix modal. Scrim `modal` (--scrim-modal + 3 px blur,
+ * Settings) or `palette` (--scrim-palette, no blur), both no-drag. Panel: opacity,
+ * scale .98→1 and y −6→0 (240 ms); fade only under reduced motion. The title is required
+ * (`title`), visually hideable (`hideTitle`) but always announced.
  */
 import { X } from 'lucide-react'
 import { Dialog as DialogPrimitive, VisuallyHidden } from 'radix-ui'
@@ -18,15 +18,15 @@ export interface DialogContentProps extends Omit<
   ComponentProps<typeof DialogPrimitive.Content>,
   'title' | 'children'
 > {
-  /** Titre FR : annoncé par les lecteurs d'écran même si `hideTitle`. */
+  /** Title (French): announced by screen readers even if `hideTitle`. */
   title: string
   hideTitle?: boolean
-  /** Description facultative (sous le titre). */
+  /** Optional description (below the title). */
   description?: ReactNode
-  /** Bouton « Fermer » en haut à droite (X 14 px, zone 28 px). */
+  /** "Close" button at the top right (X 14 px, 28 px area). */
   showClose?: boolean
   scrim?: DialogScrim
-  /** Contenu du panneau (le titre et le bouton de fermeture sont ajoutés). */
+  /** Panel content (the title and close button are added). */
   children?: ReactNode
 }
 

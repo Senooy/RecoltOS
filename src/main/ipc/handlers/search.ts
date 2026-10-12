@@ -1,6 +1,6 @@
 /**
- * Handlers `search.*` : recherche FTS5 + filtres, suggestions (tags,
- * collections), historique (8 entrées affichées, la base en garde davantage).
+ * `search.*` handlers: FTS5 search + filters, suggestions (tags,
+ * collections), history (8 entries shown, the database keeps more).
  */
 import { toItemCard } from '../../dto/item-card'
 import { requireLibrary } from '../../library/library-context'

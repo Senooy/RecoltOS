@@ -1,4 +1,4 @@
-/** Kit UI : point d'entrée unique des composants de base. */
+/** UI kit: single entry point for the base components. */
 export { Avatar, hashHue, initials, type AvatarProps } from './Avatar'
 export { Button, buttonVariants, type ButtonProps } from './Button'
 export { Chip, type ChipProps, type ChipVariant } from './Chip'

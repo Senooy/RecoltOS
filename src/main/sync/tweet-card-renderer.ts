@@ -1,9 +1,9 @@
 /**
- * Fichier principal des posts SANS média : rendu de la carte `TweetCard light` (même
- * composant que la grille) dans une fenêtre hors écran (`withOffscreenWindow` +
- * `offscreen.html?render=tweet-card`), capture puis WebP de 960 px de large (rôle
- * `render`, `media.derive` ensuite). File sérielle en mémoire, reprise au démarrage (posts `tweet`
- * synchronisés sans média).
+ * Main file for posts WITHOUT media: renders the `TweetCard light` card (same
+ * component as the grid) in an off-screen window (`withOffscreenWindow` +
+ * `offscreen.html?render=tweet-card`), capture then 960 px wide WebP (role
+ * `render`, then `media.derive`). In-memory serial queue, resumed at startup (`tweet` posts
+ * synced without media).
  */
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
@@ -15,7 +15,7 @@ import type { MediaCaller } from '../jobs/handlers/types'
 import { rel } from '../library/paths'
 import type { LibraryContext } from '../library/library-context'
 
-/** Largeur CSS de la carte ; rendue à ×2 (`zoom`) → 960 px. */
+/** CSS width of the card; rendered at ×2 (`zoom`) → 960 px. */
 export const CARD_CSS_WIDTH = 480
 export const CARD_PX_WIDTH = 960
 
@@ -25,10 +25,10 @@ export interface CardCapture {
   height: number
 }
 
-/** Capture PNG de la carte (Electron) : injectée pour garder ce module testable sous Node. */
+/** PNG capture of the card (Electron): injected to keep this module testable under Node. */
 export type CaptureCard = (data: string) => Promise<CardCapture>
 
-/** Charge utile de la route : la carte en JSON base64url (aucune URL http(s), avatar `recolt://`). */
+/** Route payload: the card as base64url JSON (no http(s) URL, avatar `recolt://`). */
 export function cardPayload(card: unknown): string {
   return Buffer.from(JSON.stringify(card), 'utf8').toString('base64url')
 }
@@ -95,7 +95,7 @@ export async function renderTweetCard(
   }
 }
 
-/** Posts synchronisés sans média ni rendu (reprise au démarrage). */
+/** Posts synced without media or render (resumed at startup). */
 export function pendingCardItems(lib: LibraryContext, limit = 200): number[] {
   return (
     lib.db
@@ -108,7 +108,7 @@ export function pendingCardItems(lib: LibraryContext, limit = 200): number[] {
   ).map((r) => r.id)
 }
 
-/** File sérielle (une fenêtre hors écran à la fois). */
+/** Serial queue (one off-screen window at a time). */
 export class CardRenderQueue {
   private queue: number[] = []
   private running = false

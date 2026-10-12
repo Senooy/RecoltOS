@@ -1,6 +1,6 @@
 /**
- * Raccourcis renderer du domaine `library`. Les raccourcis de menu
- * restent dans `src/shared/shortcuts.ts` : ne jamais rebinder ici un accélérateur de menu.
+ * Renderer shortcuts of the `library` domain. Menu shortcuts
+ * remain in `src/shared/shortcuts.ts`: never rebind a menu accelerator here.
  */
 import type { RendererShortcut } from './types'
 

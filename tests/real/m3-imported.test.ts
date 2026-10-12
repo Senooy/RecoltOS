@@ -1,7 +1,7 @@
 /**
- * Couleurs, Redécouvrir et recherche sur une COPIE d'un `userData` RecoltOS réel :
+ * Colors, Rediscover and search on a COPY of a real RecoltOS `userData`:
  * `RECOLT_TEST_IMPORTED_USERDATA=<repo>/.tmp/m3-real pnpm exec vitest run --project real`.
- * Copie APFS dans un dossier temporaire (la migration 0002 s'y applique, la source reste intacte).
+ * APFS copy into a temporary folder (migration 0002 applies to it, the source stays intact).
  */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -19,7 +19,7 @@ import { NAMED_COLORS, hexToLab, labToLch } from '../../src/shared/color'
 
 const SRC = process.env.RECOLT_TEST_IMPORTED_USERDATA ?? ''
 
-describe.skipIf(!SRC)('M3 sur la bibliothèque importée', () => {
+describe.skipIf(!SRC)('M3 on the imported library', () => {
   let base: string
   let m: LibraryManager
   beforeAll(async () => {
@@ -41,7 +41,7 @@ describe.skipIf(!SRC)('M3 sur la bibliothèque importée', () => {
     if (base) fs.rmSync(base, { recursive: true, force: true })
   })
 
-  it('migration 0002 : buckets décalés, aucun élément vivant sans palette après les dérivés', () => {
+  it('migration 0002: shifted buckets, no live item without palette after derivations', () => {
     const db = m.active()!.db
     expect(db.pragma('user_version', { simple: true })).toBeGreaterThanOrEqual(2)
     const live = 'deleted_at IS NULL AND hidden_at IS NULL'
@@ -55,7 +55,7 @@ describe.skipIf(!SRC)('M3 sur la bibliothèque importée', () => {
       .all() as { c: number; h: number; b: number }[]
     expect(rows.length).toBeGreaterThan(100)
     for (const r of rows) expect(r.b).toBe(Math.floor(((Math.trunc(r.h) + 15) % 360) / 30))
-    // Tri couleur : inconnus (s'il y en avait) en fin, l'ordre suit color_key.
+    // Color sort: unknowns (if any) at the end, order follows color_key.
     const page = listItems(db, {
       scope: 'library',
       tab: 'all',
@@ -68,12 +68,12 @@ describe.skipIf(!SRC)('M3 sur la bibliothèque importée', () => {
     )
   })
 
-  it('filtre « rouge » : éléments dominés par le rouge, < 2 ms sur l’index réel', () => {
+  it('"red" filter: items dominated by red, < 2 ms on the real index', () => {
     const db = m.active()!.db
     const red = NAMED_COLORS[0]!
     const r = runSearch(db, { q: '', filters: { colors: [red.hex] }, limit: 1000 })
     expect(r.total).toBeGreaterThan(5)
-    // La première couleur forte de chaque résultat de tête est rougeâtre (teinte ≤ 60° ou ≥ 330°).
+    // The first strong color of each top result is reddish (hue ≤ 60° or ≥ 330°).
     for (const row of r.rows.slice(0, 10)) {
       const pal = JSON.parse(
         (
@@ -93,7 +93,7 @@ describe.skipIf(!SRC)('M3 sur la bibliothèque importée', () => {
     expect(performance.now() - t0).toBeLessThan(2)
   })
 
-  it('Redécouvrir : 10 000 tirages, les non classés sortent > 2× plus souvent (par élément)', () => {
+  it('Rediscover: 10,000 draws, unclassified items come up > 2× more often (per item)', () => {
     const db = m.active()!.db
     const cands = loadCandidates(db, null)
     const uncl = new Set(cands.filter((c) => c.nCollections === 0).map((c) => c.id))

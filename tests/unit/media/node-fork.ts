@@ -1,6 +1,6 @@
 /**
- * Équivalent Node de `utilityFork` pour les tests : `child_process.fork` du vrai
- * `media.worker.ts` chargé par tsx, transport `process.send` (sérialisation « advanced »).
+ * Node equivalent of `utilityFork` for tests: `child_process.fork` of the real
+ * `media.worker.ts` loaded by tsx, `process.send` transport (« advanced » serialization).
  */
 import { fork, type ChildProcess } from 'node:child_process'
 import { resolve } from 'node:path'
@@ -12,7 +12,7 @@ export const MEDIA_WORKER_TS = resolve(ROOT, 'src/main/workers/media.worker.ts')
 export interface NodeForkHandle {
   fork: ForkFn
   children: ChildProcess[]
-  /** Tue le prochain enfant juste après l'envoi d'une requête `op`. */
+  /** Kills the next child right after sending a request `op`. */
   killAfterSend(op: string): void
 }
 

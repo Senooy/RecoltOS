@@ -1,6 +1,6 @@
 /**
- * Outils des tests des parseurs de sync : lecture des fixtures et invariants
- * communs à toute sortie de parseur.
+ * Helpers for the sync parser tests: reading fixtures and invariants
+ * shared by every parser output.
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -16,7 +16,7 @@ export function fixture(dir: Dir, name: string): unknown {
   return JSON.parse(readFileSync(join(FIXTURES, dir, name), 'utf8')) as unknown
 }
 
-/** Copie profonde modifiable d'une fixture. */
+/** Mutable deep copy of a fixture. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mutable(dir: Dir, name: string): any {
   return structuredClone(fixture(dir, name))
@@ -35,7 +35,7 @@ export function expectOk(r: PageParseResult): PageParseOk {
 
 const KEY = /^(x|ig|cosmos):[A-Za-z0-9_-]+$/
 
-/** Invariants de toute sortie : jamais d'exception en amont, comptes cohérents, post_meta v1. */
+/** Invariants of any output: never an upstream exception, consistent counts, post_meta v1. */
 export function checkInvariants(r: PageParseResult): void {
   expect(typeof r.ok).toBe('boolean')
   if (!r.ok) {

@@ -1,4 +1,4 @@
-/** l'instantané quotidien est planifié pour la bibliothèque déjà ouverte au démarrage. */
+/** the daily snapshot is scheduled for the library already open at startup. */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { initData, DAILY_DELAY_MS } from '../../../src/main/data/init'
 import * as snapshots from '../../../src/main/data/snapshots'
@@ -22,7 +22,7 @@ const ctx = (e2e: boolean) =>
   }) as unknown as ServiceContext
 
 describe('initData', () => {
-  it('bibliothèque active au démarrage : instantané quotidien après le délai', () => {
+  it('active library at startup: daily snapshot after the delay', () => {
     vi.useFakeTimers()
     const spy = vi.spyOn(snapshots, 'dailySnapshot').mockReturnValue(null)
     setActiveLibrary({ id: 'default' } as LibraryContext)
@@ -32,7 +32,7 @@ describe('initData', () => {
     expect(spy).toHaveBeenCalledTimes(1)
     void dispose()
   })
-  it('jamais en e2e', () => {
+  it('never in e2e', () => {
     vi.useFakeTimers()
     const spy = vi.spyOn(snapshots, 'dailySnapshot').mockReturnValue(null)
     setActiveLibrary({ id: 'default' } as LibraryContext)

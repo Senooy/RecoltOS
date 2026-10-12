@@ -1,9 +1,9 @@
 /**
- * Régression visuelle du thème SOMBRE sur la bibliothèque de démo déterministe : les 13 scènes
- * par défaut plus l'éditeur Spaces et Réglages › Apparence. Le thème est basculé par le
- * bouton de l'en-tête (chemin réel de l'utilisateur, bascule instantanée) avant chaque scène.
- * Les surfaces immersives (détail, étagère, Redécouvrir) doivent être identiques aux baselines
- * claires à la teinte du voile près.
+ * Dark theme visual regression on the deterministic demo library: the 13 default scenes
+ * plus the Spaces editor and Settings › Appearance. The theme is toggled by the
+ * header button (real user path, instant toggle) before each scene.
+ * Immersive surfaces (detail, shelf, Rediscover) must be identical to the light baselines
+ * up to the veil tint.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -24,12 +24,12 @@ async function settle(page: Page) {
   await page.waitForTimeout(400)
 }
 
-/** Grille prête puis thème sombre par le bouton de l'en-tête. */
+/** Grid ready, then dark theme via the header button. */
 async function darkReady(page: Page) {
   await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
   await page.locator(t('btn-theme')).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  // La bascule ne laisse aucune transition en cours : le marqueur disparaît en deux images.
+  // The toggle leaves no transition running: the marker disappears within two frames.
   await expect(page.locator('html')).not.toHaveAttribute('data-theme-switching', '1')
 }
 
@@ -47,7 +47,7 @@ async function settings(page: Page, section: string) {
 
 test('library-all-dark', async ({ app, page }) => {
   await darkReady(page)
-  // Fond de fenêtre natif aligné sur le thème (pas de bord clair au redimensionnement).
+  // Native window background aligned with the theme (no light edge on resize).
   await expect
     .poll(() =>
       app.evaluate(({ BrowserWindow }) =>

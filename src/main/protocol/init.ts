@@ -1,12 +1,12 @@
 /**
- * Initialisation du domaine `protocol` (registre `bootstrap/services.ts`) :
- *  - `protocol.handle('recolt')` sur la session par défaut ET sur chaque session hors écran
- *    (`registerOffscreenSessionSetup`, lecture seule, mêmes racines, réservé à la page interne
- *    `offscreen.html` : une page http(s) capturée reçoit 403, cf. `offscreen-guard.ts`) ; le schéma privilégié est
- *    déclaré avant `ready` par `bootstrap/pre-ready.ts` ;
- *  - canal brut `drag` (glisser vers le Finder) ;
- *  - media-worker local pour `system.copyImage` tant que n'en fournit pas.
- * Hors Electron (tests Node du registre), rien n'est branché.
+ * Initialization of the `protocol` domain (`bootstrap/services.ts` registry):
+ *  - `protocol.handle('recolt')` on the default session AND on each off-screen session
+ *    (`registerOffscreenSessionSetup`, read-only, same roots, reserved for the internal page
+ *    `offscreen.html`: a captured http(s) page gets 403, see `offscreen-guard.ts`); the privileged scheme is
+ *    declared before `ready` by `bootstrap/pre-ready.ts`;
+ *  - raw `drag` channel (drag to the Finder);
+ *  - local media-worker for `system.copyImage` until one is provided.
+ * Outside Electron (Node tests of the registry), nothing is wired up.
  */
 import { app, ipcMain, nativeImage, protocol, webContents } from 'electron'
 import path from 'node:path'
@@ -25,7 +25,7 @@ import { guardOffscreenHandler } from './offscreen-guard'
 import { setLocalMediaWorkerFactory, stopLocalMediaWorker } from './media-worker'
 import { RECOLT_PROTOCOL, createRecoltHandler, type RecoltHandler } from './recolt-protocol'
 
-/** `resources/drag-fallback.png`, à côté de `package.json` (dev) ou dans l'asar (packagé). */
+/** `resources/drag-fallback.png`, next to `package.json` (dev) or in the asar (packaged). */
 export function dragFallbackPath(appPath: string): string {
   return path.join(appPath, 'resources', 'drag-fallback.png')
 }
@@ -39,7 +39,7 @@ export function makeLibraryResolver() {
 
 let handler: RecoltHandler | null = null
 
-/** URL de premier niveau des fenêtres vivantes qui utilisent `ses`. */
+/** Top-level URL of the live windows that use `ses`. */
 function pageUrlsOfSession(ses: unknown): string[] {
   return webContents
     .getAllWebContents()
@@ -47,20 +47,20 @@ function pageUrlsOfSession(ses: unknown): string[] {
     .map((wc) => wc.getURL())
 }
 
-/** Handler courant (sessions créées hors de ce module, tests). */
+/** Current handler (sessions created outside this module, tests). */
 export function getRecoltHandler(): RecoltHandler | null {
   return handler
 }
 
 export function initProtocol(ctx: ServiceContext): Disposer | void {
   if (typeof protocol?.handle !== 'function') {
-    ctx.log.warn('[protocol] hors Electron : recolt:// non enregistré')
+    ctx.log.warn('[protocol] outside Electron: recolt:// not registered')
     return
   }
 
   const h = createRecoltHandler({
     libraryFor: makeLibraryResolver(),
-    onDenied: (reason, url) => ctx.log.warn(`[protocol] refus (${reason}) : ${url}`),
+    onDenied: (reason, url) => ctx.log.warn(`[protocol] denied (${reason}): ${url}`),
   })
   handler = h
   if (protocol.isProtocolHandled(RECOLT_PROTOCOL)) protocol.unhandle(RECOLT_PROTOCOL)
@@ -68,15 +68,15 @@ export function initProtocol(ctx: ServiceContext): Disposer | void {
 
   registerOffscreenSessionSetup((ses) => {
     if (ses.protocol.isProtocolHandled(RECOLT_PROTOCOL)) return
-    // Délègue au handler courant : une réinitialisation du domaine n'a pas à toucher ces sessions.
-    // Garde : seules les pages internes (`offscreen.html`) lisent la bibliothèque, jamais une page
-    // distante capturée dans la même partition recyclée (voir `offscreen-guard.ts`).
+    // Delegates to the current handler: a domain reset does not have to touch these sessions.
+    // Guard: only internal pages (`offscreen.html`) read the library, never a
+    // remote page captured in the same recycled partition (see `offscreen-guard.ts`).
     ses.protocol.handle(
       RECOLT_PROTOCOL,
       guardOffscreenHandler(ses, (req) => (handler ?? h)(req), {
         pageUrlsOf: pageUrlsOfSession,
         rendererUrl: ctx.flags.rendererUrl,
-        onDenied: (reason, url) => ctx.log.warn(`[protocol] refus (${reason}) : ${url}`),
+        onDenied: (reason, url) => ctx.log.warn(`[protocol] denied (${reason}): ${url}`),
       }),
     )
   })
@@ -119,7 +119,7 @@ export function initProtocol(ctx: ServiceContext): Disposer | void {
   }
 }
 
-/** Outils connus du worker local (`toPng` n'utilise que sharp ; ffmpeg reste facultatif). */
+/** Known tools of the local worker (`toPng` only uses sharp; ffmpeg remains optional). */
 function localTools(): { ffmpeg?: string; ffprobe?: string; sips: string } {
   const tools = getPrefsStore()?.get().tools ?? {}
   return {

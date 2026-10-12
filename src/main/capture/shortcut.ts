@@ -1,8 +1,8 @@
 /**
- * Raccourci global de capture : validation (≥ 1 modificateur parmi ⌘/⌃/⌥ + une
- * touche, refus des raccourcis système), enregistrement IMMÉDIAT avec retour à l'ancien si
- * `register` échoue (`taken`), verrou `inFlight` géré par le service et anti-rebond de 400 ms.
- * `globalShortcut` est injecté (tests).
+ * Global capture shortcut: validation (≥ 1 modifier among ⌘/⌃/⌥ + a
+ * key, system shortcuts refused), IMMEDIATE registration with fallback to the previous one if
+ * `register` fails (`taken`), `inFlight` lock managed by the service and 400 ms debounce.
+ * `globalShortcut` is injected (tests).
  */
 import { Accelerator } from '../../shared/accelerator'
 
@@ -18,7 +18,7 @@ export interface GlobalShortcutLike {
 const COMMAND = ['CommandOrControl', 'CmdOrCtrl', 'Command', 'Cmd', 'Super', 'Meta']
 const TRIGGER_MODS = [...COMMAND, 'Control', 'Ctrl', 'Alt', 'Option', 'AltGr']
 
-/** Réservés par macOS (captures natives ⇧⌘3/4/5/6). */
+/** Reserved by macOS (native captures ⇧⌘3/4/5/6). */
 const MAC_RESERVED = new Set(['3', '4', '5', '6'])
 
 export function validateAccelerator(accel: string): 'ok' | 'invalid' | 'reserved' {
@@ -51,7 +51,7 @@ export function createShortcutManager(gs: GlobalShortcutLike, now: () => number 
     get current() {
       return current
     },
-    /** Remplace le raccourci ; en cas d'échec, l'ancien reste actif. */
+    /** Replaces the shortcut; on failure, the previous one stays active. */
     set(next: string, onTrigger: () => void): ShortcutResult {
       const v = validateAccelerator(next)
       if (v !== 'ok') return { ok: false, error: v }
@@ -70,7 +70,7 @@ export function createShortcutManager(gs: GlobalShortcutLike, now: () => number 
           try {
             gs.register(prev, fire)
           } catch {
-            // l'ancien ne peut plus être rétabli : rien d'actif
+            // the previous one can no longer be restored: nothing is active
           }
         }
         return { ok: false, error: 'taken' }
@@ -85,12 +85,12 @@ export function createShortcutManager(gs: GlobalShortcutLike, now: () => number 
   }
 }
 
-/** Touche de l'accélérateur (« S » pour `CommandOrControl+Shift+S`). */
+/** Accelerator key ("S" for `CommandOrControl+Shift+S`). */
 export const acceleratorKey = (accel: string): string => accel.split('+').at(-1) ?? ''
 
 /**
- * Accélérateur du menu « Capturer l'écran » : posé seulement si le libellé de la disposition
- * active est la même touche (sinon le menu s'attacherait à une autre touche que le raccourci).
+ * Accelerator of the "Capture screen" menu: set only if the label of the active layout
+ * is the same key (otherwise the menu would attach to a different key than the shortcut).
  */
 export function menuAccelerator(accel: string, label: string): string | undefined {
   return label.toUpperCase() === acceleratorKey(accel).toUpperCase() ? accel : undefined

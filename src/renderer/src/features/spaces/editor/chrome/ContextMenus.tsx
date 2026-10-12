@@ -1,7 +1,7 @@
 /**
- * Menus contextuels de la toile : nœud (Copier, Dupliquer, Premier plan,
+ * Canvas context menus: node (Copier, Dupliquer, Premier plan,
  * Arrière-plan, Verrouiller, Ouvrir dans la bibliothèque, Ajouter à la bibliothèque, Supprimer)
- * et toile (Coller, Nouvelle note, Nouveau texte, Tout sélectionner, Ajuster à l'écran).
+ * and canvas (Coller, Nouvelle note, Nouveau texte, Tout sélectionner, Ajuster à l'écran).
  */
 import {
   ArrowDownToLine,

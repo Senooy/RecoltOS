@@ -1,7 +1,7 @@
 /**
- * Job `remote.fetch` : image citée, image de fil ou slide distante sans ligne
- * `item_media` → `remote/<sha1(url)>.<ext>`. Le DTO n'expose l'URL `recolt://` que si le fichier
- * existe (`library/remote-index.ts`) ; une réponse 4xx laisse l'image masquée (aucune URL http(s)).
+ * Job `remote.fetch`: quoted image, thread image or remote slide without an
+ * `item_media` row → `remote/<sha1(url)>.<ext>`. The DTO only exposes the `recolt://` URL if the file
+ * exists (`library/remote-index.ts`); a 4xx response leaves the image hidden (no http(s) URL).
  */
 import { mkdir, rename, rm } from 'node:fs/promises'
 import { dirname } from 'node:path'

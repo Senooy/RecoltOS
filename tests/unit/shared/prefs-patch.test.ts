@@ -5,8 +5,8 @@ import { DEFAULT_PREFS, mergePrefs } from '../../../src/shared/prefs'
 const input = contract['prefs.set'].input
 const ok = (patch: unknown) => input.safeParse({ patch }).success
 
-describe('prefs.set : patch strict', () => {
-  it('accepte des patchs partiels valides, sans réécrire les autres réglages', () => {
+describe('prefs.set: strict patch', () => {
+  it('accepts valid partial patches, without rewriting the other settings', () => {
     expect(ok({})).toBe(true)
     expect(ok({ theme: 'dark' })).toBe(true)
     expect(ok({ capture: { notify: false } })).toBe(true)
@@ -19,7 +19,7 @@ describe('prefs.set : patch strict', () => {
     expect(merged.capture.notify).toBe(false)
   })
 
-  it('rejette les réglages réservés (consentement, versions, outils, version)', () => {
+  it('rejects reserved settings (consent, versions, tools, version)', () => {
     expect(ok({ ai: { consentVersion: 3 } })).toBe(false)
     expect(ok({ ai: { consentAt: 1 } })).toBe(false)
     expect(ok({ ai: { provider: 'claude', consentVersion: 3 } })).toBe(false)
@@ -29,7 +29,7 @@ describe('prefs.set : patch strict', () => {
     expect(ok({ version: 1 })).toBe(false)
   })
 
-  it('dropFolder doit être absolu ; model ne peut pas ressembler à une option de CLI', () => {
+  it('dropFolder must be absolute; model cannot look like a CLI option', () => {
     expect(ok({ capture: { dropFolder: '../../x' } })).toBe(false)
     expect(ok({ capture: { dropFolder: '/Users/me/Bureau' } })).toBe(true)
     expect(ok({ ai: { claude: { model: '--dangerously-skip-permissions' } } })).toBe(false)
@@ -37,19 +37,19 @@ describe('prefs.set : patch strict', () => {
     expect(ok({ ai: { claude: { model: 'claude-opus-4-1' } } })).toBe(true)
   })
 
-  it('shortcut : un modificateur et une touche, sans raccourci système', () => {
+  it('shortcut: one modifier and one key, no system shortcut', () => {
     expect(ok({ capture: { shortcut: 'Command+Q' } })).toBe(false)
     expect(ok({ capture: { shortcut: 'CommandOrControl+W' } })).toBe(false)
     expect(ok({ capture: { shortcut: 'S' } })).toBe(false)
     expect(ok({ capture: { shortcut: 'CommandOrControl+Shift+S' } })).toBe(true)
     expect(ok({ capture: { shortcut: 'CommandOrControl+Alt+X' } })).toBe(true)
-    // `capture.setShortcut` valide dans le handler (`reserved` / `invalid` dans le résultat).
+    // `capture.setShortcut` validates in the handler (`reserved` / `invalid` in the result).
     expect(
       contract['capture.setShortcut'].input.safeParse({ accel: 'Command+Q', label: 'Q' }).success,
     ).toBe(true)
   })
 
-  it('rejette les clés inconnues à tous les niveaux et les mauvais types', () => {
+  it('rejects unknown keys at all levels and wrong types', () => {
     expect(ok({ thme: 'dark' })).toBe(false)
     expect(ok({ capture: { notifyy: true } })).toBe(false)
     expect(ok({ ai: { claude: { modle: 'x' } } })).toBe(false)

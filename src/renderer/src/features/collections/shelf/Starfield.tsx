@@ -1,9 +1,9 @@
 /**
- * `Starfield` : canvas 2D plein cadre, ≈ 220 étoiles pour 1280×820 (densité ∝
- * surface), rayon 0,5–1,3 px, opacité 0,15–0,9 ; 10 % scintillent (cycle 3–6 s) ; parallaxe de
- * 2 px liée au défilement horizontal (`parallax` ∈ [0, 1]). Statique (ni scintillement ni
- * parallaxe) en mouvement réduit.
- * Tirage déterministe (graine fixe) : captures reproductibles.
+ * `Starfield`: full-frame 2D canvas, ≈ 220 stars for 1280×820 (density ∝
+ * area), radius 0.5–1.3 px, opacity 0.15–0.9; 10 % twinkle (3–6 s cycle); 2 px parallax
+ * tied to horizontal scrolling (`parallax` ∈ [0, 1]). Static (no twinkling or
+ * parallax) in reduced motion.
+ * Deterministic draw (fixed seed): reproducible captures.
  */
 import { useEffect, useRef } from 'react'
 
@@ -19,7 +19,7 @@ interface Star {
   phase: number
 }
 
-/** Générateur pseudo-aléatoire (mulberry32). */
+/** Pseudo-random generator (mulberry32). */
 export function rng(seed: number): () => number {
   let t = seed >>> 0
   return () => {

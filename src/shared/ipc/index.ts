@@ -1,8 +1,7 @@
 /**
- * Contrat IPC agrégé : un canal Electron `rpc` + des événements `evt:<nom>`.
- * Un fichier par domaine (`ipc/<domaine>.ts`) ; la liste des domaines est FIGÉE ici et
- * reproduite par `src/main/ipc/handlers/index.ts`. Main valide toujours les entrées et, en dev,
- * les sorties.
+ * Aggregated IPC contract: one Electron `rpc` channel + `evt:<name>` events.
+ * One file per domain (`ipc/<domain>.ts`); the list of domains is FROZEN here and mirrored by
+ * `src/main/ipc/handlers/index.ts`. Main always validates inputs and, in dev, outputs.
  */
 import type { z } from 'zod'
 import { aiContract, aiEvents } from './ai'
@@ -26,7 +25,7 @@ import { tagsContract } from './tags'
 export * from './channels'
 export type { ChannelDef, ContractShape, EventShape } from './define'
 
-/** Domaines IPC (liste figée, ordre = ordre d'enregistrement). Pas de domaine `embed`. */
+/** IPC domains (frozen list, order = registration order). No `embed` domain. */
 export const DOMAINS = [
   'items',
   'collections',
@@ -90,9 +89,9 @@ export const contract = {
 
 export type Contract = typeof contract
 export type Channel = keyof Contract
-/** Ce que l'appelant envoie (défauts optionnels). */
+/** What the caller sends (optional defaults). */
 export type In<C extends Channel> = z.input<Contract[C]['input']>
-/** Ce que le handler reçoit après validation (défauts appliqués). */
+/** What the handler receives after validation (defaults applied). */
 export type Parsed<C extends Channel> = z.output<Contract[C]['input']>
 export type Out<C extends Channel> = z.output<Contract[C]['output']>
 export type ChannelOf<D extends Domain> = Extract<Channel, `${D}.${string}`>
@@ -103,7 +102,7 @@ export function isChannel(v: unknown): v is Channel {
   return typeof v === 'string' && Object.prototype.hasOwnProperty.call(contract, v)
 }
 
-/** Domaine d'un canal = premier segment (`import.gatheros.start` → `import`). */
+/** Domain of a channel = first segment (`import.gatheros.start` → `import`). */
 export function domainOf(channel: string): string {
   const i = channel.indexOf('.')
   return i === -1 ? channel : channel.slice(0, i)

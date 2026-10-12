@@ -1,5 +1,5 @@
 /**
- * Toutes les fixtures (erreurs comprises) → sortie figée en snapshot (acceptance).
+ * All fixtures (errors included) → output frozen as a snapshot (acceptance).
  */
 import { describe, expect, it } from 'vitest'
 import { parseInstagramMediaInfo, parseSyncPage } from '../../../../src/main/sync/parsers'

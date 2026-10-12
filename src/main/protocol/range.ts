@@ -1,23 +1,23 @@
 /**
- * En-tête `Range` (RFC 9110 §14) pour le protocole `recolt://`. Une seule plage
- * d'octets : c'est ce qu'envoient `<video>`/`<audio>` de Chromium. Pas d'import `electron`.
+ * `Range` header (RFC 9110 §14) for the `recolt://` protocol. A single byte range
+ * is what Chromium's `<video>`/`<audio>` send. No `electron` import.
  */
 
 export type RangeResult =
-  /** Pas d'en-tête : réponse 200 complète. */
+  /** No header: full 200 response. */
   | { kind: 'none' }
-  /** Plage satisfaisable, bornes incluses : réponse 206. */
+  /** Satisfiable range, bounds included: 206 response. */
   | { kind: 'partial'; start: number; end: number }
-  /** Plage hors du fichier, ou forme non comprise : réponse 416 `Content-Range: bytes *\/size`. */
+  /** Range outside the file, or unrecognized form: 416 response `Content-Range: bytes *\/size`. */
   | { kind: 'unsatisfiable' }
 
-// Unité insensible à la casse (RFC 9110 §14.1).
+// Unit is case-insensitive (RFC 9110 §14.1).
 const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/i
 
 /**
- * `bytes=a-b`, `bytes=a-` et `bytes=-n` (suffixe). Fin au-delà du fichier : ramenée à `size - 1`.
- * `bytes=-0`, début ≥ taille, début > fin, plages multiples ou unité inconnue : `unsatisfiable`
- * (on répond 416 plutôt que d'ignorer une plage incomprise).
+ * `bytes=a-b`, `bytes=a-` and `bytes=-n` (suffix). End beyond the file: capped to `size - 1`.
+ * `bytes=-0`, start ≥ size, start > end, multiple ranges or unknown unit: `unsatisfiable`
+ * (we answer 416 rather than ignore a range we do not understand).
  */
 export function parseRange(header: string | null | undefined, size: number): RangeResult {
   if (header === null || header === undefined) return { kind: 'none' }
@@ -30,7 +30,7 @@ export function parseRange(header: string | null | undefined, size: number): Ran
   let start: number
   let end = size - 1
   if (rawStart === '') {
-    // Suffixe plus grand que le fichier : toute la représentation (RFC 9110 §14.1.2).
+    // Suffix larger than the file: the whole representation (RFC 9110 §14.1.2).
     const suffix = Number(rawEnd)
     if (!(suffix > 0)) return { kind: 'unsatisfiable' }
     start = Math.max(0, size - suffix)
@@ -38,7 +38,7 @@ export function parseRange(header: string | null | undefined, size: number): Ran
     start = Number(rawStart)
     if (!Number.isFinite(start)) return { kind: 'unsatisfiable' }
     if (rawEnd !== '') {
-      // Fin au-delà du fichier (même démesurée) : ramenée à size - 1, comme la RFC le demande.
+      // End beyond the file (even absurdly large): capped to size - 1, as the RFC requires.
       const e = Number(rawEnd)
       end = Math.min(e, size - 1)
     }

@@ -1,6 +1,6 @@
 /**
- * Bascule de thème instantanée : `data-theme-switching` coupe les transitions pendant
- * l'image du changement, puis disparaît ; aucun marquage quand le thème ne change pas.
+ * Instant theme switch: `data-theme-switching` disables transitions during the change frame,
+ * then disappears; no marking when the theme does not change.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { setDocumentTheme } from '../../../src/renderer/src/state/prefs'
@@ -13,7 +13,7 @@ const root = (theme?: string) =>
 describe('setDocumentTheme', () => {
   afterEach(() => vi.unstubAllGlobals())
 
-  it('pose data-theme et retire data-theme-switching deux images plus tard', () => {
+  it('sets data-theme and removes data-theme-switching two frames later', () => {
     const frames: (() => void)[] = []
     vi.stubGlobal('requestAnimationFrame', (cb: () => void) => frames.push(cb))
     const el = root('light')
@@ -26,7 +26,7 @@ describe('setDocumentTheme', () => {
     expect(el.dataset.themeSwitching).toBeUndefined()
   })
 
-  it('ne marque rien quand le thème est déjà le bon', () => {
+  it('marks nothing when the theme is already the right one', () => {
     const el = root('dark')
     setDocumentTheme('dark', el)
     expect(el.dataset.themeSwitching).toBeUndefined()

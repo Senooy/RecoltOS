@@ -1,6 +1,6 @@
 /**
- * Handlers `rediscover.*` : deck pondéré par pages, actions journalisées,
- * annulation ≤ 10 s. Collections proposées = 3 plus récemment utilisées.
+ * `rediscover.*` handlers: deck weighted by pages, logged actions,
+ * undo ≤ 10 s. Suggested collections = the 3 most recently used.
  */
 import { cardRowsByIds } from '../../db/queries/list'
 import { toItemCard } from '../../dto/item-card'

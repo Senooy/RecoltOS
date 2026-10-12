@@ -1,7 +1,7 @@
 /**
- * Publication à enregistrer depuis l'extension (`save.create {kind:'post'}`) : donnée brute
- * en cache (`tweet_results.result` X, `media` Instagram, élément Cosmos) passée aux parseurs
- * dans une page synthétique ; sinon repli DOM (`partial`) : texte, auteur, images.
+ * Post to save from the extension (`save.create {kind:'post'}`): raw data
+ * cached (`tweet_results.result` for X, `media` for Instagram, Cosmos item) passed to the parsers
+ * in a synthetic page; otherwise DOM fallback (`partial`): text, author, images.
  */
 import type { SaveRequest } from '../../shared/bridge/save'
 import { PostMetaSchema } from '../../shared/post-meta'
@@ -53,7 +53,7 @@ export function postFromRequest(req: SaveRequest): NormalizedPost | null {
       if (hit) return hit
     }
   }
-  // Repli DOM : publication partielle (le backfill la complètera s'il la revoit).
+  // DOM fallback: partial post (the backfill will complete it if it sees it again).
   const dom = (p.dom ?? {}) as {
     text?: unknown
     authorName?: unknown

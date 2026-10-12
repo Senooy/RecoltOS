@@ -1,15 +1,15 @@
 /**
- * `PaletteIndex` : palettes de la bibliothèque en mémoire — `Float32Array`
- * n × 8 × 3 (Lab D65) + poids n × 8 (`palette_weights`, sinon pondération par le rang) + objets
- * `{mode:'lab65'}` pour culori, créés une fois. Reconstruit paresseusement après `items.changed`
- * (`invalidatePaletteIndex`, appelé par `events.ts`). Une base = un index.
+ * `PaletteIndex`: library palettes in memory — `Float32Array`
+ * n × 8 × 3 (Lab D65) + weights n × 8 (`palette_weights`, otherwise weighting by rank) + objects
+ * `{mode:'lab65'}` for culori, created once. Lazily rebuilt after `items.changed`
+ * (`invalidatePaletteIndex`, called by `events.ts`). One database = one index.
  */
 import type Database from 'better-sqlite3'
 import { hexToLab } from '../../shared/color'
 
 export const SLOTS = 8
 
-/** Poids par rang quand `palette_weights` est NULL (somme = 1). */
+/** Weights by rank when `palette_weights` is NULL (sum = 1). */
 export const RANK_WEIGHTS = [0.3, 0.2, 0.15, 0.11, 0.09, 0.07, 0.05, 0.03] as const
 
 export interface LabObj {
@@ -20,12 +20,12 @@ export interface LabObj {
 }
 
 export interface PaletteIndex {
-  /** Nombre d'éléments indexés. */
+  /** Number of indexed items. */
   n: number
   ids: Int32Array
-  /** Position de chaque id dans l'index. */
+  /** Position of each id in the index. */
   pos: Map<number, number>
-  /** Nombre de couleurs par élément (≤ 8). */
+  /** Number of colors per item (≤ 8). */
   counts: Uint8Array
   lab: Float32Array
   w: Float32Array
@@ -65,7 +65,7 @@ export function buildPaletteIndex(db: Database.Database): PaletteIndex {
   const pos = new Map<number, number>()
   let k = 0
   for (const r of rows) {
-    // `palette_lab` (importé ou calculé) ; à défaut, conversion des hex de `palette`.
+    // `palette_lab` (imported or computed); otherwise, convert the hex values of `palette`.
     let labs = parseNumArray(r.palette_lab)
     if (!labs || labs.length === 0) {
       labs = (parseNumArray(r.palette) ?? [])

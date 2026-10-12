@@ -1,6 +1,6 @@
 /**
- * Médias synthétiques minuscules : images par `sharp`, vidéo par le ffmpeg SYSTÈME
- * (ni ffmpeg-static, ni binaire embarqué). Sans ffmpeg, `makeVideo` renvoie `false`.
+ * Tiny synthetic media: images via `sharp`, video via the SYSTEM ffmpeg (neither ffmpeg-static
+ * nor an embedded binary). Without ffmpeg, `makeVideo` returns `false`.
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -13,9 +13,9 @@ export type ImageFormat = 'webp' | 'jpeg' | 'png'
 export interface SyntheticImageOptions {
   width?: number
   height?: number
-  /** Couleur de fond `#rrggbb`. */
+  /** Background colour `#rrggbb`. */
   color?: string
-  /** Dégradé diagonal vers cette couleur (rend la palette non triviale). */
+  /** Diagonal gradient towards this colour (makes the palette non-trivial). */
   to?: string
   format?: ImageFormat
 }
@@ -25,7 +25,7 @@ const hex = (c: string): [number, number, number] => {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
 }
 
-/** Image synthétique ; sans `to`, aplat de couleur. */
+/** Synthetic image; without `to`, a flat colour. */
 export async function makeImage(opts: SyntheticImageOptions = {}): Promise<Buffer> {
   const { width = 64, height = 48, color = '#c8a064', to, format = 'webp' } = opts
   let img: Sharp
@@ -58,7 +58,7 @@ export async function writeImage(file: string, opts: SyntheticImageOptions = {})
   return buf.length
 }
 
-/** Cherche un exécutable (Homebrew puis PATH), comme `platform/binaries.ts`. */
+/** Looks up an executable (Homebrew then PATH), like `platform/binaries.ts`. */
 export function findBinary(name: string): string | null {
   const dirs = [
     '/opt/homebrew/bin',
@@ -85,8 +85,8 @@ export interface SyntheticVideoOptions {
 }
 
 /**
- * mp4 H.264 de quelques secondes (`testsrc`, une image clé par seconde : assez long pour tester le
- * seek). `false` si ffmpeg est absent ou échoue.
+ * H.264 mp4 of a few seconds (`testsrc`, one keyframe per second: long enough to test seeking).
+ * `false` if ffmpeg is missing or fails.
  */
 export function makeVideo(file: string, opts: SyntheticVideoOptions = {}): boolean {
   const ffmpeg = findFfmpeg()

@@ -1,7 +1,7 @@
 /**
- * Entrée autonome de la galerie (dev) : `/src/components/gallery/index.html` sur le serveur
- * Vite du renderer. Équivalent de `?gallery=1` sans passer par `App.tsx`.
- * Absente du build de production (hors `rollupOptions.input`).
+ * Standalone gallery entry (dev): `/src/components/gallery/index.html` on the renderer's
+ * Vite server. Equivalent of `?gallery=1` without going through `App.tsx`.
+ * Absent from the production build (outside `rollupOptions.input`).
  */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

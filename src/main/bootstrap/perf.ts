@@ -1,6 +1,6 @@
 /**
- * Canal brut `perf:mark` : marques du renderer journalisées dans
- * `userData/logs/perf.jsonl` avec `process.uptime()`.
+ * Raw `perf:mark` channel: renderer marks logged in
+ * `userData/logs/perf.jsonl` with `process.uptime()`.
  */
 import { ipcMain } from 'electron'
 import fs from 'node:fs'

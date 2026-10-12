@@ -1,7 +1,7 @@
 /**
- * Rangée de collections : carte « Nouvelle collection » en tirets (création en
- * ligne), cartes 188×181 avec `FanStack` (3 couvertures, posts en `TweetCard cover` réduit à .28),
- * cible de dépôt des cartes de la grille, réordonnancement horizontal (`Reorder`), menu contextuel.
+ * Row of collections: dashed « Nouvelle collection » card (creation inline),
+ * 188×181 cards with `FanStack` (3 covers, posts as a reduced `TweetCard cover` at .28),
+ * drop target for the grid's cards, horizontal reordering (`Reorder`), context menu.
  */
 import { Pencil, Plus, Trash, Compass } from 'lucide-react'
 import { Reorder } from 'motion/react'
@@ -30,7 +30,7 @@ const FAN_HOVER = [
   'translateX(26px) rotate(14deg)',
 ]
 
-/** Couverture d'une pile (image, affiche ou post réduit) ; `tweetScale` suit la taille du cadre. */
+/** Cover of a stack (image, poster or reduced post); `tweetScale` follows the frame size. */
 export function Cover({ card, tweetScale = 0.28 }: { card: ItemCard; tweetScale?: number }) {
   if (card.kind === 'tweet') {
     return (

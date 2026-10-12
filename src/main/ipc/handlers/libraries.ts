@@ -1,7 +1,7 @@
 /**
- * Handlers `libraries.*` : liste, création (dossiers iCloud / Dropbox refusés),
- * bascule, ouverture d'un dossier existant, renommage, retrait (fichiers conservés), affichage
- * dans le Finder.
+ * `libraries.*` handlers: list, create (iCloud / Dropbox folders refused),
+ * switch, opening an existing folder, rename, removal (files kept), display
+ * in Finder.
  */
 import { BrowserWindow, dialog, shell, type OpenDialogOptions } from 'electron'
 import { AppError } from '../../../shared/errors'
@@ -49,7 +49,7 @@ export const librariesHandlers: DomainHandlers<'libraries'> = {
 
   'libraries.reveal': async ({ id }) => {
     const err = await shell.openPath(manager().rootOf(id))
-    // Le texte de macOS est en anglais : il part dans `details`, jamais dans le toast.
+    // The macOS text is in English: it goes into `details`, never into the toast.
     if (err) throw new AppError('io', mt().errors.revealFailed, { message: err })
   },
 }

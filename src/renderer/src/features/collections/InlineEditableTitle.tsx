@@ -1,6 +1,6 @@
 /**
- * `InlineEditableTitle` : titre 18/24 600 ; un clic le transforme en `<input>` de
- * même typo (fond `--hover`, rayon 6, padding 2 6). ↵ ou perte de focus valide, Échap annule.
+ * `InlineEditableTitle`: 18/24 600 title; a click turns it into an `<input>` of the
+ * same typography (`--hover` background, radius 6, padding 2 6). ↵ or losing focus commits, Esc cancels.
  */
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { cn } from '../../lib/cn'

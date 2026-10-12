@@ -1,11 +1,11 @@
 /**
- * Exécuteur de synchronisation : exécute les `sync.run` de l'app DEPUIS
- * L'ARRIÈRE-PLAN, sans onglet. Une page à la fois : requête → `sync.page` → `sync.ack` de l'app
- * (continuer avec le curseur, ou s'arrêter : élément connu, plafond, budget) → délai → page suivante.
- * Erreurs classées (`auth_required`, `blocked`, `rate_limited`, `api_changed`, `network`,
- * `permissions`) remontées par `sync.finished`. Alarme `sync-tick` (5 min) : `sync.request
- * {trigger:'schedule'}` pour que l'app décide de ce qui est dû. Les gabarits, jetons et indices
- * venus des scripts de contenu arrivent par `onContentMessage`.
+ * Sync runner: runs the app's `sync.run` requests FROM THE BACKGROUND, without a tab. One page at a
+ * time: request → `sync.page` → the app's `sync.ack` (continue with the cursor, or stop:
+ * known item, ceiling, budget) → delay → next page.
+ * Classified errors (`auth_required`, `blocked`, `rate_limited`, `api_changed`, `network`,
+ * `permissions`) reported via `sync.finished`. `sync-tick` alarm (5 min): `sync.request
+ * {trigger:'schedule'}` so the app decides what is due. Templates, tokens and hints
+ * coming from content scripts arrive via `onContentMessage`.
  */
 import { CHUNK_BYTES, type BridgePlatform } from '../../../../src/shared/bridge/constants'
 import type { HelloAck, PayloadOf } from '../../../../src/shared/bridge/messages'
@@ -43,7 +43,7 @@ export interface RunnerDeps {
     p: BridgePlatform,
   ) => Promise<{ fetch: FetchFn; close?: () => Promise<void> } | null>
   sleep?: (ms: number) => Promise<void>
-  /** Délai minimum entre deux pages si l'app n'en impose pas (X : 2 à 4 s). */
+  /** Minimum delay between two pages if the app does not impose one (X: 2 to 4 s). */
   defaultDelay?: () => number
 }
 
@@ -99,7 +99,7 @@ export class SyncRunner {
     try {
       this.bridge.post(type, payload)
     } catch {
-      // port fermé : l'app reprendra au prochain créneau
+      // port closed: the app will resume at the next slot
     }
   }
 
@@ -109,7 +109,7 @@ export class SyncRunner {
       const got = await sessionGet<{ [RUNS_KEY]: Record<string, unknown> }>(RUNS_KEY)
       await s.set({ [RUNS_KEY]: { ...(got[RUNS_KEY] ?? {}), [runId]: { platform, pages } } })
     } catch {
-      // stockage de session indisponible
+      // session storage unavailable
     }
   }
 
@@ -121,11 +121,11 @@ export class SyncRunner {
       delete runs[runId]
       await s.set({ [RUNS_KEY]: runs })
     } catch {
-      // idem
+      // same
     }
   }
 
-  /** Requête d'arrière-plan ou repli (onglet existant / créé). */
+  /** Background request or fallback (existing or created tab). */
   private async fetchFor(
     t: ExecTarget,
     p: BridgePlatform,
@@ -181,7 +181,7 @@ export class SyncRunner {
       return status
     }
     if (!(await hasPermission(p))) return finish('permissions', xt().syncErrors.noPermission)
-    // Cosmos : la session se vérifie par `me` (jeton capturé ou cookies), pas par un cookie connu.
+    // Cosmos: the session is checked via `me` (captured token or cookies), not a known cookie.
     if (p !== 'cosmos' && !(await platformState(p)).loggedIn) {
       return finish('auth_required', xt().syncErrors.noSession)
     }
@@ -202,7 +202,7 @@ export class SyncRunner {
         if (run.cancelled) return finish('aborted')
         if (!exec) return finish('network', xt().syncErrors.noTarget)
         let page: PageOutcome = await this.withRetries(() => client.fetchPage(cursor, exec!.fetch))
-        // Repli seulement si l'arrière-plan est refusé.
+        // Fall back only if the background request is refused.
         while (page.kind === 'error' && page.outcome === 'blocked' && ti < targets.length - 1) {
           ti += 1
           const t = targets[ti]!
@@ -244,7 +244,7 @@ export class SyncRunner {
     }
   }
 
-  /** Erreurs réseau : 3 nouvelles tentatives (2, 4, 8 s). */
+  /** Network errors: 3 retries (2, 4, 8 s). */
   private async withRetries(fn: () => Promise<PageOutcome>): Promise<PageOutcome> {
     let res = await fn()
     for (const wait of [2_000, 4_000, 8_000]) {
@@ -255,7 +255,7 @@ export class SyncRunner {
     return res
   }
 
-  // ------------------------------------------------------------------ onglets créés (repli)
+  // ------------------------------------------------------------------ created tabs (fallback)
 
   private async trackTab(id: number): Promise<void> {
     const got = await sessionGet<{ 'sync.tabs': number[] }>('sync.tabs')
@@ -270,8 +270,8 @@ export class SyncRunner {
   }
 
   /**
-   * Alarme `watchdog` / redémarrage du script d'arrière-plan : runs interrompus signalés `aborted`
-   * (l'app reprogramme), onglets de repli orphelins fermés, alarme `sync-tick` vérifiée.
+   * `watchdog` alarm / restart of the background script: interrupted runs reported as `aborted`
+   * (the app reschedules them), orphaned fallback tabs closed, `sync-tick` alarm checked.
    */
   watchdog(): void {
     void (async () => {
@@ -300,9 +300,9 @@ export class SyncRunner {
     }
   }
 
-  // ------------------------------------------------------------------ demandes ponctuelles
+  // ------------------------------------------------------------------ one-off requests
 
-  /** `item.refresh` (Instagram, dans le budget de l'app) : `media/<pk>/info/` → `item.data`. */
+  /** `item.refresh` (Instagram, within the app's budget): `media/<pk>/info/` → `item.data`. */
   async refreshItem(p: PayloadOf<'item.refresh'>): Promise<void> {
     if (p.platform !== 'instagram') return
     await ensureHeaderRules()
@@ -315,7 +315,7 @@ export class SyncRunner {
     })
   }
 
-  /** `media.fetch` (secours 403) : téléchargé ici, renvoyé en `media.chunk` de 8 Mio. */
+  /** `media.fetch` (403 fallback): downloaded here, sent back as `media.chunk`s of 8 MiB. */
   async proxyMedia(p: PayloadOf<'media.fetch'>): Promise<void> {
     const fail = (error: string) =>
       this.safePost('media.chunk', { jobId: p.jobId, seq: 0, last: true, data: '', error })
@@ -345,9 +345,9 @@ export class SyncRunner {
     }
   }
 
-  // ------------------------------------------------------------------ scripts de contenu
+  // ------------------------------------------------------------------ content scripts
 
-  /** Messages du pont de contenu (onglets x.com / instagram.com / cosmos.so). */
+  /** Messages from the content bridge (x.com / instagram.com / cosmos.so tabs). */
   onContentMessage(
     m: unknown,
     sender: chrome.runtime.MessageSender,
@@ -361,7 +361,7 @@ export class SyncRunner {
       case 'content:x-template':
         if (platform === 'x') {
           void XClient.storeTemplate(p)
-          // Signature de la page : réutilisable seulement pour le même chemin de requête.
+          // Page signature: only reusable for the same request path.
           if (
             typeof p.tid === 'string' &&
             p.tid.length < 200 &&
@@ -380,7 +380,7 @@ export class SyncRunner {
         }
         break
       case 'content:cosmos-token':
-        // Jeton vu passer dans une page cosmos.so : secours du jeton obtenu par `/api/refresh-token`.
+        // Token seen in a cosmos.so page: fallback for the token obtained via `/api/refresh-token`.
         if (
           platform === 'cosmos' &&
           typeof p.token === 'string' &&

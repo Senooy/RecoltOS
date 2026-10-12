@@ -1,15 +1,15 @@
 /**
- * M2 : page Recherche — géométrie, syntaxe convertie en chips, filtres retirables,
- * historique persistant (8 max) et « Effacer ».
+ * M2: Search page — geometry, syntax converted into chips, removable filters,
+ * persistent history (8 max) and "Clear".
  */
 import { expect, test } from '../helpers/e2e-fixtures'
 
 const t = (id: string) => `[data-testid="${id}"]`
 
-test.describe('Recherche', () => {
+test.describe('Search', () => {
   test.use({ demoLibrary: { count: 60, collections: 6 } })
 
-  test('champ à y=124, chips de syntaxe, filtres retirables, historique', async ({
+  test('field at y=124, syntax chips, removable filters, history', async ({
     page,
     openDbReadonly,
   }) => {
@@ -31,7 +31,7 @@ test.describe('Recherche', () => {
     ).n
     await expect(page.locator(t('search-count'))).toContainText(`${all} éléments`)
 
-    // `type:video` devient une chip ; seuls des éléments vidéo restent.
+    // `type:video` becomes a chip; only video items remain.
     const videos = (
       db
         .prepare(
@@ -51,7 +51,7 @@ test.describe('Recherche', () => {
     await expect(page.locator(t('search-filter-chip'))).toHaveCount(0)
     await expect(page.locator(t('search-idle'))).toBeVisible()
 
-    // Historique : une recherche gardée apparaît dans « Récents », « Effacer » la vide.
+    // History: a kept search appears under "Récents" (Recent); "Effacer" (Clear) empties it.
     const title = (
       db
         .prepare(
@@ -75,7 +75,7 @@ test.describe('Recherche', () => {
       .toEqual({ n: 0 })
   })
 
-  test('aucun résultat : état vide FR', async ({ page }) => {
+  test('no results: empty state in French', async ({ page }) => {
     await page.locator(t('seg-search')).click()
     await page.locator(t('search-input')).fill('zzzqqqxxyy')
     await expect(page.getByText('Aucun résultat pour « zzzqqqxxyy »')).toBeVisible()

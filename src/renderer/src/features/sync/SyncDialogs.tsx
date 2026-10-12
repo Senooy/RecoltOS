@@ -1,8 +1,8 @@
 /**
- * Feuilles de Réglages › Synchronisation : première activation (risques, repli onglet décoché,
- * coexistence GatherOS bloquante pour Instagram), installation de l'extension (Firefox signé ou
- * temporaire, Chromium en mode développeur), journal des 20 derniers runs, revue des publications
- * récupérées par le backfill.
+ * Settings › Sync sheets: first activation (risks, fallback when a tab is unchecked,
+ * blocking GatherOS coexistence for Instagram), extension installation (Firefox signed or
+ * temporary, Chromium in developer mode), log of the last 20 runs, review of the posts
+ * retrieved by the backfill.
  */
 import { useEffect, useState } from 'react'
 import type { ItemCard } from '../../../../shared/dto/items'

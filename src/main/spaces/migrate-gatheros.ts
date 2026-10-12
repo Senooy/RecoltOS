@@ -1,10 +1,10 @@
 /**
- * Import des boards GatherOS : `boards` → `spaces` (origine `gatheros`, idempotent
- * par `origin_id`), `board_items` → `space_nodes`. Colonnes nullables (`width`, `height`,
- * `rotation`) : `MAX(24, COALESCE(valeur, défaut du type))`, rotation normalisée. Un item dont
- * `data` désigne un save connu devient un nœud `item` ; notes / formes / textes gardent leur
- * contenu ; le reste (images sans fichier exploitable, types inconnus) est compté dans `skipped`
- * et journalisé. Aucune ligne chez l'utilisateur : validé seulement sur fixture synthétique.
+ * GatherOS boards import: `boards` → `spaces` (origin `gatheros`, idempotent
+ * by `origin_id`), `board_items` → `space_nodes`. Nullable columns (`width`, `height`,
+ * `rotation`): `MAX(24, COALESCE(value, type default))`, rotation normalized. An item whose
+ * `data` points to a known save becomes an `item` node; notes / shapes / texts keep their
+ * content; the rest (images without a usable file, unknown types) is counted in `skipped`
+ * and logged. No row in the user's data: validated only on a synthetic fixture.
  */
 import type Database from 'better-sqlite3'
 import { newUuid } from '../../shared/ids'
@@ -87,7 +87,7 @@ function noteColor(v: unknown): NoteColor {
   return 'yellow'
 }
 
-/** Identifiant de save GatherOS référencé par `data`, s'il existe. */
+/** GatherOS save id referenced by `data`, if any. */
 function saveRef(type: string, data: Record<string, unknown>): string | null {
   return (
     str(data.saveId) ??
@@ -101,7 +101,7 @@ export function importGatherosBoards(
   legacy: Database.Database,
   lib: Pick<LibraryContext, 'db' | 'repos'>,
   opts: {
-    /** Id RecoltOS d'un save GatherOS importé (`items.origin_id`). */
+    /** RecoltOS id of an imported GatherOS save (`items.origin_id`). */
     itemIdOf: (saveId: string) => number | undefined
     now?: () => number
     log?: (msg: string) => void
@@ -167,7 +167,7 @@ export function importGatherosBoards(
                   : null
         if (!kind || it.x === null || it.y === null) {
           res.skipped++
-          opts.log?.(`[import] board ${b.id} : élément ${it.id} (${type || '?'}) ignoré`)
+          opts.log?.(`[import] board ${b.id}: element ${it.id} (${type || '?'}) skipped`)
           continue
         }
         const def = DEFAULTS[kind]!

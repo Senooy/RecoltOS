@@ -1,11 +1,11 @@
 /**
- * DTO des collections et tags.
+ * DTOs for collections and tags.
  */
 import { z } from 'zod'
 import { HexColor, Source, Uuid } from '../enums'
 import { ItemCard } from './items'
 
-/** Nœud d'arbre : `count` = membres directs non supprimés (masqués compris), `covers` ≤ 3. */
+/** Tree node: `count` = direct non-deleted members (hidden ones included), `covers` ≤ 3. */
 export const CollectionNode = z.object({
   uuid: Uuid,
   name: z.string(),
@@ -33,6 +33,6 @@ export const TagInfo = z.object({
 })
 export type TagInfo = z.output<typeof TagInfo>
 
-/** Chips virtuelles `#x #instagram #cosmos` dérivées de `items.source`. */
+/** Virtual chips `#x #instagram #cosmos` derived from `items.source`. */
 export const SourceChip = z.object({ source: Source, count: z.number().int().min(0) })
 export type SourceChip = z.output<typeof SourceChip>

@@ -1,7 +1,7 @@
 /**
- * Repo `items` : API d'ÉCRITURE gelée (insertion avec médias, upsert par
- * `(origin, origin_id)`, mise à jour, corbeille, masquage, vues, purge transactionnelle avec job
- * `purge.files`). Les lectures de liste (onglets, tris, compteurs) appartiennent
+ * `items` repo: FROZEN write API (insertion with media, upsert by
+ * `(origin, origin_id)`, update, trash, hiding, views, transactional purge with a
+ * `purge.files` job). List reads (tabs, sorts, counters) belong in
  * (`db/queries/**`).
  */
 import type Database from 'better-sqlite3'
@@ -63,7 +63,7 @@ export interface ItemRow {
   deleted_at: number | null
 }
 
-/** Champs d'un item (camelCase) ; les colonnes JSON reçoivent des valeurs JS. */
+/** Item fields (camelCase); JSON columns receive JS values. */
 export interface ItemFields {
   kind: ItemKindValue
   source: ItemSourceValue
@@ -150,10 +150,10 @@ const COLUMNS: Readonly<Record<keyof ItemPatch, ColumnSpec>> = {
   deletedAt: { col: 'deleted_at' },
 }
 
-/** U+FFFF : « sans titre » trié en dernier par le tri Nom. */
+/** U+FFFF: "untitled" sorted last by the Name sort. */
 export const UNTITLED_NAME_KEY = '￿'
 
-/** Clé du tri « Nom » : minuscules, sans diacritiques, espaces réduits ; vide → U+FFFF. */
+/** Key for the "Name" sort: lowercase, no diacritics, collapsed spaces; empty → U+FFFF. */
 export function nameKey(title: string | null | undefined): string {
   const t = (title ?? '')
     .normalize('NFKD')
@@ -245,9 +245,9 @@ export interface UpsertResult {
 }
 
 export interface UpsertOptions {
-  /** `ignore` (défaut, politique d'import « ne jamais écraser ») ou `update`. */
+  /** `ignore` (default, import policy "never overwrite") or `update`. */
   onExisting?: 'ignore' | 'update'
-  /** Défaut `true` : un item en pierre tombale n'est jamais recréé. */
+  /** Default `true`: a tombstoned item is never recreated. */
   respectTombstones?: boolean
 }
 
@@ -314,7 +314,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
       ItemRow | undefined
 
   return {
-    /** Insère l'item (couverture NULL), ses médias, puis la couverture : une transaction. */
+    /** Inserts the item (cover NULL), its media, then the cover: one transaction. */
     insertWithMedia,
 
     insert(item: NewItem): InsertedItem {
@@ -322,8 +322,8 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
     },
 
     /**
-     * Idempotence par `(origin, origin_id)` (`ux_items_origin`). Par défaut : n'écrase jamais
-     * l'existant et ne ressuscite pas un item en pierre tombale.
+     * Idempotent by `(origin, origin_id)` (`ux_items_origin`). By default: never overwrites
+     * what exists and does not revive a tombstoned item.
      */
     upsertByOrigin(
       item: NewItem & { origin: string; originId: string },
@@ -351,7 +351,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
       })()
     },
 
-    /** Met à jour les champs fournis (`updated_at` = maintenant, `name_key` suit le titre). */
+    /** Updates the provided fields (`updated_at` = now, `name_key` follows the title). */
     update,
 
     getById(id: number): ItemRow | undefined {
@@ -361,7 +361,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return q('SELECT * FROM items WHERE uuid = ?').get(uuid) as ItemRow | undefined
     },
     getByOrigin,
-    /** `uuid` → `id` (les uuid inconnus sont absents de la Map). */
+    /** `uuid` → `id` (unknown uuids are absent from the Map). */
     idsByUuids(uuids: readonly string[]): Map<string, number> {
       const rows = q(
         'SELECT uuid, id FROM items WHERE uuid IN (SELECT value FROM json_each(?))',
@@ -380,8 +380,8 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
     },
 
     /**
-     * Corbeille : `deleted_at = now` ; pour X / Instagram / Cosmos avec `external_id`,
-     * `sync_dismissed` empêche la sync de le recréer.
+     * Trash: `deleted_at = now`; for X / Instagram / Cosmos with `external_id`,
+     * `sync_dismissed` prevents sync from recreating it.
      */
     trash(ids: readonly number[], at: number = now()): number {
       return db.transaction(() => {
@@ -424,7 +424,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
         .changes
     },
 
-    /** Ouverture de la vue détail : `view_count + 1`, `viewed_at = now` (sans toucher `updated_at`). */
+    /** Opening the detail view: `view_count + 1`, `viewed_at = now` (without touching `updated_at`). */
     markViewed(id: number, at: number = now()): boolean {
       return (
         q('UPDATE items SET view_count = view_count + 1, viewed_at = ? WHERE id = ?').run(at, id)
@@ -432,16 +432,16 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
       )
     },
 
-    /** Fichiers relatifs (originaux et dérivés) des items, sans doublon. */
+    /** Relative files (originals and derivatives) of the items, without duplicates. */
     filesOf,
 
     /**
-     * Suppression définitive en UNE transaction : liste des fichiers, `DELETE` (cascades,
-     * FTS, pierres tombales `item` par trigger) et job `purge.files` (`item_id NULL`).
-     * Coût : un seul `DELETE … IN json_each` (≈ 213 ms pour 3 000 items, mesuré) et un payload
-     * `purge.files` d'un seul tenant. Les appelants (« Vider la corbeille », purge automatique)
-     * DOIVENT donc découper en lots de 500 ids (`chunks(ids, 500)`) : un appel = une transaction
-     * = un job `purge.files`.
+     * Permanent deletion in ONE transaction: list of files, `DELETE` (cascades,
+     * FTS, `item` tombstones via trigger) and a `purge.files` job (`item_id NULL`).
+     * Cost: a single `DELETE … IN json_each` (≈ 213 ms for 3,000 items, measured) and a
+     * `purge.files` payload for a single tenant. Callers ("Empty trash", automatic purge)
+     * MUST therefore split into batches of 500 ids (`chunks(ids, 500)`): one call = one transaction
+     * = one `purge.files` job.
      */
     purge(ids: readonly number[], mode: PurgeMode = 'rm'): PurgeResult {
       return db.transaction((): PurgeResult => {
@@ -464,7 +464,7 @@ export function createItemsRepo(db: Database.Database, opts: RepoOptions = {}) {
       })()
     },
 
-    /** Ids des items en corbeille depuis avant `before` (purge automatique). */
+    /** Ids of items in the trash since before `before` (automatic purge). */
     trashedBefore(before: number): number[] {
       return (
         q('SELECT id FROM items WHERE deleted_at IS NOT NULL AND deleted_at < ? ORDER BY id').all(

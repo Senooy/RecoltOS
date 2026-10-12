@@ -1,7 +1,6 @@
 /**
- * Page Bibliothèque : sous-barre (onglets, « Vider la corbeille », curseur de
- * colonnes, tri), rangée de collections (Tout et Enregistrés), grille masonry ; états vides
- * et squelette de chargement.
+ * Library page: sub-bar (tabs, "Empty trash", column slider, sort), collections row
+ * (All and Saved), masonry grid; empty states and loading skeleton.
  */
 import { Download, FileUp } from 'lucide-react'
 import { useRef, useState } from 'react'
@@ -22,7 +21,7 @@ import { ColumnSlider } from './ColumnSlider'
 import { SortMenu } from './SortMenu'
 import { useLibraryItems } from './useLibraryItems'
 
-/** Hauteurs relatives des cartes squelette. */
+/** Relative heights of the skeleton cards. */
 const SKELETON_RATIOS = [1.2, 0.8, 1.5, 1, 0.75, 1.3, 0.9, 1.25, 1.4, 0.7, 1.1, 0.85]
 
 function GridSkeleton({ columns }: { columns: number }) {

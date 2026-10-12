@@ -1,6 +1,6 @@
 /**
- * Accès partagé au pont (handlers IPC `bridge.*`, coordinateur de sync) : serveur, service
- * d'enregistrement, état de l'extension. Renseigné par `bridge/init.ts`.
+ * Shared access to the bridge (IPC handlers `bridge.*`, sync coordinator): server, registration
+ * service, extension state. Filled in by `bridge/init.ts`.
  */
 import type { HelloAck } from '../../shared/bridge/messages'
 import type { BridgeServer } from './server'
@@ -18,7 +18,7 @@ export interface BridgeRuntime {
   inbox: string
   resourcesPath: string
   appRoot: string
-  /** Clients dont l'extension est plus ancienne que celle livrée (`ext.stale`), par `connId`. */
+  /** Clients whose extension is older than the bundled one (`ext.stale`), by `connId`. */
   stale: Set<number>
 }
 
@@ -32,7 +32,7 @@ export function getBridgeRuntime(): BridgeRuntime | null {
   return current
 }
 
-/** Réglages envoyés dans `hello.ack` (fournis par la sync). */
+/** Settings sent in `hello.ack` (provided by sync). */
 export type HelloSettingsProvider = () => HelloAck['settings']
 
 const DEFAULT_SETTINGS: HelloAck['settings'] = {
@@ -53,7 +53,7 @@ export function helloSettings(): HelloAck['settings'] {
   return settingsProvider()
 }
 
-/** `1.2.0` < `1.10.0` (comparaison numérique par segment). */
+/** `1.2.0` < `1.10.0` (numeric comparison per segment). */
 export function isOlderVersion(a: string, b: string): boolean {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0)
   const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0)

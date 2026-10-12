@@ -12,7 +12,7 @@ import {
 describe('synthetic-items', () => {
   const lib = makeSyntheticLibrary()
 
-  it('408 éléments dont 54 posts texte, répartition de référence', () => {
+  it('408 items including 54 text posts, reference distribution', () => {
     expect(REFERENCE_DISTRIBUTION.reduce((a, d) => a + d.n, 0)).toBe(REFERENCE_COUNT)
     expect(lib.items).toHaveLength(408)
     expect(lib.items.filter((i) => i.kind === 'tweet')).toHaveLength(54)
@@ -22,12 +22,12 @@ describe('synthetic-items', () => {
     }
   })
 
-  it('est déterministe et sensible à la graine', () => {
+  it('is deterministic and sensitive to the seed', () => {
     expect(makeSyntheticLibrary()).toEqual(lib)
     expect(makeSyntheticLibrary({ seed: 7 }).items[0]?.uuid).not.toBe(lib.items[0]?.uuid)
   })
 
-  it('uuid uniques, dates décroissantes dans la fenêtre 30/06 → 24/09/2026', () => {
+  it('unique uuids, decreasing dates within the window 30/06 → 24/09/2026', () => {
     expect(new Set(lib.items.map((i) => i.uuid)).size).toBe(408)
     const min = Date.UTC(2026, 5, 29)
     const max = Date.UTC(2026, 8, 25)
@@ -37,7 +37,7 @@ describe('synthetic-items', () => {
     }
   })
 
-  it('les post_meta passent PostMetaSchema v1 et ne contiennent que des URL factices', () => {
+  it('post_meta passes PostMetaSchema v1 and only contains fake URLs', () => {
     const withMeta = lib.items.filter((i) => i.postMeta)
     expect(withMeta.length).toBeGreaterThanOrEqual(54)
     for (const it of withMeta) {
@@ -48,7 +48,7 @@ describe('synthetic-items', () => {
     for (const u of urls) expect(u.startsWith('https://example.test/'), u).toBe(true)
   })
 
-  it('palette : tous sauf les vidéos ; bucket inconnu sans palette', () => {
+  it('palette: all except videos; unknown bucket without palette', () => {
     for (const it of lib.items) {
       if (it.kind === 'video' || it.kind === 'url') {
         expect(it.palette).toBeNull()
@@ -60,14 +60,14 @@ describe('synthetic-items', () => {
     }
   })
 
-  it('17 collections ; 252 appartenances à 408 (≤ 250 éléments distincts)', () => {
+  it('17 collections; 252 memberships for 408 (≤ 250 distinct items)', () => {
     expect(lib.collections).toHaveLength(REFERENCE_COLLECTIONS.length)
     const all = lib.collections.flatMap((c) => c.itemIndexes)
     expect(new Set(all).size).toBeLessThanOrEqual(250)
     expect(all.length).toBeGreaterThan(200)
   })
 
-  it('corbeille et masqués optionnels, jamais en collection', () => {
+  it('trash and hidden items optional, never in a collection', () => {
     const l = makeSyntheticLibrary({ trashed: 9, hidden: 1 })
     expect(liveItems(l)).toHaveLength(408)
     expect(l.items.filter((i) => i.trashedAt !== null)).toHaveLength(9)
@@ -77,7 +77,7 @@ describe('synthetic-items', () => {
       if (it.trashedAt || it.hiddenAt) expect(member.has(it.index)).toBe(false)
   })
 
-  it('count configurable (banc de perf) et somme exacte', () => {
+  it('configurable count (perf bench) and exact sum', () => {
     expect(scaleCounts([1, 1, 1], 10).reduce((a, b) => a + b, 0)).toBe(10)
     expect(makeSyntheticLibrary({ count: 1000 }).items).toHaveLength(1000)
   })

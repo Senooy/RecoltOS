@@ -1,9 +1,9 @@
 /**
- * Identifiants : cookies lus À LA DEMANDE par l'API `cookies`, jamais
- * stockés ni envoyés à l'app (seuls des identifiants de compte non secrets le sont). Gabarits et
- * constantes publiques dans `storage.local` ; jeton d'accès Cosmos (obtenu par `/api/refresh-token`,
- * voir `sync/platforms.ts`) dans `storage.local` aussi, pour que la sync en arrière-plan survive au
- * redémarrage du navigateur.
+ * Credentials: cookies are read ON DEMAND through the `cookies` API, never
+ * stored or sent to the app (only non-secret account identifiers are). Templates and
+ * public constants live in `storage.local`; the Cosmos access token (obtained via
+ * `/api/refresh-token`, see `sync/platforms.ts`) is also kept in `storage.local`, so that
+ * background sync survives a browser restart.
  */
 import type { BridgePlatform } from '../../../src/shared/bridge/constants'
 import { api } from '../lib/api'
@@ -18,7 +18,7 @@ export async function readCookie(p: BridgePlatform, name: string): Promise<strin
   }
 }
 
-/** Tous les cookies d'une plateforme (noms seulement servent aux heuristiques). */
+/** All cookies of a platform (only the names are used by the heuristics). */
 export async function cookieNames(p: BridgePlatform): Promise<string[]> {
   try {
     const all = await api().cookies.getAll({ url: ENDPOINTS[p].origin })
@@ -40,7 +40,7 @@ export async function getLocal<T>(key: string): Promise<T | undefined> {
   return (got as Record<string, unknown> | undefined)?.[key] as T | undefined
 }
 
-/** Lecture typée de `storage.session` (une ou plusieurs clés). */
+/** Typed read of `storage.session` (one or more keys). */
 export async function sessionGet<T extends object>(keys: string | string[]): Promise<Partial<T>> {
   const got: unknown = await api().storage.session.get(keys)
   return got ?? {}

@@ -1,7 +1,7 @@
 /**
- * export > 4 Go (ZIP64) valide par `unzip -t`. Lent et gourmand en disque (≈ 4,3 Go écrits) :
- * opt-in avec `RECOLT_TEST_ZIP_LARGE=1` (ex. `RECOLT_TEST_ZIP_LARGE=1 pnpm exec vitest run
- * tests/unit/data/zip-large.test.ts`). Les originaux sont des fichiers creux (APFS).
+ * export > 4 GB (ZIP64) validated by `unzip -t`. Slow and disk-hungry (≈ 4.3 GB written):
+ * opt-in with `RECOLT_TEST_ZIP_LARGE=1` (e.g. `RECOLT_TEST_ZIP_LARGE=1 pnpm exec vitest run
+ * tests/unit/data/zip-large.test.ts`). The originals are sparse files (APFS).
  */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -12,8 +12,8 @@ import { zipLibrary } from '../../../src/main/workers/media/files'
 
 const enabled = process.env.RECOLT_TEST_ZIP_LARGE === '1'
 
-describe.skipIf(!enabled)('export zip > 4 Go', () => {
-  it('ZIP64 valide, progression complète', { timeout: 900_000 }, async () => {
+describe.skipIf(!enabled)('export zip > 4 GB', () => {
+  it('ZIP64 valid, progress complete', { timeout: 900_000 }, async () => {
     const base = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-zip64-'))
     try {
       const root = path.join(base, 'lib')
@@ -22,7 +22,7 @@ describe.skipIf(!enabled)('export zip > 4 Go', () => {
       for (let i = 0; i < 3; i++) {
         const rel = `items/ab/video-${i}.mp4`
         const fd = fs.openSync(path.join(root, rel), 'w')
-        fs.ftruncateSync(fd, 1_450_000_000) // 3 × 1,45 Go ≈ 4,35 Go
+        fs.ftruncateSync(fd, 1_450_000_000) // 3 × 1.45 GB ≈ 4.35 GB
         fs.closeSync(fd)
         entries.push({ abs: rel, name: rel })
       }

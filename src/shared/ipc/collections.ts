@@ -1,4 +1,4 @@
-/** Contrat `collections.*`. Cycle refusé (`collection_cycle`). */
+/** `collections.*` contract. Cycles refused (`collection_cycle`). */
 import { z } from 'zod'
 import { CollectionNode } from '../dto/collections'
 import { HexColor, Uuid } from '../enums'
@@ -7,7 +7,7 @@ import { Count, Empty, Void, type ContractShape, type EventShape } from './defin
 const Name = z.string().trim().min(1).max(200)
 
 export const collectionsContract = {
-  /** Racines, chaque nœud porte ses `children`. */
+  /** Roots; each node carries its `children`. */
   'collections.tree': { input: Empty, output: z.array(CollectionNode) },
   'collections.create': {
     input: z.object({
@@ -28,7 +28,7 @@ export const collectionsContract = {
     }),
     output: CollectionNode,
   },
-  /** `keepChildren: false` supprime aussi les sous-collections (confirmation UI). */
+  /** `keepChildren: false` also deletes the sub-collections (UI confirmation). */
   'collections.delete': {
     input: z.object({ uuid: Uuid, keepChildren: z.boolean() }),
     output: Count,

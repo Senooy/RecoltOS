@@ -1,17 +1,16 @@
 /**
- * Étagère 3D des collections : fond noir plein cadre + `Starfield`, libellés
- * à y≈104 au pas de 122 px depuis x≈150, couvertures `.cover-face` 410×700 en `rotateY(-35deg)`
- * (média `large`, post texte en `TweetCard cover` blanche, vidéo `preview` muette en boucle : UNE à
- * la fois, celle de la couverture survolée ou, à défaut, la plus proche du centre, et aucune pendant
- * l'entrée en cascade ; jamais l'original). Une seule : dès que deux vidéos jouent à l'écran,
- * Chromium aligne l'affichage sur leur cadence (30 Hz, heuristique « visioconférence » du
- * compositeur) et la chute des tranches comme leur survol passent à une image sur quatre sur un
- * écran 120 Hz. Entrée en
- * cascade (les tranches tombent une à une, `--i` = rang) et survol qui fait sortir la tranche dans
- * son axe : voir `shelf.css`. Molette (verticale ou horizontale) →
- * défilement inertiel de la piste ; ←/→ passent d'une couverture à l'autre, ↵ ouvre, Échap revient
- * à la Bibliothèque (⌘1 passe par le menu). Fin de piste : couverture-contour « + Nouvelle
- * collection ». Mouvement réduit : étagère statique (pas d'inertie, ni scintillement, ni vidéo).
+ * 3D shelf of collections: full-frame black background + `Starfield`, labels at y≈104 in steps
+ * of 122 px from x≈150, `.cover-face` covers 410×700 in `rotateY(-35deg)` (`large` media, text
+ * post in a white `TweetCard cover`, muted looping `preview` video: ONE at a time, that of the
+ * hovered cover or, failing that, the one closest to the centre, and none during the cascade
+ * entrance; never the original). Only one: as soon as two videos play on screen, Chromium aligns
+ * the display on their rate (30 Hz, the compositor's "video call" heuristic), and the drop of the
+ * slices as well as their hover fall to one frame in four on a 120 Hz screen.
+ * Cascade entrance (the slices fall one by one, `--i` = rank) and hover that pulls the slice out
+ * along its axis: see `shelf.css`. Wheel (vertical or horizontal) → inertial scrolling of the
+ * track; ←/→ move from one cover to the next, ↵ opens, Esc returns to the Library (⌘1 goes
+ * through the menu). End of track: outline cover "+ New collection". Reduced motion: static
+ * shelf (no inertia, no flicker, no video).
  */
 import { Plus } from 'lucide-react'
 import {
@@ -38,20 +37,20 @@ import { TweetCard } from '../../grid/cards/TweetCard'
 import { Starfield } from './Starfield'
 import '../../../styles/shelf.css'
 
-/** Géométrie. */
+/** Geometry. */
 export const SHELF_PAD_LEFT = 152
 export const SHELF_STEP = 122
 export const SHELF_LABEL_X = 150
 export const SHELF_LABEL_Y = 104
-/** Vidéos lues en même temps (voir l'en-tête : au-delà d'une, l'affichage tombe à 30 Hz). */
+/** Videos played at the same time (see the header: beyond one, the display drops to 30 Hz). */
 export const MAX_PLAYING = 1
 
-/** Durée de l'entrée en cascade (`shelf.css` : `--i` × 45 ms plafonné à 18, chute de 560 ms). */
+/** Duration of the cascade entrance (`shelf.css`: `--i` × 45 ms capped at 18, 560 ms fall). */
 export function entranceMs(count: number): number {
   return Math.min(Math.max(0, count - 1), 18) * 45 + 560
 }
 
-/** Indices des vidéos à lire : au plus `max`, les plus proches du centre de la fenêtre. */
+/** Indices of the videos to play: at most `max`, the closest to the centre of the window. */
 export function playingIndices(
   isVideo: readonly boolean[],
   scroll: number,
@@ -111,7 +110,7 @@ function CoverContent({ card, play }: { card: ItemCard | undefined; play: boolea
 export default function CollectionShelf() {
   const tree = useCollections((s) => s.tree)
   const navigate = useUi((s) => s.navigate)
-  // Captures et tests (RECOLTOS_E2E) : étagère figée, comme en mouvement réduit.
+  // Captures and tests (RECOLTOS_E2E): shelf frozen, as with reduced motion.
   const reduced = useReducedMotion() || document.documentElement.dataset.e2e === '1'
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [viewport, setViewport] = useState(1280)
@@ -120,11 +119,11 @@ export default function CollectionShelf() {
   const current = useRef(0)
   const raf = useRef(0)
   const [active, setActive] = useState<number | null>(null)
-  // Aucune vidéo pendant la cascade : elle commence une fois les tranches posées.
+  // No video during the cascade: it starts once the slices have landed.
   const [landed, setLanded] = useState(false)
   const coverRefs = useRef<(HTMLButtonElement | null)[]>([])
 
-  const count = tree.length + 1 // + couverture « Nouvelle collection »
+  const count = tree.length + 1 // + "New collection" cover
   const maxScroll = Math.max(0, SHELF_PAD_LEFT + SHELF_STEP * count + 120 - viewport)
 
   useEffect(() => {
@@ -162,7 +161,7 @@ export default function CollectionShelf() {
     scrollTo(target.current + delta)
   }
 
-  /** Amène la couverture `i` dans la fenêtre (marge confortable de chaque côté). */
+  /** Brings cover `i` into the window (comfortable margin on each side). */
   const reveal = useCallback(
     (i: number) => {
       const left = SHELF_PAD_LEFT + SHELF_STEP * i - 180
@@ -231,7 +230,7 @@ export default function CollectionShelf() {
     if (reduced) return
     const id = window.setTimeout(() => setLanded(true), entranceMs(count) + 60)
     return () => window.clearTimeout(id)
-    // Une fois, au montage : la cascade ne se rejoue pas quand l'arbre change.
+    // Once, on mount: the cascade does not replay when the tree changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reduced])
 
@@ -239,7 +238,7 @@ export default function CollectionShelf() {
   const playing = useMemo(() => {
     if (reduced || !landed) return new Set<number>()
     const isVideo = covers.map((c) => c?.kind === 'video' && c.previewUrl !== null)
-    // La couverture survolée (ou focalisée) joue sa vidéo, seule ; sinon la plus proche du centre.
+    // The hovered (or focused) cover plays its video alone; otherwise the closest to the centre.
     if (active !== null && isVideo[active]) return new Set([active])
     return playingIndices(isVideo, scroll, viewport)
   }, [covers, scroll, viewport, reduced, landed, active])
@@ -323,7 +322,7 @@ export default function CollectionShelf() {
           onClick={() => void createCollection()}
         >
           <span className="cover-face cover-face-new" />
-          {/* Libellé à plat sur le créneau visible (le texte d'une face 3D vide n'est pas peint). */}
+          {/* Label laid flat on the visible slot (the text of an empty 3D face is not painted). */}
           <span className="shelf-new-label pointer-events-none absolute inset-y-0 left-0 right-0 flex flex-col items-center justify-center gap-2 px-2 text-center text-[13px] font-medium leading-4 text-[rgba(255,255,255,.55)]">
             <Plus size={24} strokeWidth={1.5} />
             {tr.collection.new}

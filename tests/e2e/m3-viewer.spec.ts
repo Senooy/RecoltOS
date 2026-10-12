@@ -1,7 +1,7 @@
 /**
- * M3 : vue détail — ouverture depuis la grille, compteur = position dans la liste
- * d'origine, ←/→, Échap rend le focus à la carte, note enregistrée (800 ms), tag ajouté en base,
- * panneau Détails (⌘I), menu natif, pipette (Échap annule, clic = couleur copiée).
+ * M3: detail view — opening from the grid, counter = position in the list
+ * of origin, ←/→, Escape returns focus to the card, note saved (800 ms), tag added to the database,
+ * Details panel (⌘I), native menu, eyedropper (Escape cancels, click = color copied).
  */
 import type { ElectronApplication } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -18,10 +18,10 @@ async function clickMenu(app: ElectronApplication, id: string): Promise<boolean>
   }, id)
 }
 
-test.describe('vue détail', () => {
+test.describe('detail view', () => {
   test.use({ demoLibrary: { count: 30, collections: 3 } })
 
-  test('ouverture, navigation, fermeture et focus', async ({ page }) => {
+  test('opening, navigation, closing and focus', async ({ page }) => {
     const cards = page.locator(`${t('grid')} ${t('card')}`)
     await expect(cards.first()).toBeVisible()
     const total = await page.locator(`${t('grid')} ${t('card')}`).count()
@@ -33,7 +33,7 @@ test.describe('vue détail', () => {
     await expect(detail).toHaveAttribute('data-uuid', uuid3!)
     await expect(page.locator(t('viewer-counter'))).toHaveText(new RegExp(`^3 / \\d+$`))
     expect(total).toBeGreaterThan(3)
-    // Panneau Détails : 300 pt à droite 18 / haut 62 / bas 18.
+    // Details panel: 300 pt on the right, 18 / top 62 / bottom 18.
     const panel = await page.locator(t('details-panel')).boundingBox()
     expect(panel!.width).toBe(300)
     expect(Math.round(panel!.x + panel!.width)).toBe(1280 - 18)
@@ -54,7 +54,7 @@ test.describe('vue détail', () => {
       .toBe(uuid4)
   })
 
-  test('fermeture : aucune vidéo ne continue de jouer (ni avec du son) hors du Viewer', async ({
+  test('closing: no video keeps playing (not even with sound) outside the Viewer', async ({
     page,
   }) => {
     const card = page.locator(`${t('grid')} ${t('card')}[data-kind="video"]`).first()
@@ -64,7 +64,7 @@ test.describe('vue détail', () => {
     await expect(detail).toBeVisible()
     const video = page.locator(t('viewer-video'))
     await expect(video).toBeVisible()
-    // Lecture réelle, avec du son (préférence par défaut : non muet).
+    // Real playback, with sound (default preference: not muted).
     await video.evaluate(async (v: HTMLVideoElement) => {
       v.muted = false
       await v.play()
@@ -80,19 +80,19 @@ test.describe('vue détail', () => {
         () => [...document.querySelectorAll('video')].filter((v) => !v.paused && !v.muted).length,
       )
 
-    // Dès le début de l'animation de fermeture : plus de lecture, même si on insiste (Espace).
+    // From the start of the closing animation: no more playback, even if pressed again (Space).
     await page.keyboard.press('Escape')
     expect(await playing()).toBe(0)
     await page.keyboard.press('Space')
     expect(await audible()).toBe(0)
     await expect(detail).toHaveCount(0)
     expect(await playing()).toBe(0)
-    // Le flux est libéré : plus aucun <video> sonore ni en lecture dans le document.
+    // The stream is released: no sound-playing or playing <video> left in the document.
     await page.waitForTimeout(400)
     expect(await audible()).toBe(0)
     expect(await playing()).toBe(0)
 
-    // Un <video> non muet ne peut pas démarrer hors du Viewer (garde globale).
+    // A non-muted <video> cannot start outside the Viewer (global guard).
     const guarded = await page.evaluate(async (url) => {
       const v = document.createElement('video')
       v.src = url
@@ -107,7 +107,7 @@ test.describe('vue détail', () => {
     expect(guarded).toBe(true)
   })
 
-  test('note (800 ms), tag et panneau ⌘I modifient la base', async ({
+  test('note (800 ms), tag and ⌘I panel modify the database', async ({
     app,
     page,
     openDbReadonly,
@@ -141,20 +141,20 @@ test.describe('vue détail', () => {
       .toEqual({ n: 1 })
     await expect(page.locator(t('detail-tag'))).toContainText(['# essai-viewer'])
 
-    // ⌘I (menu natif) masque puis réaffiche le panneau.
+    // ⌘I (native menu) hides then shows the panel again.
     await page.locator(t('viewer-stage')).click({ position: { x: 20, y: 300 } })
     expect(await clickMenu(app, 'toggleDetails')).toBe(true)
     await expect(page.locator(t('details-panel'))).toHaveCount(0)
     expect(await clickMenu(app, 'toggleDetails')).toBe(true)
     await expect(page.locator(t('details-panel'))).toBeVisible()
 
-    // Vue marquée.
+    // View recorded.
     await expect
       .poll(() => db.prepare('SELECT view_count FROM items WHERE uuid = ?').get(uuid))
       .not.toEqual({ view_count: 0 })
   })
 
-  test('pastille du panneau → Recherche filtrée par cette couleur', async ({ page }) => {
+  test('panel swatch → Search filtered by this color', async ({ page }) => {
     const card = page.locator(`${t('grid')} ${t('card')}[data-kind="image"]`).first()
     await expect(card).toBeVisible()
     await card.click()
@@ -168,7 +168,7 @@ test.describe('vue détail', () => {
     await expect(page.locator(t('search-count'))).toBeVisible()
   })
 
-  test('pipette : Échap annule, un clic sur le média copie la couleur', async ({ page }) => {
+  test('eyedropper: Escape cancels, a click on the media copies the color', async ({ page }) => {
     const card = page.locator(`${t('grid')} ${t('card')}[data-kind="image"]`).first()
     await expect(card).toBeVisible()
     await card.click()

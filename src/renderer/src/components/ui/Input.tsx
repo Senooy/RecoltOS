@@ -1,7 +1,7 @@
 /**
- * `Input` : champ de 34 px, rayon 10 (Réglages) ou 8 + fond sombre
- * (variante `viewer`, panneau Détails). Survol : bordure `--border-strong`. Le focus clavier
- * vient de `:focus-visible` (globals.css), jamais d'un variant Tailwind « focus ».
+ * `Input`: 34 px field, radius 10 (Settings) or 8 + dark background
+ * (`viewer` variant, Details panel). Hover: border `--border-strong`. Keyboard focus
+ * comes from `:focus-visible` (globals.css), never from a Tailwind "focus" variant.
  */
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ComponentProps, ReactNode } from 'react'
@@ -32,7 +32,7 @@ export interface InputProps
     Omit<ComponentProps<'input'>, 'size'>,
     Omit<VariantProps<typeof inputVariants>, 'invalid'> {
   invalid?: boolean
-  /** Élément à droite dans le champ (ex. bouton « ouvrir »). */
+  /** Element on the right inside the field (e.g. "open" button). */
   trailing?: ReactNode
 }
 

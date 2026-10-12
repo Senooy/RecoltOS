@@ -1,9 +1,9 @@
 /**
- * File de jobs unique : table `jobs`, convention `priority DESC`.
+ * Single job queue: `jobs` table, `priority DESC` convention.
  */
 import { z } from 'zod'
 
-/** Priorités : plus grand = plus urgent. */
+/** Priorities: higher = more urgent. */
 export const JOB_PRIORITY = {
   MANUAL: 100,
   INTERACTIVE: 80,
@@ -30,13 +30,13 @@ export type JobType = z.output<typeof JobType>
 export const JobState = z.enum(['queued', 'running', 'done', 'failed', 'cancelled'])
 export type JobState = z.output<typeof JobState>
 
-/** Charge utile commune : `failedOn[]` garde les fournisseurs/CDN déjà tentés. */
+/** Common payload: `failedOn[]` keeps the providers/CDNs already tried. */
 export const JobPayloadBase = z.looseObject({
   failedOn: z.array(z.string()).default([]),
 })
 export type JobPayloadBase = z.output<typeof JobPayloadBase>
 
-/** Ligne de `jobs` telle que la voit un handler. */
+/** Row of `jobs` as seen by a handler. */
 export interface JobRecord {
   id: number
   type: JobType
@@ -57,12 +57,12 @@ export interface JobError {
   message: string
 }
 
-/** Résultat d'un handler : la file applique l'état (done / nouvelle tentative / échec). */
+/** Result of a handler: the queue applies the state (done / retry / failure). */
 export type JobOutcome =
   | { status: 'done' }
   | { status: 'retry'; retryAt: number; error: JobError }
   | { status: 'failed'; error: JobError }
-  /** Remis en file à `retryAt` SANS consommer de tentative (budget, fournisseur indisponible). */
+  /** Re-queued at `retryAt` WITHOUT consuming an attempt (budget, provider unavailable). */
   | { status: 'defer'; retryAt: number; error?: JobError }
 
 export const JobsByTypeStatus = z.object({

@@ -1,11 +1,11 @@
 /**
- * Accès aux API d'extension pour Chromium (`chrome.*`) et Firefox (`browser.*`), formes à promesses
- * uniquement (pas de polyfill). Firefox expose aussi `chrome.*` mais seul `browser.*`
- * renvoie des promesses partout.
+ * Access to the extension APIs for Chromium (`chrome.*`) and Firefox (`browser.*`), promise-only forms
+ * (no polyfill). Firefox also exposes `chrome.*`, but only `browser.*`
+ * returns promises everywhere.
  */
 declare const browser: typeof chrome | undefined
 
-/** Cible du build (`__RECOLTOS_TARGET__` remplacé par esbuild). */
+/** Build target (`__RECOLTOS_TARGET__` replaced by esbuild). */
 declare const __RECOLTOS_TARGET__: 'chromium' | 'firefox'
 
 export const TARGET: 'chromium' | 'firefox' =
@@ -22,7 +22,7 @@ export function api(): typeof chrome {
   )
 }
 
-/** Message d'erreur du dernier appel (Chromium `runtime.lastError`). */
+/** Error message of the last call (Chromium `runtime.lastError`). */
 export function lastErrorMessage(): string | undefined {
   try {
     return api().runtime.lastError?.message

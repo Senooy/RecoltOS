@@ -1,8 +1,8 @@
 /**
- * Interface en anglais : réglage `ui.language: 'en'` (le système simulé reste en français, le
- * réglage prime). Aucun texte français sur la Bibliothèque ni dans les sections des Réglages
- * (texte visible, `aria-label`, `title`, `placeholder`), menu natif en anglais, puis bascule à chaud
- * vers le français et retour depuis Réglages › Apparence, sans redémarrage.
+ * English UI: `ui.language: 'en'` setting (the simulated system stays in French, the
+ * setting wins). No French text on the Library nor in the Settings sections
+ * (visible text, `aria-label`, `title`, `placeholder`), native menu in English, then hot switch
+ * to French and back from Settings › Appearance, without restart.
  */
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -11,7 +11,7 @@ import { expect, test } from '@playwright/test'
 import { launchApp } from '../helpers/electron-app'
 import { makeTmpDir, removeTmpDir } from '../helpers/tmpdir'
 
-/** Lettres accentuées et mots d'interface français (hors « Français » du sélecteur de langue). */
+/** Accented letters and French UI words (except "Français" in the language selector). */
 const FRENCH =
   /[àâçéèêëîïôûùœ«»]| [:;?!](\s|$)|\b(Bibliothèques?|Réglages|Corbeille|Masqués|Enregistrés|Non classés|Tout|Rechercher|Ajouter|Apparence|Thème|Stockage|Données|Fermer|Langue|Synchronisation|Importer|Créer|Supprimer|Ouvrir|Vider|Aucun|Aucune|Tes|Ton|Ta)\b/
 
@@ -36,7 +36,7 @@ function frenchIn(texts: string[]): string[] {
 const menuLabels = (app: ElectronApplication) =>
   app.evaluate(({ Menu }) => Menu.getApplicationMenu()?.items.map((i) => i.label))
 
-test('anglais : Bibliothèque et Réglages sans texte français, bascule à chaud', async () => {
+test('English: Library and Settings without French text, hot switch', async () => {
   test.setTimeout(90_000)
   const userData = makeTmpDir('userdata-en')
   writeFileSync(join(userData, 'prefs.json'), JSON.stringify({ ui: { language: 'en' } }))
@@ -45,7 +45,7 @@ test('anglais : Bibliothèque et Réglages sans texte français, bascule à chau
     const { app, page } = handle
     await expect(page.locator('[data-testid="seg-library"]')).toHaveText(/Library/)
     await expect.poll(() => page.evaluate(() => document.documentElement.lang)).toBe('en')
-    // Bibliothèque montée (onglets, état vide) avant de relire les textes.
+    // Library mounted (tabs, empty state) before re-reading the texts.
     await expect(page.getByRole('tablist')).toBeVisible()
     await expect(page.getByText('Your library is empty')).toBeVisible()
     expect(frenchIn(await visibleTexts(page))).toEqual([])
@@ -70,7 +70,7 @@ test('anglais : Bibliothèque et Réglages sans texte français, bascule à chau
       expect(found, `Réglages › ${section}`).toEqual([])
     }
 
-    // Bascule à chaud : Réglages › Apparence › Langue, la modale reste ouverte.
+    // Hot switch: Settings › Appearance › Language, the modal stays open.
     await page.locator('[data-testid="settings-nav-appearance"]').click()
     const select = page.locator('[data-testid="settings-language"]')
     await expect(select).toHaveValue('en')

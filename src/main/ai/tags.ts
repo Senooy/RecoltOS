@@ -1,7 +1,7 @@
 /**
- * Tags IA : normalisation, mots vides, vocabulaire contrôlé, correspondance EN → FR.
- * Les tags de source (`x`, `instagram`, `cosmos`, `bookmark`) sont des chips virtuelles :
- * ils restent dans `STOP` pour que l'IA ne les produise pas.
+ * AI tags: normalization, stop words, controlled vocabulary, EN → FR mapping.
+ * Source tags (`x`, `instagram`, `cosmos`, `bookmark`) are virtual chips:
+ * they stay in `STOP` so the AI does not produce them.
  */
 import type Database from 'better-sqlite3'
 import { isReservedTagName } from '../db/repos/tags'
@@ -80,7 +80,7 @@ export const SEED_TAGS: readonly string[] = [
   'art-numerique',
 ]
 
-/** Tags importés anglais → français ; ne s'applique qu'aux tags importés. */
+/** Imported English tags → French; only applies to imported tags. */
 export const TAG_MAP_EN_FR: Readonly<Record<string, string>> = {
   typography: 'typographie',
   branding: 'branding',
@@ -104,7 +104,7 @@ export const VOCABULARY_MAX = 60
 export const MAX_TAGS = 6
 export const MAX_NEW_TAGS = 2
 
-/** `SEED_TAGS` ∪ 40 tags les plus utilisés (hors noms réservés), 60 au plus. */
+/** `SEED_TAGS` ∪ the 40 most used tags (excluding reserved names), 60 at most. */
 export function buildVocabulary(db: Database.Database): string[] {
   const rows = db
     .prepare(
@@ -127,8 +127,9 @@ export function buildVocabulary(db: Database.Database): string[] {
 }
 
 /**
- * Filtre la proposition du modèle : normalisée, dédoublonnée, sans mots vides ni noms réservés,
- * au plus `MAX_NEW_TAGS` hors vocabulaire (les suivants sont éliminés), `MAX_TAGS` au total.
+ * Filters the model's proposal: normalized, de-duplicated, without stop words or reserved names,
+ * at most `MAX_NEW_TAGS` outside the vocabulary (the following ones are dropped),
+ * `MAX_TAGS` in total.
  */
 export function filterTags(raw: readonly string[], vocabulary: readonly string[]): string[] {
   const vocab = new Set(vocabulary.map(normalizeTag))

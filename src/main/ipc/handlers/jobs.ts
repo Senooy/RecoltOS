@@ -1,6 +1,6 @@
 /**
- * Handlers `jobs.*` : état par type, « Réessayer » les échecs, pause/reprise
- * (par type ou globale, persistée dans `settings['jobs.paused']`).
+ * `jobs.*` handlers: state per type, "Retry" for failures, pause/resume
+ * (per type or global, persisted in `settings['jobs.paused']`).
  */
 import { AppError } from '../../../shared/errors'
 import { getJobQueue, requireJobServices } from '../../jobs/runtime'

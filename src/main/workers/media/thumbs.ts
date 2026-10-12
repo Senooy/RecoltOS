@@ -1,7 +1,7 @@
 /**
- * Dérivés image par sharp : `thumbs/` 800w webp q80, `large/` 1440w webp,
- * `display/` webp 2048 (HEIC, HEIF, TIFF, PSD). Première image seulement pour une animation,
- * orientation EXIF appliquée, jamais d'agrandissement. L'original n'est jamais réécrit.
+ * Image derivatives via sharp: `thumbs/` 800w webp q80, `large/` 1440w webp,
+ * `display/` webp 2048 (HEIC, HEIF, TIFF, PSD). First frame only for an animation,
+ * EXIF orientation applied, never enlarged. The original is never rewritten.
  */
 import sharp, { type ResizeOptions, type WebpOptions } from 'sharp'
 import { AppError } from '../../../shared/errors'
@@ -11,7 +11,7 @@ import { withReadable } from './foreign'
 
 export const THUMB = { width: 800, quality: 80, effort: 4 } as const
 export const LARGE = { width: 1440, quality: 82, effort: 4 } as const
-/** Plafond du format WebP sur chaque côté (images très hautes : captures pleine page, infographies). */
+/** WebP format limit on each side (very tall images: full-page captures, infographics). */
 export const WEBP_MAX_EDGE = 16383
 export const DISPLAY = { maxEdge: 2048, quality: 85, effort: 4 } as const
 
@@ -109,7 +109,7 @@ export async function makeDisplay(
 
 export const AVATAR = { size: 128, quality: 86 } as const
 
-/** Avatar d'auteur : carré 128 px recadré au centre, JPEG (`avatars/<platform>/<k>.jpg`). */
+/** Author avatar: 128 px square cropped at the center, JPEG (`avatars/<platform>/<k>.jpg`). */
 export async function makeAvatar(
   a: { src: string; dst: string; size: 128 },
   tools: MediaTools,

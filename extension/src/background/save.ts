@@ -1,7 +1,7 @@
 /**
- * Enregistrement depuis l'extension : menu contextuel, raccourci, popup → `save.create`.
- * Images `blob:` / `data:` lues dans la page : ≤ 8 Mio inline, jusqu'à 200 Mo en `media.chunk` de
- * 8 Mio (app ouverte), au-delà refus. Toast dans la page, badge ✓ et notification en secours.
+ * Saving from the extension: context menu, shortcut, popup → `save.create`.
+ * `blob:` / `data:` images read in the page: ≤ 8 MiB inline, up to 200 MB in `media.chunk` chunks of
+ * 8 MiB (app open); beyond that, refused. Toast in the page, ✓ badge and fallback notification.
  */
 import {
   CHUNK_BYTES,
@@ -14,14 +14,14 @@ import { BridgeError } from './native'
 import { xt, type ExtMessages } from '../lib/i18n'
 import { probeBlob, readBlobChunk, type PageMeta } from './page-functions'
 
-/** Textes des toasts dans la langue active (chaque lecture passe par `xt()`). */
+/** Toast texts in the active language (each read goes through `xt()`). */
 export const TOAST: ExtMessages['toast'] = new Proxy({} as ExtMessages['toast'], {
   get: (_t, key: string) => xt().toast[key as keyof ExtMessages['toast']],
 })
 
 export interface SaveDeps {
   bridge: Pick<NativeBridge, 'request' | 'post' | 'state'>
-  /** `scripting.executeScript` dans l'onglet (fonction sérialisée). */
+  /** `scripting.executeScript` in the tab (serialized function). */
   exec<A extends unknown[], R>(tabId: number, fn: (...a: A) => R, args: A): Promise<Awaited<R>>
   captureTab(windowId: number | undefined): Promise<string | null>
   pageMeta(tabId: number): Promise<PageMeta | null>
@@ -53,7 +53,7 @@ export type SaveOutcome = SaveAck | { status: 'refused'; error: string }
 
 const isHttp = (u: string | undefined) => !!u && /^https?:\/\//i.test(u)
 
-/** Contexte du clic → requête (sans le binaire). `null` : type non pris en charge. */
+/** Click context → request (without the binary). `null`: type not supported. */
 export function baseRequest(info: MenuInfo, tab: TabLike): SaveRequest | null {
   const pageUrl = info.pageUrl ?? tab.url ?? ''
   if (!isHttp(pageUrl)) return null
@@ -96,7 +96,7 @@ async function send(deps: SaveDeps, req: SaveRequest): Promise<SaveOutcome> {
   }
 }
 
-/** Lit un `blob:` / `data:` dans la page puis l'envoie inline ou par morceaux. */
+/** Reads a `blob:` / `data:` in the page, then sends it inline or in chunks. */
 async function withBinary(
   deps: SaveDeps,
   tabId: number,
@@ -126,7 +126,7 @@ async function withBinary(
   return { ...rest, upload: { id, mime, size } }
 }
 
-/** Enregistre ce qui a été cliqué ; affiche le toast ; rend l'accusé. */
+/** Saves what was clicked; shows the toast; returns the acknowledgement. */
 export async function saveFromClick(
   deps: SaveDeps,
   info: MenuInfo,

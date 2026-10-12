@@ -1,7 +1,7 @@
 /**
- * Port native messaging vers l'hôte RecoltOS : connexion, classification des
- * erreurs de déconnexion, reconnexion avec backoff (1 à 60 s), requêtes avec délai, distribution des
- * messages de l'app. Essaie `com.recoltos.host` puis `com.recoltos.host.dev` (app de développement).
+ * Port native messaging to the RecoltOS host: connection, classification of
+ * disconnect errors, reconnection with backoff (1 to 60 s), requests with timeout, dispatch of
+ * app messages. Tries `com.recoltos.host`, then `com.recoltos.host.dev` (development app).
  */
 import {
   BRIDGE_PROTOCOL_VERSION,
@@ -21,7 +21,7 @@ export type BridgeState =
   | 'host_exited'
   | 'protocol_mismatch'
 
-/** Classe le message d'erreur d'une déconnexion (Chrome `lastError`, Firefox `port.error`). */
+/** Classifies the error message of a disconnection (Chrome `lastError`, Firefox `port.error`). */
 export function classifyDisconnect(message: string | undefined): BridgeState {
   const m = (message ?? '').toLowerCase()
   if (m.includes('not found') || m.includes('no such native application')) return 'host_missing'
@@ -42,7 +42,7 @@ type Listener = (m: Envelope) => void
 
 export interface NativeBridgeOptions {
   hostNames?: string[]
-  /** Contenu du `hello` (appelé à chaque connexion de l'app). */
+  /** Content of the `hello` (sent on each app connection). */
   hello: () => Promise<PayloadOf<'hello'>>
   setTimer?: (fn: () => void, ms: number) => unknown
   clearTimer?: (t: unknown) => void
@@ -90,7 +90,7 @@ export class NativeBridge {
     for (const fn of this.stateListeners) fn(s)
   }
 
-  /** Connexion (idempotente). */
+  /** Connect (idempotent). */
   connect(): void {
     if (this.port) return
     if (this.retry) {
@@ -112,7 +112,7 @@ export class NativeBridge {
       this.port = null
       this.onDisconnect(p.error?.message ?? port.error?.message ?? lastErrorMessage())
     })
-    // L'hôte répondra `app.status` ; le `hello` part dès que l'app est connectée.
+    // The host will reply with `app.status`; the `hello` is sent as soon as the app is connected.
     void this.sendHello()
   }
 
@@ -123,7 +123,7 @@ export class NativeBridge {
       w.reject(new BridgeError('DISCONNECTED'))
       this.waiters.delete(id)
     }
-    // Hôte absent sous ce nom : on essaie le suivant tout de suite (une fois par tour).
+    // Host not found under this name: try the next one right away (once per turn).
     if (s === 'host_missing' && this.nameIndex < this.names.length - 1) {
       this.nameIndex += 1
       this.connect()
@@ -139,7 +139,7 @@ export class NativeBridge {
     }, delay)
   }
 
-  /** Reconnexion immédiate (alarme `watchdog`, réveil du script d'arrière-plan). */
+  /** Immediate reconnection (`watchdog` alarm, background script wake-up). */
   ensure(): void {
     if (!this.port && !this.retry) this.connect()
   }
@@ -148,7 +148,7 @@ export class NativeBridge {
     try {
       this.post('hello', await this.opts.hello())
     } catch {
-      // port fermé entre-temps : nouvel essai à la reconnexion
+      // port closed in the meantime: retry on reconnection
     }
   }
 
@@ -161,7 +161,7 @@ export class NativeBridge {
     return id
   }
 
-  /** Envoie et attend la réponse (`re`) ; une réponse `error` rejette avec son code. */
+  /** Sends and waits for the reply (`re`); an `error` reply rejects with its code. */
   request<T extends MessageType>(
     type: T,
     payload: PayloadOf<T>,
@@ -231,7 +231,7 @@ export class NativeBridge {
       try {
         fn(m)
       } catch {
-        // un gestionnaire défaillant n'interrompt pas les autres
+        // a failing handler does not interrupt the others
       }
     }
   }

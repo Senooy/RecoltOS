@@ -1,6 +1,6 @@
 /**
- * Racine React : coque `AppShell` + ponts transverses (prefs, vidage avant fermeture,
- * nettoyage du glisser interne).
+ * React root: `AppShell` shell + cross-cutting bridges (prefs, flush before close,
+ * cleanup of the internal drag).
  */
 import { useEffect, useState } from 'react'
 import { installInternalDragCleanup } from './lib/dnd'
@@ -23,13 +23,13 @@ function useDarkTheme(): boolean {
   return dark
 }
 
-/** StrictMode exécute les effets deux fois en dev : la métrique n'est écrite qu'une fois. */
+/** StrictMode runs effects twice in dev: the metric is written only once. */
 let appMountedMarked = false
 
 export function App() {
   const dark = useDarkTheme()
-  // Changement de langue : la coque est remontée (`key`), tout le texte suit sans redémarrage.
-  // Route, calque (Réglages) et sélection vivent dans des stores : ils sont conservés.
+  // Language change: the shell is remounted (`key`), all text follows without restart.
+  // Route, layer (Settings) and selection live in stores: they are kept.
   const lang = useUiLang()
 
   useEffect(() => {

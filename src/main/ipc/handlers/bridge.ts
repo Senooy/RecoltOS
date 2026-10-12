@@ -1,6 +1,6 @@
 /**
- * Handlers `bridge.*` : clients connectés, navigateurs, extension embarquée,
- * coexistence GatherOS, (dés)installation des manifests natifs.
+ * `bridge.*` handlers: connected clients, browsers, embedded extension,
+ * GatherOS coexistence, (un)installation of the native manifests.
  */
 import { shell } from 'electron'
 import { existsSync, readdirSync } from 'node:fs'
@@ -51,7 +51,7 @@ function home(): string {
   return getBridgeRuntime()?.home ?? os.homedir()
 }
 
-/** Extension Firefox signée la plus récente (`dist-extension/signed/*.xpi` ou embarquée). */
+/** Most recent signed Firefox extension (`dist-extension/signed/*.xpi` or embedded). */
 function signedXpi(rt: BridgeRuntime): string | null {
   const dirs = rt.isPackaged
     ? [path.join(rt.resourcesPath, 'extension')]
@@ -64,7 +64,7 @@ function signedXpi(rt: BridgeRuntime): string | null {
         .pop()
       if (xpi) return path.join(d, xpi)
     } catch {
-      // dossier absent
+      // folder missing
     }
   }
   return null

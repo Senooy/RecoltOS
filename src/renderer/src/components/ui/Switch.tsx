@@ -1,5 +1,5 @@
 /**
- * `Switch` : 34×20, piste `--switch-on` / `--switch-off`, pastille Ø 16, 160 ms.
+ * `Switch`: 34×20, track `--switch-on` / `--switch-off`, knob Ø 16, 160 ms.
  */
 import { Switch as SwitchPrimitive } from 'radix-ui'
 import type { ComponentProps } from 'react'
@@ -7,8 +7,8 @@ import { cn } from '../../lib/cn'
 import './ui.css'
 
 /**
- * Nom accessible OBLIGATOIRE (typage) : `aria-label`, ou `aria-labelledby` quand un `<label>`
- * visible est associé. Le contrôle ne compile pas sans l'un des deux.
+ * Accessible name REQUIRED (typing): `aria-label`, or `aria-labelledby` when a `<label>`
+ * visible is associated. The control does not compile without one of the two.
  */
 export type SwitchProps = Omit<ComponentProps<typeof SwitchPrimitive.Root>, 'children'> &
   (

@@ -1,94 +1,94 @@
 /**
- * Sortie commune des parseurs de sync.
+ * Common output of the sync parsers.
  *
- * Les parseurs sont des fonctions PURES : pas de réseau, pas d'horloge, pas d'exception. Ils
- * reçoivent le `json` brut d'un `sync.page` (ou d'un `capture.passive` / `item.data`) et rendent
- * soit une page normalisée, soit une erreur classée. Les URL distantes produites ici sont des
- * DONNÉES pour le téléchargeur de l'app : elles vivent en base (`post_meta`, jobs) et ne
- * partent jamais telles quelles vers le renderer (qui reçoit `PostView`).
+ * The parsers are PURE functions: no network, no clock, no exception. They
+ * receive the raw `json` of a `sync.page` (or of a `capture.passive` / `item.data`) and return
+ * either a normalized page or a classified error. The remote URLs produced here are
+ * DATA for the app's downloader: they live in the database (`post_meta`, jobs) and never
+ * go to the renderer as-is (which receives `PostView`).
  */
 import type { BridgePlatform } from '../../../shared/bridge/constants'
 import type { PostMeta } from '../../../shared/post-meta'
 
 export type SyncPlatform = BridgePlatform
 
-/** Préfixe de `source_key` par plateforme : `x:<rest_id>`, `ig:<code>`, `cosmos:<id>`. */
+/** `source_key` prefix per platform: `x:<rest_id>`, `ig:<code>`, `cosmos:<id>`. */
 export const SOURCE_KEY_PREFIX: Readonly<Record<SyncPlatform, string>> = {
   x: 'x',
   instagram: 'ig',
   cosmos: 'cosmos',
 }
 
-/** Auteur normalisé : handle SANS `@`, avatar https (X : `_400x400`). */
+/** Normalized author: handle WITHOUT `@`, https avatar (X: `_400x400`). */
 export interface NormalizedAuthor {
-  /** Identifiant numérique de la plateforme (X `rest_id`, IG `pk`), si connu. */
+  /** Numeric platform identifier (X `rest_id`, IG `pk`), if known. */
   id: string | null
   name: string | null
   handle: string | null
   avatarUrl: string | null
 }
 
-/** Un média à télécharger, dans l'ordre de la publication (`media[0]` = fichier principal). */
+/** A media item to download, in publication order (`media[0]` = main file). */
 export interface NormalizedMedia {
   type: 'image' | 'video'
   /**
-   * Meilleure URL directe : photo X `name=orig`, mp4 au plus haut débit, IG plus grande variante,
-   * Cosmos original (sans `?format=webp`). `null` si la vidéo n'existe qu'en HLS.
+   * Best direct URL: X photo `name=orig`, highest-bitrate mp4, the largest IG variant,
+   * Cosmos original (without `?format=webp`). `null` if the video only exists in HLS.
    */
   url: string | null
-  /** URL de repli si l'originale échoue (Cosmos : `?format=jpeg`). */
+  /** Fallback URL if the original fails (Cosmos: `?format=jpeg`). */
   fallbackUrl: string | null
-  /** Liste de lecture HLS (`.m3u8`), si présente. */
+  /** HLS playlist (`.m3u8`), if present. */
   hlsUrl: string | null
-  /** Vrai si seule la variante HLS existe : le téléchargeur passe par ffmpeg `-c copy`. */
+  /** True if only the HLS variant exists: the downloader goes through ffmpeg `-c copy`. */
   hlsOnly: boolean
   posterUrl: string | null
   width: number | null
   height: number | null
   durationMs: number | null
-  /** GIF animé X (vidéo muette en boucle). */
+  /** Animated X GIF (looping silent video). */
   gif: boolean
 }
 
 export interface XPostExtra {
   platform: 'x'
-  /** `sortIndex` de l'entrée de timeline (snowflake, plus grand = plus récent). */
+  /** `sortIndex` of the timeline entry (snowflake, larger = more recent). */
   sortIndex: string | null
   conversationId: string | null
   inReplyToId: string | null
   inReplyToHandle: string | null
-  /** Réponse de l'auteur à lui-même (fil). Le parent n'est pas dans la page des favoris. */
+  /** Author replying to themselves (thread). The parent is not in the bookmarks page. */
   selfReply: boolean
-  /** Favori sur un repost : le contenu (et la clé) est celui de l'original. */
+  /** Bookmark of a repost: the content (and the key) is that of the original. */
   retweetedBy: NormalizedAuthor | null
   retweetId: string | null
-  /** Le tweet cité existe mais est indisponible (tombstone). */
+  /** The quoted tweet exists but is unavailable (tombstone). */
   quotedUnavailable: boolean
-  /** Texte long (`note_tweet`) utilisé à la place de `full_text`. */
+  /** Long text (`note_tweet`) used in place of `full_text`. */
   noteTweet: boolean
 }
 
 export interface InstagramPostExtra {
   platform: 'instagram'
-  /** `pk` numérique du média (sert à `media/<pk>/info/` pour `item.refresh`). */
+  /** Numeric `pk` of the media (used for `media/<pk>/info/` by `item.refresh`). */
   pk: string | null
-  /** `saved_collection_ids` (mappage éventuel vers des collections RecoltOS). */
+  /** `saved_collection_ids` (optional mapping to RecoltOS collections). */
   igCollections: string[]
   productType: string | null
-  /** 1 image, 2 vidéo, 8 carrousel. */
+  /** 1 image, 2 video, 8 carousel. */
   mediaType: number
-  /** Expiration la plus proche des URL signées (`oe=` hexadécimal), en ms, si lisible. */
+  /** Nearest expiry of the signed URLs (hexadecimal `oe=`), in ms, if readable. */
   expiresAt: number | null
 }
 
 export interface CosmosPostExtra {
   platform: 'cosmos'
-  /** Date d'ajout à Cosmos (`createdAt`), en ms. */
+  /** Date added to Cosmos (`createdAt`), in ms. */
   savedAt: number | null
-  /** Tuile site web : URL du site (le `kind` est alors `url`). */
+  /** Website tile: site URL (the `kind` is then `url`). */
   linkUrl: string | null
   websiteTitle: string | null
-  /** Légende générée par Cosmos (pas le texte d'un auteur). */
+  /** Caption generated by Cosmos (not an author's text). */
   generatedCaption: string | null
   ownerId: string | null
 }
@@ -97,69 +97,69 @@ export type PostExtra = XPostExtra | InstagramPostExtra | CosmosPostExtra
 
 export interface NormalizedPost {
   platform: SyncPlatform
-  /** `rest_id` X, `code` IG, `id` Cosmos. */
+  /** X `rest_id`, IG `code`, Cosmos `id`. */
   externalId: string
   /** `x:<rest_id>` | `ig:<code>` | `cosmos:<id>` (= `sync_items.source_key`). */
   sourceKey: string
-  /** URL canonique de la publication. */
+  /** Canonical URL of the post. */
   sourceUrl: string
-  /** `items.kind` visé : suit le 1er média. */
+  /** Targeted `items.kind`: follows the first media. */
   kind: 'image' | 'video' | 'tweet' | 'url'
-  /** Position dans la page (0 = premier rendu par la plateforme, donc le plus récent). */
+  /** Position in the page (0 = first rendered by the platform, hence the most recent). */
   position: number
-  /** Clé de tri distante brute (`sync_items.remote_sort`) : `sortIndex` X, sinon `null`. */
+  /** Raw remote sort key (`sync_items.remote_sort`): X `sortIndex`, otherwise `null`. */
   remoteSort: string | null
-  /** Date de publication (ms epoch UTC) si connue. */
+  /** Publication date (ms epoch UTC) if known. */
   postedAt: number | null
   /**
-   * Heure d'ordre attribuée par `order.ts`. Toujours `null` en sortie de parseur : les
-   * parseurs ne lisent pas l'horloge.
+   * Order time assigned by `order.ts`. Always `null` as parser output: the
+   * parsers do not read the clock.
    */
   createdAt: number | null
   author: NormalizedAuthor | null
-  /** Auteurs à alimenter dans la table `authors` (principal, cité, repost), dédupliqués. */
+  /** Authors to feed into the `authors` table (main, quoted, repost), deduplicated. */
   authors: NormalizedAuthor[]
   text: string | null
   media: NormalizedMedia[]
-  /** `items.post_meta` v1, validé par `PostMetaSchema`. `mediaUuid` = `null`. */
+  /** `items.post_meta` v1, validated by `PostMetaSchema`. `mediaUuid` = `null`. */
   postMeta: PostMeta
   extra: PostExtra
 }
 
 export interface ParseStats {
-  /** Entrées examinées (tweets, médias, éléments ; curseurs exclus). */
+  /** Entries examined (tweets, media, items; cursors excluded). */
   entries: number
-  /** Publications normalisées rendues. */
+  /** Normalized posts returned. */
   parsed: number
-  /** Supprimées ou indisponibles (tombstone, `TweetUnavailable`). */
+  /** Deleted or unavailable (tombstone, `TweetUnavailable`). */
   unavailable: number
-  /** Ignorées volontairement (tuile texte Cosmos, entrée non-tweet). */
+  /** Intentionally skipped (Cosmos text tile, non-tweet entry). */
   ignored: number
-  /** Malformées : isolées et comptées, la page continue. */
+  /** Malformed: isolated and counted, the page continues. */
   malformed: number
-  /** Médias écartés à l'intérieur de publications gardées (sans URL exploitable). */
+  /** Media discarded inside kept posts (without a usable URL). */
   mediaDropped: number
 }
 
 export interface ParseIssue {
-  /** Index de l'entrée dans la page. */
+  /** Index of the entry in the page. */
   index: number
-  /** Identifiant lisible s'il existe (entryId, code, id). */
+  /** Readable identifier if any (entryId, code, id). */
   id: string | null
   kind: 'unavailable' | 'ignored' | 'malformed' | 'media_dropped'
   reason: string
 }
 
-/** Sous-ensemble de `SyncOutcome` (bridge) que le corps d'une réponse permet de décider. */
+/** Subset of `SyncOutcome` (bridge) that a response body lets us decide on. */
 export type ParseErrorCode = 'auth_required' | 'rate_limited' | 'api_changed'
 
 export interface ParseError {
   code: ParseErrorCode
-  /** Raison courte et stable (`unknown_shape`, `features_missing`, `checkpoint_required`…). */
+  /** Short, stable reason (`unknown_shape`, `features_missing`, `checkpoint_required`…). */
   reason: string
-  /** Message lisible (tronqué), pour le journal. */
+  /** Readable message (truncated), for the log. */
   message: string
-  /** X 336 : noms des `features` à ajouter à `false` avant de relancer. */
+  /** X 336: names of the `features` to set to `false` before retrying. */
   missingFeatures?: string[]
 }
 
@@ -167,10 +167,10 @@ export interface PageParseOk {
   ok: true
   platform: SyncPlatform
   posts: NormalizedPost[]
-  /** Curseur de la page suivante ; `null` = fin de pagination. */
+  /** Cursor of the next page; `null` = end of pagination. */
   nextCursor: string | null
   stats: ParseStats
-  /** Détail des entrées écartées (plafonné à `MAX_ISSUES`). */
+  /** Details of discarded entries (capped at `MAX_ISSUES`). */
   issues: ParseIssue[]
 }
 
@@ -184,8 +184,8 @@ export type PageParseResult = PageParseOk | PageParseError
 
 export interface PageParseOptions {
   /**
-   * Curseur qui a servi à demander cette page. Si la plateforme renvoie le même, la pagination
-   * s'arrête (`nextCursor = null`) pour éviter une boucle.
+   * Cursor used to request this page. If the platform returns the same one, pagination
+   * stops (`nextCursor = null`) to avoid a loop.
    */
   requestCursor?: string | null
 }

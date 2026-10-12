@@ -1,7 +1,7 @@
 /**
- * Handlers `spaces.*` : liste, document, `applyBatch` atomique, renommage,
- * duplication, suppression, « Ajouter à un space › », assets (Finder, presse-papiers), promotion
- * d'un asset en élément de la bibliothèque, presse-papiers interne, export PNG (fenêtre stage).
+ * Handlers `spaces.*`: list, document, atomic `applyBatch`, rename,
+ * duplicate, delete, "Add to a space ›", assets (Finder, clipboard), promotion
+ * of an asset into a library item, internal clipboard, PNG export (stage window).
  */
 import { AppError } from '../../../shared/errors'
 import { ItemStyle } from '../../../shared/spaces-schema'
@@ -85,7 +85,7 @@ export const spacesHandlers: DomainHandlers<'spaces'> = {
     }
     if (failed.length > 0) {
       requireJobServices().log.warn(
-        `[spaces] ${failed.length} fichier(s) ignoré(s) pour ${spaceUuid}`,
+        `[spaces] ${failed.length} file(s) skipped for ${spaceUuid}`,
         failed,
       )
     }
@@ -116,7 +116,7 @@ export const spacesHandlers: DomainHandlers<'spaces'> = {
       lockAspect: old.lockAspect ?? true,
       ...(typeof old.opacity === 'number' ? { opacity: old.opacity } : {}),
     })
-    // L'asset devient orphelin : collecté au prochain démarrage (l'annulation reste possible).
+    // The asset becomes orphaned: collected at the next startup (cancelling remains possible).
     lib.db
       .prepare(
         `UPDATE space_nodes SET type = 'item', item_id = ?, asset_rel = NULL, style = ?, updated_at = ?

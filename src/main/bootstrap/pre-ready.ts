@@ -1,17 +1,17 @@
 /**
- * Registre « avant ready » : schéma privilégié `recolt://`, `open-file`,
- * instance unique (verrou par userData, donc par worktree en e2e).
+ * "Before ready" registry: privileged `recolt://` scheme, `open-file`,
+ * single instance (lock per userData, hence per worktree in e2e).
  */
 import { app, protocol } from 'electron'
 import { getMainWindow } from '../windows/main-window'
 import { applyMemoryBudgets } from './memory'
 import { filesFromArgv, queueOpenFiles } from './open-files'
 
-/** Doit précéder `app.whenReady()`. Le handler est posé par `protocol/init.ts`. */
+/** Must come before `app.whenReady()`. The handler is set by `protocol/init.ts`. */
 export const RECOLT_SCHEME = 'recolt'
 
 export function preReady(): { gotLock: boolean } {
-  // Budgets mémoire GPU (`bootstrap/memory.ts`) : commutateurs Chromium, avant `ready`.
+  // GPU memory budgets (`bootstrap/memory.ts`): Chromium switches, before `ready`.
   applyMemoryBudgets(app.commandLine)
   protocol.registerSchemesAsPrivileged([
     {

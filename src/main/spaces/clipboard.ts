@@ -1,9 +1,9 @@
 /**
- * Presse-papiers des Spaces, API asynchrone d'Electron 44
- * (`clipboard.write([ClipboardItem])`, `clipboard.read()`). Un seul `write` avec `text/plain` et
- * `text/html` : le HTML porte les nœuds internes (`data-recolt-nodes` = base64 du JSON), le texte
- * reste lisible par les autres apps. Lecture par priorité : nœuds internes, fichiers du Finder,
- * image, texte (une URL est un texte : une note contenant une URL est recollée comme note).
+ * Spaces clipboard, Electron 44 async API
+ * (`clipboard.write([ClipboardItem])`, `clipboard.read()`). A single `write` with `text/plain` and
+ * `text/html`: the HTML carries the internal nodes (`data-recolt-nodes` = base64 of the JSON), the
+ * text stays readable by other apps. Reading by priority: internal nodes, Finder files, image,
+ * text (a URL is text: a note containing a URL is pasted as a note).
  */
 import { ClipboardItem, clipboard } from 'electron'
 import { readClipboardFiles, readClipboardImage } from '../import-ux/clipboard'
@@ -39,7 +39,7 @@ async function readHtml(): Promise<string | null> {
       const v = await it.getType('text/html')
       if (v instanceof Blob) return await v.text()
     } catch {
-      // format illisible
+      // unreadable format
     }
   }
   return null

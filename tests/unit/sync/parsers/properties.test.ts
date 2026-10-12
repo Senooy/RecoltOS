@@ -1,6 +1,6 @@
 /**
- * Propriétés (fast-check) des parseurs de sync : JSON arbitraire → `{ ok:false, error }` ou
- * page cohérente, jamais d'exception ; fixtures mutées au hasard → entrées isolées, invariants tenus.
+ * Properties (fast-check) of the sync parsers: arbitrary JSON → `{ ok:false, error }` or
+ * consistent page, never an exception; randomly mutated fixtures → isolated entries, invariants held.
  */
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
@@ -29,7 +29,7 @@ function safe(parse: (j: unknown) => PageParseResult, input: unknown): PageParse
   return r!
 }
 
-/** Chemins [parent, clé] de tous les nœuds d'un JSON. */
+/** Paths [parent, key] of all the nodes of a JSON. */
 function paths(root: unknown): [Record<string, unknown> | unknown[], string | number][] {
   const out: [Record<string, unknown> | unknown[], string | number][] = []
   const walk = (v: unknown) => {
@@ -79,8 +79,8 @@ const mutation = fc.record({
   value: fc.oneof(fc.jsonValue({ maxDepth: 2 }), fc.constant(null), fc.constant('javascript:x')),
 })
 
-describe('propriétés des parseurs', () => {
-  it('JSON arbitraire : jamais d’exception, erreur classée ou page cohérente', () => {
+describe('parser properties', () => {
+  it('arbitrary JSON: never an exception, classified error or consistent page', () => {
     fc.assert(
       fc.property(fc.jsonValue({ maxDepth: 6 }), (j) => {
         for (const p of ALL) safe(p, j)
@@ -89,7 +89,7 @@ describe('propriétés des parseurs', () => {
     )
   })
 
-  it('valeurs JavaScript quelconques (objets exotiques compris) : jamais d’exception', () => {
+  it('any JavaScript values (exotic objects included): never an exception', () => {
     fc.assert(
       fc.property(
         fc.anything({ maxDepth: 4, withMap: true, withSet: true, withBigInt: true }),
@@ -101,7 +101,7 @@ describe('propriétés des parseurs', () => {
     )
   })
 
-  it('JSON arbitraire sous les racines attendues : jamais d’exception', () => {
+  it('arbitrary JSON under the expected roots: never an exception', () => {
     const wrap = (dir: Dir, v: unknown) =>
       dir === 'x'
         ? {
@@ -128,7 +128,7 @@ describe('propriétés des parseurs', () => {
   })
 
   for (const dir of ['x', 'instagram', 'cosmos'] as Dir[]) {
-    it(`fixtures ${dir} mutées au hasard : invariants tenus`, () => {
+    it(`fixtures ${dir} randomly mutated: invariants held`, () => {
       const pages = fixtureNames(dir).map((n) => fixture(dir, n))
       fc.assert(
         fc.property(
@@ -143,7 +143,7 @@ describe('propriétés des parseurs', () => {
     })
   }
 
-  it('entrée arbitraire insérée dans une page valide : les publications d’origine restent', () => {
+  it('arbitrary entry inserted into a valid page: original posts remain', () => {
     const base = fixture('x', 'curseur-page1.json') as {
       data: { bookmark_timeline_v2: { timeline: { instructions: { entries: unknown[] }[] } } }
     }

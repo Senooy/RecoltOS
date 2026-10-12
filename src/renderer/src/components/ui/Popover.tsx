@@ -1,6 +1,6 @@
 /**
- * `Popover` : surface flottante Radix, rayon 12, `--shadow-popover`, même
- * animation que les menus. Filtres de recherche, sélecteur de collections, infos techniques.
+ * `Popover`: floating Radix surface, radius 12, `--shadow-popover`, same
+ * animation as the menus. Search filters, collection picker, technical info.
  */
 import { Popover as PopoverPrimitive } from 'radix-ui'
 import type { ComponentProps } from 'react'

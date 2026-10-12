@@ -1,9 +1,9 @@
 /**
- * Bibliothèque GatherOS factice depuis `tests/fixtures/gatheros/seed.json` et
- * `legacy-schema.sql` : base v17 en WAL, tags (sources, `__starter__`, `screenshot`), collections
- * (dont une sous-collection et une couverture synthétiques), `dismissed_tweets`, médias minuscules
- * générés, `prefs.json` avec un faux jeton d'extension et `SingletonLock` facultatif. Aucune donnée
- * réelle. Pas d'`import.meta` (chargé en CJS par Playwright).
+ * Fake GatherOS library from `tests/fixtures/gatheros/seed.json` and
+ * `legacy-schema.sql`: v17 DB in WAL, tags (sources, `__starter__`, `screenshot`), collections
+ * (including a sub-collection and a synthetic cover), `dismissed_tweets`, tiny generated media,
+ * `prefs.json` with a fake extension token and an optional `SingletonLock`. No real data.
+ * No `import.meta` (loaded as CJS by Playwright).
  */
 import Database from 'better-sqlite3'
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
@@ -13,7 +13,7 @@ import { REPO_ROOT } from './paths'
 import { makeVideo } from './synthetic-media'
 
 export const FAKE_EXTENSION_TOKEN = 'FAKE-TOKEN-DO-NOT-USE'
-/** Nom de la clé du jeton dans les réglages de l'ancienne app (jamais importé). */
+/** Name of the token key in the old app's settings (never imported). */
 export const TOKEN_KEY = 'extension' + 'Token'
 
 export interface LegacySeed {
@@ -34,13 +34,13 @@ export function loadSeed(): LegacySeed {
 }
 
 export interface LegacyLibrary {
-  /** Dossier « GatherOS » (équivalent de `~/Library/Application Support/GatherOS`). */
+  /** "GatherOS" folder (equivalent of `~/Library/Application Support/GatherOS`). */
   root: string
   libDir: string
   dbPath: string
   saveIds: string[]
   starterId: string
-  /** Ids synthétiques du seed par rôle. */
+  /** Synthetic seed ids by role. */
   ids: { trashedInCollection: string; hidden: string; carousel: string; tweetQuoted: string }
 }
 
@@ -110,7 +110,7 @@ export async function makeLegacyLibrary(
   )
   const rows = [
     ...seed.saves,
-    // Exemple de démarrage livré par GatherOS : exclu par défaut (déjà en corbeille).
+    // Starter example shipped with GatherOS: excluded by default (already in the trash).
     {
       ...seed.saves[0]!,
       id: STARTER_ID,
@@ -135,7 +135,7 @@ export async function makeLegacyLibrary(
     files.add(String(row.file_path).split('/').pop()!)
   }
 
-  // Tags : sources (deviennent des chips), démarrage, screenshot (→ capture).
+  // Tags: sources (become chips), starter, screenshot (→ capture).
   const tag = db.prepare('INSERT OR IGNORE INTO tags (id, name) VALUES (?, ?)')
   const link = db.prepare('INSERT OR IGNORE INTO save_tags (save_id, tag_id) VALUES (?, ?)')
   const tagIds: Record<string, string> = {
@@ -160,7 +160,7 @@ export async function makeLegacyLibrary(
     trashedInCollection: seed.saves[8]!.id,
     hidden: seed.saves[9]!.id,
   }
-  // Collections : 3 « réelles » anonymisées + une sous-collection + une couverture synthétiques.
+  // Collections: 3 anonymized "real" ones + one sub-collection + one synthetic cover.
   const col = db.prepare(
     'INSERT INTO collections (id, name, color, created_at, order_index, parent_id, cover_save_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
   )
@@ -174,7 +174,7 @@ export async function makeLegacyLibrary(
   seed.saves.slice(0, 4).forEach((s, i) => ci.run(COL(1), s.id, 1_700_000_100_000 + i))
   ci.run(COL(2), byRole.carousel, 1_700_000_200_000)
   ci.run(COL(2), seed.saves[0]!.id, 1_700_000_200_001)
-  ci.run(COL(3), byRole.trashedInCollection, 1_700_000_300_000) // cas synthétique
+  ci.run(COL(3), byRole.trashedInCollection, 1_700_000_300_000) // synthetic case
   ci.run(COL(4), byRole.hidden, 1_700_000_400_000)
   ci.run(COL(1), STARTER_ID, 1_700_000_500_000)
 

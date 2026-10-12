@@ -30,8 +30,8 @@ afterAll(() => {
 
 const job = (n: number) => join(a.userData, 'ai-sandbox', 'claude', 'jobs', String(n))
 
-describe('préparation des médias', () => {
-  it('JPEG ≤ 1568 px, EXIF retiré', async () => {
+describe('media preparation', () => {
+  it('JPEG ≤ 1568 px, EXIF removed', async () => {
     const rel = await writeImage(a.lib, 'items/aa/exif.jpg', '#884422', [3000, 2000])
     const before = await sharp(a.lib.paths.abs(rel)).metadata()
     expect(before.exif).toBeDefined()
@@ -42,13 +42,13 @@ describe('préparation des médias', () => {
     expect(meta.exif).toBeUndefined()
     expect(meta.icc).toBeUndefined()
     expect(statSync(m.path).size).toBe(m.bytes)
-    // Orientation EXIF appliquée puis retirée.
+    // EXIF orientation applied, then removed.
     const r = await prepareImageForAi(a.media, fx.exif6Jpg, job(1), 'img2.jpg')
     expect([r.width, r.height]).toEqual([200, 300])
     expect((await sharp(r.path).metadata()).orientation).toBeUndefined()
   })
 
-  it('pickSlides : couverture, médiane, dernière ; vidéos ignorées', () => {
+  it('pickSlides: cover, median, last; videos ignored', () => {
     const s = Array.from({ length: 6 }, (_, i) => ({
       index: i,
       path: `/s${i}`,
@@ -59,13 +59,13 @@ describe('préparation des médias', () => {
     expect(pickSlides(mixed).map((x) => x.index)).toEqual([0, 1])
   })
 
-  it('instants des images clés', () => {
+  it('keyframe instants', () => {
     expect(keyframeTimes(10)).toEqual([1, 5, 9])
     expect(keyframeTimes(1)).toEqual([0, 0.5])
     expect(keyframeTimes(2)[2]).toBeCloseTo(1.7)
   })
 
-  it.skipIf(!FFMPEG)('vidéo réelle : 3 images clés en cache, réutilisées', async () => {
+  it.skipIf(!FFMPEG)('real video: 3 keyframes cached and reused', async () => {
     const r = await getVideoKeyframes({
       itemUuid: 'vid-1',
       video: fx.longMp4!,
@@ -94,7 +94,7 @@ describe('préparation des médias', () => {
     expect(again.frames).toEqual(r.frames)
   })
 
-  it('dernière image absente → repli à 0,80·d', async () => {
+  it('last frame missing → fallback at 0.80·d', async () => {
     const calls: FrameAt[] = []
     const r = await getVideoKeyframes({
       itemUuid: 'vid-2',
@@ -104,7 +104,7 @@ describe('préparation des médias', () => {
       durationSec: () => Promise.resolve(10),
       extract: (_src, dst, at) => {
         calls.push(at)
-        // ffmpeg n'écrit rien près de la fin
+        // ffmpeg writes nothing near the end
         if ('atMs' in at && at.atMs >= 8_500) return Promise.resolve(false)
         mkdirSync(join(dst, '..'), { recursive: true })
         copyFileSync(fx.exif6Jpg, dst)
@@ -115,7 +115,7 @@ describe('préparation des médias', () => {
     expect(calls).toEqual([{ atMs: 1000 }, { atMs: 5000 }, { atMs: 9000 }, { atMs: 8000 }])
   })
 
-  it('aucune image extraite → repli sur le poster (une image)', async () => {
+  it('no frame extracted → fallback to the poster (one image)', async () => {
     const r = await getVideoKeyframes({
       itemUuid: 'vid-3',
       video: '/v.mp4',
@@ -129,8 +129,8 @@ describe('préparation des médias', () => {
   })
 })
 
-describe("construction de l'entrée", () => {
-  it('carrousel de 6 diapositives → 3 JPEG (1, 4, 6), diapositive vidéo ignorée', async () => {
+describe('building the input', () => {
+  it('carousel of 6 slides → 3 JPEGs (1, 4, 6), video slide ignored', async () => {
     const media = []
     for (let i = 0; i < 6; i++) {
       const rel = await writeImage(
@@ -159,7 +159,7 @@ describe("construction de l'entrée", () => {
     for (const m of input.media) expect(existsSync(m.path)).toBe(true)
   })
 
-  it('post texte : aucune image ; sans texte : la capture', async () => {
+  it('text post: no image; without text: the capture', async () => {
     const rel = await writeImage(a.lib, 'items/dd/tweet.jpg', '#ffffff', [600, 400])
     const withText = a.lib.repos.items.insertWithMedia(
       {
@@ -182,7 +182,7 @@ describe("construction de l'entrée", () => {
     expect(r2.input.media).toHaveLength(1)
   })
 
-  it.skipIf(!FFMPEG)('vidéo : 3 images clés ≤ 1024 px et durée', async () => {
+  it.skipIf(!FFMPEG)('video: 3 keyframes ≤ 1024 px and duration', async () => {
     mkdirSync(a.lib.paths.abs('items/ee').replace(/\/ee$/, '/ee'), { recursive: true })
     copyFileSync(fx.longMp4!, a.lib.paths.abs('items/ee/v.mp4'))
     const { id } = a.lib.repos.items.insertWithMedia({ kind: 'video', source: 'instagram' }, [

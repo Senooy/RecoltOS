@@ -1,6 +1,6 @@
 /**
- * géométrie de la toile (caméra, magnétisme, redimensionnement avec rotation,
- * rotation, alignement, répartition, ordre), historique, keymap AZERTY / QWERTY simulés.
+ * canvas geometry (camera, snapping, resizing with rotation,
+ * rotation, alignment, distribution, order), history, simulated AZERTY / QWERTY keymap.
  */
 import { describe, expect, it } from 'vitest'
 import fc from 'fast-check'
@@ -39,8 +39,8 @@ import {
 import { aabb, gridPlacement } from '../../../src/shared/spaces-geometry'
 import type { SpaceNode } from '../../../src/shared/spaces-schema'
 
-describe('caméra', () => {
-  it('zoomAt : le point monde sous l’ancre est invariant (1e-9)', () => {
+describe('camera', () => {
+  it('zoomAt: the world point under the anchor is invariant (1e-9)', () => {
     fc.assert(
       fc.property(
         fc.double({ min: -5000, max: 5000, noNaN: true }),
@@ -61,7 +61,7 @@ describe('caméra', () => {
     )
   })
 
-  it('bornes, paliers, aller-retour monde ↔ écran, fitBox centre', () => {
+  it('bounds, steps, world ↔ screen round trip, fitBox centre', () => {
     const c = { x: 0, y: 0, zoom: 1 }
     expect(zoomAt(c, { x: 0, y: 0 }, 100).zoom).toBe(MAX_ZOOM)
     expect(zoomAt(c, { x: 0, y: 0 }, 0).zoom).toBe(MIN_ZOOM)
@@ -76,7 +76,7 @@ describe('caméra', () => {
     expect(worldToScreen(f, { x: 200, y: 150 })).toEqual({ x: 500, y: 300 })
   })
 
-  it('molette : ⌃ = pincement, ⌘ ou réglage = zoom, sinon pan', () => {
+  it('wheel: ⌃ = pinch, ⌘ or setting = zoom, otherwise pan', () => {
     const e = { deltaX: 3, deltaY: 10, deltaMode: 0, ctrlKey: false, metaKey: false }
     expect(wheelAction(e, 'scroll', 800)).toEqual({ kind: 'pan', dx: -3, dy: -10 })
     expect(wheelAction({ ...e, ctrlKey: true }, 'scroll', 800).kind).toBe('zoom')
@@ -90,8 +90,8 @@ describe('caméra', () => {
   })
 })
 
-describe('magnétisme', () => {
-  it('seuil 6 / zoom ; guides produits ; rien au-delà', () => {
+describe('snapping', () => {
+  it('threshold 6 / zoom; guides produced; nothing beyond', () => {
     const other = { x: 100, y: 100, width: 50, height: 50 }
     const zoom = 2
     const th = SNAP_PX / zoom
@@ -100,16 +100,16 @@ describe('magnétisme', () => {
     expect(near.guides.some((g) => g.axis === 'x' && g.at === 100)).toBe(true)
     const far = snapBox({ x: 100 + th + 0.1, y: 300, width: 10, height: 40 }, [other], th)
     expect(far.dx).toBe(0)
-    // Centre sur centre en Y.
+    // Center on center in Y.
     const c = snapBox({ x: 400, y: 104, width: 40, height: 40 }, [other], 6)
     expect(c.dy).toBe(1)
   })
 })
 
-describe('redimensionnement avec rotation', () => {
+describe('resizing with rotation', () => {
   const box = { x: 10, y: 20, width: 200, height: 120, rotation: 0 }
   for (const r of [0, 30, 90, 137]) {
-    it(`ancre opposée fixe à 1e-6 pour les 8 poignées (r = ${r}°)`, () => {
+    it(`opposite anchor fixed at 1e-6 for the 8 handles (r = ${r}°)`, () => {
       const b = { ...box, rotation: r }
       for (const h of HANDLES) {
         const [sx, sy] = HANDLE_DIR[h]
@@ -125,7 +125,7 @@ describe('redimensionnement avec rotation', () => {
     })
   }
 
-  it('minimum 24 ; ratio verrouillé ; depuis le centre', () => {
+  it('minimum 24; locked ratio; from the center', () => {
     const out = resize(box, 'se', { x: -500, y: -500 }, { lockAspect: false })
     expect(out.width).toBe(24)
     expect(out.height).toBe(24)
@@ -136,7 +136,7 @@ describe('redimensionnement avec rotation', () => {
     expect(c.width).toBeCloseTo(400, 9)
   })
 
-  it('rotation : ⇧ = pas de 15°, normalisée ]-180, 180]', () => {
+  it('rotation: ⇧ = 15° steps, normalized ]-180, 180]', () => {
     const b = { x: 0, y: 0, width: 100, height: 100, rotation: 0 }
     const r = rotateTo(b, { x: 100, y: 50 }, { x: 50, y: 100 }, 0)
     expect(r).toBeCloseTo(90, 9)
@@ -144,7 +144,7 @@ describe('redimensionnement avec rotation', () => {
     expect(rotateTo(b, { x: 100, y: 50 }, { x: 0, y: 49 }, 170)).toBeLessThanOrEqual(180)
   })
 
-  it('AABB d’une boîte tournée de 90° : dimensions échangées', () => {
+  it('AABB of a box rotated by 90°: dimensions swapped', () => {
     const a = aabb({ x: 0, y: 0, width: 200, height: 100, rotation: 90 })
     expect(a.width).toBeCloseTo(100, 9)
     expect(a.height).toBeCloseTo(200, 9)
@@ -152,7 +152,7 @@ describe('redimensionnement avec rotation', () => {
   })
 })
 
-describe('alignement, répartition, ordre', () => {
+describe('alignment, distribution, order', () => {
   const n = (uuid: string, x: number, y: number, w = 50, h = 50) => ({
     uuid,
     x,
@@ -161,7 +161,7 @@ describe('alignement, répartition, ordre', () => {
     height: h,
     rotation: 0,
   })
-  it('align gauche / centre / bas', () => {
+  it('align left / center / bottom', () => {
     const nodes = [n('a', 0, 0), n('b', 100, 40, 80, 20), n('c', 30, 200)]
     expect(align(nodes, 'left')).toEqual({ b: { x: 0, y: 40 }, c: { x: 0, y: 200 } })
     const hc = align(nodes, 'hcenter')
@@ -169,13 +169,13 @@ describe('alignement, répartition, ordre', () => {
     const bottom = align(nodes, 'bottom')
     expect(bottom.a!.y! + 50).toBe(250)
   })
-  it('répartition : espaces égaux (≥ 3)', () => {
+  it('distribution: equal spacing (≥ 3)', () => {
     const nodes = [n('a', 0, 0), n('b', 70, 0), n('c', 300, 0)]
     const p = distribute(nodes, 'h')
     expect(p.b!.x).toBeCloseTo(150, 9)
     expect(distribute(nodes.slice(0, 2), 'h')).toEqual({})
   })
-  it('ordre : avancer, reculer, premier plan, arrière-plan', () => {
+  it('order: bring forward, send backward, front, back', () => {
     const order = ['a', 'b', 'c', 'd']
     const z = (r: Record<string, number>) =>
       Object.entries(r)
@@ -186,7 +186,7 @@ describe('alignement, répartition, ordre', () => {
     expect(z(reorder(order, ['a', 'b'], 'front'))).toEqual(['c', 'd', 'a', 'b'])
     expect(z(reorder(order, ['d'], 'back'))).toEqual(['d', 'a', 'b', 'c'])
   })
-  it('grille centrée : cols = ceil(sqrt(N)), espace 24', () => {
+  it('centered grid: cols = ceil(sqrt(N)), spacing 24', () => {
     const pos = gridPlacement(
       Array.from({ length: 5 }, () => ({ width: 100, height: 50 })),
       { x: 0, y: 0 },
@@ -214,7 +214,7 @@ describe('historique', () => {
     content: '',
     style: { color: 'yellow', fontSize: 14, align: 'left' },
   })
-  it('aller-retour undo / redo ; coalescence < 600 ms ; plafond', () => {
+  it('undo / redo round trip; coalescing < 600 ms; cap', () => {
     const h = new History()
     let nodes: Record<string, SpaceNode> = { a: note('a', 0) }
     const step = (next: Record<string, SpaceNode>, at: number, key?: string) => {
@@ -243,7 +243,7 @@ describe('historique', () => {
   })
 })
 
-describe('keymap AZERTY / QWERTY simulés', () => {
+describe('simulated AZERTY / QWERTY keymap', () => {
   const qwerty = new Map([
     ['KeyA', 'a'],
     ['KeyQ', 'q'],
@@ -274,24 +274,24 @@ describe('keymap AZERTY / QWERTY simulés', () => {
     ctrlKey: false,
     ...mods,
   })
-  it('⌥A = aligner à gauche : touche imprimée « A » (KeyQ en AZERTY, KeyA en QWERTY), insensible à « å »', () => {
+  it('⌥A = align left: printed key "A" (KeyQ in AZERTY, KeyA in QWERTY), insensitive to "å"', () => {
     expect(resolveShortcut(ev('KeyA', 'å', { altKey: true }), qwerty)).toBe('alignLeft')
     expect(resolveShortcut(ev('KeyQ', 'æ', { altKey: true }), azerty)).toBe('alignLeft')
     expect(resolveShortcut(ev('KeyA', 'q', { altKey: true }), azerty)).toBeNull()
   })
-  it('⌥W en AZERTY = KeyZ ; ⌘Z (annuler) suit la lettre imprimée', () => {
+  it('⌥W in AZERTY = KeyZ; ⌘Z (undo) follows the printed letter', () => {
     expect(resolveShortcut(ev('KeyZ', 'Ω', { altKey: true }), azerty)).toBe('alignTop')
     expect(resolveShortcut(ev('KeyW', 'z', { metaKey: true }), azerty)).toBe('undo')
     expect(resolveShortcut(ev('KeyZ', 'z', { metaKey: true }), qwerty)).toBe('undo')
     expect(resolveShortcut(ev('KeyZ', 'z', { metaKey: true, shiftKey: true }), qwerty)).toBe('redo')
   })
-  it('⇧1 / ⇧2 / ⌘0 par position (Digit1 imprime « & » en AZERTY)', () => {
+  it('⇧1 / ⇧2 / ⌘0 by position (Digit1 prints "&" in AZERTY)', () => {
     expect(resolveShortcut(ev('Digit1', '1', { shiftKey: true }), azerty)).toBe('fitAll')
     expect(resolveShortcut(ev('Digit1', '!', { shiftKey: true }), qwerty)).toBe('fitAll')
     expect(resolveShortcut(ev('Digit2', '2', { shiftKey: true }), azerty)).toBe('fitSelection')
     expect(resolveShortcut(ev('Digit0', 'à', { metaKey: true }), azerty)).toBe('zoom100')
   })
-  it('⌥⌘↑ / ⌥⌘↓ (et ⇧) ; alias ⌘] / ⌘[ ; lettres d’outils', () => {
+  it('⌥⌘↑ / ⌥⌘↓ (and ⇧); aliases ⌘] / ⌘[; tool letters', () => {
     expect(resolveShortcut(ev('ArrowUp', 'ArrowUp', { metaKey: true, altKey: true }), azerty)).toBe(
       'bringForward',
     )

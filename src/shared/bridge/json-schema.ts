@@ -1,6 +1,6 @@
 /**
- * Export JSON Schema v1 du protocole, généré depuis zod (`z.toJSONSchema`, draft 2020-12).
- * `pnpm run gen:bridge-schema` écrit `src/shared/bridge/schema/v1.json` ; un test vérifie qu'il est à jour.
+ * JSON Schema v1 export of the protocol, generated from zod (`z.toJSONSchema`, draft 2020-12).
+ * `pnpm run gen:bridge-schema` writes `src/shared/bridge/schema/v1.json`; a test checks that it is up to date.
  */
 import { z } from 'zod'
 import { Envelope, Platform, Trigger } from './envelope'
@@ -22,7 +22,7 @@ function toSchema(t: z.ZodType): Json {
 
 export function bridgeJsonSchema(): Json {
   const saveRequest = toSchema(SaveRequest)
-  // Le `refine` d'exclusivité n'est pas représentable par zod : on l'exprime comme
+  // The exclusivity `refine` cannot be represented by zod: we express it as
   saveRequest.not = { required: ['inlineMedia', 'upload'] }
   const payloads: Json = {}
   for (const [type, schema] of Object.entries(MESSAGE_SCHEMAS)) payloads[type] = toSchema(schema)

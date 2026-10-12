@@ -1,7 +1,7 @@
 /**
- * Empreinte des sources qui déterminent `out/` : `src/**`, `extension/**`,
- * `electron.vite.config.ts`, `package.json`, `pnpm-lock.yaml`. Comparée à `out/.build-hash` par
- * le projet Playwright `build` pour ne reconstruire que si nécessaire.
+ * Fingerprint of the sources that determine `out/`: `src/**`, `extension/**`,
+ * `electron.vite.config.ts`, `package.json`, `pnpm-lock.yaml`. Compared to `out/.build-hash` by
+ * the Playwright `build` project to rebuild only when necessary.
  */
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'

@@ -1,11 +1,11 @@
 /**
- * Banc des requêtes du main, directement sur une base (sans IPC) :
- * page de liste (première, suivante, onglets, tri), compteurs (sans cache), FTS (`runSearch`),
- * `EXPLAIN QUERY PLAN` des requêtes chaudes, `PRAGMA optimize` et `wal_checkpoint` sur une copie.
+ * Benchmark of the main process queries, run directly on a database (no IPC):
+ * list page (first, next, tabs, sort), counters (uncached), FTS (`runSearch`),
+ * `EXPLAIN QUERY PLAN` of the hot queries, `PRAGMA optimize` and `wal_checkpoint` on a copy.
  *
  *   tsx --tsconfig tsconfig.node.json scripts/bench-queries.mts --db <recolt.db> [--runs 50] [--json f]
  *
- * La base est ouverte en LECTURE SEULE ; les opérations d'écriture portent sur une copie temporaire.
+ * The database is opened READ-ONLY; write operations run on a temporary copy.
  */
 import Database from 'better-sqlite3'
 import { copyFileSync, existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -48,7 +48,7 @@ export function benchQueries(dbFile: string, runs = 50) {
   const list = (extra: Record<string, unknown>) => () =>
     listItems(db, { scope: 'library', tab: 'all', limit: 100, ...extra } as never)
   const first = listItems(db, { scope: 'library', tab: 'all', limit: 100 } as never)
-  // Termes FTS réels : premier mot (≥ 4 lettres) de quelques titres.
+  // Real FTS terms: first word (≥ 4 letters) of some titles.
   const words = (
     db
       .prepare(
@@ -110,7 +110,7 @@ export function benchQueries(dbFile: string, runs = 50) {
     maintenance: {} as Record<string, number>,
   }
   db.close()
-  // Écritures sur une copie : `PRAGMA optimize` et `wal_checkpoint(TRUNCATE)`.
+  // Writes on a copy: `PRAGMA optimize` and `wal_checkpoint(TRUNCATE)`.
   const dir = mkdtempSync(join(tmpdir(), 'recolt-bench-q-'))
   try {
     const copy = join(dir, 'recolt.db')
@@ -141,7 +141,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     },
   })
   if (!values.db) {
-    console.error('usage : bench-queries.mts --db <recolt.db> [--runs 50] [--json <fichier>]')
+    console.error('usage: bench-queries.mts --db <recolt.db> [--runs 50] [--json <file>]')
     process.exit(2)
   }
   const r = benchQueries(resolve(values.db), Number(values.runs))

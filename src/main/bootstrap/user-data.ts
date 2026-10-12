@@ -1,6 +1,6 @@
 /**
- * `userData` isolé : appelé tout au début de `main/index.ts`, AVANT
- * `requestSingleInstanceLock()` et `whenReady`.
+ * `userData` isolated: called at the very start of `main/index.ts`, BEFORE
+ * `requestSingleInstanceLock()` and `whenReady`.
  */
 import { app } from 'electron'
 import fs from 'node:fs'
@@ -18,10 +18,10 @@ export function resolveUserDataPath(
 
 export function configureUserData(): string {
   const p = resolveUserDataPath(process.env, app.getPath('appData'), app.isPackaged)
-  // app.setPath exige un chemin absolu existant.
+  // app.setPath requires an existing absolute path.
   fs.mkdirSync(p, { recursive: true })
   app.setPath('userData', p)
-  // Sinon les journaux partent dans ~/Library/Logs/RecoltOS.
+  // Otherwise the logs go to ~/Library/Logs/RecoltOS.
   app.setAppLogsPath(path.join(p, 'logs'))
   return p
 }

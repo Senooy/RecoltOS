@@ -1,6 +1,6 @@
 /**
- * Lecture tolérante de `prefs.json` au démarrage (thème de la première image, avant que
- * le magasin ne soit initialisé). Lecture seule.
+ * Lenient read of `prefs.json` at startup (theme of the first image, before the store
+ * is initialized). Read-only.
  */
 import fs from 'node:fs'
 import path from 'node:path'

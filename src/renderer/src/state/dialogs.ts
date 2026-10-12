@@ -1,6 +1,6 @@
 /**
- * Dialogues de confirmation et de saisie (window.prompt / confirm n'existent pas dans Electron) :
- * `askConfirm` et `askName` renvoient une promesse ; `shell/Dialogs.tsx` les affiche.
+ * Confirmation and input dialogs (window.prompt / confirm do not exist in Electron):
+ * `askConfirm` and `askName` return a promise; `shell/Dialogs.tsx` displays them.
  */
 import { create } from 'zustand'
 

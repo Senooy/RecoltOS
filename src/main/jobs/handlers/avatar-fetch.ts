@@ -1,8 +1,8 @@
 /**
- * Job `avatar.fetch` : avatar d'auteur → `avatars/<platform>/<k>.jpg`
- * (carré 128 px), `authors.updated_at` sert de `?v=`. X : `_normal` → `_400x400`. Une réponse 4xx
- * (avatars Instagram expirés) donne `avatar_status='failed'` sans nouvelle tentative : l'UI affiche
- * un monogramme.
+ * `avatar.fetch` job: author avatar → `avatars/<platform>/<k>.jpg`
+ * (128 px square), `authors.updated_at` serves as `?v=`. X: `_normal` → `_400x400`. A 4xx response
+ * (expired Instagram avatars) sets `avatar_status='failed'` without retry: the UI shows
+ * a monogram.
  */
 import type Database from 'better-sqlite3'
 import { mkdir, rm } from 'node:fs/promises'
@@ -11,7 +11,7 @@ import { rel } from '../../library/paths'
 import { fetchToFile } from '../fetch'
 import { payloadId, type JobFailureHook, type JobHandler } from './types'
 
-/** URL d'avatar en meilleure résolution (X : `_normal` 48 px → `_400x400`). */
+/** Avatar URL at the best resolution (X: `_normal` 48 px → `_400x400`). */
 export function upscaleAvatarUrl(url: string): string {
   return url.replace(/_normal(\.[a-z]+)(\?.*)?$/i, '_400x400$1$2')
 }
@@ -41,7 +41,7 @@ export const avatarFetch: JobHandler = async (job, ctx) => {
     try {
       await fetchToFile(ctx.fetch, url, tmp, { signal: ctx.signal, maxBytes: 20 * 1024 ** 2 })
     } catch (err) {
-      // Repli sur l'URL d'origine si la variante agrandie n'existe pas.
+      // Falls back to the original URL if the enlarged variant does not exist.
       if (url === a.avatar_url) throw err
       url = a.avatar_url
       await fetchToFile(ctx.fetch, url, tmp, { signal: ctx.signal, maxBytes: 20 * 1024 ** 2 })

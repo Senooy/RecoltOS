@@ -1,7 +1,7 @@
 /**
- * Navigateurs pris en charge (Firefox) : dossier de données, dossier des
- * manifests natifs, format du manifest, détection de l'application (`mdfind` par bundle ID, puis
- * `/Applications` et `~/Applications`). Sans import `electron`.
+ * Supported browsers (Firefox): data folder, native manifests folder,
+ * manifest format, app detection (`mdfind` by bundle ID, then
+ * `/Applications` and `~/Applications`). No `electron` import.
  */
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -13,9 +13,9 @@ export interface BrowserDef {
   id: string
   label: string
   kind: BrowserKind
-  /** Dossier de données sous `~/Library/Application Support/`. */
+  /** Data folder under `~/Library/Application Support/`. */
   dir: string
-  /** Dossier des manifests natifs sous `~/Library/Application Support/`. */
+  /** Native manifests folder under `~/Library/Application Support/`. */
   hostsDir: string
   bundleId: string
   app: string
@@ -46,7 +46,7 @@ export const BROWSERS: readonly BrowserDef[] = [
     label: 'Firefox',
     kind: 'firefox',
     dir: 'Firefox',
-    // Firefox (et ses éditions Developer / Nightly) lit `Mozilla/NativeMessagingHosts`.
+    // Firefox (and its Developer / Nightly editions) reads `Mozilla/NativeMessagingHosts`.
     hostsDir: 'Mozilla/NativeMessagingHosts',
     bundleId: 'org.mozilla.firefox',
     app: 'Firefox',
@@ -90,7 +90,7 @@ const defaultMdfind: MdfindFn = (query) =>
     )
   })
 
-/** Application installée : `mdfind` par bundle ID, sinon `/Applications/<app>.app`, `~/Applications`. */
+/** Installed app: `mdfind` by bundle ID, otherwise `/Applications/<app>.app`, `~/Applications`. */
 export async function isAppInstalled(
   b: BrowserDef,
   home: string,
@@ -107,8 +107,8 @@ export async function isAppInstalled(
 }
 
 /**
- * Libellé d'un client : nom du processus parent de l'hôte (« Google Chrome », « firefox »,
- * « Brave Browser »…) ou identifiant, sinon le nom annoncé par l'extension.
+ * Label of a client: name of the host's parent process ("Google Chrome", "firefox",
+ * "Brave Browser"...) or identifier, otherwise the name announced by the extension.
  */
 export function browserLabel(hostBrowser: string, helloName?: string | null): string {
   const n = hostBrowser.toLowerCase()

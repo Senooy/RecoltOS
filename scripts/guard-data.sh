@@ -1,22 +1,22 @@
 #!/bin/sh
-# Garde des données : échoue si le dépôt suivi par git contient une base, des réglages utilisateur,
-# un secret ou un fichier qui n'a rien à y faire. `pnpm run guard` (dans `verify`).
+# Data guard: fails if the git-tracked repository contains a database, user settings,
+# a secret, or a file that does not belong there. `pnpm run guard` (inside `verify`).
 #   - prefs.json, window-state.json, *.db, *.db-wal, *.db-shm, *.db-journal, *.sqlite, *.sqlite3,
-#     *.bak, insensible à la casse (bases et réglages de l'utilisateur ; APFS ne distingue pas
-#     `DATA.DB` de `data.db`) ;
-#   - secrets : .env, .env.*, *.pem, *.key, *.p12, *.p8, *.cer, *.mobileprovision, et toute clé
-#     privée PEM (« BEGIN … PRIVATE KEY ») dans le contenu suivi ;
-#   - fichier de plus de 2 Mo hors liste blanche.
-# Échec FERMÉ : hors dépôt git, ou si git échoue (safe.directory, index corrompu…), la garde sort en
-# erreur au lieu de conclure « OK » sur une liste vide. `git grep` : code 1 = aucun résultat (normal),
-# code > 1 = vraie erreur.
-# GUARD_ROOT=<dossier> pour viser un autre dépôt (tests).
+#     *.bak, case-insensitive (user databases and settings; APFS does not distinguish
+#     `DATA.DB` from `data.db`);
+#   - secrets: .env, .env.*, *.pem, *.key, *.p12, *.p8, *.cer, *.mobileprovision, and any PEM
+#     private key ("BEGIN … PRIVATE KEY") in the tracked content;
+#   - files over 2 MB outside the allowlist.
+# FAIL CLOSED: outside a git repo, or if git fails (safe.directory, corrupt index...), the guard
+# exits with an error instead of concluding "OK" on an empty list. `git grep`: code 1 = no result
+# (normal), code > 1 = real error.
+# GUARD_ROOT=<dir> to target another repository (tests).
 set -eu
 
 ROOT="${GUARD_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$ROOT"
 
-# Le motif est assemblé pour que ce script ne se dénonce pas lui-même.
+# The pattern is assembled so that this script does not flag itself.
 PEM_KEY="BEGIN ([A-Z]+ )?PRIVATE"" KEY"
 MAX_BYTES=2097152
 
@@ -27,37 +27,37 @@ report() {
 }
 abort() {
   echo "guard : $1" >&2
-  echo "guard : ÉCHEC (garde impossible à exécuter : refus par prudence)" >&2
+  echo "guard : FAILED (guard cannot run: refused as a precaution)" >&2
   exit 1
 }
 
-# Le dossier visé doit être LA racine d'un dépôt git (pas un sous-dossier non versionné d'un autre
-# dépôt, dont `git ls-files` serait vide).
+# The target directory must BE the root of a git repository (not an untracked subfolder of another
+# repository, whose `git ls-files` would be empty).
 TOP="$(git rev-parse --show-toplevel 2>/dev/null)" || abort "$ROOT n'est pas dans un dépôt git exploitable"
 HERE="$(pwd -P)"
 [ "$(cd "$TOP" && pwd -P)" = "$HERE" ] || abort "$HERE n'est pas la racine d'un dépôt git (racine : $TOP)"
 
 LIST="$(mktemp)"
 trap 'rm -f "$LIST"' EXIT
-git ls-files -z > "$LIST" 2>/dev/null || abort "git ls-files a échoué"
+git ls-files -z > "$LIST" 2>/dev/null || abort "git ls-files failed"
 FILES="$(tr '\0' '\n' < "$LIST")"
 
-# 1. Bases et réglages de l'utilisateur.
-# Insensible à la casse : APFS l'est par défaut (`DATA.DB` = `data.db`).
+# 1. User databases and settings.
+# Case-insensitive: APFS is by default (`DATA.DB` = `data.db`).
 bad_names="$(printf '%s\n' "$FILES" | grep -Ei '(^|/)prefs\.json$|(^|/)window-state\.json$|\.db$|\.db-wal$|\.db-shm$|\.db-journal$|\.sqlite3?$|\.bak$' || true)"
 if [ -n "$bad_names" ]; then
-  report "fichier(s) de données suivi(s) par git :"
+  report "data file(s) tracked by git:"
   printf '%s\n' "$bad_names" | sed 's/^/    /' >&2
 fi
 
-# 2. Fichiers de secrets.
+# 2. Secret files.
 bad_secrets="$(printf '%s\n' "$FILES" | grep -Ei '(^|/)\.env(\..*)?$|\.(pem|key|p12|p8|cer|mobileprovision)$' || true)"
 if [ -n "$bad_secrets" ]; then
-  report "fichier(s) de secrets suivi(s) par git :"
+  report "secret file(s) tracked by git:"
   printf '%s\n' "$bad_secrets" | sed 's/^/    /' >&2
 fi
 
-# 3. Fichiers volumineux (liste blanche : snapshots visuels internes et icône).
+# 3. Large files (allowlist: internal visual snapshots and the icon).
 big=""
 OLD_IFS="$IFS"
 IFS='
@@ -69,26 +69,26 @@ for f in $FILES; do
   esac
   size="$(wc -c < "$f" | tr -d ' ')"
   if [ "$size" -gt "$MAX_BYTES" ]; then big="$big
-    $f ($size octets)"; fi
+    $f ($size bytes)"; fi
 done
 IFS="$OLD_IFS"
 if [ -n "$big" ]; then
-  report "fichier(s) de plus de 2 Mo hors liste blanche :$big"
+  report "file(s) over 2 MB outside the allowlist:$big"
 fi
 
-# 4. Contenu : clé privée PEM.
+# 4. Content: PEM private key.
 grep_rc=0
 hits="$(git grep -I -l -E -e "$PEM_KEY" -- . 2>/dev/null)" || grep_rc=$?
 if [ "$grep_rc" -gt 1 ]; then
-  abort "git grep a échoué (code $grep_rc)"
+  abort "git grep failed (code $grep_rc)"
 fi
 if [ -n "$hits" ]; then
-  report "clé(s) privée(s) dans le contenu suivi :"
+  report "private key(s) in tracked content:"
   printf '%s\n' "$hits" | sed 's/^/    /' >&2
 fi
 
 if [ "$fail" -ne 0 ]; then
-  echo "guard : ÉCHEC (données ou secrets suivis par git)" >&2
+  echo "guard : FAILED (data or secrets tracked by git)" >&2
   exit 1
 fi
-echo "guard : OK (aucune base, aucun réglage utilisateur ni secret suivi)"
+echo "guard : OK (no database, user settings or secrets tracked)"

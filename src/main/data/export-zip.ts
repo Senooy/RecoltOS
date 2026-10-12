@@ -1,10 +1,10 @@
 /**
- * Export zip : `manifest.json`, `recolt.db` (`VACUUM INTO`, bibliothèque entière
- * seulement), `items/**` (originaux), `metadata/items.jsonl` (une ligne par élément, lisible hors
- * de RecoltOS), `metadata/collections.json` ; dérivés seulement si `includeDerived`. L'archive est
- * écrite en streaming par le media-worker (yazl, ZIP64 automatique) ; progression en octets.
- * Une collection exporte ses éléments et ceux de ses sous-collections (sans la base).
- * Pas d'import electron (dialogue et `showItemInFolder` : handler).
+ * Zip export: `manifest.json`, `recolt.db` (`VACUUM INTO`, whole library only),
+ * `items/**` (originals), `metadata/items.jsonl` (one line per item, readable outside
+ * RecoltOS), `metadata/collections.json`; derived files only if `includeDerived`. The archive is
+ * streamed by the media-worker (yazl, automatic ZIP64); progress in bytes.
+ * A collection exports its items and those of its sub-collections (without the database).
+ * No electron import (dialog and `showItemInFolder`: handler).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -39,7 +39,7 @@ const DERIVED_COLUMNS = [
   'display_rel',
 ] as const
 
-/** Nom proposé : `RecoltOS-<nom>-<AAAA-MM-JJ>.zip`. */
+/** Suggested name: `RecoltOS-<name>-<YYYY-MM-DD>.zip`. */
 export function defaultExportName(name: string, at: number): string {
   const d = new Date(at)
   const p = (n: number) => String(n).padStart(2, '0')
@@ -47,7 +47,7 @@ export function defaultExportName(name: string, at: number): string {
   return `RecoltOS-${safe}-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.zip`
 }
 
-/** Ids des éléments exportés : tous (base complète) ou la collection et ses descendantes. */
+/** IDs of the exported items: all (full library) or the collection and its descendants. */
 function itemIdsFor(lib: Lib, collectionUuid: string | undefined): number[] | null {
   if (!collectionUuid) return null
   const col = lib.db.prepare('SELECT id FROM collections WHERE uuid = ?').get(collectionUuid) as
@@ -71,7 +71,7 @@ interface Prepared {
   counts: { items: number; media: number; collections: number }
 }
 
-/** Prépare les fichiers de métadonnées dans `tmp/export-<ts>/` et la liste des entrées. */
+/** Prepares the metadata files in `tmp/export-<ts>/` and the list of entries. */
 export function prepareExport(lib: Lib, opts: ExportOptions, at: number): Prepared {
   const ids = itemIdsFor(lib, opts.collectionUuid)
   const tmpDir = path.join(lib.paths.dir('tmp'), `export-${snapshotStamp(at)}-${process.pid}`)
@@ -80,7 +80,7 @@ export function prepareExport(lib: Lib, opts: ExportOptions, at: number): Prepar
   const idFilter = ids ? 'WHERE i.id IN (SELECT value FROM json_each(@ids))' : ''
   const params = ids ? { ids: JSON.stringify(ids) } : {}
 
-  // Métadonnées lisibles hors de RecoltOS.
+  // Metadata readable outside RecoltOS.
   const items = lib.db
     .prepare(
       `SELECT i.id, i.uuid, i.kind, i.source, coalesce(i.title, i.ai_title) AS title, i.notes,
@@ -140,7 +140,7 @@ export function prepareExport(lib: Lib, opts: ExportOptions, at: number): Prepar
     `${JSON.stringify(colOut, null, 2)}\n`,
   )
 
-  // Fichiers : originaux (+ dérivés).
+  // Files: originals (+ derived).
   const media = lib.db
     .prepare(
       `SELECT m.file_rel, ${DERIVED_COLUMNS.map((c) => `m.${c}`).join(', ')}
@@ -171,13 +171,13 @@ export function prepareExport(lib: Lib, opts: ExportOptions, at: number): Prepar
       if (!st.isFile()) continue
       sizes.push(st.size)
     } catch {
-      continue // fichier absent : signalé par « Vérifier la bibliothèque »
+      continue // missing file: reported by the library check
     }
     entries.push({ abs, name: rel })
     mediaCount++
   }
 
-  // Base cohérente (bibliothèque entière seulement).
+  // Consistent database (whole library only).
   if (!ids) {
     const dbFile = path.join(tmpDir, 'recolt.db')
     vacuumInto(lib.db, dbFile)
@@ -206,7 +206,7 @@ export function prepareExport(lib: Lib, opts: ExportOptions, at: number): Prepar
   return { entries, sizes, tmpDir, counts }
 }
 
-/** Export complet vers `out` ; `zip` = appel au media-worker (`zipLibrary`). */
+/** Full export to `out`; `zip` = call to the media-worker (`zipLibrary`). */
 export async function exportZip(
   lib: Lib,
   opts: ExportOptions,

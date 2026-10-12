@@ -1,6 +1,6 @@
 /**
- * Repo `item_media` : 1..n médias par item, position 0 = principal.
- * API d'écriture gelée (ingestion, import). Les chemins sont relatifs à la racine.
+ * `item_media` repo: 1..n media per item, position 0 = main.
+ * Write API frozen (ingestion, import). Paths are relative to the root.
  */
 import type Database from 'better-sqlite3'
 import { newUuid } from '../../../shared/ids'
@@ -41,7 +41,7 @@ export interface MediaRow {
   created_at: number
 }
 
-/** Champs modifiables d'un média (camelCase). */
+/** Editable fields of a media item (camelCase). */
 export interface MediaFields {
   role: MediaRole
   mediaType: MediaKind
@@ -71,7 +71,7 @@ export interface MediaFields {
 export type NewMedia = Partial<MediaFields> & {
   mediaType: MediaKind
   uuid?: string
-  /** Défaut : position suivante de l'item. */
+  /** Default: the item's next position. */
   position?: number
   createdAt?: number
 }
@@ -105,7 +105,7 @@ const COLUMNS: Readonly<Record<keyof MediaPatch, ColumnSpec>> = {
   originId: { col: 'origin_id' },
 }
 
-/** Colonnes de fichiers relatifs d'un média (purge, vérification). */
+/** Relative file columns of a media item (purge, verification). */
 export const MEDIA_FILE_COLUMNS = [
   'file_rel',
   'thumb_rel',
@@ -172,7 +172,7 @@ export function createMediaRepo(db: Database.Database, opts: RepoOptions = {}) {
       ) as { p: number }
     ).p
 
-  /** Recalcule `media_count` et rétablit une couverture si elle a disparu. */
+  /** Recomputes `media_count` and restores a cover if it has disappeared. */
   const syncItem = (itemId: number): void => {
     q(
       `UPDATE items SET
@@ -191,10 +191,10 @@ export function createMediaRepo(db: Database.Database, opts: RepoOptions = {}) {
   }
 
   const repo = {
-    /** Insertion brute, sans recalcul de l'item (utilisée par `items.insertWithMedia`). */
+    /** Raw insert, without recomputing the item (used by `items.insertWithMedia`). */
     insertRaw,
 
-    /** Ajoute un média à un item existant (met à jour `media_count` et la couverture). */
+    /** Adds a media item to an existing item (updates `media_count` and the cover). */
     insert(itemId: number, m: NewMedia): { id: number; uuid: string } {
       return db.transaction(() => {
         const r = insertRaw(itemId, m)
@@ -203,7 +203,7 @@ export function createMediaRepo(db: Database.Database, opts: RepoOptions = {}) {
       })()
     },
 
-    /** Idempotent par `uuid` (import : basename GatherOS) : n'écrase jamais l'existant. */
+    /** Idempotent by `uuid` (import: GatherOS basename): never overwrites the existing one. */
     upsertByUuid(itemId: number, m: NewMedia & { uuid: string }): { id: number; created: boolean } {
       return db.transaction(() => {
         const existing = q('SELECT id FROM item_media WHERE uuid = ?').get(m.uuid) as
@@ -223,7 +223,7 @@ export function createMediaRepo(db: Database.Database, opts: RepoOptions = {}) {
       )
     },
 
-    /** Supprime un média (le fichier est purgé par l'appelant) ; l'item reste cohérent. */
+    /** Deletes a media item (the file is purged by the caller); the item stays consistent. */
     delete(id: number): boolean {
       return db.transaction(() => {
         const row = q('SELECT item_id FROM item_media WHERE id = ?').get(id) as
@@ -246,7 +246,7 @@ export function createMediaRepo(db: Database.Database, opts: RepoOptions = {}) {
         itemId,
       ) as MediaRow[]
     },
-    /** Dédoublonnage des ingestions : médias d'items vivants portant ce hash. */
+    /** Deduplication of ingests: media of live items carrying this hash. */
     findByHash(contentHash: string): MediaRow[] {
       return q(
         `SELECT m.* FROM item_media m JOIN items i ON i.id = m.item_id

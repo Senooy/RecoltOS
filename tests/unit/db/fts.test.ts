@@ -11,7 +11,7 @@ const ids = (match: string, sources?: string[]) =>
   lib.repos.search.match(match, sources ? { sources } : {}).map((h) => h.id)
 
 describe('FTS5', () => {
-  it('insertion → recherche : « cafe » trouve « café » (remove_diacritics 2)', () => {
+  it('insert → search: « cafe » finds « café » (remove_diacritics 2)', () => {
     const { items } = lib.repos
     const a = items.insert({ kind: 'image', title: 'Un café à Lyon' }).id
     items.insert({ kind: 'image', title: 'Thé vert' })
@@ -20,7 +20,7 @@ describe('FTS5', () => {
     expect(ids('lyo*')).toEqual([a])
   })
 
-  it('cherche dans notes, OCR, description IA, tags IA, URL et texte de post', () => {
+  it('searches notes, OCR, AI description, AI tags, URL and post text', () => {
     const { items } = lib.repos
     const post = items.insert({
       kind: 'tweet',
@@ -59,7 +59,7 @@ describe('FTS5', () => {
     expect(ids('post_text:ada')).toEqual([post])
   })
 
-  it('mise à jour de titre réindexe ; masqués et supprimés exclus ; filtre de sources', () => {
+  it('title update reindexes; hidden and deleted excluded; source filter', () => {
     const { items } = lib.repos
     const a = items.insert({ kind: 'image', title: 'avant', source: 'instagram' }).id
     const b = items.insert({ kind: 'image', title: 'avant aussi', source: 'x' }).id
@@ -75,7 +75,7 @@ describe('FTS5', () => {
     expect(ids('apres')).toEqual([])
   })
 
-  it('renommage de tag réindexe les items liés', () => {
+  it('tag rename reindexes linked items', () => {
     const { items, tags, search } = lib.repos
     const a = items.insert({ kind: 'image', title: 'photo' }).id
     const [tagId] = tags.addToItems([a], ['vacances'])
@@ -89,7 +89,7 @@ describe('FTS5', () => {
     expect(search.indexedCount()).toBe(1)
   })
 
-  it('purge sans ligne FTS fantôme (cascade item_tags + trigger)', () => {
+  it('purge leaves no ghost FTS row (item_tags cascade + trigger)', () => {
     const { items, tags, search, collections } = lib.repos
     const a = items.insert({ kind: 'image', title: 'fantome' }).id
     const b = items.insert({ kind: 'image', title: 'vivant' }).id
@@ -105,7 +105,7 @@ describe('FTS5', () => {
     expect(ids('commun')).toEqual([b])
   })
 
-  it('reconstruction, optimize et requête invalide', () => {
+  it('rebuild, optimize and invalid query', () => {
     const { items, search } = lib.repos
     const a = items.insert({ kind: 'image', title: 'alpha' }).id
     lib.db.prepare('DELETE FROM items_fts').run()
@@ -121,7 +121,7 @@ describe('FTS5', () => {
     )
   })
 
-  it('classement bm25 : un titre pèse plus qu’une URL', () => {
+  it('bm25 ranking: a title weighs more than a URL', () => {
     const { items } = lib.repos
     const inUrl = items.insert({ kind: 'url', sourceUrl: 'https://exemple.test/zebre' }).id
     const inTitle = items.insert({ kind: 'image', title: 'zebre' }).id
@@ -129,7 +129,7 @@ describe('FTS5', () => {
     expect(lib.repos.search.match('zebre', { limit: 1 })).toHaveLength(1)
   })
 
-  it('historique de recherche', () => {
+  it('search history', () => {
     const { search } = lib.repos
     lib.clock.now = 10
     search.addHistory('  chat ')
@@ -146,7 +146,7 @@ describe('FTS5', () => {
   })
 })
 
-describe('EXPLAIN QUERY PLAN : index partiels ix_items_live_*', () => {
+describe('EXPLAIN QUERY PLAN: partial indexes ix_items_live_*', () => {
   const plan = (sql: string) =>
     (lib.db.prepare(`EXPLAIN QUERY PLAN ${sql}`).all() as { detail: string }[])
       .map((r) => r.detail)
@@ -155,7 +155,7 @@ describe('EXPLAIN QUERY PLAN : index partiels ix_items_live_*', () => {
 
   it.each([
     [
-      'récents',
+      'recent',
       `SELECT id FROM items WHERE ${live} ORDER BY created_at DESC, id DESC LIMIT 60`,
       'ix_items_live_created',
     ],
@@ -165,12 +165,12 @@ describe('EXPLAIN QUERY PLAN : index partiels ix_items_live_*', () => {
       'ix_items_live_created',
     ],
     [
-      'nom',
+      'name',
       `SELECT id FROM items WHERE ${live} ORDER BY name_key, id LIMIT 60`,
       'ix_items_live_name',
     ],
     [
-      'couleur',
+      'color',
       `SELECT id FROM items WHERE ${live} ORDER BY color_key, id LIMIT 60`,
       'ix_items_live_color',
     ],

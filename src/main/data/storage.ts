@@ -1,6 +1,6 @@
 /**
- * `data.storage` : taille de chaque dossier de la bibliothèque (parcours asynchrone, liens
- * symboliques ignorés) et de la base (db + wal + shm). Pas d'import electron.
+ * `data.storage`: size of each folder of the library (asynchronous walk, symbolic links
+ * ignored) and of the database (db + wal + shm). No electron import.
  */
 import type { Dirent } from 'node:fs'
 import fs from 'node:fs/promises'
@@ -37,7 +37,7 @@ export async function dirSize(dir: string): Promise<number> {
       try {
         total += (await fs.stat(abs)).size
       } catch {
-        // fichier disparu entre-temps
+        // file disappeared in the meantime
       }
     }
   }

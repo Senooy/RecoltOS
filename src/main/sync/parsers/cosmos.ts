@@ -1,18 +1,18 @@
 /**
- * Parseur Cosmos : réponse GraphQL `GetAllElements` (`allElementsV2`) → publications normalisées.
- * Fonction pure, jamais d'exception.
+ * Cosmos parser: GraphQL response `GetAllElements` (`allElementsV2`) → normalized posts.
+ * Pure function, never throws.
  *
- *  - image : `media.url` / `multipleMedia[]` sur `cdn.cosmos.so`, SANS `?format=webp` (original) ;
- *    repli `?format=jpeg` dans `fallbackUrl` ;
- *  - vidéo : `mux.downloadableUrl ?? mux.mp4Url ?? video.url`, poster `video.thumbnailUrl` ;
- *  - site web : `kind = 'url'`, `extra.linkUrl = source.url`, la vignette de la tuile en média ;
- *  - tuile texte : ignorée en V1 et comptée (`stats.ignored`).
+ *  - image: `media.url` / `multipleMedia[]` on `cdn.cosmos.so`, WITHOUT `?format=webp` (original);
+ *    fallback `?format=jpeg` in `fallbackUrl`;
+ *  - video: `mux.downloadableUrl ?? mux.mp4Url ?? video.url`, poster `video.thumbnailUrl`;
+ *  - website: `kind = 'url'`, `extra.linkUrl = source.url`, the tile thumbnail as media;
+ *  - text tile: ignored in V1 and counted (`stats.ignored`).
  *
- * Deux formes acceptées : l'ancienne (`video` / `mux` au niveau de l'élément,
- * `source.author` chaîne) et celle du schéma relevé le 2026-10-12 (requête de l'extension) : médias
- * typés (`__typename` `StaticImage` / `AnimatedImage` / `Video`) avec `Video.mux.mp4Url`,
- * `Video.thumbnail.url`, `AnimatedImage.video.{url, thumbnailUrl}` ; `source.author` objet
- * (`fullName`, `username`) ; tuile typée (`TextElementTile` → texte).
+ * Two accepted shapes: the old one (`video` / `mux` at the element level,
+ * `source.author` string) and the one from the schema observed on 2026-10-12 (extension request): media
+ * typed (`__typename` `StaticImage` / `AnimatedImage` / `Video`) with `Video.mux.mp4Url`,
+ * `Video.thumbnail.url`, `AnimatedImage.video.{url, thumbnailUrl}`; `source.author` object
+ * (`fullName`, `username`); typed tile (`TextElementTile` → text).
  */
 import {
   arr,
@@ -55,7 +55,7 @@ function isCosmosCdn(url: string): boolean {
   return host === 'cosmos.so' || host.endsWith('.cosmos.so')
 }
 
-/** Original Cosmos : paramètre `format` retiré (seulement sur le CDN Cosmos). */
+/** Cosmos original: `format` parameter removed (only on the Cosmos CDN). */
 export function cosmosOriginal(url: string | null): string | null {
   if (url === null) return null
   return isCosmosCdn(url) ? withoutParam(url, 'format') : url
@@ -99,7 +99,7 @@ function classifyErrors(errors: unknown): PageParseResult | null {
   )
 }
 
-/** `data.allElementsV2`, sinon le premier `data.<clé>` qui a `items[]` (renommage). */
+/** `data.allElementsV2`, otherwise the first `data.<key>` that has `items[]` (renaming). */
 function findConnection(data: Json): Json | null {
   if (isObj(data.allElementsV2) && Array.isArray(data.allElementsV2.items))
     return data.allElementsV2
@@ -137,7 +137,7 @@ function cosmosPost(
 
   const mux = obj(el.mux)
   const video = obj(el.video)
-  // Média vidéo typé (schéma actuel) : mp4 de Mux, sinon URL du média ; GIF animé : sa vidéo.
+  // Typed video media (current schema): Mux mp4, otherwise the media URL; animated GIF: its video.
   const typedVideoUrl =
     firstVideo === null
       ? null
@@ -183,7 +183,7 @@ function cosmosPost(
     fail('élément sans média ni lien')
   }
 
-  // `source.author` : chaîne (ancienne forme) ou objet `{ fullName, username }`.
+  // `source.author`: string (old shape) or object `{ fullName, username }`.
   const authorObj = obj(source.author)
   const name = isObj(source.author)
     ? cleanText(nonEmpty(authorObj.fullName) ?? authorObj.username)
@@ -280,8 +280,8 @@ function parsePage(json: unknown, opts: PageParseOptions): PageParseResult {
 }
 
 /**
- * Page `GetAllElements` → publications normalisées + curseur (`meta.nextPageCursor`). Accepte
- * l'objet JSON ou sa chaîne. Ne lève jamais.
+ * `GetAllElements` page → normalized posts + cursor (`meta.nextPageCursor`). Accepts
+ * the JSON object or its string. Never throws.
  */
 export function parseCosmosSavesPage(json: unknown, opts: PageParseOptions = {}): PageParseResult {
   try {

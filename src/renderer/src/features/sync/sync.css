@@ -1,4 +1,4 @@
-/* Réglages › Synchronisation (modale 749 × 571). */
+/* Settings › Sync (modal 749 × 571). */
 .sync-group {
   margin-top: 9px;
   font-size: 11px;
@@ -36,7 +36,7 @@
 .sync-tone-err {
   color: var(--tone-err);
 }
-/* Invisible tant que la ligne n'est pas survolée (la mise en page ne bouge pas). */
+/* Invisible until the row is hovered (the layout does not move). */
 .sync-more {
   display: inline-flex;
   height: 26px;

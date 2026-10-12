@@ -1,6 +1,6 @@
 /**
- * Table des opérations du media-worker (`MediaOps`, `src/shared/worker-protocol.ts`).
- * Fonctions pures côté processus : chemins explicites, aucune base, aucun `electron`.
+ * Operations table of the media-worker (`MediaOps`, `src/shared/worker-protocol.ts`).
+ * Pure functions on the process side: explicit paths, no database, no `electron`.
  */
 import { AppError } from '../../../shared/errors'
 import type { MediaArgs, MediaOp, MediaResult } from '../../../shared/worker-protocol'
@@ -44,7 +44,7 @@ export function isMediaOp(op: string): op is MediaOp {
   return Object.prototype.hasOwnProperty.call(MEDIA_OPS, op)
 }
 
-/** Exécute `op` ; les arguments doivent être un objet (validation fine dans chaque op). */
+/** Runs `op`; the arguments must be an object (fine-grained validation in each op). */
 export function runMediaOp(op: string, args: unknown, ctx: OpContext): Promise<unknown> {
   if (!isMediaOp(op))
     return Promise.reject(new AppError('unknown_op', `opération inconnue : ${op}`))

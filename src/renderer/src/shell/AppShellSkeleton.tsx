@@ -1,6 +1,6 @@
 /**
- * Coque statique sur les tokens : en-tête 96 px, sous-barre 60 px, rangée de
- * collections et grille squelette. Remplacée par `AppShell`.
+ * Static shell built on tokens: 96 px header, 60 px sub-bar, row of
+ * collections and skeleton grid. Replaced by `AppShell`.
  */
 import {
   ChevronDown,
@@ -24,7 +24,7 @@ import {
 import { tr } from '../i18n'
 
 const COLUMNS = 4
-/** Hauteurs relatives des cartes squelette (1,2 / 0,8 / 1,5…). */
+/** Relative heights of the skeleton cards (1.2 / 0.8 / 1.5…). */
 const SKELETON_RATIOS = [1.2, 0.8, 1.5, 1, 0.75, 1.3, 0.9, 1.25, 1.4, 0.7, 1.1, 0.85]
 
 function Logo() {

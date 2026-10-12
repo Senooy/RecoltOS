@@ -1,7 +1,7 @@
 /**
- * Import côté renderer : rapport « N ajoutés · M doublons · 0 échec »,
- * progression `ingest.progress` dans la pilule, sélecteurs (fichiers / dossier), ⌘V (le main lit le
- * presse-papiers), URL.
+ * Renderer-side import: report « N added · M duplicates · 0 failed »,
+ * `ingest.progress` progress in the pill, pickers (files / folder), ⌘V (the main reads the
+ * clipboard), URL.
  */
 import { create } from 'zustand'
 import type { IngestReport } from '../../../../shared/dto/items'
@@ -14,7 +14,7 @@ export const useImportUi = create<{ urlOpen: boolean; setUrlOpen: (o: boolean) =
   (set) => ({ urlOpen: false, setUrlOpen: (urlOpen) => set({ urlOpen }) }),
 )
 
-/** Toast de rapport ; un seul élément ajouté → « Voir » ouvre la vue détail. */
+/** Report toast; a single item added → « View » opens the detail view. */
 export function reportImport(r: IngestReport | null): void {
   if (!r) return
   const total = r.added.length + r.duplicates.length + r.failed.length

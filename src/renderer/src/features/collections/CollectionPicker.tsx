@@ -1,7 +1,6 @@
 /**
- * `CollectionPickerPopover` (réutilisable : Redécouvrir, panneau Détails, déplacement
- * d'une collection) : champ « Filtrer… », liste à plat avec sous-collections indentées de 12 px,
- * option « racine » facultative.
+ * `CollectionPickerPopover` (reusable: Rediscover, Details panel, moving a collection):
+ * « Filtrer… » field, flat list with sub-collections indented by 12 px, optional « racine » option.
  */
 import { Check, CornerDownRight, Folder, FolderPlus } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
@@ -14,18 +13,18 @@ import { flattenTree, useCollections } from '../../state/collections'
 export interface CollectionPickerProps {
   children: ReactNode
   onPick: (node: CollectionNode | null) => void
-  /** Propose « Aucune (racine) » en tête. */
+  /** Offers « Aucune (racine) » at the top. */
   allowRoot?: boolean
-  /** Collections cochées (appartenance). */
+  /** Checked collections (membership). */
   checked?: readonly string[]
-  /** Uuid exclu de la liste (la collection elle-même). */
+  /** Uuid excluded from the list (the collection itself). */
   exclude?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
   align?: 'start' | 'center' | 'end'
-  /** Collections proposées en tête (Redécouvrir : 3 plus récemment utilisées). */
+  /** Collections suggested at the top (Rediscover: the 3 most recently used). */
   suggested?: readonly { uuid: string; name: string }[]
-  /** « Nouvelle collection… » en dernier. */
+  /** « Nouvelle collection… » last. */
   onCreate?: () => void
   side?: 'top' | 'bottom'
 }

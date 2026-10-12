@@ -1,7 +1,7 @@
 /**
- * `ShortcutRecorder` : 3 key caps 24×22 (⌘ ⇧ S) ; clic = écoute de
- * la prochaine combinaison (Échap annule) ; accélérateur positionnel (`e.code`), libellé de la
- * touche imprimée (`getLayoutMap()`) ; application immédiate (`capture.setShortcut`), erreur inline.
+ * `ShortcutRecorder`: 3 key caps 24×22 (⌘ ⇧ S); click = listens for
+ * the next combination (Esc cancels); positional accelerator (`e.code`), label of the
+ * printed key (`getLayoutMap()`); immediate application (`capture.setShortcut`), inline error.
  */
 import { useEffect, useRef, useState } from 'react'
 import { tr } from '../../i18n'
@@ -29,7 +29,7 @@ export function ShortcutRecorder() {
   const layout = useRef<Map<string, string> | null>(null)
   const btn = useRef<HTMLButtonElement | null>(null)
 
-  // Libellé recalculé depuis l'accélérateur stocké (autre disposition depuis le dernier réglage).
+  // Label recomputed from the stored accelerator (different layout since the last setting).
   useEffect(() => {
     void layoutMap().then((m) => {
       layout.current = m

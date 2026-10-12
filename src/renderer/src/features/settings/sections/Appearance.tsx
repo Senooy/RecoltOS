@@ -1,6 +1,6 @@
 /**
- * Réglages › Apparence : thème, langue, colonnes et tri par défaut, vidéos au survol, animations.
- * La langue s'applique tout de suite (renderer remonté, menu natif reconstruit par main).
+ * Settings › Appearance: theme, language, default columns and sort, hover videos, animations.
+ * The language applies immediately (renderer re-mounted, native menu rebuilt by main).
  */
 import type { SortMode } from '../../../../../shared/enums'
 import type { LanguagePref } from '../../../../../shared/i18n/lang'

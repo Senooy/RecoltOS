@@ -1,6 +1,6 @@
 /**
- * `Kbd` : raccourcis clavier. `xs` (11 px, en-tête), `sm`, `md`
- * (Réglages : une touche = une boîte de 24×22). Mono pour les touches en lettres (« esc »).
+ * `Kbd`: keyboard shortcuts. `xs` (11 px, header), `sm`, `md`
+ * (Settings: one key = a 24×22 box). Monospace for letter keys (« esc »).
  */
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ComponentProps } from 'react'
@@ -28,17 +28,17 @@ const kbdVariants = cva('inline-flex items-center justify-center whitespace-nowr
 
 export interface KbdProps
   extends Omit<ComponentProps<'span'>, 'children'>, VariantProps<typeof kbdVariants> {
-  /** Touches, une entrée par touche : `['⌘', '⇧', 'S']`. */
+  /** Keys, one entry per key: `['⌘', '⇧', 'S']`. */
   keys: readonly string[]
 }
 
-/** Deux lettres ASCII ou plus : « esc », « Tab » → police mono. */
+/** Two or more ASCII letters: « esc », « Tab » → monospace font. */
 const isWord = (s: string): boolean => /[A-Za-z]{2,}/.test(s)
 
 export function Kbd({ keys, size = 'xs', tone = 'light', className, ...rest }: KbdProps) {
   const base = kbdVariants({ size, tone })
   if (size === 'md') {
-    // Réglages : une boîte par touche, annoncée comme un seul raccourci.
+    // Settings: one box per key, announced as a single shortcut.
     return (
       <span
         role="img"

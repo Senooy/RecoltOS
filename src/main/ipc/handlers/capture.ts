@@ -1,7 +1,7 @@
 /**
- * Handlers `capture.*` : lancer une capture, état (permission, raccourci,
- * signature, dernier échec du dossier de dépôt), raccourci appliqué immédiatement, volet des
- * Réglages Système, relance, choix du dossier de dépôt.
+ * `capture.*` handlers: start a capture, state (permission, shortcut,
+ * signature, last failure of the drop folder), shortcut applied immediately, the
+ * System Settings pane, relaunch, choice of the drop folder.
  */
 import { BrowserWindow, app, dialog, type OpenDialogOptions } from 'electron'
 import { getCaptureService, isShortcutRegistered, setCaptureShortcut } from '../../capture/init'

@@ -1,6 +1,6 @@
 /**
- * Correspondance champ par champ `saves` → `items`, `item_media`, `authors`.
- * Fonctions pures : aucune E/S, aucune base.
+ * Field-by-field mapping `saves` → `items`, `item_media`, `authors`.
+ * Pure functions: no I/O, no database.
  */
 import { createHash } from 'node:crypto'
 import { basename, extname, join } from 'node:path'
@@ -20,14 +20,14 @@ import type { SaveRow } from './read'
 
 export const ORIGIN = 'gatheros'
 export const STARTER_TAG = '__starter__'
-/** Tags GatherOS qui ne deviennent pas des tags : ils sont dans `source` (chips virtuelles). */
+/** GatherOS tags that do not become tags: they go into `source` (virtual chips). */
 export const SOURCE_TAGS: ReadonlySet<string> = new Set(['bookmark', 'instagram', 'cosmos', 'x'])
-/** tags importés hors démarrage renommés en français. */
+/** Imported tags (other than the starter tag) renamed to French. */
 export const TAG_MAP_EN_FR: Readonly<Record<string, string>> = { screenshot: 'capture-ecran' }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-/** UUID déterministe (forme v5 : version 5, variante RFC) dérivé d'une graine. */
+/** Deterministic UUID (v5 form: version 5, RFC variant) derived from a seed. */
 export function deterministicUuid(seed: string): string {
   const h = createHash('sha1').update(`recoltos:gatheros:${seed}`).digest('hex')
   const v = ((parseInt(h[16]!, 16) & 0x3) | 0x8).toString(16)
@@ -40,7 +40,7 @@ export function isUuid(s: string): boolean {
 
 const WebUrlSchema = z.url({ protocol: /^https?$/ })
 
-/** URL http(s) valide, sinon `null` (les chaînes vides deviennent `null`). */
+/** Valid http(s) URL, otherwise `null` (empty strings become `null`). */
 export function webUrl(v: unknown): string | null {
   if (typeof v !== 'string') return null
   const t = v.trim()
@@ -59,7 +59,8 @@ export function cleanHandle(v: unknown): string | null {
   return h || null
 }
 
-/** `external_id` extrait de l'URL source (X `/status/<n>`, IG `/(p|reel|tv)/<code>`, Cosmos `/e/<n>`). */
+/** `external_id` extracted from the source URL
+ * (X `/status/<n>`, IG `/(p|reel|tv)/<code>`, Cosmos `/e/<n>`). */
 export function externalIdOf(source: string, url: string | null): string | null {
   if (!url) return null
   if (source === 'x') return /\/status(?:es)?\/(\d+)/.exec(url)?.[1] ?? null
@@ -77,7 +78,7 @@ function hostOf(url: string | null): string | null {
   }
 }
 
-/** Source RecoltOS : `url` hors x.com → `web` ; sans URL : `capture` (tag screenshot) ou `local`. */
+/** RecoltOS source: `url` outside x.com → `web`; without URL: `capture` (screenshot tag) or `local`. */
 export function mapSource(
   save: Pick<SaveRow, 'source' | 'source_url' | 'kind'>,
   tags: readonly string[],
@@ -119,7 +120,7 @@ export function mimeOf(name: string): string | null {
   return MIME[extOf(name)] ?? null
 }
 
-/** `moodmark-file://local/<chemin encodé>` → basename du fichier, sinon `null`. */
+/** `moodmark-file://local/<encoded path>` → file basename, otherwise `null`. */
 export function localBasename(url: unknown): string | null {
   if (typeof url !== 'string' || !url.startsWith('moodmark-file://local/')) return null
   try {
@@ -140,7 +141,7 @@ export interface ParsedPalette {
   colorBucket: number
 }
 
-/** Palette importée conservée ; LCh et bucket de tri dérivés de la dominante. */
+/** Imported palette kept; LCh and sort bucket derived from the dominant color. */
 export function parsePalette(
   hexJson: string | null,
   labJson: string | null,
@@ -179,7 +180,7 @@ export function parsePalette(
       if (ok) lab = (raw as [number, number, number][]).map(([l, a, b]) => [l, a, b])
     }
   } catch {
-    // recalculée ci-dessous
+    // recomputed below
   }
   if (lab && deltaE76(hexToLab(hex[0]!), lab[0]!) > 5) {
     warn('palette_lab incohérente avec palette : recalculée')
@@ -201,7 +202,7 @@ export type PlannedFileKind = 'main' | 'slide' | 'poster' | 'legacyThumb'
 
 export interface PlannedFile {
   kind: PlannedFileKind
-  /** Nom du fichier dans `images/` (ou `thumbs/` pour la miniature). */
+  /** File name inside `images/` (or `thumbs/` for the thumbnail). */
   srcName: string
   dstRel: string
   mediaUuid: string
@@ -215,7 +216,7 @@ export interface MappedSave {
   files: PlannedFile[]
   author: (AuthorInput & { name: string | null }) | null
   quotedAuthor: AuthorInput | null
-  /** Images citées et de fil à télécharger (`remote.fetch`). */
+  /** Quoted and thread images to download (`remote.fetch`). */
   remoteImages: string[]
   tags: string[]
   warnings: string[]
@@ -261,7 +262,7 @@ function authorPlatform(p: PostPlatform): AuthorPlatform {
 
 export interface MapOptions {
   importAiFields: boolean
-  /** Fichiers présents dans `thumbs/` de GatherOS (miniature legacy copiée si présente). */
+  /** Files present in GatherOS `thumbs/` (legacy thumbnail copied if present). */
   hasThumb?: (name: string) => boolean
 }
 
@@ -275,7 +276,7 @@ export function mapSave(save: SaveRow, tags: readonly string[], opts: MapOptions
   const platform: PostPlatform =
     source === 'x' || source === 'instagram' || source === 'cosmos' ? source : 'web'
 
-  // Média principal (position 0) = `file_path`.
+  // Main media (position 0) = `file_path`.
   const mainName = basename(save.file_path || '')
   const mainStem = mainName.replace(/\.[^.]+$/, '')
   const mainUuid = isUuid(mainStem) ? mainStem.toLowerCase() : deterministicUuid(`${save.id}:0`)
@@ -516,7 +517,7 @@ export function mapSave(save: SaveRow, tags: readonly string[], opts: MapOptions
   }
 }
 
-/** Clé `dismissed_tweets` → `(source, external_id)`. */
+/** `dismissed_tweets` key → `(source, external_id)`. */
 export function mapDismissedKey(key: string): { source: string; externalId: string } {
   const i = key.indexOf(':')
   if (i > 0) {
@@ -535,7 +536,7 @@ export function mapDismissedKey(key: string): { source: string; externalId: stri
   return { source: /^\d+$/.test(key) ? 'x' : 'unknown', externalId: key }
 }
 
-/** Chemin source d'un fichier planifié. */
+/** Source path of a planned file. */
 export function sourceAbs(dirs: { images: string; thumbs: string }, f: PlannedFile): string {
   return join(f.kind === 'legacyThumb' ? dirs.thumbs : dirs.images, f.srcName)
 }

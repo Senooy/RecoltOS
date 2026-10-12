@@ -1,10 +1,10 @@
 /**
- * Vitest : trois projets.
- *  - `unit`     : Node, processus enfants (`forks`), `tests/unit/**`, `src/**` et les auto-tests de l'outillage.
+ * Vitest: three projects.
+ *  - `unit`     : Node, child processes (`forks`), `tests/unit/**`, `src/**` and the tooling self-tests.
  *  - `renderer` : happy-dom, `tests/renderer/**`.
- *  - `real`     : `tests/real/**`, séquentiel, ignoré sauf si `RECOLTOS_REAL_LIBRARY` est défini
- *                 (ou `RECOLT_TEST_IMPORTED_USERDATA` : seulement `m2-imported` et `m3-imported`).
- * Les alias répliquent ceux d'`electron.vite.config.ts` / `tsconfig.base.json`.
+ *  - `real`     : `tests/real/**`, sequential, skipped unless `RECOLTOS_REAL_LIBRARY` is set
+ *                 (or `RECOLT_TEST_IMPORTED_USERDATA`: only `m2-imported` and `m3-imported`).
+ * The aliases mirror those of `electron.vite.config.ts` / `tsconfig.base.json`.
  */
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
@@ -17,7 +17,7 @@ const alias = {
 }
 
 const realLibrary = process.env.RECOLTOS_REAL_LIBRARY
-/** Bibliothèque RecoltOS déjà importée (copie de dev, ex. `.tmp/m2-real`) : tests M2 sur données réelles. */
+/** RecoltOS library already imported (dev copy, e.g. `.tmp/m2-real`): M2 tests on real data. */
 const importedUserData = process.env.RECOLT_TEST_IMPORTED_USERDATA
 
 export default defineConfig({

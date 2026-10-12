@@ -1,8 +1,8 @@
 /**
- * Job `media.download` : média de carrousel distant (`status='remote'`)
- * téléchargé dans `items/<ab>/<uuid>.<ext>` (et son poster), puis `media.derive`. Une réponse 4xx
- * le passe en `missing` sans nouvelle tentative. Gouverné par `prefs.storage.downloadRemoteMedia`.
- * Point d'extension : `registerFetchPolicy` (`../fetch`), utilisé par la sync.
+ * `media.download` job: remote carousel media (`status='remote'`) downloaded into
+ * `items/<ab>/<uuid>.<ext>` (and its poster), then `media.derive`. A 4xx response sets it to
+ * `missing` without retrying. Governed by `prefs.storage.downloadRemoteMedia`.
+ * Extension point: `registerFetchPolicy` (`../fetch`), used by the sync.
  */
 import { mkdir, rename, rm } from 'node:fs/promises'
 import { dirname } from 'node:path'
@@ -53,7 +53,7 @@ export const mediaDownload: JobHandler = async (job, ctx) => {
     } catch (err) {
       await rm(ptmp, { force: true })
       posterRel = null
-      ctx.log.warn(`[jobs] poster distant indisponible pour ${m.uuid}`, err)
+      ctx.log.warn(`[jobs] remote poster unavailable for ${m.uuid}`, err)
     }
   }
 
@@ -81,7 +81,7 @@ export const mediaDownload: JobHandler = async (job, ctx) => {
   return { status: 'done' }
 }
 
-/** Échec définitif (4xx, désactivé…) : `missing`, l'élément garde sa couverture. */
+/** Permanent failure (4xx, disabled…): `missing`, the item keeps its cover. */
 export const mediaDownloadFailed: JobFailureHook = (job, error, s) => {
   const mediaId = payloadId(job, 'mediaId')
   if (mediaId === null || error.code === 'disabled') return

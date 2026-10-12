@@ -1,5 +1,5 @@
 /**
- * `SaveRequest`, accusé, envoi découpé et collections.
+ * `SaveRequest`, acknowledgement, chunked send and collections.
  */
 import { z } from 'zod'
 import { MAX_INLINE_BASE64_CHARS, MAX_UPLOAD_BYTES } from './constants'
@@ -57,21 +57,21 @@ export type SaveRequest = z.output<typeof SaveRequest>
 
 export const SaveAck = z.object({
   status: z.enum(['saved', 'duplicate', 'queued', 'error']),
-  /** `uuid` de l'élément créé ou retrouvé. */
+  /** `uuid` of the item created or found. */
   saveId: z.string().optional(),
   collectionName: z.string().optional(),
   error: z.string().optional(),
 })
 export type SaveAck = z.output<typeof SaveAck>
 
-/** Morceau binaire (base64) : envoi d'un fichier > 8 Mio (`upload.id`) ou proxy `media.fetch` (`jobId`). */
+/** Binary chunk (base64): sending a file > 8 MiB (`upload.id`) or `media.fetch` proxy (`jobId`). */
 export const MediaChunkMessage = z.object({
   jobId: z.string().min(1).max(64),
   seq: z.number().int().min(0),
   last: z.boolean(),
   mime: z.string().max(100).optional(),
   data: z.string().max(MAX_INLINE_BASE64_CHARS),
-  /** Échec côté extension (proxy) : plus aucun morceau ne suivra. */
+  /** Failure on the extension side (proxy): no further chunk will follow. */
   error: z.string().max(500).optional(),
 })
 export type MediaChunkMessage = z.output<typeof MediaChunkMessage>
@@ -93,7 +93,7 @@ export type BridgeCollection = z.output<typeof BridgeCollection>
 
 export const CollectionsListResult = z.object({
   collections: z.array(BridgeCollection).max(2000),
-  /** `collection.create` : identifiant de la collection créée. */
+  /** `collection.create`: id of the created collection. */
   createdId: z.string().optional(),
 })
 export const CollectionCreateMessage = z.object({

@@ -1,10 +1,10 @@
 /**
- * Préparation des médias envoyés à l'IA, dans le media-worker :
- * - `aiImage` : JPEG q85, côté ≤ `maxEdge` (1568), orientation appliquée, fond blanc, AUCUNE
- *   métadonnée (EXIF/GPS retirés : pas de `withMetadata`), première image d'une animation ;
- * - `extractFrame` : une image d'une vidéo à `atMs` (ou à `fromEndMs` de la fin, `-sseof`), JPEG
- *   ≤ `maxEdge` (1024). Pas de repli interne : un fichier vide donne `decode_failed`, la stratégie de
- *   repli (0,80·d puis `-sseof -0.5`) appartient à `ai/media.ts`.
+ * Preparation of media sent to the AI, in the media-worker:
+ * - `aiImage`: JPEG q85, side ≤ `maxEdge` (1568), orientation applied, white background, NO
+ *   metadata (EXIF/GPS removed: no `withMetadata`), first frame of an animation;
+ * - `extractFrame`: one frame of a video at `atMs` (or at `fromEndMs` from the end, `-sseof`), JPEG
+ *   ≤ `maxEdge` (1024). No internal fallback: an empty file gives `decode_failed`, the fallback strategy
+ *   (0.80·d then `-sseof -0.5`) belongs to `ai/media.ts`.
  */
 import { stat } from 'node:fs/promises'
 import sharp from 'sharp'
@@ -124,7 +124,7 @@ export async function extractFrame(
       } catch (err) {
         throw sourceFailure(err)
       }
-      // ffmpeg peut sortir avec le code 0 sans rien écrire près de la fin.
+      // ffmpeg may exit with code 0 without writing anything near the end.
       const size = await stat(tmp).then(
         (s) => s.size,
         () => 0,

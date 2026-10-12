@@ -1,10 +1,10 @@
 /**
- * Téléchargement des médias synchronisés PAR L'APP : étend
- * `media.download` par `registerFetchPolicy`, sans remplacer le handler.
- * - `Referer` selon le CDN, `User-Agent` de navigateur, AUCUN cookie ;
- * - listes de lecture HLS (`.m3u8`) → mp4 par ffmpeg `-c copy` ;
- * - Instagram : 403/410 sur une URL signée périmée → `onExpired` (le coordinateur demande un
- *   `item.refresh` à l'extension, dans le budget Instagram).
+ * Download of synced media BY THE APP: extends
+ * `media.download` via `registerFetchPolicy`, without replacing the handler.
+ * - `Referer` depending on the CDN, browser `User-Agent`, NO cookie;
+ * - HLS playlists (`.m3u8`) → mp4 via ffmpeg `-c copy`;
+ * - Instagram: 403/410 on an expired signed URL → `onExpired` (the coordinator requests an
+ *   `item.refresh` from the extension, within the Instagram budget).
  */
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -30,7 +30,7 @@ export function refererFor(u: URL): string | null {
   return null
 }
 
-/** Résumé d'un fichier écrit (même forme que `fetchToFile`). */
+/** Summary of a written file (same shape as `fetchToFile`). */
 async function describe(dst: string, status = 200): Promise<FetchedFile> {
   const st = await stat(dst)
   if (st.size === 0) throw new AppError('http_4xx', 'réponse vide', { status })
@@ -46,7 +46,7 @@ async function describe(dst: string, status = 200): Promise<FetchedFile> {
   return { bytes: st.size, sha256: hash.digest('hex'), contentType: 'video/mp4', status, head }
 }
 
-/** HLS → mp4 sans réencodage (`ffmpeg -c copy`), en-têtes du CDN, délai 10 min. */
+/** HLS → mp4 without re-encoding (`ffmpeg -c copy`), CDN headers, 10 min timeout. */
 export function hlsDownload(ffmpeg: () => string | null) {
   return async (url: string, dst: string, opts: FetchToFileOptions): Promise<FetchedFile> => {
     const bin = ffmpeg()
@@ -103,11 +103,11 @@ export function hlsDownload(ffmpeg: () => string | null) {
 
 export interface DownloaderDeps {
   ffmpeg: () => string | null
-  /** URL signée Instagram périmée (403/410). */
+  /** Expired Instagram signed URL (403/410). */
   onExpired: (url: string, status: number) => void
 }
 
-/** Enregistre les politiques par CDN ; rend la fonction de retrait. */
+/** Registers the policies per CDN; returns the removal function. */
 export function registerSyncFetchPolicies(deps: DownloaderDeps): () => void {
   const hls = hlsDownload(deps.ffmpeg)
   const offs = [

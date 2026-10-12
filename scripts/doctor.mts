@@ -1,7 +1,7 @@
 /**
- * `pnpm run check:env` (nom `doctor` réservé par pnpm) : vérifie que l'environnement
- * permet de construire et de tester RecoltOS. Code de sortie 1 seulement si un contrôle `fail`
- * échoue ; les avertissements (outils optionnels, pnpm 9.15.0 de Homebrew…) ne bloquent jamais.
+ * `pnpm run check:env` (the name `doctor` is reserved by pnpm): checks that the environment
+ * can build and test RecoltOS. Exit code 1 only if a `fail` check fails; warnings (optional tools,
+ * pnpm 9.15.0 from Homebrew…) never block.
  */
 import { resolve } from 'node:path'
 import { runChecks, type Level } from './check-env.mjs'
@@ -18,10 +18,10 @@ function main(): number {
   const fails = checks.filter((c) => c.level === 'fail')
   const warns = checks.filter((c) => c.level === 'warn')
   console.log(
-    `\n${checks.length - fails.length - warns.length} ok, ${warns.length} avertissement(s), ${fails.length} échec(s)`,
+    `\n${checks.length - fails.length - warns.length} ok, ${warns.length} warning(s), ${fails.length} failure(s)`,
   )
   if (fails.length > 0) {
-    console.error('check:env : ÉCHEC')
+    console.error('check:env : FAILED')
     return 1
   }
   console.log('check:env : OK')

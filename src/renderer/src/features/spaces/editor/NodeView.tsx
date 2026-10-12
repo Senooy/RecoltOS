@@ -1,18 +1,18 @@
 /**
- * `NodeView` : boîte absolue `translate(x,y) rotate(r)` de taille `w × h` ; le
- * contenu est inerte (`.node-content { pointer-events: none }`), le hit-test se fait sur
- * `.space-node`. Mémoïsé : ne se re-rend que si SON nœud, SA prévisualisation, son état d'édition,
- * sa vidéo ou le palier de niveau de détail changent (jamais à chaque image de pan/zoom).
+ * `NodeView`: absolute box `translate(x,y) rotate(r)` of size `w × h`; the
+ * content is inert (`.node-content { pointer-events: none }`), hit-testing happens on
+ * `.space-node`. Memoized: re-renders only if ITS node, ITS preview, its edit state,
+ * its video or the detail-level step changes (never on every pan/zoom frame).
  */
 import { memo } from 'react'
 import { create } from 'zustand'
 import { NodeContent } from './nodes/NodeContent'
 import { useCamera, useSpace } from './store/spaceStore'
 
-/** Vidéos actives (≤ 2), calculées par le viewport en fin de geste. */
+/** Active videos (≤ 2), computed by the viewport at the end of the gesture. */
 export const useVideos = create<{ ids: readonly string[] }>()(() => ({ ids: [] }))
 
-/** Paliers du niveau de détail (zoom × densité) : re-rendu seulement au franchissement. */
+/** Detail-level steps (zoom × density): re-rendered only when a step is crossed. */
 const LOD_STEPS = [0.25, 0.5, 1, 1.5, 2, 3, 4, 6, 8]
 export function lodOf(zoom: number, dpr: number): number {
   const v = zoom * dpr
@@ -29,7 +29,7 @@ export const NodeView = memo(function NodeView({
   stageScale,
 }: {
   id: string
-  /** Fenêtre stage : échelle fixée par le main, pas de vidéo, pas d'édition. */
+  /** Stage window: scale set by main, no video, no editing. */
   stageScale?: number
 }) {
   const node = useSpace((s) => s.nodes[id])

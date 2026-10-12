@@ -1,6 +1,6 @@
 /**
- * Repo `settings` : réglages propres à une bibliothèque (vue courante, dernier import, pauses de
- * jobs `jobs.paused`, compteur IA du jour…), valeurs JSON.
+ * `settings` repo: per-library settings (current view, last import, job pauses
+ * `jobs.paused`, today's AI counter…), JSON values.
  */
 import type Database from 'better-sqlite3'
 import type { z } from 'zod'
@@ -17,10 +17,10 @@ export function createSettingsRepo(db: Database.Database, opts: RepoOptions = {}
   }
 
   return {
-    /** Valeur brute (`undefined` si absente). */
+    /** Raw value (`undefined` if absent). */
     get: getRaw,
 
-    /** Valeur validée ; absente ou invalide → `fallback`. */
+    /** Validated value; missing or invalid → `fallback`. */
     getParsed<S extends z.ZodType>(key: string, schema: S, fallback: z.output<S>): z.output<S> {
       const raw = getRaw(key)
       if (raw === undefined) return fallback

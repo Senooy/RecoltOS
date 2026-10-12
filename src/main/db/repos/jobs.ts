@@ -1,6 +1,6 @@
 /**
- * Repo `jobs` : primitives SQL de la file unique (`priority DESC`).
- * L'ordonnancement (boucles par type, concurrence, pauses, handlers) appartient
+ * `jobs` repo: SQL primitives of the single queue (`priority DESC`).
+ * Scheduling (per-type loops, concurrency, pauses, handlers) belongs to
  * (`jobs/queue.ts`).
  */
 import type Database from 'better-sqlite3'
@@ -70,8 +70,8 @@ export function toJobRecord(row: JobRow): JobRecord {
 export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
   const { q, now } = repoBase(db, opts)
   const requeueTx = db.transaction((type: JobType | null, at: number): number => {
-    // `ux_jobs_active` interdit deux jobs actifs de même (type, dedupe_key) : les `failed`
-    // supplantés (clé déjà active, ou `failed` plus récent de même clé) passent en `cancelled`.
+    // `ux_jobs_active` forbids two active jobs with the same (type, dedupe_key): the `failed`
+    // superseded ones (key already active, or a more recent `failed` with the same key) become `cancelled`.
     q(
       `UPDATE jobs SET state = 'cancelled', updated_at = @at
        WHERE state = 'failed' AND (@type IS NULL OR type = @type) AND dedupe_key IS NOT NULL AND (
@@ -87,8 +87,8 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
   })
   return {
     /**
-     * Ajoute un job. Avec `dedupeKey`, un job actif (`queued`/`running`) du même type est réutilisé
-     * et sa priorité relevée si nécessaire (`ux_jobs_active`). Renvoie l'id.
+     * Adds a job. With `dedupeKey`, an active job (`queued`/`running`) of the same type is reused
+     * and its priority raised if needed (`ux_jobs_active`). Returns the id.
      */
     enqueue(j: EnqueueInput, at: number = now()): number {
       const row = q(
@@ -113,7 +113,7 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return row.id
     },
 
-    /** Prend le prochain job prêt d'un type et le passe en `running`. */
+    /** Takes the next ready job of a type and sets it to `running`. */
     claimNext(type: JobType, at: number = now()): JobRecord | null {
       const row = q(
         `UPDATE jobs SET state = 'running', attempts = attempts + 1, updated_at = @now
@@ -134,7 +134,7 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
       )
     },
 
-    /** Nouvelle tentative à `retryAt` ; `refundAttempt` = sans consommer de tentative (limite IA). */
+    /** New attempt at `retryAt`; `refundAttempt` = without consuming an attempt (AI limit). */
     retry(
       id: number,
       retryAt: number,
@@ -166,7 +166,7 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
       )
     },
 
-    /** Annule les jobs actifs d'un item (ou d'un type pour cet item). */
+    /** Cancels the active jobs of an item (or of a type for that item). */
     cancelForItem(itemId: number, type?: JobType, at: number = now()): number {
       return q(
         `UPDATE jobs SET state = 'cancelled', updated_at = @at
@@ -175,20 +175,20 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
     },
 
     /**
-     * Remet en `queued` des jobs `failed` (bouton « Réessayer »). Les doublons de clé de dédup
-     * déjà actifs ou supplantés sont annulés au lieu d'être relancés.
+     * Puts `failed` jobs back to `queued` (the "Réessayer" button). Duplicate dedupe keys
+     * already active or superseded are cancelled instead of being re-run.
      */
     requeueFailed(type?: JobType, at: number = now()): number {
       return requeueTx(type ?? null, at)
     },
 
-    /** Au démarrage : les jobs restés `running` repassent en `queued`. */
+    /** At startup: jobs left `running` go back to `queued`. */
     resetRunning(at: number = now()): number {
       return q("UPDATE jobs SET state = 'queued', updated_at = ? WHERE state = 'running'").run(at)
         .changes
     },
 
-    /** Ménage : jobs `done` / `cancelled` plus vieux que `before`. */
+    /** Cleanup: `done` / `cancelled` jobs older than `before`. */
     cleanup(before: number): number {
       return q("DELETE FROM jobs WHERE state IN ('done','cancelled') AND updated_at < ?").run(
         before,
@@ -203,7 +203,7 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return q('SELECT * FROM jobs WHERE id = ?').get(id) as JobRow | undefined
     },
 
-    /** Compteurs par type et état (`jobs.progress`). */
+    /** Counters per type and state (`jobs.progress`). */
     countsByType(): Record<string, { queued: number; running: number; failed: number }> {
       const rows = q(
         `SELECT type,

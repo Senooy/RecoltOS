@@ -1,4 +1,4 @@
-/** variante d'image de la toile choisie explicitement, et caches bornés. */
+/** Canvas image variant chosen explicitly, and bounded caches. */
 import { describe, expect, it } from 'vitest'
 import {
   THUMB_UPSCALE,
@@ -12,17 +12,17 @@ const thumb = 'recolt://lib/thumbs/ab/abc.webp?v=1'
 const large = 'recolt://lib/large/ab/abc.webp?v=1'
 
 describe('pickSpaceVariant', () => {
-  it('vignette 800w tant qu’elle suffit, large au-delà, jamais l’original', () => {
+  it('800w thumbnail while it suffices, large beyond that, never the original', () => {
     expect(pickSpaceVariant(thumb, large, 64)).toBe(thumb)
-    // Nœud de 320 px à 100 % en Retina : 640 px physiques.
+    // 320 px node at 100 % on Retina: 640 physical px.
     expect(pickSpaceVariant(thumb, large, 320 * lodOf(1, 2))).toBe(thumb)
-    // À 150 % en Retina (palier 3) : 960 px, tolérance d'agrandissement de la vignette.
+    // At 150 % on Retina (tier 3): 960 px, thumbnail upscaling tolerance.
     expect(pickSpaceVariant(thumb, large, 320 * lodOf(1.5, 2))).toBe(thumb)
     expect(pickSpaceVariant(thumb, large, THUMB_W * THUMB_UPSCALE + 1)).toBe(large)
     expect(pickSpaceVariant(thumb, large, 320 * lodOf(2, 2))).toBe(large)
   })
 
-  it('une vignette non dérivée (repli) cède la place à large ; sans large, la vignette', () => {
+  it('a non-derived thumbnail (fallback) yields to large; without large, the thumbnail', () => {
     const legacy = 'recolt://lib/items/ab/legacy.jpg?v=1'
     expect(pickSpaceVariant(legacy, large, 64)).toBe(large)
     expect(pickSpaceVariant(thumb, undefined, 4000)).toBe(thumb)
@@ -32,7 +32,7 @@ describe('pickSpaceVariant', () => {
 })
 
 describe('lruSet', () => {
-  it('borne la Map et évince la plus ancienne entrée', () => {
+  it('bounds the Map and evicts the oldest entry', () => {
     const m = new Map<string, number>()
     for (let i = 0; i < 5; i++) lruSet(m, `k${i}`, i, 3)
     expect([...m.keys()]).toEqual(['k2', 'k3', 'k4'])

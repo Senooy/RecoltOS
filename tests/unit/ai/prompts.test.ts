@@ -87,7 +87,7 @@ describe('prompts', () => {
     })
   }
 
-  it('langue de sortie : français par défaut, anglais si l’interface est en anglais', () => {
+  it('output language: French by default, English if the interface is in English', () => {
     expect(systemPrompt('fr')).toBe(SYSTEM_FR)
     expect(systemPrompt('en')).toContain('Langue de sortie : anglais,')
     expect(systemPrompt('en')).not.toContain('Langue de sortie : français')
@@ -101,7 +101,7 @@ describe('prompts', () => {
     )
   })
 
-  it('champ unique et 2ᵉ essai renforcé', () => {
+  it('single field and reinforced 2nd attempt', () => {
     const p = buildAnalyzePrompt(inputs.image!, 'claude', { fields: ['title'], retry: true })
     expect(p).toContain('"title"')
     expect(p).not.toContain('"description"')
@@ -112,7 +112,7 @@ describe('prompts', () => {
     expect(buildImagePromptPrompt(inputs.image!, 'claude')).toMatchSnapshot()
   })
 
-  it('légende ≤ 600, post texte ≤ 1200, post cité ≤ 600', () => {
+  it('caption ≤ 600, post text ≤ 1200, quoted post ≤ 600', () => {
     const cap = (kind: AiInput['kind']) =>
       contextBlock({
         ...inputs.tweet!,
@@ -132,13 +132,13 @@ describe('prompts', () => {
     expect(clip('a  b\n c', 10)).toBe('a b c')
   })
 
-  it("le contexte n'inclut jamais d'URL complète ni de chemin local", () => {
+  it('the context never includes a full URL nor a local path', () => {
     for (const i of Object.values(inputs)) {
       const ctx = contextBlock(i)
       expect(ctx).not.toMatch(/https?:\/\//)
       expect(ctx).not.toContain('/ud/')
     }
-    // Codex : aucun chemin dans le prompt (images par -i).
+    // Codex: no path in the prompt (images via -i).
     expect(buildAnalyzePrompt(inputs.video!, 'codex')).not.toContain('/ud/')
   })
 })

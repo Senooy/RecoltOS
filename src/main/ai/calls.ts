@@ -1,7 +1,7 @@
 /**
- * Journal des envois `ai_calls` : base du budget et de « Journal des envois ».
- * Rétention 90 jours. Aucun contenu n'y est écrit : fichiers (nom, octets, dimensions), nombre de
- * caractères, empreinte du prompt, résultat.
+ * Send log `ai_calls`: basis of the budget and of the "Journal des envois" view.
+ * Retention 90 days. No content is written here: files (name, bytes, dimensions), number of
+ * characters, prompt fingerprint, result.
  */
 import type Database from 'better-sqlite3'
 import type { AiCallMeta, AiErrorCode } from '../../shared/ai-types'
@@ -121,7 +121,7 @@ export function purgeOldCalls(db: Database.Database, now: number): number {
   return db.prepare('DELETE FROM ai_calls WHERE ts < ?').run(now - CALLS_RETENTION_MS).changes
 }
 
-/** Durée moyenne glissante (20 derniers appels réussis), pour l'ETA des lots. */
+/** Rolling average duration (last 20 successful calls), for batch ETA. */
 export function averageDurationMs(db: Database.Database, fallbackMs = 18_000): number {
   const r = db
     .prepare(

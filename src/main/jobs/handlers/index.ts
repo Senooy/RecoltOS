@@ -1,5 +1,5 @@
 /**
- * Table FIGÉE type de job → handler. Chaque type de job a son fichier.
+ * FROZEN table job type → handler. Each job type has its own file.
  */
 import type { JobType } from '../../../shared/jobs'
 import { aiEnrich, aiEnrichFailed } from './ai-enrich'
@@ -25,7 +25,7 @@ export const jobHandlers: Readonly<Record<JobType, JobHandler>> = {
   'purge.files': purgeFiles,
 }
 
-/** Effets de bord d'un échec définitif (statut du média, de l'avatar). */
+/** Side effects of a permanent failure (status of the media and of the avatar). */
 export const jobFailureHooks: Partial<Record<JobType, JobFailureHook>> = {
   'media.derive': mediaDeriveFailed,
   'media.preview': () => undefined,

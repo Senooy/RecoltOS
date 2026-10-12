@@ -1,4 +1,4 @@
-/** — garde `recolt://` des sessions hors écran : seule la page interne `offscreen.html` est servie. */
+/** — `recolt://` guard for offscreen sessions: only the internal `offscreen.html` page is served. */
 import { describe, expect, it, vi } from 'vitest'
 import {
   guardOffscreenHandler,
@@ -34,7 +34,7 @@ describe('guardOffscreenHandler', () => {
   const req = new Request('recolt://default/thumbs/a.webp')
   const internal = 'file:///app/out/renderer/offscreen.html?render=tweet-card'
 
-  it('refuse (403) sans page, avec une page distante ou mixte, et journalise', async () => {
+  it('refuses (403) without a page, with a remote or mixed page, and logs', async () => {
     for (const pages of [[], ['https://evil.example/'], [internal, 'https://evil.example/']]) {
       const onDenied = vi.fn()
       const h = guardOffscreenHandler({}, ok, {
@@ -47,12 +47,12 @@ describe('guardOffscreenHandler', () => {
     }
   })
 
-  it('sert la page interne, y compris au pré-vol OPTIONS (délégué)', async () => {
+  it('serves the internal page, including the OPTIONS preflight (delegated)', async () => {
     const h = guardOffscreenHandler({}, ok, { pageUrlsOf: () => [internal], rendererUrl: null })
     expect((await h(req)).status).toBe(200)
   })
 
-  it('relit les pages à chaque requête (partition recyclée)', async () => {
+  it('rereads the pages on each request (recycled partition)', async () => {
     let pages = [internal]
     const h = guardOffscreenHandler({}, ok, { pageUrlsOf: () => pages, rendererUrl: null })
     expect((await h(req)).status).toBe(200)

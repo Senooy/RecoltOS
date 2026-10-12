@@ -1,6 +1,6 @@
 /**
- * Actions sur les éléments (menu contextuel, barre de sélection, glisser) avec toast et annulation
- * ⌘Z (corbeille, masquer, ajout / retrait de collection, couverture).
+ * Item actions (context menu, selection bar, drag) with toast and ⌘Z undo
+ * (trash, hide, add / remove from collection, cover).
  */
 import type { ItemCard } from '../../../../shared/dto/items'
 import { toast } from '../../components/ui'
@@ -83,10 +83,10 @@ export async function setHidden(uuids: string[], hidden: boolean): Promise<void>
   }
 }
 
-/** Au-delà, l'appartenance préalable n'est pas relue (l'annulation retire alors toute la sélection). */
+/** Beyond this, prior membership is not re-read (undo then removes the whole selection). */
 export const MEMBERSHIP_CHECK_MAX = 200
 
-/** Éléments déjà membres directs de la collection (relus seulement pour une sélection multiple). */
+/** Items already direct members of the collection (re-read only for a multiple selection). */
 async function alreadyIn(collectionUuid: string, uuids: readonly string[]): Promise<Set<string>> {
   if (uuids.length < 2 || uuids.length > MEMBERSHIP_CHECK_MAX) return new Set()
   const details = await Promise.all(
@@ -100,9 +100,9 @@ async function alreadyIn(collectionUuid: string, uuids: readonly string[]): Prom
 }
 
 /**
- * Ajoute à une collection ; renvoie le nombre d'éléments réellement ajoutés. Un élément déjà
- * présent n'est ni ajouté deux fois (`INSERT OR IGNORE`) ni retiré par ⌘Z : l'annulation ne porte
- * que sur les nouveaux membres. Rien d'ajouté : toast « Déjà dans … », pas d'entrée d'annulation.
+ * Adds to a collection; returns the number of items actually added. An item already present is
+ * neither added twice (`INSERT OR IGNORE`) nor removed by ⌘Z: undo only covers the new members.
+ * Nothing added: toast "Already in …", no undo entry.
  */
 export async function addToCollection(
   collection: { uuid: string; name: string },

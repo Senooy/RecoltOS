@@ -1,8 +1,8 @@
 /**
- * Coque de l'app : en-tête 96 px (région de glisser seulement sans calque),
- * sélecteur de bibliothèque, segmented central, groupe de droite, écran courant (`routes.tsx`),
- * calques (Réglages…), FAB, calque de dépôt, barre de sélection, toasts, dialogues. Commandes du
- * menu natif (`evt:menu.command`) et replis clavier (⌘1/2/3 par `e.code`, Échap).
+ * App shell: 96 px header (drag region only without an overlay),
+ * library selector, central segmented control, right group, current screen (`routes.tsx`),
+ * overlays (Settings…), FAB, drop overlay, selection bar, toasts, dialogs. Commands from the
+ * native menu (`evt:menu.command`) and keyboard fallbacks (⌘1/2/3 by `e.code`, Esc).
  */
 import { Suspense, useEffect, useState } from 'react'
 import { EmptyState, Toaster, TooltipProvider, toast } from '../components/ui'
@@ -32,7 +32,7 @@ import { importFolder } from '../features/import/import-actions'
 import { IngestProgress } from '../features/import/IngestProgress'
 import { usePaste } from '../features/import/usePaste'
 
-/** La reprise d'import n'est proposée qu'une fois par lancement (la coque se remonte au changement de langue). */
+/** The import resume is offered only once per launch (the shell remounts on language change). */
 let resumeOffered = false
 
 const navOf = (r: Route): NavValue =>
@@ -76,7 +76,7 @@ export function AppShell({ dark }: { dark: boolean }) {
     const offs = [
       followCollections(),
       subscribe('menu.command', ({ cmd }) => runMenuCommand(cmd)),
-      // Notification de capture, « Ouvrir avec », import d'un seul fichier : vue détail.
+      // Capture notification, "Open with", single-file import: detail view.
       subscribe('nav.openItem', ({ uuid }) => {
         void rpc('system.takePendingNav').catch(() => undefined)
         openViewerByUuid(uuid)
@@ -91,7 +91,7 @@ export function AppShell({ dark }: { dark: boolean }) {
         if (useUi.getState().selection.length > 0) useUi.getState().clearSelection()
         return
       }
-      // Repli ⌘1/2/3 par position (AZERTY), si le menu n'a pas consommé la touche.
+      // ⌘1/2/3 fallback by position (AZERTY), if the menu did not consume the key.
       if (e.metaKey && !e.shiftKey && !e.altKey) {
         const map: [number, MenuCommand][] = [
           [1, 'goLibrary'],
@@ -107,7 +107,7 @@ export function AppShell({ dark }: { dark: boolean }) {
       }
     }
     window.addEventListener('keydown', onKey)
-    // Fenêtre recréée par « Ouvrir avec » ou une notification : élément en attente.
+    // Window recreated by "Open with" or a notification: pending item.
     void rpc('system.takePendingNav')
       .then((p) => {
         if (p) openViewerByUuid(p.uuid)
@@ -119,7 +119,7 @@ export function AppShell({ dark }: { dark: boolean }) {
     }
   }, [])
 
-  // Import interrompu : reprise proposée au lancement.
+  // Interrupted import: resume offered at launch.
   useEffect(() => {
     if (resumeOffered) return
     resumeOffered = true
@@ -136,7 +136,7 @@ export function AppShell({ dark }: { dark: boolean }) {
         }
       })
       .catch((err: unknown) => {
-        if (!isNotImplemented(err)) console.warn('[import] état inconnu', err)
+        if (!isNotImplemented(err)) console.warn('[import] unknown state', err)
       })
   }, [openOverlay])
 
@@ -150,7 +150,7 @@ export function AppShell({ dark }: { dark: boolean }) {
           ?.node ?? null)
       : null
 
-  // Étagère : plein cadre noir, en-tête réduit aux feux et au segmented sombre.
+  // Shelf: full-frame black, header reduced to the traffic lights and the dark segmented control.
   const immersive = route.name === 'shelf' && implemented
   return (
     <TooltipProvider>

@@ -17,8 +17,8 @@ import { MENU_COMMANDS, SHORTCUTS } from '../../../src/shared/shortcuts'
 
 const U = '0decd148-5f3c-4d7a-9b1e-2a3b4c5d6e7f'
 
-describe('contrat IPC', () => {
-  it('items.list : défauts appliqués à une entrée valide', () => {
+describe('IPC contract', () => {
+  it('items.list: defaults applied to a valid entry', () => {
     const parsed = contract['items.list'].input.parse({ scope: 'library' })
     expect(parsed).toEqual({
       scope: 'library',
@@ -35,7 +35,7 @@ describe('contrat IPC', () => {
     expect(coll).toMatchObject({ scope: 'collection', collectionUuid: U, sort: 'name' })
   })
 
-  it('items.list : rejette une entrée invalide', () => {
+  it('items.list: rejects an invalid entry', () => {
     const bad = [
       { scope: 'nope' },
       { scope: 'collection' },
@@ -53,18 +53,18 @@ describe('contrat IPC', () => {
       expect(contract['items.list'].input.safeParse(b).success, JSON.stringify(b)).toBe(false)
   })
 
-  it('typage de bout en bout sur items.list', () => {
+  it('end-to-end typing on items.list', () => {
     expectTypeOf<In<'items.list'>>().toExtend<{ scope: 'library' | 'collection' }>()
     expectTypeOf<Parsed<'items.list'>['sort']>().toEqualTypeOf<
       'recent' | 'oldest' | 'name' | 'color' | 'viewed' | 'mostViewed' | 'random'
     >()
     expectTypeOf<Out<'items.list'>['items'][number]['thumbUrl']>().toEqualTypeOf<string | null>()
     expectTypeOf<Out<'items.list'>['nextCursor']>().toEqualTypeOf<string | null>()
-    // @ts-expect-error canal inconnu
+    // @ts-expect-error unknown channel
     expectTypeOf<In<'items.nope'>>().toBeAny()
   })
 
-  it('chaque canal appartient à un domaine figé et à un seul contrat de domaine', () => {
+  it('each channel belongs to a frozen domain and to a single domain contract', () => {
     for (const ch of CHANNELS) expect(DOMAINS).toContain(domainOf(ch))
     const total = Object.values(contractsByDomain).reduce((n, c) => n + Object.keys(c).length, 0)
     expect(total).toBe(CHANNELS.length)
@@ -75,7 +75,7 @@ describe('contrat IPC', () => {
     expect(isChannel('toString')).toBe(false)
   })
 
-  it('contient les domaines et canaux attendus, sans recherche visuelle', () => {
+  it('contains the expected domains and channels, without visual search', () => {
     for (const ch of [
       'libraries.list',
       'libraries.remove',
@@ -102,7 +102,7 @@ describe('contrat IPC', () => {
     expect(CHANNELS).not.toContain('items.rediscoverDeck')
   })
 
-  it('libraries.remove impose deleteFiles: false ; system.openExternal refuse file://', () => {
+  it('libraries.remove enforces deleteFiles: false; system.openExternal refuses file://', () => {
     expect(
       contract['libraries.remove'].input.safeParse({ id: 'default', deleteFiles: true }).success,
     ).toBe(false)
@@ -117,7 +117,7 @@ describe('contrat IPC', () => {
     ).toBe(true)
   })
 
-  it('les DTO média refusent les URL http(s)', () => {
+  it('media DTOs refuse http(s) URLs', () => {
     const out = contract['items.recentlyViewed'].output
     const card = {
       uuid: U,
@@ -148,15 +148,15 @@ describe('contrat IPC', () => {
     )
   })
 
-  it('les entrées vides acceptent undefined (rpc sans argument)', () => {
+  it('empty inputs accept undefined (rpc without argument)', () => {
     expect(contract['items.counts'].input.parse(undefined)).toEqual({})
     expect(contract['jobs.pause'].input.parse(undefined)).toEqual({})
   })
 
-  it('noms d’événements compatibles avec le preload', () => {
+  it('event names compatible with the preload', () => {
     const re = /^[a-z][a-zA-Z]*(\.[a-zA-Z]+)+$/
     for (const e of EVENT_NAMES) expect(e).toMatch(re)
-    // La liste blanche du preload (sans dépendance) reste égale aux événements réels.
+    // The preload allowlist (dependency-free) stays equal to the real events.
     expect([...EVENT_NAME_LIST].sort()).toEqual([...EVENT_NAMES].sort())
     expect(EVENT_NAMES).toEqual(
       expect.arrayContaining([
@@ -190,7 +190,7 @@ describe('contrat IPC', () => {
     expect(PRELOAD_ARG.e2e.startsWith('--')).toBe(true)
   })
 
-  it('chaque raccourci de menu est une commande de menu relayée', () => {
+  it('each menu shortcut is a relayed menu command', () => {
     for (const s of SHORTCUTS.filter((d) => d.scope === 'menu'))
       expect(MENU_COMMANDS).toContain(s.id)
     expect(new Set(SHORTCUTS.map((s) => s.id)).size).toBe(SHORTCUTS.length)

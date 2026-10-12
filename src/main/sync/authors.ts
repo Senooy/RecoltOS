@@ -1,14 +1,15 @@
 /**
- * Auteurs des publications synchronisées : cache d'avatars par
- * `(plateforme, handle)` (une URL fraîche remet le téléchargement en file), `sample_external_id`
- * (pour `item.refresh`), liste `wantedAuthors` envoyée à l'extension (auteurs sans avatar valide).
+ * Authors of synced posts: avatar cache per
+ * `(platform, handle)` (a fresh URL puts the download back in the queue), `sample_external_id`
+ * (for `item.refresh`), `wantedAuthors` list sent to the extension (authors without a valid
+ * avatar).
  */
 import { MAX_WANTED_AUTHORS, type BridgePlatform } from '../../shared/bridge/constants'
 import { JOB_PRIORITY } from '../../shared/jobs'
 import type { LibraryContext } from '../library/library-context'
 import type { NormalizedPost } from './parsers'
 
-/** Upsert de tous les auteurs d'une publication ; rend l'id de l'auteur principal. */
+/** Upserts all the authors of a post; returns the id of the main author. */
 export function upsertPostAuthors(
   lib: LibraryContext,
   post: NormalizedPost,
@@ -45,7 +46,7 @@ export function upsertPostAuthors(
   return mainId
 }
 
-/** Auteurs sans avatar valide (rafraîchissement gratuit par `author.seen`), 500 au plus. */
+/** Authors without a valid avatar (free refresh via `author.seen`), 500 at most. */
 export function wantedAuthors(lib: LibraryContext): { platform: BridgePlatform; handle: string }[] {
   return lib.db
     .prepare(
@@ -56,7 +57,7 @@ export function wantedAuthors(lib: LibraryContext): { platform: BridgePlatform; 
     .all(MAX_WANTED_AUTHORS) as { platform: BridgePlatform; handle: string }[]
 }
 
-/** `author.seen` : nouvelle URL d'avatar → téléchargement (sans appel d'API). */
+/** `author.seen`: new avatar URL → download (no API call). */
 export function authorSeen(
   lib: LibraryContext,
   a: { platform: BridgePlatform; handle: string; name?: string | null; avatarUrl?: string | null },

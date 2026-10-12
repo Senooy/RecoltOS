@@ -1,12 +1,12 @@
 /**
- * Menu de tri : déclencheur 32 px (rayon 10, bordure), options avec coche.
+ * Sort menu: 32 px trigger (radius 10, border), options with a check mark.
  */
 import { Check, ChevronDown, Clock } from 'lucide-react'
 import type { SortMode } from '../../../../shared/enums'
 import { Menu } from '../../components/ui'
 import { tr } from '../../i18n'
 
-/** Libellés lus au rendu : ils suivent la langue active. */
+/** Labels read at render time: they follow the active language. */
 export const sortOptions = (): { value: SortMode; label: string }[] => [
   { value: 'recent', label: tr.sort.recent },
   { value: 'oldest', label: tr.sort.oldest },

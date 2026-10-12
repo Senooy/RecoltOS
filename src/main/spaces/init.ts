@@ -1,8 +1,8 @@
 /**
- * Initialisation du domaine `spaces` : ramasse-miettes des assets à l'ouverture de chaque
- * bibliothèque (une fois par bibliothèque et par lancement, jamais pendant une session : l'annulation
- * doit pouvoir restaurer un asset), canal synchrone `spaces:applyBatchSync` réservé à
- * `beforeunload` (un seul sous-lot ≤ 2 000 nœuds, mêmes contrôles que `rpc`).
+ * Initialization of the `spaces` domain: garbage collection of assets when each
+ * library is opened (once per library and per launch, never during a session: cancellation
+ * must be able to restore an asset), synchronous channel `spaces:applyBatchSync` reserved for
+ * `beforeunload` (a single sub-batch of ≤ 2,000 nodes, same checks as `rpc`).
  */
 import { ipcMain, type IpcMainEvent } from 'electron'
 import { z } from 'zod'
@@ -35,9 +35,9 @@ export function initSpaces(ctx: ServiceContext): () => void {
     collected.add(lib.id)
     void gcSpaceAssets(lib)
       .then((r) => {
-        if (r.removed > 0) ctx.log.info(`[spaces] ${r.removed} asset(s) orphelin(s) supprimé(s)`)
+        if (r.removed > 0) ctx.log.info(`[spaces] ${r.removed} orphaned asset(s) deleted`)
       })
-      .catch((err: unknown) => ctx.log.warn('[spaces] ramasse-miettes en échec', err))
+      .catch((err: unknown) => ctx.log.warn('[spaces] garbage collection failed', err))
   }
   const offLifecycle = registerLibraryLifecycle('spaces', { afterOpen: gc })
   const active = getActiveLibrary()
@@ -69,7 +69,7 @@ export function initSpaces(ctx: ServiceContext): () => void {
       e.returnValue = { ok: false, error: shape }
     }
   }
-  // Hors Electron (tests du registre), `ipcMain` n'existe pas.
+  // Outside Electron (registry tests), `ipcMain` does not exist.
   const ipc = ipcMain as typeof ipcMain | undefined
   ipc?.on(RAW_CHANNELS.applyBatchSync, onSync)
   return () => {

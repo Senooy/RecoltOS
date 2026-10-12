@@ -1,6 +1,6 @@
 /**
- * Opérations fichier du media-worker : PNG pour le presse-papiers, sha256 en flux,
- * clonage APFS (`COPYFILE_FICLONE`) et archive zip (yazl)
+ * File operations of the media-worker: PNG for the clipboard, streamed sha256,
+ * APFS cloning (`COPYFILE_FICLONE`) and zip archive (yazl)
  */
 import { createHash } from 'node:crypto'
 import { once } from 'node:events'
@@ -23,7 +23,7 @@ import {
 } from './exec'
 import { withReadable } from './foreign'
 
-/** PNG (première image, orientation appliquée) ; `nativeImage` ne lit pas le webp. */
+/** PNG (first image, orientation applied); `nativeImage` does not read webp. */
 export function toPng(
   a: { abs: string; maxEdge?: number },
   tools: MediaTools,
@@ -68,7 +68,7 @@ export async function hashFile(a: { abs: string }): Promise<MediaResult<'hashFil
   return { sha256: hash.digest('hex'), bytes }
 }
 
-/** Erreur d'export zip → AppError typée (source modifiée, absente, ou E/S). */
+/** Zip export error → typed AppError (source modified, missing, or I/O). */
 function zipError(err: unknown, out: string): AppError {
   if (err instanceof AppError) return err
   const e = err as NodeJS.ErrnoException
@@ -78,7 +78,7 @@ function zipError(err: unknown, out: string): AppError {
   return ioError(err, e.path ?? out)
 }
 
-/** Copie par clonage APFS si possible (copie classique sinon), puis `rename` atomique. */
+/** Copy by APFS cloning if possible (classic copy otherwise), then atomic `rename`. */
 export async function cloneFile(a: {
   src: string
   dst: string
@@ -97,7 +97,7 @@ export async function cloneFile(a: {
   }
 }
 
-/** Chemin d'archive sûr : relatif, en `/`, sans `..` ni segment vide. */
+/** Safe archive path: relative, using `/`, without `..` or empty segment. */
 export function safeZipName(name: string): string {
   if (typeof name !== 'string' || name.length === 0 || name.length > 1024) {
     throw new AppError('validation', 'nom d’entrée zip invalide')
@@ -112,7 +112,7 @@ export function safeZipName(name: string): string {
   return posix.normalize(name)
 }
 
-/** Les médias sont déjà compressés : on les stocke tels quels (export rapide). */
+/** Media are already compressed: stored as-is (fast export). */
 const STORED_EXT = new Set([
   '.jpg',
   '.jpeg',
@@ -136,8 +136,8 @@ export interface ZipProgress {
 }
 
 /**
- * Chemin source d'une entrée zip. Un chemin absolu (envoyé par main, de confiance) est pris tel
- * quel ; un chemin relatif est résolu depuis `root` et doit rester dans `root`.
+ * Source path of a zip entry. An absolute path (sent by main, trusted) is taken as-is;
+ * a relative path is resolved from `root` and must stay within `root`.
  */
 export function resolveEntryAbs(root: string, abs: string): string {
   if (isAbsolute(abs)) return abs
@@ -149,15 +149,15 @@ export function resolveEntryAbs(root: string, abs: string): string {
   return resolved
 }
 
-/** Vrai si `p` (déjà résolu) est strictement sous `root` (lui aussi résolu). */
+/** True if `p` (already resolved) is strictly under `root` (itself resolved). */
 function isInside(root: string, p: string): boolean {
   const rel = relative(root, p)
   return rel !== '' && rel !== '..' && !rel.startsWith('../') && !isAbsolute(rel)
 }
 
 /**
- * `realpath` qui tolère un chemin absent : remonte au premier ancêtre existant puis rajoute le
- * reste (le dossier de sortie peut ne pas exister encore, `writeAtomic` le crée).
+ * `realpath` tolerating a missing path: walks up to the first existing ancestor then appends the
+ * rest (the output folder may not exist yet, `writeAtomic` creates it).
  */
 async function realpathLoose(p: string): Promise<string> {
   const tail: string[] = []
@@ -178,8 +178,8 @@ async function realpathLoose(p: string): Promise<string> {
 }
 
 /**
- * Une entrée relative doit rester dans la bibliothèque une fois les liens symboliques des
- * dossiers intermédiaires suivis. `lstat` ne voit que le dernier segment : `dirlink/x` passerait.
+ * A relative entry must stay in the library once the symbolic links of the
+ * intermediate folders are followed. `lstat` only sees the last segment: `dirlink/x` would pass.
  */
 async function assertEntryContained(realRoot: string, rel: string, abs: string): Promise<void> {
   let real: string
@@ -194,9 +194,9 @@ async function assertEntryContained(realRoot: string, rel: string, abs: string):
 }
 
 /**
- * Archive `entries` dans `out` (écriture atomique). `abs` relatif est résolu depuis `root`.
- * Progression émise à chaque entrée lue. `out` ne peut ni être dans `root` ni être une source :
- * le rename final remplacerait le fichier de la bibliothèque.
+ * Archive `entries` into `out` (atomic write). A relative `abs` is resolved from `root`.
+ * Progress emitted for each entry read. `out` can be neither in `root` nor a source:
+ * the final rename would replace the library file.
  */
 export async function zipLibrary(
   a: { root: string; entries: ZipEntry[]; out: string },
@@ -208,12 +208,12 @@ export async function zipLibrary(
   if (!Array.isArray(a.entries)) throw new AppError('validation', 'entries attendu')
   const seen = new Set<string>()
   const entries = a.entries.map((raw: unknown) => {
-    // Une entrée malformée (null, nombre, objet sans nom) est une erreur de validation, pas un
-    // TypeError qui remonterait comme `internal`.
+    // A malformed entry (null, number, object without a name) is a validation error, not a
+    // TypeError that would surface as `internal`.
     const e = raw as Partial<ZipEntry> | null
     if (!e || typeof e !== 'object') throw new AppError('validation', 'entrée zip invalide')
     const name = safeZipName(e.name as string)
-    // APFS est insensible à la casse : « A.txt » et « a.txt » se combattraient à l'extraction.
+    // APFS is case-insensitive: "A.txt" and "a.txt" would clash during extraction.
     const key = name.normalize('NFC').toLowerCase()
     if (seen.has(key)) throw new AppError('validation', `entrée zip en double : ${name}`)
     seen.add(key)
@@ -224,8 +224,8 @@ export async function zipLibrary(
     return { name, abs: resolveEntryAbs(root, e.abs), rel: isRel ? e.abs : null }
   })
   const realRoot = await realpathLoose(root)
-  // `out` ne doit pas être dans la bibliothèque, ni être une des sources (même fichier, lien dur
-  // compris) : le rename atomique remplacerait l'original.
+  // `out` must not be in the library, nor be one of the sources (same file, hard link
+  // included): the atomic rename would replace the original.
   const outReal = join(await realpathLoose(dirname(out)), basename(out))
   if (isInside(realRoot, outReal)) {
     throw new AppError('validation', `sortie dans la bibliothèque refusée : ${out}`)
@@ -240,12 +240,12 @@ export async function zipLibrary(
     out,
     async (tmp) => {
       const zip = new yazl.ZipFile()
-      // `outputStream` est un PassThrough (typé ReadableStream par @types/yazl).
+      // `outputStream` is a PassThrough (typed ReadableStream by @types/yazl).
       const output = zip.outputStream as NodeJS.ReadableStream & { destroy(): void }
       const ws = createWriteStream(tmp)
-      // yazl signale sur le ZipFile (pas sur outputStream) une source supprimée ou modifiée
-      // pendant l'export : sans écouteur, `error` tuerait tout le worker. Écouteur permanent,
-      // posé avant le premier flux : une 2e erreur ne doit pas être orpheline non plus.
+      // yazl signals on the ZipFile (not on outputStream) a source deleted or modified
+      // during the export: without a listener, `error` would kill the whole worker. Permanent listener,
+      // set before the first stream: a 2nd error must not be orphaned either.
       const zipFailed = new Promise<never>((_, reject) => {
         zip.on('error', (err: Error) => {
           output.destroy()
@@ -257,9 +257,9 @@ export async function zipLibrary(
       let done = 0
       try {
         for (const e of entries) {
-          // Entrée relative : les dossiers intermédiaires ne doivent pas non plus sortir de la racine.
+          // Relative entry: intermediate folders must not leave the root either.
           if (e.rel !== null) await assertEntryContained(realRoot, e.rel, e.abs)
-          // lstat : un lien symbolique n'est pas suivi (il pourrait pointer hors de la bibliothèque).
+          // lstat: a symbolic link is not followed (it could point outside the library).
           let st
           try {
             st = await lstat(e.abs)
@@ -280,7 +280,7 @@ export async function zipLibrary(
             },
             (cb) => {
               const rs = createReadStream(e.abs)
-              // yazl n'écoute pas les erreurs des flux « lazy » : on les relaie sur le ZipFile.
+              // yazl does not listen to errors from "lazy" streams: they are relayed to the ZipFile.
               rs.on('error', (err) => zip.emit('error', err))
               rs.once('end', () => {
                 done++
@@ -295,7 +295,7 @@ export async function zipLibrary(
       } catch (err) {
         output.destroy()
         ws.destroy()
-        // Le temporaire doit être fermé avant que writeAtomic ne le supprime.
+        // The temporary file must be closed before writeAtomic deletes it.
         if (!ws.closed) await once(ws, 'close').catch(() => undefined)
         if (signal?.aborted) throw new AppError('cancelled', 'export annulé')
         throw zipError(err, out)

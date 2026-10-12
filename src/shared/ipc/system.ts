@@ -1,6 +1,6 @@
 /**
- * Contrat `system.*` (`edit`, `openLogs`, `copyText`, `redetectTools`).
- * Événements transverses : `menu.command`, `nav.openItem`, `library.switched`.
+ * `system.*` contract (`edit`, `openLogs`, `copyText`, `redetectTools`).
+ * Cross-cutting events: `menu.command`, `nav.openItem`, `library.switched`.
  */
 import { z } from 'zod'
 import { LibraryId, Uuid, WebUrl } from '../enums'
@@ -12,9 +12,9 @@ export const EditCommand = z.enum(['undo', 'redo', 'selectAll', 'cut', 'copy', '
 
 export const systemContract = {
   'system.revealInFinder': { input: z.object({ itemUuid: Uuid }), output: Void },
-  /** http(s) seulement. */
+  /** http(s) only. */
   'system.openExternal': { input: z.object({ url: WebUrl }), output: Void },
-  /** Poster pour une vidéo ; `toPng` côté worker (nativeImage ne lit pas le webp). */
+  /** Poster for a video; `toPng` on the worker side (nativeImage cannot read webp). */
   'system.copyImage': { input: z.object({ itemUuid: Uuid }), output: Void },
   'system.copyText': { input: z.object({ text: z.string().max(100_000) }), output: Void },
   'system.saveAs': {
@@ -22,11 +22,11 @@ export const systemContract = {
     output: z.object({ path: z.string() }).nullable(),
   },
   'system.quickLook': { input: z.object({ itemUuid: Uuid }), output: Void },
-  /** Champ éditable focalisé : `webContents.undo()`…. */
+  /** Focused editable field: `webContents.undo()`…. */
   'system.edit': { input: z.object({ cmd: EditCommand }), output: Void },
   'system.openLogs': { input: Empty, output: Void },
   'system.redetectTools': { input: Empty, output: ToolsPrefs },
-  /** Élément à ouvrir demandé par main avant que la fenêtre écoute (`nav.openItem`). */
+  /** Item to open, requested by main before the window listens (`nav.openItem`). */
   'system.takePendingNav': { input: Empty, output: z.object({ uuid: Uuid }).nullable() },
   'system.appInfo': {
     input: Empty,

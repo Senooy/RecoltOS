@@ -10,8 +10,8 @@ vi.mock('electron', () => ({
 
 import { BG_DARK, BG_LIGHT, followNativeTheme } from '../../../src/main/windows/main-window'
 
-describe('fond de fenêtre et apparence du système', () => {
-  it('suit nativeTheme « updated » et se détache', () => {
+describe('window background and system appearance', () => {
+  it('follows nativeTheme "updated" and detaches', () => {
     let listener: (() => void) | undefined
     const theme = {
       shouldUseDarkColors: true,
@@ -31,7 +31,7 @@ describe('fond de fenêtre et apparence du système', () => {
     expect(theme.removeListener).toHaveBeenCalledWith('updated', listener)
   })
 
-  it('ignore une fenêtre détruite', () => {
+  it('ignores a destroyed window', () => {
     let listener: (() => void) | undefined
     const theme = {
       shouldUseDarkColors: true,

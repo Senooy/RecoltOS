@@ -1,7 +1,7 @@
 /**
- * critère 5 : crash volontaire du worker → redémarrage avec backoff, job repassé en
- * `queued`. Plus : RPC de bout en bout avec le vrai `media.worker.ts`, erreurs sérialisées,
- * annulation, `stopAll()`.
+ * criterion 5: deliberate worker crash → restart with backoff, job set back to
+ * `queued`. Also: end-to-end RPC with the real `media.worker.ts`, serialized errors,
+ * cancellation, `stopAll()`.
  */
 import { createHash } from 'node:crypto'
 import { chmodSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
@@ -29,7 +29,7 @@ afterEach(async () => {
 })
 afterAll(() => tmp.cleanup())
 
-/** File de jobs minimale en mémoire, branchée comme le fera sur `onCrash`. */
+/** Minimal in-memory job queue, wired as it would be to `onCrash`. */
 function memoryQueue() {
   const jobs = new Map<
     number,
@@ -50,15 +50,15 @@ function memoryQueue() {
         const j = it.jobId === undefined ? undefined : jobs.get(it.jobId)
         if (j && j.state === 'running') {
           j.state = 'queued'
-          j.attempts-- // un crash du worker ne consomme pas de tentative
+          j.attempts-- // a worker crash does not consume an attempt
         }
       }
     },
   }
 }
 
-describe('media-worker réel (child_process + tsx)', () => {
-  it('RPC hashFile / probeImage, erreurs typées sans crash du worker', async () => {
+describe('real media-worker (child_process + tsx)', () => {
+  it('RPC hashFile / probeImage, typed errors without worker crash', async () => {
     const nf = nodeFork()
     const mw = createMediaWorker({ modulePath: MEDIA_WORKER_TS, fork: nf.fork, tools: TOOLS })
     expect(await mw.call('hashFile', { abs: file })).toEqual({
@@ -69,7 +69,7 @@ describe('media-worker réel (child_process + tsx)', () => {
       code: 'not_found',
     })
     await expect(mw.host.call('nope', {})).rejects.toMatchObject({ code: 'unknown_op' })
-    // ffmpeg absent côté worker (configuration sans ffmpeg) → tool_missing, le worker survit.
+    // ffmpeg missing on the worker side (configuration without ffmpeg) → tool_missing, the worker survives.
     await mw.setTools({ sips: '/usr/bin/sips' })
     await expect(
       mw.call('makePreview', {
@@ -84,7 +84,7 @@ describe('media-worker réel (child_process + tsx)', () => {
     expect(mw.host.restarts).toBe(0)
   }, 30_000)
 
-  it('crash volontaire → redémarrage, job repassé en queued puis terminé', async () => {
+  it('deliberate crash → restart, job set back to queued then completed', async () => {
     const nf = nodeFork()
     const q = memoryQueue()
     const crashes: CrashInfo[] = []
@@ -98,7 +98,7 @@ describe('media-worker réel (child_process + tsx)', () => {
         q.onCrash(info)
       },
     })
-    // Démarrage et premier appel normal.
+    // Startup and first normal call.
     await mw.call('hashFile', { abs: file })
     const firstPid = mw.host.pid
 
@@ -117,7 +117,7 @@ describe('media-worker réel (child_process + tsx)', () => {
     })
     expect(q.jobs.get(7)).toEqual({ state: 'queued', attempts: 0 })
 
-    // La file relance le job : le worker a redémarré (nouveau pid) et répond.
+    // The queue relaunches the job: the worker restarted (new pid) and responds.
     q.start(7)
     const r = await mw.call('hashFile', { abs: file }, { jobId: 7 })
     expect(r.sha256).toBe(expectedSha)
@@ -128,7 +128,7 @@ describe('media-worker réel (child_process + tsx)', () => {
     expect(mw.host.state).toBe('ready')
   }, 30_000)
 
-  it('les requêtes émises pendant le redémarrage partent après, avec la configuration', async () => {
+  it('requests sent during the restart go out afterwards, with the configuration', async () => {
     const nf = nodeFork()
     const mw = createMediaWorker({
       modulePath: MEDIA_WORKER_TS,
@@ -141,12 +141,12 @@ describe('media-worker réel (child_process + tsx)', () => {
     const lost = mw.call('hashFile', { abs: file })
     await expect(lost).rejects.toMatchObject({ code: 'worker_crashed' })
     expect(mw.host.state).toBe('restarting')
-    // Émise pendant le backoff : attend le nouveau worker. La config (sans ffmpeg) est rejouée.
+    // Sent during the backoff: waits for the new worker. The config (without ffmpeg) is replayed.
     const p = mw.call('makePoster', { src: file, dst: join(tmp.dir, 'p.jpg'), atMs: 0 })
     await expect(p).rejects.toMatchObject({ code: 'tool_missing' })
   }, 30_000)
 
-  it('zipLibrary avec une source illisible : erreur typée, worker vivant, aucun .part', async () => {
+  it('zipLibrary with an unreadable source: typed error, worker alive, no .part', async () => {
     const nf = nodeFork()
     const crashes: CrashInfo[] = []
     const mw = createMediaWorker({
@@ -186,7 +186,7 @@ describe('media-worker réel (child_process + tsx)', () => {
     expect(readdirSync(outDir)).toEqual([])
   }, 30_000)
 
-  it('module qui lève au chargement (enfant réel) → broken, appel rejeté, pas de boucle', async () => {
+  it('module that throws on load (real child) → broken, call rejected, no loop', async () => {
     const bad = join(tmp.dir, 'boom.cjs')
     writeFileSync(bad, "throw new Error('boom au chargement')\n")
     const nf = nodeFork()
@@ -210,7 +210,7 @@ describe('media-worker réel (child_process + tsx)', () => {
     await h.stop()
   }, 30_000)
 
-  it('stopAll : arrêt propre, appels ultérieurs refusés', async () => {
+  it('stopAll: clean stop, later calls refused', async () => {
     const nf = nodeFork()
     const mw = createMediaWorker({ modulePath: MEDIA_WORKER_TS, fork: nf.fork, tools: TOOLS })
     await mw.call('hashFile', { abs: file })
@@ -222,7 +222,7 @@ describe('media-worker réel (child_process + tsx)', () => {
   }, 30_000)
 })
 
-/** Enfant factice piloté par le test (backoff, SIGKILL après délai, annulation). */
+/** Fake child driven by the test (backoff, SIGKILL after a delay, cancellation). */
 function fakeFork() {
   const kids: {
     child: WorkerChild
@@ -259,8 +259,8 @@ function fakeFork() {
   return { fork, kids }
 }
 
-describe('WorkerHost (enfant factice)', () => {
-  it('backoff 1 s, 5 s, 30 s puis 30 s ; remis à zéro après stabilité', async () => {
+describe('WorkerHost (fake child)', () => {
+  it('backoff 1 s, 5 s, 30 s then 30 s; reset to zero after stability', async () => {
     vi.useFakeTimers()
     try {
       const ff = fakeFork()
@@ -292,7 +292,7 @@ describe('WorkerHost (enfant factice)', () => {
     }
   })
 
-  it('sorties répétées sans hello → broken : requêtes rejetées (worker_unavailable), plus de boucle', async () => {
+  it('repeated exits without hello → broken: requests rejected (worker_unavailable), no more loop', async () => {
     vi.useFakeTimers()
     try {
       const ff = fakeFork()
@@ -307,7 +307,7 @@ describe('WorkerHost (enfant factice)', () => {
       const p2 = h.call('hashFile', { abs: '/b' })
       const settled = Promise.allSettled([p1, p2])
       for (let i = 0; i < 3; i++) {
-        ff.kids.at(-1)!.exit(1) // sort sans avoir dit hello
+        ff.kids.at(-1)!.exit(1) // exits without having said hello
         if (i < 2) {
           expect(h.state).toBe('restarting')
           await vi.advanceTimersByTimeAsync(i === 0 ? 1_000 : 5_000)
@@ -321,20 +321,20 @@ describe('WorkerHost (enfant factice)', () => {
         reason: { code: 'worker_unavailable', details: { jobId: 7 } },
       })
       expect(r2).toMatchObject({ status: 'rejected', reason: { code: 'worker_unavailable' } })
-      // Un seul signal « broken », avec les requêtes (jobId) à échouer côté file de jobs.
+      // A single « broken » signal, with the requests (jobId) to fail on the job queue side.
       const last = crashes.at(-1)!
       expect(last.broken).toBe(true)
       expect(last.restartInMs).toBe(0)
       expect(last.interrupted.map((i) => i.jobId)).toEqual([7, undefined])
       expect(crashes.slice(0, -1).every((c) => !c.broken && c.interrupted.length === 0)).toBe(true)
-      // Plus aucun redémarrage automatique, et les appels suivants échouent tout de suite.
+      // No more automatic restarts, and the following calls fail immediately.
       await vi.advanceTimersByTimeAsync(120_000)
       expect(ff.kids).toHaveLength(3)
       await expect(h.call('hashFile', { abs: '/c' }, { jobId: 9 })).rejects.toMatchObject({
         code: 'worker_unavailable',
         details: { jobId: 9 },
       })
-      // restart() explicite : le worker repart et sert de nouveau.
+      // Explicit restart(): the worker starts again and serves again.
       h.restart()
       expect(ff.kids).toHaveLength(4)
       const k = ff.kids.at(-1)!
@@ -352,7 +352,7 @@ describe('WorkerHost (enfant factice)', () => {
     }
   })
 
-  it('un hello suffit à remettre le compteur de démarrages ratés à zéro', async () => {
+  it('a hello is enough to reset the failed-start counter to zero', async () => {
     vi.useFakeTimers()
     try {
       const ff = fakeFork()
@@ -360,7 +360,7 @@ describe('WorkerHost (enfant factice)', () => {
       h.start()
       for (let i = 0; i < 6; i++) {
         const k = ff.kids.at(-1)!
-        if (i % 2 === 1) k.reply({ ready: true, pid: k.child.pid }) // un démarrage sur deux réussit
+        if (i % 2 === 1) k.reply({ ready: true, pid: k.child.pid }) // one start in two succeeds
         k.exit(1)
         await vi.advanceTimersByTimeAsync(30_000)
       }
@@ -373,7 +373,7 @@ describe('WorkerHost (enfant factice)', () => {
     }
   })
 
-  it('stop : SIGTERM puis SIGKILL après 3 s si le worker ne sort pas', async () => {
+  it('stop: SIGTERM then SIGKILL after 3 s if the worker does not exit', async () => {
     vi.useFakeTimers()
     try {
       const ff = fakeFork()
@@ -388,9 +388,9 @@ describe('WorkerHost (enfant factice)', () => {
       k.exit(null, 'SIGKILL')
       await stopped
       expect(h.state).toBe('stopped')
-      expect(ff.kids).toHaveLength(1) // pas de redémarrage après un arrêt demandé
+      expect(ff.kids).toHaveLength(1) // no restart after a requested stop
 
-      // Enfant qui ne signale jamais sa sortie : l'arrêt se termine quand même.
+      // Child that never reports its exit: the stop completes anyway.
       const h2 = new WorkerHost({ name: 't2', modulePath: '/x.js', fork: ff.fork })
       h2.start()
       ff.kids.at(-1)!.reply({ ready: true, pid: 2 })
@@ -404,7 +404,7 @@ describe('WorkerHost (enfant factice)', () => {
     }
   })
 
-  it('stop pendant le démarrage : hello ignoré, SIGTERM renvoyé, aucun redémarrage', async () => {
+  it('stop during startup: hello ignored, SIGTERM sent again, no restart', async () => {
     vi.useFakeTimers()
     try {
       const ff = fakeFork()
@@ -425,7 +425,7 @@ describe('WorkerHost (enfant factice)', () => {
         resolved = true
       })
       expect(k.signals).toEqual(['SIGTERM'])
-      // `hello` arrive après le stop (kill sans effet avant le spawn, cas Electron).
+      // `hello` arrives after the stop (kill has no effect before the spawn, Electron case).
       k.reply({ ready: true, pid: 1 })
       expect(h.state).toBe('stopping')
       expect(k.signals).toEqual(['SIGTERM', 'SIGTERM'])
@@ -439,7 +439,7 @@ describe('WorkerHost (enfant factice)', () => {
       expect(crashes).toEqual([])
       expect(ff.kids).toHaveLength(1)
 
-      // Même scénario, l'enfant ne signale jamais sa sortie : le filet finalise l'arrêt.
+      // Same scenario, the child never reports its exit: the safety net finalizes the stop.
       const h2 = new WorkerHost({
         name: 't2',
         modulePath: '/x.js',
@@ -457,7 +457,7 @@ describe('WorkerHost (enfant factice)', () => {
       expect(k2.signals).toEqual(['SIGTERM', 'SIGTERM', 'SIGKILL'])
       expect(crashes).toEqual([])
       expect(ff.kids).toHaveLength(2)
-      // Sortie tardive après le filet : ignorée, pas de redémarrage.
+      // Late exit after the safety net: ignored, no restart.
       k2.exit(null, 'SIGKILL')
       await vi.advanceTimersByTimeAsync(100)
       expect(h2.state).toBe('stopped')
@@ -467,7 +467,7 @@ describe('WorkerHost (enfant factice)', () => {
     }
   })
 
-  it('stop avant hello puis sortie : pas de crash signalé ni de redémarrage (enfant réel)', async () => {
+  it('stop before hello then exit: no crash reported nor restart (real child)', async () => {
     const nf = nodeFork()
     const crashes: CrashInfo[] = []
     const mw = createMediaWorker({
@@ -486,14 +486,14 @@ describe('WorkerHost (enfant factice)', () => {
     expect(mw.host.restarts).toBe(0)
   }, 30_000)
 
-  it('annulation : rejet immédiat et __cancel envoyé ; progression relayée ; délai dépassé', async () => {
+  it('cancellation: immediate rejection and __cancel sent; progress relayed; timeout exceeded', async () => {
     const ff = fakeFork()
     const h = new WorkerHost({ name: 't', modulePath: '/x.js', fork: ff.fork, config: { a: 1 } })
     const ac = new AbortController()
     const progress: unknown[] = []
     const p = h.call('zipLibrary', {}, { signal: ac.signal, onProgress: (x) => progress.push(x) })
     const k = ff.kids[0]!
-    expect(k.sent).toEqual([]) // pas encore prêt
+    expect(k.sent).toEqual([]) // not ready yet
     k.reply({ ready: true, pid: 1 })
     expect(k.sent.map((m) => m.op)).toEqual(['__configure', 'zipLibrary'])
     const id = k.sent[1]!.id
@@ -507,7 +507,7 @@ describe('WorkerHost (enfant factice)', () => {
     const tId = k.sent.at(-1)!.id
     await expect(t).rejects.toMatchObject({ code: 'timeout' })
     expect(k.sent.at(-1)).toEqual({ id: 0, op: '__cancel', args: { id: tId } })
-    // Réponses tardives ou inconnues ignorées sans erreur.
+    // Late or unknown responses ignored without error.
     k.reply({ id: tId, ok: true, result: 1 })
     k.reply({ id: 999, ok: false, error: { code: 'x', message: 'y', retryAt: 5 } })
     k.reply('bruit')
@@ -529,8 +529,8 @@ describe('WorkerHost (enfant factice)', () => {
   })
 })
 
-describe('délai de démarrage', () => {
-  it('worker vivant sans hello → tué au délai, compté comme démarrage raté ; broken, requêtes rejetées', async () => {
+describe('startup timeout', () => {
+  it('live worker without hello → killed at the timeout, counted as a failed start; broken, requests rejected', async () => {
     let kills = 0
     const fork: ForkFn = () => {
       let exitCb: ((code: number | null, signal: string | null) => void) | undefined

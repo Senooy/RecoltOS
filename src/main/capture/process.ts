@@ -1,7 +1,7 @@
 /**
- * Processus `screencapture` : arguments par mode, `execFile` (jamais `exec`) avec un
- * environnement minimal, binaire remplaçable en développement (`RECOLTOS_SCREENCAPTURE_BIN`, refusé
- * dans l'app empaquetée). Succès = fichier non vide à signature PNG, jamais le seul code de sortie.
+ * `screencapture` process: arguments per mode, `execFile` (never `exec`) with a
+ * minimal environment, binary replaceable in development (`RECOLTOS_SCREENCAPTURE_BIN`, refused
+ * in the packaged app). Success = non-empty file with a PNG signature, never the exit code alone.
  */
 import { execFile } from 'node:child_process'
 import { open, stat } from 'node:fs/promises'
@@ -47,7 +47,7 @@ export function runScreencapture(
         env: {
           PATH: '/usr/bin:/bin:/usr/sbin:/sbin',
           HOME: process.env.HOME ?? '',
-          // Faux binaire de test (développement seulement) : réglages transmis.
+          // Fake test binary (development only): settings passed through.
           ...(bin !== DEFAULT_SCREENCAPTURE ? fakeEnv() : {}),
         },
         timeout: 5 * 60_000,
@@ -68,7 +68,7 @@ export function runScreencapture(
 
 const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 
-/** Fichier existant, non vide, commençant par la signature PNG. */
+/** Existing, non-empty file starting with the PNG signature. */
 export async function isPngFile(path: string): Promise<boolean> {
   try {
     const st = await stat(path)
@@ -87,7 +87,7 @@ export async function isPngFile(path: string): Promise<boolean> {
 }
 
 /**
- * « Capture RecoltOS 2026-10-11 à 14.32.07.png » (heure locale) ; en anglais
+ * « Capture RecoltOS 2026-10-11 à 14.32.07.png » (local time); in English
  * « RecoltOS Capture 2026-10-11 at 14.32.07.png ».
  */
 export function dropFileName(at: Date, n = 1): string {

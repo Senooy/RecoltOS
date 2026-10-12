@@ -1,7 +1,7 @@
 /**
- * Pont de contenu, monde ISOLATED : reçoit les événements du hook (vérifie la
- * source, l'origine et le marqueur), les classe (`classify.ts`) et les relaie à l'arrière-plan ;
- * garde un petit cache des posts X vus (bouton « Enregistrer dans RecoltOS » des publications).
+ * Content bridge, ISOLATED world: receives events from the hook (checks the
+ * source, origin and marker), classifies them (`classify.ts`) and relays them to the background;
+ * keeps a small cache of seen X posts (the « Enregistrer dans RecoltOS » button on posts).
  */
 import { api } from '../lib/api'
 import { classify, type HookEvent } from '../lib/classify'
@@ -17,7 +17,7 @@ function remember(id: string, raw: unknown): void {
   if (tweetCache.size > MAX_CACHE) tweetCache.delete(tweetCache.keys().next().value as string)
 }
 
-/** Parcourt une réponse GraphQL X et met en cache chaque `tweet_results.result` par `rest_id`. */
+/** Walks an X GraphQL response and caches each `tweet_results.result` by `rest_id`. */
 function cacheTweets(json: unknown, depth = 0): void {
   if (!json || typeof json !== 'object' || depth > 30) return
   if (Array.isArray(json)) {
@@ -63,7 +63,7 @@ function savePost(ref: PostRef): Promise<{ status?: string } | undefined> {
   })
 }
 
-// Langue de l'app (mémorisée par l'arrière-plan) avant d'injecter les boutons.
+// App language (stored by the background) before injecting the buttons.
 const start = () => void loadExtLang().then(() => injectButtons(document, savePost))
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', start, { once: true })

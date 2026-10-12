@@ -1,9 +1,9 @@
 /**
- * Job `media.derive` : `thumbs/` 800w webp, `large/` 1440w webp,
- * poster ffmpeg pour une vidéo qui n'en a pas, palette k-means Lab pour le média de couverture
- * sans palette (vidéos importées, nouveaux ajouts), suppression de la miniature GatherOS
- * (`legacy_thumb_rel`), `status='ok'`, `derive_version++`, puis `items.changed{derived}`.
- * Une vidéo reçoit ensuite un job `media.preview` (aperçu muet de survol).
+ * Job `media.derive`: `thumbs/` 800w webp, `large/` 1440w webp,
+ * ffmpeg poster for a video that has none, Lab k-means palette for the cover media
+ * without a palette (imported videos, new additions), removal of the GatherOS thumbnail
+ * (`legacy_thumb_rel`), `status='ok'`, `derive_version++`, then `items.changed{derived}`.
+ * A video then receives a `media.preview` job (silent hover preview).
  */
 import { mkdir, rm, stat } from 'node:fs/promises'
 import { dirname } from 'node:path'
@@ -32,7 +32,7 @@ export const mediaDerive: JobHandler = async (job, ctx) => {
   const m = lib.repos.media.getById(mediaId)
   if (!m) return { status: 'done' }
   if (m.status === 'remote') {
-    // Pas encore téléchargé : `media.download` relancera le dérivé.
+    // Not downloaded yet: `media.download` will re-run the derivation.
     return { status: 'done' }
   }
   if (!m.file_rel) throw new AppError('not_found', 'média sans fichier')
@@ -46,7 +46,7 @@ export const mediaDerive: JobHandler = async (job, ctx) => {
   let height = m.height
   const patch: Parameters<typeof lib.repos.media.update>[1] = {}
 
-  // Source des dérivés : image (ou son display), poster pour une vidéo.
+  // Derivation source: image (or its display), poster for a video.
   let srcAbs: string
   if (m.media_type === 'video') {
     if (ctx.hasTool('ffprobe') && (m.duration_ms === null || width === null || height === null)) {
@@ -112,7 +112,7 @@ export const mediaDerive: JobHandler = async (job, ctx) => {
     { ...call, timeoutMs: IMAGE_TIMEOUT },
   )
 
-  // Palette : média de couverture d'un item sans palette (les palettes importées sont conservées).
+  // Palette: cover media of an item without a palette (imported palettes are kept).
   const item = lib.repos.items.getById(m.item_id)
   let paletteDone = false
   let palette: { hex: string[]; lab: [number, number, number][]; share: number[] } | null = null
@@ -120,7 +120,7 @@ export const mediaDerive: JobHandler = async (job, ctx) => {
     try {
       palette = await ctx.media('palette', { src: thumbAbs }, { ...call, timeoutMs: IMAGE_TIMEOUT })
     } catch (err) {
-      ctx.log.warn(`[jobs] palette impossible pour ${m.uuid}`, err)
+      ctx.log.warn(`[jobs] palette failed for ${m.uuid}`, err)
     }
   }
 
@@ -161,12 +161,12 @@ export const mediaDerive: JobHandler = async (job, ctx) => {
   })()
   if (legacy) await rm(lib.paths.abs(legacy), { force: true }).catch(() => undefined)
   if (item) ctx.changed([item.uuid], 'derived')
-  if (paletteDone) ctx.log.info(`[jobs] palette calculée pour ${item?.uuid ?? m.uuid}`)
+  if (paletteDone) ctx.log.info(`[jobs] palette computed for ${item?.uuid ?? m.uuid}`)
   ctx.kick()
   return { status: 'done' }
 }
 
-/** Échec définitif : le média passe en `missing` (fichier perdu) ou `failed`. */
+/** Permanent failure: the media moves to `missing` (file lost) or `failed`. */
 export const mediaDeriveFailed: JobFailureHook = (job, error, s) => {
   const mediaId = payloadId(job, 'mediaId')
   if (mediaId === null) return

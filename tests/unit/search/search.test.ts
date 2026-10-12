@@ -1,4 +1,4 @@
-/** traduction de la requête, recherche FTS + filtres, suggestions, performance. */
+/** Query translation, FTS search + filters, suggestions, performance. */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { runSearch, suggest } from '../../../src/main/search/search'
 import { toFtsQuery } from '../../../src/shared/search-query'
@@ -7,13 +7,13 @@ import { seedSyntheticLibrary } from '../../helpers/db'
 import { makeSyntheticLibrary } from '../../helpers/synthetic-items'
 
 describe('toFtsQuery', () => {
-  it('termes préfixés, ET implicite, guillemets échappés', () => {
+  it('prefixed terms, implicit AND, escaped quotes', () => {
     expect(toFtsQuery('dark moody ui').match).toBe('"dark"* "moody"* "ui"*')
     expect(toFtsQuery('"une phrase" exacte').match).toBe('"une phrase" "exacte"*')
     expect(toFtsQuery('a"b').match).toBe('"a"b"*'.replace('a"b', 'a""b'))
     expect(toFtsQuery('   ').match).toBeNull()
   })
-  it('chips de source, tags, handles, types, couleur', () => {
+  it('source chips, tags, handles, types, color', () => {
     const p = toFtsQuery(
       '#instagram #bookmark #Vacances @ada type:video source:cosmos couleur:#FF3B30',
     )
@@ -24,7 +24,7 @@ describe('toFtsQuery', () => {
     expect(p.color).toBe('#ff3b30')
     expect(p.match).toBe('tags:"Vacances"* post_text:"ada"')
   })
-  it('mot nu égal à une source : terme FTS + source notée', () => {
+  it('bare word equal to a source: FTS term + source noted', () => {
     const p = toFtsQuery('instagram')
     expect(p.match).toBe('"instagram"*')
     expect(p.sourceWords).toEqual(['instagram'])
@@ -41,7 +41,7 @@ describe('runSearch', () => {
   const titles = (q: string, filters?: Parameters<typeof runSearch>[1]['filters']) =>
     runSearch(lib.db, { q, filters, limit: 300 }).rows.map((r) => r.title)
 
-  it('« cafe » trouve « café » ; corbeille et masqués exclus', () => {
+  it('"cafe" finds "café"; trash and hidden items excluded', () => {
     const { items } = lib.repos
     items.insert({ kind: 'image', title: 'Un café à Lyon' })
     const t = items.insert({ kind: 'image', title: 'café supprimé' }).id
@@ -51,7 +51,7 @@ describe('runSearch', () => {
     expect(titles('cafe')).toEqual(['Un café à Lyon'])
   })
 
-  it('« instagram » : éléments Instagram en tête, puis les mentions ; #cosmos filtre', () => {
+  it('"instagram": Instagram items first, then mentions; #cosmos filters', () => {
     const { items } = lib.repos
     for (let i = 0; i < 3; i++)
       items.insert({ kind: 'image', title: `photo ${i}`, source: 'instagram' })
@@ -67,7 +67,7 @@ describe('runSearch', () => {
     expect(c.rows.every((x) => x.source === 'cosmos')).toBe(true)
   })
 
-  it('@handle cible l’auteur ; #tag cible les tags ; filtres de type et de période', () => {
+  it('@handle targets the author; #tag targets tags; type and period filters', () => {
     const { items, tags } = lib.repos
     const meta = (handle: string, text: string) => ({
       v: 1 as const,
@@ -92,7 +92,7 @@ describe('runSearch', () => {
     expect(titles('', { period: { from: lib.clock.now, to: null } })).toEqual([])
   })
 
-  it('filtre couleur (ΔE2000, PaletteIndex) : éléments sans palette exclus et comptés', () => {
+  it('color filter (ΔE2000, PaletteIndex): items without palette excluded and counted', () => {
     const { items } = lib.repos
     items.insert({ kind: 'image', title: 'rouge', palette: ['#fe3a2f', '#ffffff'] } as never)
     items.insert({ kind: 'image', title: 'bleu', palette: ['#1040ff'] } as never)
@@ -102,7 +102,7 @@ describe('runSearch', () => {
     expect(r.noPalette).toBe(1)
   })
 
-  it('suggestions : tags et collections par nom', () => {
+  it('suggestions: tags and collections by name', () => {
     const { items, tags, collections } = lib.repos
     const a = items.insert({ kind: 'image', title: 'x' }).id
     tags.addToItems([a], ['design', 'graphic-design'])
@@ -112,10 +112,10 @@ describe('runSearch', () => {
     expect(s.collections.map((c) => c.name)).toEqual(['Graphic Design'])
   })
 
-  it('FTS < 30 ms sur 10 000 lignes synthétiques', () => {
+  it('FTS < 30 ms on 10,000 synthetic rows', () => {
     seedSyntheticLibrary(lib.db, makeSyntheticLibrary({ count: 10_000 }))
     lib.repos.search.rebuild()
-    runSearch(lib.db, { q: 'lumière', limit: 300 }) // préchauffage
+    runSearch(lib.db, { q: 'lumière', limit: 300 }) // warm-up
     const times: number[] = []
     for (const q of ['lumière', 'design ville', 'a', 'instagram', '#x photo']) {
       const t0 = performance.now()

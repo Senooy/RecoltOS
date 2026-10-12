@@ -16,7 +16,7 @@ const ev = (
   shiftKey: !!mods.shift,
 })
 
-describe('enregistreur de raccourci (positionnel)', () => {
+describe('shortcut recorder (positional)', () => {
   it('⇧⌘S QWERTY → CommandOrControl+Shift+S, caps ⌘ ⇧ S', () => {
     const r = eventToAccelerator(
       ev('KeyS', 'S', { meta: true, shift: true }),
@@ -25,7 +25,7 @@ describe('enregistreur de raccourci (positionnel)', () => {
     expect(r).toEqual({ accel: 'CommandOrControl+Shift+S', label: 'S' })
     expect(accelToCaps('CommandOrControl+Shift+S', 'S')).toEqual(['⌘', '⇧', 'S'])
   })
-  it('AZERTY : touche imprimée « A » = KeyQ → accélérateur …+Q, key cap « A »', () => {
+  it('AZERTY: printed key "A" = KeyQ → accelerator …+Q, key cap "A"', () => {
     const azerty = new Map([
       ['KeyQ', 'a'],
       ['KeyA', 'q'],
@@ -34,7 +34,7 @@ describe('enregistreur de raccourci (positionnel)', () => {
     expect(r).toEqual({ accel: 'CommandOrControl+Shift+Q', label: 'A' })
     expect(accelToCaps('CommandOrControl+Shift+Q', 'A')).toEqual(['⌘', '⇧', 'A'])
   })
-  it('chiffres et touches spéciales ; modificateur seul incomplet ; ponctuation non prise en charge', () => {
+  it('digits and special keys; lone modifier incomplete; punctuation not supported', () => {
     expect(eventToAccelerator(ev('Digit2', 'é', { alt: true, meta: true }))).toEqual({
       accel: 'CommandOrControl+Alt+2',
       label: '2',
@@ -52,8 +52,8 @@ describe('enregistreur de raccourci (positionnel)', () => {
   })
 })
 
-describe('dépôt et URL', () => {
-  it('chemins (fichiers et dossiers), sinon lien http(s)', () => {
+describe('drop and URL', () => {
+  it('paths (files and folders), otherwise http(s) link', () => {
     const files = [{ name: 'a.png' }, { name: 'Dossier' }] as unknown as File[]
     const dt = {
       files,

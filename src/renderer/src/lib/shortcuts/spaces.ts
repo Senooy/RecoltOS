@@ -1,6 +1,6 @@
 /**
- * Raccourcis renderer du domaine `spaces`. Les raccourcis de menu
- * restent dans `src/shared/shortcuts.ts` : ne jamais rebinder ici un accélérateur de menu.
+ * Renderer shortcuts for the `spaces` domain. Menu shortcuts
+ * stay in `src/shared/shortcuts.ts`: never rebind a menu accelerator here.
  */
 import type { RendererShortcut } from './types'
 

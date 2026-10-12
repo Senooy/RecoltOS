@@ -1,7 +1,7 @@
 /**
- * ESLint flat config : typescript-eslint typé, react-hooks sur le renderer,
- * frontières de couches (pas d'`electron` dans shared/db/import/ingest/sync/ai/host ;
- * pas de node/electron/natifs dans le renderer), prettier en dernier.
+ * ESLint flat config: typed typescript-eslint, react-hooks on the renderer,
+ * layer boundaries (no `electron` import in shared/db/import/ingest/sync/ai/host;
+ * no node/electron/native modules in the renderer), prettier last.
  */
 import js from '@eslint/js'
 import prettier from 'eslint-config-prettier'
@@ -60,7 +60,7 @@ export default defineConfig(
     rules: { '@typescript-eslint/no-require-imports': 'off' },
   },
   {
-    // Scripts en ligne de commande : la sortie standard est leur interface.
+    // Command-line scripts: standard output is their interface.
     files: ['scripts/**'],
     rules: { 'no-console': 'off' },
   },

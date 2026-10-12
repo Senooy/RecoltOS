@@ -1,19 +1,19 @@
 /**
- * Faux CDN local (`node:http` sur 127.0.0.1) pour les avatars et médias distants : permet de tester
- * `remote.fetch` / `avatar.fetch` sans réseau. Routes :
- *   /avatar/<handle>.jpg   JPEG 64×64 dont la teinte dépend du handle
- *   /media/<nom>.<ext>     image synthétique (webp, jpg ou png)
- *   /expired/…             403 (URL signée expirée, comme les avatars Instagram)
- *   /slow/…                répond après `slowMs`
+ * Fake local CDN (`node:http` on 127.0.0.1) for remote avatars and media: lets us test
+ * `remote.fetch` / `avatar.fetch` without network. Routes:
+ *   /avatar/<handle>.jpg   JPEG 64×64 whose hue depends on the handle
+ *   /media/<nom>.<ext>     synthetic image (webp, jpg or png)
+ *   /expired/…             403 (signed URL expired, like Instagram avatars)
+ *   /slow/…                responds after `slowMs`
  *   /missing/…             404
- * Chaque requête reçue est consignée dans `requests`.
+ * Each request received is recorded in `requests`.
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { makeImage } from './synthetic-media'
 
 export interface RemoteServer {
-  /** Origine, ex. `http://127.0.0.1:41234`. */
+  /** Origin, e.g. `http://127.0.0.1:41234`. */
   origin: string
   requests: { method: string; url: string }[]
   url: (path: string) => string

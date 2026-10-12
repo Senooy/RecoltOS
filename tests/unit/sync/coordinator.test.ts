@@ -1,6 +1,6 @@
 /**
- * `SyncCoordinator` : planning, backfill, backoff, auth_required, page refusée par le parseur,
- * et simulation de 24 h avec l'exécuteur réel de l'extension : aucun onglet créé sans l'option.
+ * `SyncCoordinator`: scheduling, backfill, backoff, auth_required, page rejected by the parser,
+ * and 24 h simulation with the real extension executor: no tab created without the option.
  */
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -35,7 +35,7 @@ beforeEach(() => {
 })
 afterEach(() => t.cleanup())
 
-// ---------------------------------------------------------------------------- coordinateur
+// ---------------------------------------------------------------------------- coordinator
 
 interface Sent {
   connId: number
@@ -79,7 +79,7 @@ const firefox: ClientView = {
 }
 
 describe('SyncCoordinator', () => {
-  it('activation → backfill (toggle) ; pages suivies jusqu’à la fin ; backfill_done', () => {
+  it('activation → backfill (toggle); pages followed until the end; backfill_done', () => {
     const { c, sent } = coordinator([firefox])
     c.setEnabled('x', true)
     const run = sent.find((s) => s.type === 'sync.run')!
@@ -119,7 +119,7 @@ describe('SyncCoordinator', () => {
     expect(s).toMatchObject({ enabled: true, status: 'ok', browser: 'Firefox', loggedIn: true })
   })
 
-  it('aucun navigateur → no_browser (détail browser_closed) ; non connecté → auth_required sans relance', () => {
+  it('no browser → no_browser (detail browser_closed); not signed in → auth_required without retry', () => {
     const none = coordinator([])
     none.c.setEnabled('instagram', true)
     expect(none.sent).toEqual([])
@@ -138,7 +138,7 @@ describe('SyncCoordinator', () => {
     expect(out.sent).toEqual([])
   })
 
-  it('3 échecs d’affilée → intervalle doublé ; requête refusée (blocked) → pas de relance automatique', () => {
+  it('3 consecutive failures → interval doubled; request refused (blocked) → no automatic retry', () => {
     const { c, sent } = coordinator([firefox])
     t.repos.sync.patchState('cosmos', { enabled: true, backfillDone: true })
     for (let i = 0; i < 3; i++) {
@@ -151,7 +151,7 @@ describe('SyncCoordinator', () => {
     const before = sent.length
     t.clock.now += 31 * 60_000
     c.tick()
-    expect(sent.length).toBe(before) // 30 min ×2 pas encore écoulées
+    expect(sent.length).toBe(before) // 30 min ×2 not yet elapsed
     t.clock.now += 31 * 60_000
     c.tick()
     expect(sent.length).toBe(before + 1)
@@ -168,7 +168,7 @@ describe('SyncCoordinator', () => {
     expect(sent.length).toBe(before + 2)
   })
 
-  it('page refusée par le parseur (checkpoint Instagram) → arrêt auth_required', () => {
+  it('page rejected by the parser (Instagram checkpoint) → auth_required stop', () => {
     const { c, sent } = coordinator([firefox])
     t.repos.sync.patchState('instagram', { enabled: true, backfillDone: true })
     c.runNow('instagram')
@@ -185,7 +185,7 @@ describe('SyncCoordinator', () => {
     expect(t.repos.sync.getState('instagram').status).toBe('auth_required')
   })
 
-  it('24 h simulées sans option, exécuteur réel de l’extension : aucun onglet créé', async () => {
+  it('24 h simulated without the option, real extension executor: no tab created', async () => {
     const fake = new FakeChrome()
     fake.install()
     fake.cookies.set('ct0', 'c')
@@ -206,7 +206,7 @@ describe('SyncCoordinator', () => {
       at: 0,
     })
     fake.local.set('cosmos.me', { id: '8800001' })
-    // Jeton Cosmos encore valable (JWT factice non signé, expiration lointaine).
+    // Cosmos token still valid (unsigned fake JWT, distant expiry).
     const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url')
     fake.local.set('cosmos.token', {
       token: `${b64({ alg: 'none' })}.${b64({ exp: 4_000_000_000, eid: 8800001 })}.sig`,
@@ -216,7 +216,7 @@ describe('SyncCoordinator', () => {
     })
     const targets: string[] = []
     const pending: Promise<unknown>[] = []
-    // eslint-disable-next-line prefer-const -- affecté après la création du port (références croisées)
+    // eslint-disable-next-line prefer-const -- assigned after the port is created (cross references)
     let c!: SyncCoordinator
     const ext = new SyncRunner(
       {

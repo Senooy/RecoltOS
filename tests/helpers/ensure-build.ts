@@ -1,7 +1,7 @@
 /**
- * Construit `out/` quand les sources ont changé depuis `out/.build-hash` (ou si `RECOLTOS_REBUILD=1`).
- * Partagé par le projet Playwright `build` et par `scripts/visual/shots.mts`. Les builds passent par
- * `process.execPath` (jamais de pnpm imbriqué : il repasserait par le PATH et corepack).
+ * Builds `out/` when the sources changed since `out/.build-hash` (or if `RECOLTOS_REBUILD=1`).
+ * Shared by the Playwright `build` project and by `scripts/visual/shots.mts`. Builds go through
+ * `process.execPath` (never a nested pnpm: it would go back through the PATH and corepack).
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -27,7 +27,7 @@ export function isBuildComplete(root: string): boolean {
   )
 }
 
-/** Renvoie `true` si un build a eu lieu. */
+/** Returns `true` if a build took place. */
 export function ensureBuild(root: string = REPO_ROOT): boolean {
   const out = join(root, 'out')
   const hashFile = join(out, '.build-hash')

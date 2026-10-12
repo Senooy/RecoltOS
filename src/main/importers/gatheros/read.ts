@@ -1,6 +1,6 @@
 /**
- * Lecture tolérante de la copie de `moodmark.db` (phase `read`) : `z.looseObject`,
- * colonnes absentes = `null`. Aucune écriture : la copie est ouverte en lecture seule.
+ * Tolerant read of the copy of `moodmark.db` (`read` phase): `z.looseObject`,
+ * missing columns = `null`. No writes: the copy is opened read-only.
  */
 import Database from 'better-sqlite3'
 import { z } from 'zod'
@@ -51,7 +51,7 @@ export interface GatherosData {
   saves: SaveRow[]
   collections: CollectionRowG[]
   collectionItems: { collection_id: string; save_id: string; added_at: number }[]
-  /** `save_id` → noms de tags. */
+  /** `save_id` → tag names. */
   tagsBySave: Map<string, string[]>
   tagNames: string[]
   dismissed: { tweet_key: string; dismissed_at: number }[]

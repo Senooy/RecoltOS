@@ -1,14 +1,14 @@
 /**
- * Pierres tombales d'import : ce que l'utilisateur a retiré d'un import n'est
- * jamais recréé par un ré-import. Les triggers de 0001 posent celles des suppressions directes ;
- * `collections.delete` pose explicitement celles des descendants.
+ * Import tombstones: what the user removed from an import is never
+ * recreated by a re-import. The triggers in 0001 set those for direct deletions;
+ * `collections.delete` explicitly sets those for descendants.
  */
 import type Database from 'better-sqlite3'
 import { repoBase, type RepoOptions } from './util'
 
 export type TombstoneEntity = 'item' | 'collection' | 'membership'
 
-/** Clé d'une appartenance : `<collectionOriginId>:<itemOriginId>`. */
+/** Key of a membership: `<collectionOriginId>:<itemOriginId>`. */
 export function membershipKey(collectionOriginId: string, itemOriginId: string): string {
   return `${collectionOriginId}:${itemOriginId}`
 }
@@ -25,7 +25,7 @@ export function createTombstonesRepo(db: Database.Database, opts: RepoOptions = 
         ) !== undefined
       )
     },
-    /** Ensemble des `origin_id` en pierre tombale (préchargé par l'importeur). */
+    /** Set of `origin_id`s that are tombstoned (preloaded by the importer). */
     ids(origin: string, entity: TombstoneEntity): Set<string> {
       const rows = q('SELECT origin_id FROM import_tombstones WHERE origin = ? AND entity = ?').all(
         origin,
@@ -63,7 +63,7 @@ export function createTombstonesRepo(db: Database.Database, opts: RepoOptions = 
       ) as { n: number }
       return row.n
     },
-    /** Option `ignoreTombstones` de l'importeur : oublie tout pour une origine. */
+    /** Importer's `ignoreTombstones` option: forgets everything for an origin. */
     clear(origin: string): number {
       return q('DELETE FROM import_tombstones WHERE origin = ?').run(origin).changes
     },

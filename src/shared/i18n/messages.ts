@@ -1,7 +1,7 @@
 /**
- * Typage des catalogues : le catalogue anglais est DÉRIVÉ du français (`Widen<typeof fr>`).
- * Les littéraux deviennent `string`, les fonctions gardent leurs paramètres et renvoient `string` :
- * une clé manquante ou en trop dans le catalogue anglais est une erreur de compilation.
+ * Typing of the catalogs: the English catalog is DERIVED from the French one (`Widen<typeof fr>`).
+ * Literals become `string`, functions keep their parameters and return `string`:
+ * a missing or extra key in the English catalog is a compilation error.
  */
 export type Widen<T> = T extends string
   ? string

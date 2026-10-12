@@ -1,9 +1,9 @@
 /**
- * Fichiers d'un élément, côté main (handlers `system.*`, glisser natif). Lecture synchrone
- * (better-sqlite3, `fs.statSync`) : le glisser doit appeler `startDrag` pendant l'événement IPC,
- * sans aller-retour asynchrone. Pas d'import `electron`.
+ * Files of an item, main side (`system.*` handlers, native drag). Synchronous reads
+ * (better-sqlite3, `fs.statSync`): the drag must call `startDrag` during the IPC event,
+ * with no asynchronous round-trip. No `electron` import.
  *
- * Ne mémorise ni `db` ni `repos` : la bibliothèque est relue à chaque appel (contrat).
+ * Does not cache `db` nor `repos`: the library is re-read on each call (contract).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -15,7 +15,7 @@ import { mt } from '../i18n'
 
 export interface ItemWithMedia {
   item: ItemRow
-  /** Médias par position ; la couverture en premier. */
+  /** Media by position; the cover first. */
   media: MediaRow[]
 }
 
@@ -31,9 +31,9 @@ export function loadItem(lib: Lib, uuid: string): ItemWithMedia {
 }
 
 /**
- * Chemin absolu d'un fichier relatif s'il existe (fichier ordinaire), sinon `null`. Le fichier doit
- * rester sous la racine de la bibliothèque une fois les liens symboliques résolus : le glisser et
- * « Afficher dans le Finder » ne donnent jamais un fichier qui sort de la bibliothèque.
+ * Absolute path of a relative file if it exists (regular file), otherwise `null`. The file must
+ * stay under the library root once symbolic links are resolved: dragging and
+ * "Show in Finder" never give a file that leaves the library.
  */
 export function existingAbs(lib: Lib, rel: string | null | undefined): string | null {
   if (!rel) return null
@@ -55,15 +55,15 @@ export function existingAbs(lib: Lib, rel: string | null | undefined): string | 
   }
 }
 
-/** Original local d'un média (`remote` / `missing` : aucun). */
+/** Local original of a media item (`remote` / `missing`: none). */
 export function originalAbs(lib: Lib, m: MediaRow): string | null {
   if (m.status === 'remote' || m.status === 'missing') return null
   return existingAbs(lib, m.file_rel)
 }
 
 /**
- * Originaux locaux d'un élément, couverture d'abord (« Afficher dans le Finder », « Enregistrer
- * sous », Quick Look, glisser vers le Finder : on donne l'original, jamais un dérivé).
+ * Local originals of an item, cover first ("Show in Finder", "Save as",
+ * Quick Look, drag to Finder: the original is given, never a derivative).
  */
 export function itemOriginals(lib: Lib, uuid: string): string[] {
   const { media } = loadItem(lib, uuid)
@@ -75,7 +75,7 @@ export function itemOriginals(lib: Lib, uuid: string): string[] {
   return [...seen]
 }
 
-/** Original de la couverture ou `AppError('not_found')` (post texte, média distant ou perdu). */
+/** Original of the cover or `AppError('not_found')` (text post, remote or lost media). */
 export function requireCoverOriginal(lib: Lib, uuid: string): string {
   const [first] = itemOriginals(lib, uuid)
   if (!first) throw new AppError('not_found', mt().errors.noLocalFile)
@@ -83,8 +83,8 @@ export function requireCoverOriginal(lib: Lib, uuid: string): string {
 }
 
 /**
- * Source d'une copie d'image (`system.copyImage`) : vidéo → poster (sinon vignette) ;
- * image → variante affichable (HEIC, PSD…) sinon original, puis grande image et vignette.
+ * Source of an image copy (`system.copyImage`): video → poster (otherwise thumbnail);
+ * image → displayable variant (HEIC, PSD…) otherwise original, then large image and thumbnail.
  */
 export function copyImageSource(lib: Lib, uuid: string): string {
   const { media } = loadItem(lib, uuid)
@@ -108,8 +108,8 @@ export function copyImageSource(lib: Lib, uuid: string): string {
 }
 
 /**
- * Fichiers glissés vers l'extérieur pour une sélection (ordre de la sélection, sans doublon).
- * Appelé pendant le `dragstart` : dédoublonnage par `Set` (O(n)), pas de `includes` (O(n²)).
+ * Files dragged out for a selection (selection order, no duplicates).
+ * Called during `dragstart`: de-duplication via `Set` (O(n)), no `includes` (O(n²)).
  */
 export function dragFiles(lib: Lib, uuids: readonly string[]): string[] {
   const out = new Set<string>()

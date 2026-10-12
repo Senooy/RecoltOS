@@ -1,23 +1,23 @@
 /**
- * Drapeaux d'exécution lus une fois au démarrage (contrats de testabilité).
- * Sans import `electron` : testable sous Node.
+ * Runtime flags read once at startup (testability contracts).
+ * No `electron` import: testable under Node.
  */
 import { langFromLocale, type Lang } from '../../shared/i18n/lang'
 
 export interface RuntimeFlags {
-  /** `RECOLTOS_E2E=1` : ni raccourci global, ni sync, ni IA, ni manifests, ni réseau ; animations coupées. */
+  /** `RECOLTOS_E2E=1`: no global shortcut, no sync, no AI, no manifests, no network; animations off. */
   e2e: boolean
-  /** Taille imposée (`RECOLTOS_WINDOW=1280x820`), sinon `null`. */
+  /** Forced size (`RECOLTOS_WINDOW=1280x820`), otherwise `null`. */
   windowSize: { width: number; height: number } | null
-  /** `RECOLTOS_HOME` remplace `os.homedir()` (manifests, dossier de dépôt). */
+  /** `RECOLTOS_HOME` replaces `os.homedir()` (manifests, repository folder). */
   home: string | null
-  /** URL du serveur Vite en dev (`ELECTRON_RENDERER_URL`, posée par electron-vite). */
+  /** Vite dev server URL (`ELECTRON_RENDERER_URL`, set by electron-vite). */
   rendererUrl: string | null
-  /** `RECOLTOS_INSTALL_DEV_HOST=1` : manifests de dev (`com.recoltos.host.dev`). */
+  /** `RECOLTOS_INSTALL_DEV_HOST=1`: dev manifests (`com.recoltos.host.dev`). */
   installDevHost: boolean
   /**
-   * `RECOLTOS_LANG=fr|en` : langue du système SIMULÉE (tests e2e et visuels, captures). Le réglage
-   * `ui.language` garde la priorité ; `null` = langue préférée du Mac.
+   * `RECOLTOS_LANG=fr|en`: SIMULATED system language (e2e and visual tests, screenshots). The
+   * `ui.language` setting keeps priority; `null` = the Mac's preferred language.
    */
   systemLang: Lang | null
 }

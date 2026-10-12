@@ -1,8 +1,8 @@
 /**
- * `Chip` : pastille pleine (`rounded-full`). Variantes `tag` (# nom), `recent`
- * (recherche récente), `filter` (bascule), `collection`, `viewer` (26 px, sur fond sombre).
- * Cliquable si `onClick`/`selected` est fourni (rend alors un `<button>`) ; `onRemove` ajoute
- * une croix distincte avec son propre nom accessible.
+ * `Chip`: solid pill (`rounded-full`). Variants `tag` (# name), `recent`
+ * (recent search), `filter` (toggle), `collection`, `viewer` (26 px, on a dark background).
+ * Clickable if `onClick`/`selected` is provided (then renders a `<button>`); `onRemove` adds
+ * a separate cross with its own accessible name.
  */
 import { cva } from 'class-variance-authority'
 import { X } from 'lucide-react'
@@ -77,7 +77,7 @@ export interface ChipProps {
   icon?: ReactNode
   selected?: boolean
   onClick?: () => void
-  /** Ajoute une croix de retrait (nom accessible « Retirer <label> »). */
+  /** Adds a remove cross (its accessible name comes from `UI_LABELS.remove`). */
   onRemove?: () => void
   className?: string
   title?: string
@@ -134,7 +134,7 @@ export function Chip({
     )
   }
   if (interactive && onRemove) {
-    // Deux contrôles distincts : jamais de <button> imbriqué.
+    // Two separate controls: never a nested <button>.
     return (
       <span className={classes} title={title}>
         <button

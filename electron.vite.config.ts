@@ -1,6 +1,6 @@
 /**
- * electron-vite : main et preload en CJS, preload isolé et autonome
- * (sandbox), renderer React + Tailwind avec CSP injectée (sans `https:`).
+ * electron-vite: main and preload in CJS, preload isolated and self-contained
+ * (sandbox), renderer React + Tailwind with an injected CSP (without `https:`).
  */
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -16,7 +16,7 @@ const alias = {
 }
 const watchIgnored = ['**/.worktrees/**', '**/.tmp/**', '**/out/**', '**/dist/**']
 
-/** CSP de production (avec le schéma `recolt:` ; aucune origine http(s) distante). */
+/** Production CSP (with the `recolt:` scheme; no remote http(s) origin). */
 export const CSP_PROD = [
   "default-src 'self'",
   "script-src 'self'",
@@ -31,7 +31,7 @@ export const CSP_PROD = [
   "form-action 'none'",
 ].join('; ')
 
-/** Dev : préambule react-refresh (`'unsafe-inline'`) et WebSocket HMR local. */
+/** Dev: react-refresh preamble (`'unsafe-inline'`) and local HMR WebSocket. */
 export const CSP_DEV = CSP_PROD.replace(
   "script-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -58,8 +58,8 @@ function htmlCsp(): Plugin {
 }
 
 /**
- * Images factices du mode maquette (`api/mock.ts`, dev uniquement) : `recolt://mock/<root>/<n>.svg`
- * est traduit par `lib/media-url.ts` en `/__mock/media/<root>/<n>.svg?w=&h=&c=` (même origine, CSP `'self'`).
+ * Placeholder images for mock mode (`api/mock.ts`, dev only): `recolt://mock/<root>/<n>.svg`
+ * is translated by `lib/media-url.ts` into `/__mock/media/<root>/<n>.svg?w=&h=&c=` (same origin, CSP `'self'`).
  */
 function mockMedia(): Plugin {
   return {
@@ -91,7 +91,7 @@ export default defineConfig({
     resolve: { alias },
     build: {
       outDir: 'out/main',
-      // Deux entrées : le main et le worker média (utilityProcess, → out/main/media.worker.js).
+      // Two entries: the main process and the media worker (utilityProcess, → out/main/media.worker.js).
       rollupOptions: {
         input: {
           index: resolve(root, 'src/main/index.ts'),
@@ -104,9 +104,9 @@ export default defineConfig({
     resolve: { alias },
     build: {
       outDir: 'out/preload',
-      // Entrée unique : bundle autonome sans chunk partagé. `isolatedEntries: true` est
-      // inutile ici et casse le build hors TTY (electron-vite 5.0.0 appelle
-      // `process.stdout.moveCursor` sans vérifier `isTTY`). À réactiver si une 2e entrée apparaît.
+      // Single entry: self-contained bundle with no shared chunk. `isolatedEntries: true` is
+      // useless here and breaks the build outside a TTY (electron-vite 5.0.0 calls
+      // `process.stdout.moveCursor` without checking `isTTY`). Re-enable if a 2nd entry appears.
       isolatedEntries: false,
       externalizeDeps: false,
       rollupOptions: { input: { index: resolve(root, 'src/preload/index.ts') } },
@@ -119,8 +119,8 @@ export default defineConfig({
     server: { watch: { ignored: watchIgnored } },
     build: {
       outDir: resolve(root, 'out/renderer'),
-      // code minifié (electron-vite ne minifie pas par défaut) : moins à analyser au
-      // démarrage et moins de mémoire V8 (source et bytecode) dans le renderer.
+      // minified code (electron-vite does not minify by default): less to parse at
+      // startup and less V8 memory (source and bytecode) in the renderer.
       minify: true,
       rollupOptions: {
         input: {

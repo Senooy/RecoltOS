@@ -1,9 +1,9 @@
 /**
- * Nœuds de texte : note (6 teintes, 15/21, `<textarea>` en
- * édition), forme (rectangle, ellipse, triangle, losange en SVG, libellé centré) et texte libre
- * (`contenteditable="plaintext-only"`, largeur automatique tant qu'aucune poignée latérale n'a été
- * tirée). L'édition reste locale jusqu'au blur / Échap : un seul commit dans l'historique ;
- * `commitEditing()` (handshake de fermeture) la valide à la demande.
+ * Text nodes: note (6 tints, 15/21, `<textarea>` while
+ * editing), shape (rectangle, ellipse, triangle, diamond in SVG, centred label) and free text
+ * (`contenteditable="plaintext-only"`, automatic width as long as no side handle has been
+ * dragged). Editing stays local until blur / Escape: a single commit in the history;
+ * `commitEditing()` (closing handshake) validates it on demand.
  */
 import {
   useEffect,
@@ -23,7 +23,7 @@ type NoteN = Extract<SpaceNode, { type: 'note' }>
 type ShapeN = Extract<SpaceNode, { type: 'shape' }>
 type TextN = Extract<SpaceNode, { type: 'text' }>
 
-/** Taille S/M/L/XL → police/interligne (S = 15/21). */
+/** Size S/M/L/XL → font / line height (S = 15/21). */
 export const NOTE_FONT: Record<number, [number, number]> = {
   14: [15, 21],
   18: [18, 25],
@@ -38,7 +38,7 @@ function stopEditing() {
   useSpace.setState({ editingId: null })
 }
 
-/** Édition locale + validation unique (blur, Échap, handshake). */
+/** Local editing + single validation (blur, Escape, handshake). */
 function useEditing(id: string, initial: string, editing: boolean, onCommit: (v: string) => void) {
   const [draft, setDraft] = useState(initial)
   const draftRef = useRef(initial)
@@ -134,7 +134,7 @@ function shapePath(kind: ShapeN['style']['kind'], w: number, h: number, sw: numb
   }
 }
 
-/** Contenu éditable en place (texte libre, libellé de forme). */
+/** In-place editable content (free text, shape label). */
 function Editable({
   value,
   editing,
@@ -266,7 +266,7 @@ export function TextNodeView({ node, editing }: { node: TextN; editing: boolean 
   const st = node.style
   const measure = useRef<HTMLDivElement | null>(null)
   const { draft, update } = useEditing(node.uuid, node.content, editing, (v) => {
-    // Texte vide à la fin de l'édition : le nœud disparaît (comme une zone de texte vide).
+    // Empty text at the end of editing: the node disappears (like an empty text box).
     if (!v.trim()) {
       commit(tr.spacesUi.delete, (d) => {
         delete d[node.uuid]

@@ -1,11 +1,11 @@
 /**
- * Préparation des médias pour l'IA. Les opérations lourdes passent par le media-worker
- * (`aiImage`, `extractFrame`, `probeVideo`) ; ce module décide QUOI envoyer :
- * - image / url : 1 JPEG ≤ 1568 px sans EXIF ;
- * - carrousel : couverture + médiane + dernière (diapositives vidéo ignorées) ;
- * - vidéo : 3 images clés à 10 / 50 / 90 % (cache `cache/frames/<uuid>/f1..f3.jpg`), chaque
- *   extraction vérifiée (fichier non vide), repli à 0,80·d puis `-sseof -0.5`, sinon abandon de
- *   cette image ; repli final : poster / miniature (1 image).
+ * Media preparation for the AI. Heavy operations go through the media worker
+ * (`aiImage`, `extractFrame`, `probeVideo`); this module decides WHAT to send:
+ * - image / url: 1 JPEG ≤ 1568 px without EXIF;
+ * - carousel: cover + median + last (video slides skipped);
+ * - video: 3 keyframes at 10 / 50 / 90 % (cache `cache/frames/<uuid>/f1..f3.jpg`), each
+ *   extraction checked (non-empty file), fallback to 0.80·d then `-sseof -0.5`, otherwise giving
+ *   up on this frame; final fallback: poster / thumbnail (1 image).
  */
 import { existsSync, statSync } from 'node:fs'
 import { mkdir, readdir, rm, stat } from 'node:fs/promises'
@@ -17,13 +17,13 @@ export const AI_IMAGE_MAX_EDGE = 1568
 export const AI_FRAME_MAX_EDGE = 1024
 
 export interface Slide {
-  /** 0 = couverture. */
+  /** 0 = cover. */
   index: number
   path: string
   type: 'image' | 'video'
 }
 
-/** Couverture + diapositives réparties (médiane, dernière) ; ignore les vidéos. */
+/** Cover + spread slides (median, last); ignores videos. */
 export function pickSlides(slides: readonly Slide[], n = 3): Slide[] {
   const images = slides.filter((s) => s.type === 'image')
   if (images.length <= n) return images.slice(0, n)
@@ -32,7 +32,7 @@ export function pickSlides(slides: readonly Slide[], n = 3): Slide[] {
   return [...new Set(picks)].map((i) => images[i]!)
 }
 
-/** Instants des images clés : 10/50/90 % ; < 1,5 s : [0, d/2] ; plafonné à d − 0,3 s. */
+/** Keyframe times: 10/50/90 %; < 1.5 s: [0, d/2]; capped at d − 0.3 s. */
 export function keyframeTimes(durationSec: number): number[] {
   const d = Math.max(0, durationSec)
   const raw = d < 1.5 ? [0, d / 2] : [0.1 * d, 0.5 * d, 0.9 * d]
@@ -56,7 +56,7 @@ export async function prepareImageForAi(
 }
 
 export type FrameAt = { atMs: number } | { fromEndMs: number }
-/** Extraction d'une image : renvoie vrai si un fichier non vide a été écrit. */
+/** Extracts one frame: returns true if a non-empty file was written. */
 export type FrameExtractor = (src: string, dst: string, at: FrameAt) => Promise<boolean>
 
 export function workerFrameExtractor(media: MediaCaller, signal?: AbortSignal): FrameExtractor {
@@ -82,13 +82,13 @@ export function workerFrameExtractor(media: MediaCaller, signal?: AbortSignal): 
 export interface KeyframesResult {
   frames: string[]
   durationSec?: number
-  /** Repli sur une image fixe (ffmpeg absent, pas de flux vidéo…). */
+  /** Fallback to a still image (ffmpeg missing, no video stream…). */
   fallback: boolean
 }
 
 /**
- * Images clés d'une vidéo, en cache sous `cacheDir/<uuid>/f1..f3.jpg` (réutilisées tant qu'elles
- * existent). `fallbackImage` (poster ou miniature) sert de repli final.
+ * Keyframes of a video, cached under `cacheDir/<uuid>/f1..f3.jpg` (reused as long as they
+ * exist). `fallbackImage` (poster or thumbnail) serves as the final fallback.
  */
 export async function getVideoKeyframes(deps: {
   itemUuid: string
@@ -99,7 +99,7 @@ export async function getVideoKeyframes(deps: {
   extract: FrameExtractor | null
 }): Promise<KeyframesResult> {
   const dir = join(deps.cacheDir, deps.itemUuid)
-  // Cache : toutes les images présentes et non vides.
+  // Cache: all frames present and non-empty.
   if (existsSync(dir)) {
     const names = (await readdir(dir)).filter((n) => /^f\d\.jpg$/.test(n)).sort()
     const ok: string[] = []
@@ -146,7 +146,7 @@ export async function getVideoKeyframes(deps: {
   return { frames, durationSec: d, fallback: false }
 }
 
-/** Purge des dossiers de job de plus d'une heure (démarrage). */
+/** Purges job folders older than one hour (at startup). */
 export async function purgeOldJobDirs(jobsDir: string, now: number, maxAgeMs = 3_600_000) {
   if (!existsSync(jobsDir)) return 0
   let n = 0

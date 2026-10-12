@@ -1,7 +1,7 @@
 /**
- * Contenu d'un dépôt : chemins des fichiers ET dossiers (`webUtils.getPathForFile`,
- * le main parcourt les dossiers : ≤ 12 niveaux, ≤ 20 000 fichiers, confirmation au-delà de 200),
- * sinon une URL http(s) (`text/uri-list` / `text/plain`, glisser depuis un navigateur).
+ * Drop content: paths of files AND folders (`webUtils.getPathForFile`, the main process walks
+ * the folders: ≤ 12 levels, ≤ 20,000 files, confirmation beyond 200), otherwise an http(s) URL
+ * (`text/uri-list` / `text/plain`, dragged from a browser).
  */
 
 export interface DropContent {
@@ -28,7 +28,7 @@ export function readDrop(dt: DataTransfer | null, pathForFile: (f: File) => stri
   return { paths: [], url: raw && /^https?:\/\//i.test(raw) ? raw : null }
 }
 
-/** Le glisser vient de l'extérieur (fichiers ou lien), pas d'une carte de la grille. */
+/** The drag comes from outside (files or link), not from a grid card. */
 export function isExternalDrag(types: readonly string[]): boolean {
   return types.includes('Files') || types.includes('text/uri-list')
 }

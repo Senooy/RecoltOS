@@ -1,10 +1,10 @@
 /**
- * Accès au media-worker pour les handlers `system.*` (`toPng` de `system.copyImage`).
+ * Access to the media-worker for the `system.*` handlers (`toPng` of `system.copyImage`).
  *
- * Adaptateur local : le worker partagé est créé par la file de jobs
- * (`jobs/init.ts`). Tant qu'aucun fournisseur n'est déclaré via
- * `provideMediaWorker()`, un worker dédié est lancé au premier besoin et arrêté au `dispose` du
- * domaine `protocol`.
+ * Local adapter: the shared worker is created by the jobs queue
+ * (`jobs/init.ts`). As long as no provider is declared via
+ * `provideMediaWorker()`, a dedicated worker is started on first need and stopped at the
+ * `dispose` of the `protocol` domain.
  */
 import type { MediaWorker } from '../workers-host'
 
@@ -14,18 +14,18 @@ let provider: (() => MediaWorker | null) | null = null
 let factory: MediaWorkerFactory | null = null
 let local: MediaWorker | null = null
 
-/** déclare le worker partagé (le worker local éventuel est alors arrêté). */
+/** Declares the shared worker (any local worker is then stopped). */
 export function provideMediaWorker(fn: (() => MediaWorker | null) | null): void {
   provider = fn
   if (fn && local) void stopLocalMediaWorker()
 }
 
-/** `init.ts` : fabrique du worker local (Electron `utilityProcess`). */
+/** `init.ts`: factory of the local worker (Electron `utilityProcess`). */
 export function setLocalMediaWorkerFactory(fn: MediaWorkerFactory | null): void {
   factory = fn
 }
 
-/** Worker partagé s'il est déclaré, sinon worker local lancé à la demande, sinon `null`. */
+/** Shared worker if declared, otherwise local worker started on demand, otherwise `null`. */
 export function getMediaWorker(): MediaWorker | null {
   const shared = provider?.() ?? null
   if (shared) return shared
@@ -33,7 +33,7 @@ export function getMediaWorker(): MediaWorker | null {
   return local
 }
 
-/** Worker local en cours (pour transmettre les outils re-détectés). */
+/** Current local worker (to pass on the re-detected tools). */
 export function localMediaWorker(): MediaWorker | null {
   return local
 }
@@ -44,7 +44,7 @@ export async function stopLocalMediaWorker(): Promise<void> {
   if (w) await w.stop()
 }
 
-/** Tests uniquement. */
+/** Tests only. */
 export function resetMediaWorkerAccessForTests(): void {
   provider = null
   factory = null

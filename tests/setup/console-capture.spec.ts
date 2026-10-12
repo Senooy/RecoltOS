@@ -1,9 +1,9 @@
 /**
- * Preuve que le critère « 0 erreur console » n'est pas faillible : une violation CSP
- * émise PENDANT le chargement initial doit être vue à chaque lancement, et pas seulement quand les
- * écouteurs posés après `electron.launch()` arrivent à temps (course mesurée : 1 fois sur 3).
- * L'app est lancée depuis une copie de `out/` dont `index.html` embarque un script inline (interdit
- * par la CSP `script-src 'self'`).
+ * Proof that the "0 console errors" criterion is not fallible: a CSP violation
+ * emitted DURING the initial load must be seen at every launch, not only when the
+ * listeners set after `electron.launch()` arrive in time (measured race: 1 time in 3).
+ * The app is launched from a copy of `out/` whose `index.html` embeds an inline script (forbidden
+ * by the CSP `script-src 'self'`).
  */
 import { cpSync, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -24,7 +24,7 @@ function poisonedRoot(): string {
   return root
 }
 
-test('une violation CSP au chargement est vue à chaque lancement', async () => {
+test('a CSP violation on load is seen at every launch', async () => {
   expect(existsSync(join(REPO_ROOT, 'out/main/index.js'))).toBe(true)
   const root = poisonedRoot()
   for (let i = 0; i < 3; i++) {
@@ -32,7 +32,7 @@ test('une violation CSP au chargement est vue à chaque lancement', async () => 
     try {
       const errors = await handle.flushErrors()
       expect(errors.join('\n'), `lancement ${i + 1}`).toMatch(/Content Security Policy/)
-      // Sans doublon, même si l'écouteur en direct l'a aussi vue.
+      // No duplicate, even if the live listener also saw it.
       expect(new Set(errors).size).toBe(errors.length)
     } finally {
       await handle.close()
@@ -40,7 +40,7 @@ test('une violation CSP au chargement est vue à chaque lancement', async () => 
   }
 })
 
-test('app saine : flushErrors ne renvoie rien', async () => {
+test('healthy app: flushErrors returns nothing', async () => {
   const handle = await launchApp()
   try {
     await handle.page.locator('#root > *').first().waitFor()

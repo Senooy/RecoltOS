@@ -30,8 +30,8 @@ afterEach(() => {
   delete process.env.FAKE_SCREENCAPTURE_SALT
 })
 
-describe('raccourci global', () => {
-  it('validation : modificateur requis, ⌘Q/⌘W et ⇧⌘3/4/5 réservés', () => {
+describe('global shortcut', () => {
+  it('validation: modifier required, ⌘Q/⌘W and ⇧⌘3/4/5 reserved', () => {
     expect(validateAccelerator('CommandOrControl+Shift+S')).toBe('ok')
     expect(validateAccelerator('Alt+Shift+K')).toBe('ok')
     expect(validateAccelerator('Shift+S')).toBe('invalid')
@@ -41,7 +41,7 @@ describe('raccourci global', () => {
     expect(validateAccelerator('CommandOrControl+Shift+4')).toBe('reserved')
   })
 
-  it('register → false : ancien raccourci conservé et `taken`', () => {
+  it('register → false: previous shortcut kept and `taken`', () => {
     const active = new Set<string>()
     const gs = {
       register: vi.fn((a: string) => {
@@ -63,7 +63,7 @@ describe('raccourci global', () => {
     expect(m.current).toBe('CommandOrControl+Shift+S')
   })
 
-  it('anti-rebond 400 ms', () => {
+  it('400 ms debounce', () => {
     let fire: () => void = () => undefined
     let t = 1000
     const m = createShortcutManager(
@@ -80,15 +80,15 @@ describe('raccourci global', () => {
     expect(spy).toHaveBeenCalledTimes(2)
   })
 
-  it('menu : accélérateur seulement si la touche imprimée correspond (AZERTY)', () => {
+  it('menu: accelerator only if the printed key matches (AZERTY)', () => {
     expect(menuAccelerator('CommandOrControl+Shift+S', 'S')).toBe('CommandOrControl+Shift+S')
-    // Touche imprimée « A » en AZERTY = position KeyQ → accélérateur …+Q : pas d'accélérateur de menu.
+    // Printed key "A" on AZERTY = KeyQ position → accelerator …+Q: no menu accelerator.
     expect(menuAccelerator('CommandOrControl+Shift+Q', 'A')).toBeUndefined()
   })
 })
 
 describe('screencapture', () => {
-  it('arguments par mode', () => {
+  it('arguments per mode', () => {
     expect(buildArgs('region', '/t/a.png')).toEqual(['-i', '-s', '-x', '-t', 'png', '/t/a.png'])
     expect(buildArgs('window', '/t/a.png')).toEqual([
       '-i',
@@ -101,12 +101,12 @@ describe('screencapture', () => {
     ])
     expect(buildArgs('screen', '/t/a.png', 2)).toEqual(['-D', '2', '-x', '-t', 'png', '/t/a.png'])
   })
-  it('nom du fichier de dépôt', () => {
+  it('drop file name', () => {
     const d = new Date(2026, 9, 11, 14, 32, 7)
     expect(dropFileName(d)).toBe('Capture RecoltOS 2026-10-11 à 14.32.07.png')
     expect(dropFileName(d, 2)).toBe('Capture RecoltOS 2026-10-11 à 14.32.07 (2).png')
   })
-  it('signature codesign', () => {
+  it('codesign signature', () => {
     expect(parseCodesign('Signature=adhoc\nTeamIdentifier=not set', 0)).toBe('adhoc')
     expect(parseCodesign('Authority=RecoltOS Local', 0)).toBe('identity')
     expect(parseCodesign('code object is not signed at all', 1)).toBe('unsigned')
@@ -114,7 +114,7 @@ describe('screencapture', () => {
       '/Applications/RecoltOS.app',
     )
   })
-  it('faux binaire : PNG valide, Échap sans fichier', async () => {
+  it('fake binary: valid PNG, Escape leaves no file', async () => {
     const d = tmp()
     const out = path.join(d, 'a.png')
     expect((await runScreencapture(FAKE, buildArgs('region', out))).code).toBe(0)
@@ -186,8 +186,8 @@ function deps(over: Partial<CaptureDeps> = {}) {
   return { d, deps: base, calls, window }
 }
 
-describe('service de capture', () => {
-  it('capture → élément → fichier de dépôt → capture.done ; fenêtre masquée puis restaurée', async () => {
+describe('capture service', () => {
+  it('capture → item → drop file → capture.done; window hidden then restored', async () => {
     process.env.FAKE_SCREENCAPTURE_SALT = 'un'
     const { d, deps: dd, calls, window } = deps()
     const svc = createCaptureService(dd)
@@ -199,15 +199,15 @@ describe('service de capture', () => {
     expect(r).toMatchObject({ dropPath: drop })
     expect(calls.done).toHaveLength(1)
     expect(window).toMatchObject({ hidden: 1, shown: 1, visible: true })
-    // Temporaire supprimé.
+    // Temp file removed.
     expect(fs.readdirSync(path.join(d, 'tmp-capture'))).toEqual([])
-    // Même image : doublon, fichier de dépôt suffixé « (2) ».
+    // Same image: duplicate, drop file suffixed "(2)".
     const r2 = await svc.run({ trigger: 'button' })
     expect(r2).toMatchObject({ status: 'ok', duplicate: true })
     expect(fs.existsSync(drop.replace('.png', ' (2).png'))).toBe(true)
   })
 
-  it('Échap : `cancelled`, aucun élément', async () => {
+  it('Escape: `cancelled`, no item', async () => {
     process.env.FAKE_SCREENCAPTURE_MODE = 'cancel'
     const { deps: dd, calls } = deps()
     expect(await createCaptureService(dd).run({ trigger: 'shortcut' })).toEqual({
@@ -216,7 +216,7 @@ describe('service de capture', () => {
     expect(calls.ingest).toBe(0)
   })
 
-  it('⌃ pendant la sélection : image du presse-papiers ingérée (`viaClipboard`)', async () => {
+  it('⌃ during selection: clipboard image ingested (`viaClipboard`)', async () => {
     process.env.FAKE_SCREENCAPTURE_MODE = 'cancel'
     let h = 'avant'
     const png = fs.readFileSync(path.join(REPO_ROOT, 'build/icon.png'))
@@ -236,7 +236,7 @@ describe('service de capture', () => {
     expect(calls.ingest).toBe(1)
   })
 
-  it('permission non accordée : `permission-required`, screencapture jamais lancé', async () => {
+  it('permission not granted: `permission-required`, screencapture never launched', async () => {
     const prompted = vi.fn(() => Promise.resolve())
     const { deps: dd, calls } = deps({
       access: () => ({ access: 'denied', raw: 'denied' }),
@@ -257,7 +257,7 @@ describe('service de capture', () => {
     expect(calls.permission).toBe(1)
   })
 
-  it('verrou : une seconde capture pendant la première → `busy`', async () => {
+  it('lock: a second capture during the first → `busy`', async () => {
     let release: () => void = () => undefined
     const { deps: dd } = deps({
       run: () =>
@@ -273,7 +273,7 @@ describe('service de capture', () => {
     expect(await first).toEqual({ status: 'cancelled' })
   })
 
-  it('dossier de dépôt non inscriptible : capture réussie, erreur remontée', async () => {
+  it('unwritable drop folder: capture succeeds, error reported', async () => {
     process.env.FAKE_SCREENCAPTURE_SALT = 'deux'
     const { deps: dd } = deps({
       prefs: () => ({

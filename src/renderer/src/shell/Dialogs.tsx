@@ -1,4 +1,4 @@
-/** Rendu des dialogues `askConfirm` / `askName` (`state/dialogs.ts`). */
+/** Renders the `askConfirm` / `askName` dialogs (`state/dialogs.ts`). */
 import { useEffect, useState } from 'react'
 import { Button, Dialog, Input } from '../components/ui'
 import { tr } from '../i18n'

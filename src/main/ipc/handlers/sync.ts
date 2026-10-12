@@ -1,7 +1,7 @@
 /**
- * Handlers `sync.*` : état, interrupteurs, « Synchroniser maintenant », « Tout
- * resynchroniser », journal, éléments récupérés par le backfill. Sans coordinateur (pont arrêté,
- * e2e sans `RECOLTOS_BRIDGE`), l'état reste lisible depuis la base et les actions n'ont pas d'effet.
+ * `sync.*` handlers: state, toggles, "Sync now", "Resync everything",
+ * log, items recovered by the backfill. Without a coordinator (bridge stopped,
+ * e2e without `RECOLTOS_BRIDGE`), the state stays readable from the database and the actions have no effect.
  */
 import { BRIDGE_PLATFORMS } from '../../../shared/bridge/constants'
 import type { SyncStatus } from '../../../shared/dto/sync'
@@ -11,7 +11,7 @@ import { getActiveLibrary } from '../../library/library-context'
 import { getSyncCoordinator } from '../../sync/init'
 import type { DomainHandlers } from '../router'
 
-/** État minimal sans coordinateur (lecture de `sync_state`). */
+/** Minimal state without a coordinator (reads `sync_state`). */
 function offlineStatus(): SyncStatus {
   const lib = getActiveLibrary()
   return {

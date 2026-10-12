@@ -1,25 +1,25 @@
 /**
- * Contrôles du bundle livré,
- * appelés par `pnpm run dist` :
- *  - binaire principal et hôte natif arm64 seuls, `CFBundleIdentifier = com.recoltos.app` ;
- *  - `Info.plist` : association « Ouvrir avec » en `LSHandlerRank = Alternate`,
- *    `CFBundleTypeRole = Viewer`, textes d'autorisation en français ;
- *  - signature : `codesign --verify --deep --strict` ; identité attendue (`RECOLTOS_SIGN_IDENTITY`
- *    ou `--identity`) pour l'app ET l'hôte natif ; exigence désignée stable (certificat, pas cdhash) ;
- *  - fuses lus par `getCurrentFuseWire` : build livré `runAsNode` et `enableNodeCliInspectArguments`
- *    FERMÉS (profil `--profile test` : ouverts, réservé aux tests) ;
- *  - hôte natif SEA présent, exécutable, autonome : `ping` → `pong` sans l'app ;
- *  - extension Chromium + Firefox présentes, version = `EXTENSION_VERSION`, scripts de contenu sans
- *    `import`, aucun code de test (auto-test, faux serveur) ;
- *  - `app.asar` : aucun Mach-O (`.node`, `.dylib`, ffmpeg), aucun `.map`/`.onnx`, preload autonome
- *    (`require` d'`electron` et des modules Node seulement) ;
- *  - aucun binaire d'une autre plateforme, aucun `.map` dans le bundle ;
- *  - tailles mesurées puis figées (budgets ci-dessous).
+ * Checks on the shipped bundle,
+ * called by `pnpm run dist`:
+ *  - main binary and arm64 native host only, `CFBundleIdentifier = com.recoltos.app`;
+ *  - `Info.plist`: « Ouvrir avec » association as `LSHandlerRank = Alternate`,
+ *    `CFBundleTypeRole = Viewer`, usage-description texts in French;
+ *  - signature: `codesign --verify --deep --strict`; expected identity (`RECOLTOS_SIGN_IDENTITY`
+ *    or `--identity`) for the app AND the native host; stable designated requirement (certificate, not cdhash);
+ *  - fuses read by `getCurrentFuseWire`: shipped build has `runAsNode` and `enableNodeCliInspectArguments`
+ *    CLOSED (`--profile test` profile: open, reserved for tests);
+ *  - SEA native host present, executable, standalone: `ping` → `pong` without the app;
+ *  - Chromium + Firefox extensions present, version = `EXTENSION_VERSION`, content scripts without
+ *    `import`, no test code (self-test, fake server);
+ *  - `app.asar`: no Mach-O (`.node`, `.dylib`, ffmpeg), no `.map`/`.onnx`, standalone preload
+ *    (`require` of `electron` and Node modules only);
+ *  - no binary of another platform, no `.map` in the bundle;
+ *  - sizes measured then frozen (budgets below).
  *
  *   tsx --tsconfig tsconfig.node.json scripts/check-dist.mts [--app dist/mac-arm64/RecoltOS.app]
- *       [--profile shipped|test] [--identity "RecoltOS Local"] [--json <rapport>]
+ *       [--profile shipped|test] [--identity "RecoltOS Local"] [--json <report>]
  *
- * Sans identité demandée, une signature ad hoc est acceptée avec un avertissement (dev seulement).
+ * Without a requested identity, an ad hoc signature is accepted with a warning (dev only).
  */
 import { FuseState, FuseV1Options, getCurrentFuseWire } from '@electron/fuses'
 import { execFileSync, spawn } from 'node:child_process'
@@ -43,9 +43,9 @@ import { FrameDecoder, encodeFrame } from '../src/host/framing'
 
 const ROOT = resolve(import.meta.dirname, '..')
 
-/** Budgets de taille (Mo), mesurés puis figés : voir `docs/perf.md` § Paquet. */
+/** Size budgets (MB), measured then frozen: see `docs/perf.md` § Paquet. */
 export const SIZE_BUDGETS_MB = {
-  // Mesuré le 2026-10-12 : 370,1 / 2,7 / 20,0 / 106,8 / 0,2 Mo (marge ≈ 8 %).
+  // Measured on 2026-10-12: 370.1 / 2.7 / 20.0 / 106.8 / 0.2 MB (margin ≈ 8 %).
   app: 400,
   appAsar: 4,
   appAsarUnpacked: 22,
@@ -68,9 +68,9 @@ export interface DistReport {
   sizesMb: Record<string, number>
 }
 
-/** Liste des fichiers d'une archive asar (en-tête JSON lu directement, sans dépendance). */
+/** List of the files of an asar archive (JSON header read directly, without dependency). */
 export function readAsar(file: string): {
-  /** Fichiers DANS l'archive (les entrées `unpacked` sont dans `app.asar.unpacked/`). */
+  /** Files IN the archive (`unpacked` entries are in `app.asar.unpacked/`). */
   files: string[]
   unpacked: string[]
   read: (p: string) => Buffer | null
@@ -127,14 +127,14 @@ function sh(cmd: string, args: string[]): { ok: boolean; out: string } {
   }
 }
 
-/** Identité de signature (`codesign -dvv` écrit sur stderr). */
+/** Signature identity (`codesign -dvv` writes to stderr). */
 function signInfo(path: string): { authority: string | null; adhoc: boolean; raw: string } {
   const raw = spawnSyncStderr('codesign', ['-dvv', path])
   const authority = /^Authority=(.+)$/m.exec(raw)?.[1]?.trim() ?? null
   return { authority, adhoc: /Signature=adhoc/.test(raw), raw }
 }
 
-/** Sortie standard + erreur d'une commande (même en cas d'échec). */
+/** Standard output + error of a command (even on failure). */
 function spawnSyncStderr(cmd: string, args: string[]): string {
   try {
     return execFileSync('/bin/sh', ['-c', `"$0" "$@" 2>&1`, cmd, ...args], { encoding: 'utf8' })
@@ -143,7 +143,7 @@ function spawnSyncStderr(cmd: string, args: string[]): string {
   }
 }
 
-/** Taille sur disque, liens symboliques non suivis (les frameworks en contiennent). */
+/** Size on disk, symbolic links not followed (frameworks contain some). */
 function dirSizeBytes(p: string): number {
   if (!existsSync(p)) return 0
   const st = lstatSync(p)
@@ -166,7 +166,7 @@ function walkFiles(p: string, out: string[] = []): string[] {
 
 const mb = (b: number) => Math.round((b / 2 ** 20) * 10) / 10
 
-/** Hôte natif lancé comme par un navigateur : `ping` → `pong` (réponse de l'hôte seul). */
+/** Native host launched as a browser would: `ping` → `pong` (reply from the host alone). */
 async function hostPing(host: string): Promise<{ ok: boolean; detail: string }> {
   const ud = mkdtempSync(join(tmpdir(), 'recolt-checkdist-'))
   try {
@@ -198,7 +198,7 @@ async function hostPing(host: string): Promise<{ ok: boolean; detail: string }> 
   }
 }
 
-/** `require(...)` d'un bundle : seulement `electron` et les modules Node. */
+/** `require(...)` of a bundle: only `electron` and the Node modules. */
 export function foreignRequires(code: string): string[] {
   const allowed = new Set([...builtinModules, 'electron'])
   const out = new Set<string>()
@@ -329,7 +329,7 @@ export async function checkDist(options: {
     )
   }
 
-  // Hôte natif.
+  // Native host.
   const hostMode = existsSync(host) ? statSync(host).mode : 0
   add('hôte natif exécutable', (hostMode & 0o111) !== 0, host)
   const ping = existsSync(host) ? await hostPing(host) : { ok: false, detail: 'absent' }
@@ -387,7 +387,7 @@ export async function checkDist(options: {
     leftovers.slice(0, 5).join(', ') || 'aucun',
   )
 
-  // Autres plateformes et sourcemaps dans tout le bundle (hors framework Electron).
+  // Other platforms and sourcemaps across the whole bundle (excluding the Electron framework).
   const resources = walkFiles(R)
   const foreignBins = resources.filter((f) =>
     /(linux|linuxmusl|win32|darwin-x64|freebsd|wasm32)[^/]*\.(node|dll|so|dylib)$|sharp-(linux|win32|darwin-x64)/.test(
@@ -406,7 +406,7 @@ export async function checkDist(options: {
     resourceMaps.map((f) => relative(R, f)).join(', ') || 'aucun',
   )
 
-  // Tailles.
+  // Sizes.
   const sizesMb = {
     app: mb(dirSizeBytes(app)),
     appAsar: mb(dirSizeBytes(asarPath)),
@@ -439,16 +439,16 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     identity: values.identity ?? process.env.RECOLTOS_SIGN_IDENTITY,
   })
   for (const c of report.checks) {
-    const mark = !c.ok ? 'ÉCHEC' : c.warn ? 'avert.' : 'ok'
+    const mark = !c.ok ? 'FAIL' : c.warn ? 'warn' : 'ok'
     console.log(`${mark.padEnd(6)} ${c.name} — ${c.detail}`)
   }
   console.log(
-    `tailles (Mo) : ${Object.entries(report.sizesMb)
+    `sizes (MB): ${Object.entries(report.sizesMb)
       .map(([k, v]) => `${k} ${v}`)
       .join(', ')}`,
   )
   const out = values.json ?? join(resolve(values.app, '..', '..'), 'check-dist.json')
   writeFileSync(out, JSON.stringify(report, null, 2))
-  console.log(report.ok ? 'check:dist : vert' : 'check:dist : ÉCHEC')
+  console.log(report.ok ? 'check:dist: pass' : 'check:dist: FAILED')
   process.exit(report.ok ? 0 : 1)
 }

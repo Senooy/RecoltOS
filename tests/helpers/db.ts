@@ -1,8 +1,8 @@
 /**
- * Bases SQLite de test. `openTestDb()` applique les migrations de `src/main/db/migrations/` dans
- * l'ordre et pose `PRAGMA user_version` (le contrat de `db/migrate.ts`) ; tant que `db/open.ts`
- * n'existe pas, ce helper est l'unique chemin des tests vers un schéma à jour.
- * Sous Node pur (vitest) : aucun import d'`electron`.
+ * Test SQLite databases. `openTestDb()` applies the migrations of `src/main/db/migrations/` in
+ * order and sets `PRAGMA user_version` (the contract of `db/migrate.ts`); as long as `db/open.ts`
+ * does not exist, this helper is the only path for tests to an up-to-date schema.
+ * Under plain Node (vitest): no `electron` import.
  */
 import Database from 'better-sqlite3'
 import { existsSync, readdirSync, readFileSync, mkdirSync } from 'node:fs'
@@ -13,8 +13,8 @@ import type { SyntheticLibrary } from './synthetic-items'
 export type TestDb = Database.Database
 
 /**
- * Clé de tri « Nom » (`name_key` = NFD sans accents, minuscules). Même règle que la
- * production : « Lumière » → « lumiere ». Sans titre, la colonne vaut U+FFFF (en dernier), pas cette fonction.
+ * Sort key « Nom » (`name_key` = NFD without accents, lowercase). Same rule as
+ * production: « Lumière » → « lumiere ». Without a title, the column is U+FFFF (last), not this function.
  */
 export function nameKeyOf(title: string): string {
   return title.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
@@ -26,7 +26,7 @@ export interface MigrationFile {
   sql: string
 }
 
-/** Migrations `NNNN_nom.sql`, triées par numéro. */
+/** Migrations `NNNN_name.sql`, sorted by number. */
 export function listMigrations(dir: string = MIGRATIONS_DIR): MigrationFile[] {
   return readdirSync(dir)
     .filter((f) => /^\d{4}_.+\.sql$/.test(f))
@@ -39,9 +39,9 @@ export function listMigrations(dir: string = MIGRATIONS_DIR): MigrationFile[] {
 }
 
 export interface OpenTestDbOptions {
-  /** Fichier de base ; absent = `:memory:`. Le dossier parent est créé. */
+  /** Database file; absent = `:memory:`. The parent folder is created. */
   file?: string
-  /** Applique les migrations jusqu'à cette version incluse (défaut : toutes). */
+  /** Applies the migrations up to this version included (default: all). */
   upTo?: number
   migrationsDir?: string
 }
@@ -75,17 +75,17 @@ export function hasFts5(db: TestDb): boolean {
 }
 
 export interface SeedOptions {
-  /** Écrit les chemins relatifs des dérivés (`thumb_rel`, `poster_rel`) : à vrai si les fichiers existent. */
+  /** Writes the relative paths of the derived files (`thumb_rel`, `poster_rel`): true if the files exist. */
   withDerived?: boolean
-  /** Origine posée sur items/collections (défaut `app`). */
+  /** Origin set on items/collections (default `app`). */
   origin?: string
 }
 
 const ab = (uuid: string): string => uuid.slice(0, 2)
 
 /**
- * Insère une bibliothèque synthétique par SQL direct (les repos et l'ingestion
- * n'existent pas encore ; ils reprendront ce rôle). Renvoie les identifiants internes par index.
+ * Inserts a synthetic library by direct SQL (the repos and the ingestion
+ * do not exist yet; they will take over this role). Returns the internal identifiers by index.
  */
 export function seedSyntheticLibrary(
   db: TestDb,
@@ -217,13 +217,13 @@ export function seedSyntheticLibrary(
   return { itemIds, collectionIds }
 }
 
-/** Base d'une bibliothèque d'un `userData` (par défaut la bibliothèque `default`, cf. `make-fixtures`). */
+/** Database of a `userData` library (by default the `default` library, see `make-fixtures`). */
 export const libraryDbPath = (userData: string, libraryId = 'default'): string =>
   join(userData, 'libraries', libraryId, 'recolt.db')
 
 /**
- * Ouvre une base EXISTANTE en lecture seule (vérifier ce que l'app a écrit). Aucune
- * migration, aucune écriture : l'app peut tourner en parallèle (WAL). À fermer par l'appelant.
+ * Opens an EXISTING database read-only (to check what the app wrote). No
+ * migration, no write: the app can run in parallel (WAL). To be closed by the caller.
  */
 export function openDbReadonly(file: string): TestDb {
   const db = new Database(file, { readonly: true, fileMustExist: true })
@@ -231,5 +231,5 @@ export function openDbReadonly(file: string): TestDb {
   return db
 }
 
-/** Vrai si le chemin d'une base existe (aide pour les tests de fixtures). */
+/** True if the path of a database exists (helper for fixture tests). */
 export const dbExists = (file: string): boolean => existsSync(file)

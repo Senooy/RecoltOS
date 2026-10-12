@@ -1,4 +1,4 @@
-/** Contrat `data.*` : export zip, instantanés, vérification, stockage. */
+/** `data.*` contract: zip export, snapshots, verification, storage. */
 import { z } from 'zod'
 import { Uuid } from '../enums'
 import { Count, Empty, Void, type ContractShape, type EventShape } from './define'
@@ -26,7 +26,7 @@ export const StorageBreakdown = z.object({
   snapshots: z.number().int(),
   database: z.number().int(),
   total: z.number().int(),
-  /** Originaux par type (somme de `item_media.file_size`), pour la barre empilée. */
+  /** Originals by type (sum of `item_media.file_size`), for the stacked bar. */
   images: z.number().int().default(0),
   videos: z.number().int().default(0),
 })
@@ -53,7 +53,7 @@ export const dataContract = {
     }),
   },
   'data.storage': { input: Empty, output: StorageBreakdown },
-  /** « Régénérer les aperçus » : `media.derive` pour chaque média présent (priorité de fond). */
+  /** "Regenerate previews": `media.derive` for each existing media (background priority). */
   'data.regenerateDerived': { input: Empty, output: Count },
 } as const satisfies ContractShape
 

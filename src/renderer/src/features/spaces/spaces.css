@@ -1,8 +1,8 @@
 /*
- * Spaces : toile maison DOM + transform CSS. Sobre : fond `--bg`,
- * points `--canvas-dot`, sélection bleue `--accent-blue`, guides roses.
+ * Spaces: in-house DOM canvas + CSS transform. Plain: `--bg` background,
+ * `--canvas-dot` dots, blue selection `--accent-blue`, pink guides.
  */
-/* Couleurs --sp-* (deux thèmes) : `styles/tokens.css`. */
+/* --sp-* colors (two themes): `styles/tokens.css`. */
 
 .space-viewport {
   position: relative;
@@ -87,7 +87,7 @@
   cursor: default;
 }
 
-/* Note (rayon 4, 15/21, texte sombre sur les 6 teintes). */
+/* Note (radius 4, 15/21, dark text on the 6 tints). */
 .sp-note {
   border-radius: 4px;
   box-shadow: var(--sp-note-shadow);
@@ -158,7 +158,7 @@
   pointer-events: all;
 }
 
-/* Barres flottantes (dock, zoom, barre de style) : même langage que le segmented. */
+/* Floating bars (dock, zoom, style bar): same language as the segmented control. */
 .sp-float {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -215,7 +215,7 @@
     0 0 0 3.5px var(--sp-select);
 }
 
-/* Vignette de liste : rendu DOM réduit, inerte. */
+/* List thumbnail: reduced DOM rendering, inert. */
 .sp-thumb {
   position: relative;
   overflow: hidden;
@@ -226,7 +226,7 @@
   will-change: auto;
 }
 
-/* Vignette de liste et fenêtre stage : pas d'indication de saisie. */
+/* List thumbnail and stage window: no input indication. */
 .sp-thumb .sp-note-placeholder,
 [data-stage] .sp-note-placeholder {
   display: none;

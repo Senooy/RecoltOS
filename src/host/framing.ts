@@ -1,6 +1,6 @@
 /**
- * Trames native messaging : `[uint32 longueur, ordre natif = LE sur arm64/x64][JSON UTF-8]`.
- * Sans dépendance (bundle de l'hôte et tests).
+ * Native messaging frames: `[uint32 length, native order = LE on arm64/x64][JSON UTF-8]`.
+ * No dependencies (host bundle and tests).
  */
 import { MAX_FROM_EXT_BYTES, MAX_TO_EXT_BYTES } from '../shared/bridge/constants'
 
@@ -9,7 +9,7 @@ export type DecodeEvent =
   | { kind: 'invalid'; reason: string }
   | { kind: 'fatal'; reason: string }
 
-/** Décodeur incrémental : accepte des morceaux arbitraires, rend les messages complets. */
+/** Incremental decoder: accepts arbitrary chunks, returns complete messages. */
 export class FrameDecoder {
   private pending: Buffer = Buffer.alloc(0)
   private dead = false
@@ -21,7 +21,7 @@ export class FrameDecoder {
     this.littleEndian = littleEndian
   }
 
-  /** Après un `fatal`, plus rien n'est décodé (le flux doit être fermé). */
+  /** After a `fatal`, nothing more is decoded (the stream must be closed). */
   get closed(): boolean {
     return this.dead
   }
@@ -54,7 +54,7 @@ export class FrameDecoder {
   }
 }
 
-/** Encode un message ; `null` s'il dépasse `maxBytes` (le navigateur fermerait le port). */
+/** Encodes a message; `null` if it exceeds `maxBytes` (the browser would close the port). */
 export function encodeFrame(
   msg: unknown,
   maxBytes: number = MAX_TO_EXT_BYTES,
@@ -68,7 +68,7 @@ export function encodeFrame(
   return Buffer.concat([head, body])
 }
 
-/** Lignes NDJSON (socket hôte ↔ app) : accumule et rend les lignes complètes non vides. */
+/** NDJSON lines (host ↔ app socket): accumulates and returns complete non-empty lines. */
 export class LineDecoder {
   private acc = ''
   private readonly maxChars: number

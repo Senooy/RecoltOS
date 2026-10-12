@@ -1,6 +1,6 @@
 /**
- * Barre de sélection : pilule flottante « 3 sélectionnés » + actions (Ajouter à…,
- * Masquer, Télécharger, Supprimer) ; Échap ou `X` désélectionne.
+ * Selection bar: floating pill "3 selected" + actions (Add to…, Hide, Download, Delete);
+ * Esc or `X` deselects.
  */
 import { X } from 'lucide-react'
 import { Menu, PillBar } from '../components/ui'

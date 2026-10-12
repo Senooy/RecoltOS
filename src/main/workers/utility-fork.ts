@@ -1,13 +1,13 @@
 /**
- * Adaptateur `utilityProcess.fork` (Electron) → `WorkerChild`. La sortie standard
- * du worker est relayée vers le journal de main (`stdio: 'pipe'`).
+ * `utilityProcess.fork` adapter (Electron) → `WorkerChild`. The standard output
+ * of the worker is relayed to the main log (`stdio: 'pipe'`).
  */
 import * as electron from 'electron'
 import { join } from 'node:path'
 import type { ForkFn, HostLogger, WorkerChild } from '../workers-host'
 
 /**
- * Bundle du media-worker à côté de `out/main/index.js` : entrée `media.worker` de
+ * Media-worker bundle next to `out/main/index.js`: `media.worker` entry of
  * `electron.vite.config.ts`.
  */
 export function mediaWorkerPath(mainDir: string = __dirname): string {
@@ -23,7 +23,7 @@ export function makeUtilityFork(log?: HostLogger): ForkFn {
     }
     proc.stdout?.on('data', relay('info'))
     proc.stderr?.on('data', relay('warn'))
-    // `proc.kill()` avant l'événement `spawn` est sans effet : la demande est rejouée au spawn.
+    // `proc.kill()` before the `spawn` event has no effect: the request is replayed on spawn.
     let spawned = false
     let killOnSpawn: NodeJS.Signals | null = null
     const doKill = (signal: NodeJS.Signals | undefined): void => {
@@ -32,7 +32,7 @@ export function makeUtilityFork(log?: HostLogger): ForkFn {
           process.kill(proc.pid, 'SIGKILL')
           return
         } catch {
-          // déjà terminé
+          // already finished
         }
       }
       proc.kill()

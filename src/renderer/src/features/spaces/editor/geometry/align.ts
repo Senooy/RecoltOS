@@ -1,7 +1,7 @@
 /**
- * Alignement, répartition et ordre. Référence = enveloppe de la sélection ; la
- * répartition (≥ 3 nœuds) égalise les espaces entre enveloppes triées par centre. Les nœuds tournés
- * sont alignés par leur enveloppe (AABB). `reorder` rend de nouveaux `z` 0..n-1.
+ * Alignment, distribution and order. Reference = bounding box of the selection; the
+ * distribution (≥ 3 nodes) equalizes the gaps between bounding boxes sorted by center. Rotated nodes
+ * are aligned by their bounding box (AABB). `reorder` returns new `z` values 0..n-1.
  */
 import { aabb, unionRect, type OrientedBox } from '../../../../../../shared/spaces-geometry'
 
@@ -65,8 +65,8 @@ export function distribute(nodes: readonly N[], axis: 'h' | 'v'): Patch {
 }
 
 /**
- * Nouvel ordre : `order` = uuid triés par `z` croissant ; `ids` = sélection.
- * `forward` / `backward` : d'un cran ; `front` / `back` : tout en haut / en bas.
+ * New order: `order` = uuids sorted by ascending `z`; `ids` = selection.
+ * `forward` / `backward`: one step; `front` / `back`: to the top / bottom.
  */
 export function reorder(
   order: readonly string[],

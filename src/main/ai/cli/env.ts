@@ -1,8 +1,8 @@
 /**
- * Environnement MINIMAL des CLI IA : construit de zéro, jamais à partir de
- * `process.env`. Volontairement absents : `ANTHROPIC_*` (clé API, URL de base exportée par le shell
- * de login), `CLAUDE_CODE_USE_*`, `OPENAI_API_KEY`, `CODEX_API_KEY`, `CLAUDECODE`,
- * `CLAUDE_CODE_ENTRYPOINT` : une clé dans l'env ferait facturer à l'usage au lieu de l'abonnement.
+ * MINIMAL environment for the AI CLIs: built from scratch, never from `process.env`.
+ * Deliberately absent: `ANTHROPIC_*` (API key, base URL exported by the login shell),
+ * `CLAUDE_CODE_USE_*`, `OPENAI_API_KEY`, `CODEX_API_KEY`, `CLAUDECODE`,
+ * `CLAUDE_CODE_ENTRYPOINT`: a key in the env would bill per use instead of the subscription.
  */
 import { homedir, tmpdir, userInfo } from 'node:os'
 
@@ -41,7 +41,7 @@ export function buildCliEnv(
   try {
     user = userInfo().username
   } catch {
-    // compte sans entrée passwd : nom générique
+    // account without a passwd entry: generic name
   }
   return {
     HOME: homedir(),

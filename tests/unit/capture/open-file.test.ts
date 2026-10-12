@@ -5,8 +5,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-describe('« Ouvrir avec » : regroupement 250 ms', () => {
-  it('N événements → un seul import ; un élément → vue détail', async () => {
+describe('« Ouvrir avec » : 250 ms grouping', () => {
+  it('N events → a single import; one item → detail view', async () => {
     const importPaths = vi.fn((paths: string[]) =>
       Promise.resolve({
         added: paths.slice(0, 1).map(() => ({ itemUuid: '00000000-0000-4000-8000-000000000001' })),
@@ -31,8 +31,8 @@ describe('« Ouvrir avec » : regroupement 250 ms', () => {
   })
 })
 
-describe('parcours des dossiers déposés', () => {
-  it('récursif ≤ 12 niveaux, cachés et non-médias ignorés, liens non suivis', async () => {
+describe('walking dropped folders', () => {
+  it('recursive ≤ 12 levels, hidden and non-media ignored, links not followed', async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-walk-'))
     let d = root
     for (let i = 0; i < 14; i++) {
@@ -46,7 +46,7 @@ describe('parcours des dossiers déposés', () => {
     const out = await expand([root])
     expect(out.every((p) => p.endsWith('.jpg'))).toBe(true)
     expect(out).toHaveLength(12)
-    // Un fichier déposé seul est toujours essayé (erreur « non pris en charge » visible).
+    // A single dropped file is always tried (a visible « non pris en charge » error).
     expect(await expand([path.join(root, 'notes.txt')])).toEqual([path.join(root, 'notes.txt')])
     fs.rmSync(root, { recursive: true, force: true })
   })

@@ -7,7 +7,7 @@ import {
 } from '../../../src/shared/prefs'
 
 describe('PrefsSchema', () => {
-  it('parse({}) renvoie tous les défauts imbriqués (prefault)', () => {
+  it('parse({}) returns all nested defaults (prefault)', () => {
     const p = PrefsSchema.parse({})
     expect(p).toEqual({
       version: 1,
@@ -63,7 +63,7 @@ describe('PrefsSchema', () => {
     expect(DEFAULT_PREFS).toEqual(p)
   })
 
-  it('applique les défauts internes d’un sous-objet partiel', () => {
+  it('applies the inner defaults of a partial sub-object', () => {
     const p = PrefsSchema.parse({ ai: { provider: 'claude' }, capture: { mode: 'window' } })
     expect(p.ai.provider).toBe('claude')
     expect(p.ai.claude.model).toBe('sonnet')
@@ -71,19 +71,19 @@ describe('PrefsSchema', () => {
     expect(p.capture.mode).toBe('window')
   })
 
-  it('n’a ni secret partagé ni réglage de recherche visuelle', () => {
+  it('has neither a shared secret nor a visual search setting', () => {
     const keys = JSON.stringify(PrefsSchema.parse({}))
     expect(keys).not.toMatch(/bridgeToken|semanticSearch|embeddingModel/)
   })
 
-  it('refuse des colonnes hors 2..8 et un tri inconnu', () => {
+  it('rejects columns outside 2..8 and an unknown sort', () => {
     expect(PrefsSchema.safeParse({ defaultColumns: 9 }).success).toBe(false)
     expect(PrefsSchema.safeParse({ defaultColumns: 1 }).success).toBe(false)
     expect(PrefsSchema.safeParse({ defaultSort: 'size' }).success).toBe(false)
     expect(PrefsSchema.parse({ defaultSort: 'mostViewed' }).defaultSort).toBe('mostViewed')
   })
 
-  it('mergePrefs fusionne en profondeur et revalide', () => {
+  it('mergePrefs merges deeply and revalidates', () => {
     const p = mergePrefs(DEFAULT_PREFS, { ai: { claude: { model: 'opus' } }, theme: 'dark' })
     expect(p.ai.claude.model).toBe('opus')
     expect(p.ai.claude.effort).toBe('low')
@@ -91,12 +91,12 @@ describe('PrefsSchema', () => {
     expect(() => mergePrefs(DEFAULT_PREFS, { defaultColumns: 12 })).toThrow()
   })
 
-  it('parsePrefsLenient retombe sur les défauts', () => {
+  it('parsePrefsLenient falls back to the defaults', () => {
     expect(parsePrefsLenient({ theme: 'violet' })).toEqual(DEFAULT_PREFS)
     expect(parsePrefsLenient({ theme: 'dark' }).theme).toBe('dark')
   })
 
-  it('parsePrefsLenient répare champ par champ : une valeur hors bornes ne perd pas le reste', () => {
+  it('parsePrefsLenient repairs field by field: an out-of-range value does not lose the rest', () => {
     const p = parsePrefsLenient({
       theme: 'dark',
       defaultColumns: 10,
@@ -111,7 +111,7 @@ describe('PrefsSchema', () => {
     expect(p.capture.shortcut).toBe('CommandOrControl+Alt+X')
   })
 
-  it('parsePrefsLenient : un sous-objet mal typé revient à son défaut sans toucher au reste', () => {
+  it('parsePrefsLenient: a mistyped sub-object reverts to its default without touching the rest', () => {
     const p = parsePrefsLenient({ theme: 'light', ai: 'off', defaultSort: 'name' })
     expect(p.ai).toEqual(DEFAULT_PREFS.ai)
     expect(p.theme).toBe('light')

@@ -1,8 +1,8 @@
 /**
- * Budgets de requêtes par plateforme : un seul budget pour toutes les requêtes à l'API
- * d'une plateforme (pages, `item.refresh`), écart minimum avec gigue, plafond par run et par jour,
- * cooldown partagé doublé à chaque fois (30 min → 6 h). Les téléchargements CDN n'en font pas partie.
- * État persisté dans `sync_state` (`budget_day`, `budget_used`, `cooldown_until`).
+ * Request budgets per platform: a single budget for all requests to a platform's API
+ * (pages, `item.refresh`), minimum gap with jitter, cap per run and per day,
+ * shared cooldown doubled each time (30 min → 6 h). CDN downloads are not part of it.
+ * State persisted in `sync_state` (`budget_day`, `budget_used`, `cooldown_until`).
  */
 import type { BridgePlatform } from '../../shared/bridge/constants'
 
@@ -46,7 +46,7 @@ export interface BudgetState {
   budgetDay: string | null
   budgetUsed: number
   cooldownUntil: number | null
-  /** Nombre de cooldowns successifs (pour le doublement). */
+  /** Number of successive cooldowns (for the doubling). */
   cooldowns: number
 }
 
@@ -96,7 +96,7 @@ export class PlatformBudget {
     }
   }
 
-  /** Refus motivé, ou délai à attendre avant l'appel (gigue entre min et max). */
+  /** Reasoned refusal, or delay to wait before the call (jitter between min and max). */
   check(
     kind: SpendKind,
     now: number,
@@ -121,7 +121,7 @@ export class PlatformBudget {
     this.persist(this.snapshot)
   }
 
-  /** Cooldown partagé (pages ET refresh), doublé à chaque fois jusqu'au plafond. */
+  /** Shared cooldown (pages AND refresh), doubled each time up to the cap. */
   cooldown(now: number, until?: number): number {
     const ms = Math.min(this.cfg.cooldownBaseMs * 2 ** this.state.cooldowns, this.cfg.cooldownMaxMs)
     this.state.cooldowns += 1
@@ -131,7 +131,7 @@ export class PlatformBudget {
     return this.state.cooldownUntil
   }
 
-  /** Run réussi : le doublement repart de zéro. */
+  /** Successful run: the doubling restarts from zero. */
   success(): void {
     if (this.state.cooldowns === 0 && this.state.cooldownUntil === null) return
     this.state.cooldowns = 0

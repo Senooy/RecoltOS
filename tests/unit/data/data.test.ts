@@ -1,7 +1,7 @@
 /**
- * instantanés (noms, rétention, quotidien), export zip (contenu, items.jsonl,
- * progression), restauration (WAL non vide, pre-restore, abandon si checkpoint bloqué),
- * vérification, stockage, fusion de tags réindexée.
+ * snapshots (names, retention, daily), zip export (content, items.jsonl,
+ * progress), restore (non-empty WAL, pre-restore, abort if checkpoint blocked),
+ * verification, storage, tag merge with reindexing.
  */
 import Database from 'better-sqlite3'
 import { execFileSync } from 'node:child_process'
@@ -52,7 +52,7 @@ afterEach(async () => {
 
 const count = (db: Database.Database, sql: string) => (db.prepare(sql).get() as { n: number }).n
 
-/** Élément avec un original réel sous `items/`. */
+/** Item with a real original under `items/`. */
 function addItemWithFile(lib: Awaited<ReturnType<LibraryManager['open']>>, title: string) {
   const it = lib.repos.items.insert({ kind: 'image', title, source: 'local' })
   const uuid = `${it.uuid}`
@@ -70,8 +70,8 @@ function addItemWithFile(lib: Awaited<ReturnType<LibraryManager['open']>>, title
   return { ...it, rel }
 }
 
-describe('instantanés', () => {
-  it('noms : raison, suffixe de collision retiré, pre-vN conservé', () => {
+describe('snapshots', () => {
+  it('names: reason, collision suffix removed, pre-vN kept', () => {
     expect(parseSnapshotName('recolt-20261011-183000-daily.db')?.reason).toBe('daily')
     expect(parseSnapshotName('recolt-20261011-183000-manual-2.db')?.reason).toBe('manual')
     expect(parseSnapshotName('recolt-20261011-183000-pre-v1.db')?.reason).toBe('pre-v1')
@@ -80,7 +80,7 @@ describe('instantanés', () => {
     expect(parseSnapshotName('recolt-20261011-183000-daily.db-wal')).toBeNull()
   })
 
-  it('rétention : 7 daily, 20 manuels, pre-* de moins de 30 jours', () => {
+  it('retention: 7 daily, 20 manual, pre-* under 30 days old', () => {
     const day = 86_400_000
     const now = 100 * day
     const mk = (reason: string | null, i: number): SnapshotInfo => ({
@@ -100,7 +100,7 @@ describe('instantanés', () => {
     expect(victims.filter((v) => v.startsWith('pre-import'))).toHaveLength(9)
   })
 
-  it('création, liste, quotidien unique par jour', async () => {
+  it('creation, list, one daily per day', async () => {
     const lib = await manager.open()
     lib.repos.items.insert({ kind: 'image', title: 'a' })
     const s = createSnapshot(lib, 'manual', Date.now())
@@ -115,8 +115,8 @@ describe('instantanés', () => {
   })
 })
 
-describe('export zip', () => {
-  it('manifest, base, originaux, items.jsonl lisible, progression en octets ; collection', async () => {
+describe('zip export', () => {
+  it('manifest, database, originals, readable items.jsonl, byte progress; collection', async () => {
     const lib = await manager.open()
     const a = addItemWithFile(lib, 'Café du matin')
     const b = addItemWithFile(lib, 'Autre')
@@ -162,10 +162,10 @@ describe('export zip', () => {
     const last = progress.at(-1)!
     expect(last.bytesDone).toBe(last.bytesTotal)
     expect(last.bytesTotal).toBeGreaterThan(2048)
-    // Dossier temporaire nettoyé.
+    // Temporary folder cleaned up.
     expect(fs.readdirSync(lib.paths.dir('tmp')).filter((f) => f.startsWith('export-'))).toEqual([])
 
-    // Collection : ses éléments seulement, sans la base.
+    // Collection: its items only, without the database.
     const out2 = path.join(base, 'out', 'col.zip')
     await exportZip(
       lib,
@@ -181,18 +181,18 @@ describe('export zip', () => {
   })
 })
 
-describe('restauration', () => {
-  it('WAL non vide : aucun -wal résiduel, base = instantané, pre-restore contient les écritures', async () => {
+describe('restore', () => {
+  it('non-empty WAL: no leftover -wal, database = snapshot, pre-restore contains the writes', async () => {
     const lib = await manager.open()
     for (let i = 0; i < 3; i++) lib.repos.items.insert({ kind: 'image', title: `avant ${i}` })
     const snap = createSnapshot(lib, 'manual', Date.now())
-    // Écritures après l'instantané, encore dans le WAL.
+    // Writes after the snapshot, still in the WAL.
     for (let i = 0; i < 4; i++) lib.repos.items.insert({ kind: 'image', title: `après ${i}` })
     expect(fs.statSync(lib.paths.wal).size).toBeGreaterThan(0)
     const r = await restoreSnapshot(manager, snap.name)
     const next = manager.active()!
     expect(next.repos.items.countLive()).toBe(3)
-    // Aucun ancien WAL rejoué (sinon 7 éléments) ; celui de l'instantané « avant » est vide.
+    // No old WAL replayed (otherwise 7 items); the one of the "before" snapshot is empty.
     const preWal = path.join(next.paths.dir('snapshots'), `${r.preRestore}-wal`)
     expect(fs.existsSync(preWal) ? fs.statSync(preWal).size : 0).toBe(0)
     const pre = new Database(path.join(next.paths.dir('snapshots'), r.preRestore), {
@@ -201,11 +201,11 @@ describe('restauration', () => {
     expect(count(pre, 'SELECT count(*) n FROM items')).toBe(7)
     pre.close()
     expect(emit).toHaveBeenLastCalledWith('library.switched', { libraryId: 'default' })
-    // FTS reconstruite.
+    // FTS rebuilt.
     expect(next.repos.search.match('"avant"*').length).toBe(3)
   })
 
-  it('checkpoint bloqué par un lecteur : abandon propre, rien n’a bougé', async () => {
+  it('checkpoint blocked by a reader: clean abort, nothing moved', async () => {
     const lib = await manager.open()
     lib.repos.items.insert({ kind: 'image', title: 'x' })
     const snap = createSnapshot(lib, 'manual', Date.now())
@@ -223,7 +223,7 @@ describe('restauration', () => {
     expect(fs.readdirSync(lib.paths.dir('tmp')).filter((f) => f.startsWith('restore-'))).toEqual([])
   })
 
-  it('instantané endommagé : refusé avant toute modification', async () => {
+  it('damaged snapshot: refused before any change', async () => {
     const lib = await manager.open()
     const bad = path.join(lib.paths.dir('snapshots'), 'recolt-20260101-000000-manual.db')
     fs.writeFileSync(bad, 'pas une base')
@@ -234,8 +234,8 @@ describe('restauration', () => {
   })
 })
 
-describe('vérification, stockage, tags', () => {
-  it('original disparu → missing ; fichier orphelin signalé ; tailles par dossier', async () => {
+describe('verification, storage, tags', () => {
+  it('missing original → missing; orphan file reported; sizes per folder', async () => {
     const lib = await manager.open()
     const a = addItemWithFile(lib, 'a')
     fs.rmSync(lib.paths.abs(a.rel))
@@ -250,7 +250,7 @@ describe('vérification, stockage, tags', () => {
     expect(s.total).toBeGreaterThanOrEqual(s.items + s.database)
   })
 
-  it('fusion de deux tags : liens réaffectés et FTS réindexée', async () => {
+  it('merging two tags: links reassigned and FTS reindexed', async () => {
     const lib = await manager.open()
     const a = lib.repos.items.insert({ kind: 'image', title: 'a' }).id
     const b = lib.repos.items.insert({ kind: 'image', title: 'b' }).id

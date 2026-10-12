@@ -1,6 +1,6 @@
 /**
- * critères 1 (images) et 2 : orientation EXIF, webp animé, HEIC/PSD par sips,
- * TIFF par sharp, dérivés webp, originaux intacts.
+ * Criteria 1 (images) and 2: EXIF orientation, animated webp, HEIC/PSD via sips,
+ * TIFF via sharp, webp derivatives, originals intact.
  */
 import { mkdirSync, symlinkSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
@@ -24,14 +24,14 @@ beforeAll(async () => {
 afterAll(() => tmp.cleanup())
 
 describe('probeImage', () => {
-  it('JPEG orientation EXIF 6 : dimensions permutées', async () => {
+  it('JPEG EXIF orientation 6: dimensions swapped', async () => {
     const raw = await sharp(fx.exif6Jpg).metadata()
     expect([raw.width, raw.height, raw.orientation]).toEqual([300, 200, 6])
     const p = await probeImage({ abs: fx.exif6Jpg }, TOOLS)
     expect(p).toMatchObject({ width: 200, height: 300, mime: 'image/jpeg', isAnimated: false })
   })
 
-  it('webp animé : animé, dimensions de la première image', async () => {
+  it('animated webp: animated, dimensions of the first frame', async () => {
     const p = await probeImage({ abs: fx.animWebp }, TOOLS)
     expect(p).toEqual({
       width: 120,
@@ -42,7 +42,7 @@ describe('probeImage', () => {
     })
   })
 
-  it('PNG avec alpha et TIFF', async () => {
+  it('PNG with alpha and TIFF', async () => {
     expect(await probeImage({ abs: fx.alphaPng }, TOOLS)).toMatchObject({
       width: 320,
       height: 200,
@@ -56,7 +56,7 @@ describe('probeImage', () => {
     })
   })
 
-  it.skipIf(!HAS_SIPS)('HEIC et PSD : lus par sips', async () => {
+  it.skipIf(!HAS_SIPS)('HEIC and PSD: read by sips', async () => {
     expect(await sniffForeign(fx.heic!)).toBe('heic')
     expect(await sniffForeign(fx.psd!)).toBe('psd')
     expect(await sniffForeign(fx.alphaPng)).toBeNull()
@@ -74,9 +74,9 @@ describe('probeImage', () => {
     })
   })
 
-  it('HEIC orienté (6) : dimensions affichées = celles des dérivés', async (ctx) => {
-    if (!fx.heicOriented) return ctx.skip() // swift indisponible : fixture non générée
-    // sips ignore l'orientation HEIF : dimensions stockées 300×200.
+  it('oriented HEIC (6): displayed dimensions = those of the derivatives', async (ctx) => {
+    if (!fx.heicOriented) return ctx.skip() // swift unavailable: fixture not generated
+    // sips ignores the HEIF orientation: stored dimensions 300×200.
     expect(await sniffForeign(fx.heicOriented)).toBe('heic')
     const before = sha256(fx.heicOriented)
     const p = await probeImage({ abs: fx.heicOriented }, TOOLS)
@@ -97,7 +97,7 @@ describe('probeImage', () => {
       TOOLS,
     )
     expect(d).toEqual({ width: p.width, height: p.height })
-    // Pixels redressés : le coin rouge (haut-gauche stocké) est en haut à droite.
+    // Pixels straightened: the red corner (stored top-left) is at the top right.
     const { data, info } = await sharp(out('display/portrait.webp'))
       .raw()
       .toBuffer({ resolveWithObject: true })
@@ -117,7 +117,7 @@ describe('probeImage', () => {
     expect(sha256(fx.heicOriented)).toBe(before)
   })
 
-  it('fichier illisible → decode_failed ; chemin relatif → validation', async () => {
+  it('unreadable file → decode_failed; relative path → validation', async () => {
     await expect(probeImage({ abs: join(fx.dir, '..', 'fx', 'nope.jpg') }, TOOLS)).rejects.toThrow()
     await expect(probeImage({ abs: 'relatif.jpg' }, TOOLS)).rejects.toMatchObject({
       code: 'validation',
@@ -125,8 +125,8 @@ describe('probeImage', () => {
   })
 })
 
-describe('dérivés webp', () => {
-  it('makeThumb EXIF 6 : orientation appliquée, pas d’agrandissement', async () => {
+describe('webp derivatives', () => {
+  it('makeThumb EXIF 6: orientation applied, no enlargement', async () => {
     const r = await makeThumb(
       { src: fx.exif6Jpg, dst: out('thumbs/ab/exif6.webp'), width: 800 },
       TOOLS,
@@ -137,19 +137,19 @@ describe('dérivés webp', () => {
     expect([m.format, m.width, m.height, m.orientation ?? 1]).toEqual(['webp', 200, 300, 1])
   })
 
-  it('makeThumb webp animé → première image seulement', async () => {
+  it('makeThumb animated webp → first frame only', async () => {
     const dst = out('thumbs/anim.webp')
     await makeThumb({ src: fx.animWebp, dst, width: 800 }, TOOLS)
     const m = await sharp(dst).metadata()
     expect(m.pages ?? 1).toBe(1)
     const { data } = await sharp(dst).raw().toBuffer({ resolveWithObject: true })
-    // Première image : rouge.
+    // First frame: red.
     expect(data[0]).toBeGreaterThan(200)
     expect(data[1]).toBeLessThan(40)
     expect(data[2]).toBeLessThan(40)
   })
 
-  it('makeLarge 1440w et makeThumb 800w réduisent une grande image', async () => {
+  it('makeLarge 1440w and makeThumb 800w shrink a large image', async () => {
     const big = out('big.png')
     await sharp({ create: { width: 3000, height: 2000, channels: 3, background: '#808080' } })
       .png()
@@ -168,7 +168,7 @@ describe('dérivés webp', () => {
     })
   })
 
-  it('TIFF → display webp par sharp', async () => {
+  it('TIFF → display webp via sharp', async () => {
     const before = sha256(fx.tiff)
     const d = await makeDisplay(
       { src: fx.tiff, dst: out('display/tiff.webp'), maxEdge: 2048 },
@@ -179,7 +179,7 @@ describe('dérivés webp', () => {
     expect(sha256(fx.tiff)).toBe(before)
   })
 
-  it('destination = source sous une autre écriture (/./, //, lien) → validation, original intact', async () => {
+  it('destination = source under another spelling (/./, //, link) → validation, original intact', async () => {
     const dir = out('same')
     mkdirSync(dir, { recursive: true })
     const src = join(dir, 'self.webp')
@@ -203,7 +203,7 @@ describe('dérivés webp', () => {
     expect(sha256(src)).toBe(before)
   })
 
-  it.skipIf(!HAS_SIPS)('source = destination sur un HEIC → refusé avant décodage', async () => {
+  it.skipIf(!HAS_SIPS)('source = destination on a HEIC → refused before decoding', async () => {
     const before = sha256(fx.heic as string)
     await expect(
       decodeForeign(
@@ -214,9 +214,9 @@ describe('dérivés webp', () => {
     expect(sha256(fx.heic as string)).toBe(before)
   })
 
-  it.skipIf(!HAS_SIPS)('HEIC → décodé par sips → display webp, original intact', async () => {
+  it.skipIf(!HAS_SIPS)('HEIC → decoded by sips → display webp, original intact', async () => {
     const before = sha256(fx.heic as string)
-    // sharp seul ne décode pas le HEVC : la voie sips est nécessaire.
+    // sharp alone does not decode HEVC: the sips route is needed.
     await expect(
       sharp(fx.heic as string)
         .png()
@@ -239,7 +239,7 @@ describe('dérivés webp', () => {
     expect(sha256(fx.heic!)).toBe(before)
   })
 
-  it.skipIf(!HAS_SIPS)('PSD → décodé par sips → display webp, original intact', async () => {
+  it.skipIf(!HAS_SIPS)('PSD → decoded by sips → display webp, original intact', async () => {
     const before = sha256(fx.psd as string)
     await expect(sharp(fx.psd as string).metadata()).rejects.toThrow()
     const dec = await decodeForeign(
@@ -257,7 +257,7 @@ describe('dérivés webp', () => {
     expect(sha256(fx.psd!)).toBe(before)
   })
 
-  it('sips absent → tool_missing pour un HEIC', async () => {
+  it('sips missing → tool_missing for a HEIC', async () => {
     if (!fx.heic) return
     await expect(
       makeDisplay(
@@ -267,7 +267,7 @@ describe('dérivés webp', () => {
     ).rejects.toMatchObject({ code: 'tool_missing' })
   })
 
-  it('aucun fichier partiel en cas d’échec', async () => {
+  it('no partial file on failure', async () => {
     const { readdirSync, mkdirSync, writeFileSync } = await import('node:fs')
     const bad = out('bad/bad.jpg')
     mkdirSync(out('bad'), { recursive: true })
@@ -278,7 +278,7 @@ describe('dérivés webp', () => {
     expect(readdirSync(out('bad'))).toEqual(['bad.jpg'])
   })
 
-  it('toPng : PNG décodable, borné par maxEdge', async () => {
+  it('toPng: decodable PNG, bounded by maxEdge', async () => {
     const r = await toPng({ abs: fx.exif6Jpg, maxEdge: 150 }, TOOLS)
     expect([r.width, r.height]).toEqual([100, 150])
     const m = await sharp(Buffer.from(r.png)).metadata()
@@ -286,7 +286,7 @@ describe('dérivés webp', () => {
   })
 })
 
-describe('fichier source absent ou dossier', () => {
+describe('missing source file or folder', () => {
   const missing = join(tmp.dir, 'absent', 'nope.jpg')
   const ops: [string, () => Promise<unknown>][] = [
     ['probeImage', () => probeImage({ abs: missing }, TOOLS)],
@@ -304,7 +304,7 @@ describe('fichier source absent ou dossier', () => {
     ],
   ]
   for (const [name, call] of ops) {
-    it(`${name} : fichier absent → not_found en français`, async () => {
+    it(`${name}: missing file → not_found in French`, async () => {
       const err = await call().then(
         () => null,
         (e: unknown) => e,
@@ -315,7 +315,7 @@ describe('fichier source absent ou dossier', () => {
     })
   }
 
-  it('un dossier à la place du fichier → validation, pas internal', async () => {
+  it('a folder in place of the file → validation, not internal', async () => {
     const dir = join(tmp.dir, 'un-dossier')
     mkdirSync(dir, { recursive: true })
     for (const call of [
@@ -334,12 +334,12 @@ describe('fichier source absent ou dossier', () => {
   })
 })
 
-describe('images très hautes (plafond WebP 16383 px)', () => {
+describe('very tall images (WebP 16383 px cap)', () => {
   it.each([
     [1280, 26000],
     [800, 40000],
   ])(
-    '%i×%i : makeThumb et makeLarge réussissent, côtés ≤ 16383',
+    '%i×%i: makeThumb and makeLarge succeed, sides ≤ 16383',
     async (w, h) => {
       const src = join(tmp.dir, `tall-${w}x${h}.png`)
       await sharp({

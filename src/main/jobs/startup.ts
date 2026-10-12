@@ -1,7 +1,7 @@
 /**
- * Ménage à l'ouverture d'une bibliothèque : jobs `running` → `queued` (reprise après
- * crash), jobs terminés de plus de 7 jours supprimés, fichiers temporaires orphelins (`.part`,
- * `.decoded.*`…) supprimés : à ce moment, aucun job ne tourne dans cette bibliothèque.
+ * Cleanup when a library is opened: `running` jobs → `queued` (resume after a
+ * crash), finished jobs older than 7 days deleted, orphaned temporary files (`.part`,
+ * `.decoded.*`...) deleted: at this point, no job is running in this library.
  */
 import { readdir, rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -9,7 +9,7 @@ import type { LibraryContext } from '../library/library-context'
 
 const DAY = 86_400_000
 
-/** Supprime les `.part` / `.decoded.*` de `tmp/` (aucun job ne tourne encore) et les vieux jobs. */
+/** Deletes the `.part` / `.decoded.*` files in `tmp/` (no job is running yet) and the old jobs. */
 export async function cleanupAtOpen(lib: LibraryContext, now = Date.now()): Promise<void> {
   lib.repos.jobs.resetRunning(now)
   lib.repos.jobs.cleanup(now - 7 * DAY)

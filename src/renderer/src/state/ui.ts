@@ -1,6 +1,6 @@
 /**
- * État d'interface (zustand) : route, calques, sélection, glisser interne, colonnes par vue,
- * graine de recherche (`ui.openSearch`).
+ * UI state (zustand): route, overlays, selection, internal drag, columns per view,
+ * search seed (`ui.openSearch`).
  */
 import { create } from 'zustand'
 import { SortMode, type LibraryTab } from '../../../shared/enums'
@@ -39,11 +39,11 @@ export interface UiState {
   overlay: Overlay | null
   selection: string[]
   internalDrag: string[] | null
-  /** Incrémenté à chaque `openSearch` pour que la page applique la graine. */
+  /** Incremented on each `openSearch` so the page applies the seed. */
   search: SearchSeed & { nonce: number }
-  /** Colonnes par vue (`library`, `collection:<uuid>`…), 2 à 8. */
+  /** Columns per view (`library`, `collection:<uuid>`…), 2 to 8. */
   columns: Record<string, number>
-  /** Tri choisi par vue (`collection:<uuid>`…) ; absent = tri par défaut des Réglages. */
+  /** Sort chosen per view (`collection:<uuid>`…); absent = default sort from Settings. */
   sorts: Record<string, SortMode>
 
   navigate: (route: Route) => void
@@ -59,11 +59,11 @@ export interface UiState {
   openSearch: (seed?: SearchSeed) => void
   setColumns: (viewKey: string, n: number) => void
   setSort: (viewKey: string, sort: SortMode) => void
-  /** Réglages › Colonnes par défaut : les colonnes choisies vue par vue sont oubliées. */
+  /** Settings › Default columns: columns chosen view by view are forgotten. */
   resetColumns: () => void
 }
 
-/** Colonnes et tris par vue, mémorisés localement (confort par poste, jamais critique). */
+/** Columns and sorts per view, remembered locally (per-machine convenience, never critical). */
 const VIEW_PREFS_KEY = 'recolt.viewPrefs.v1'
 
 function readViewPrefs(): { columns: Record<string, number>; sorts: Record<string, SortMode> } {
@@ -84,7 +84,7 @@ function readViewPrefs(): { columns: Record<string, number>; sorts: Record<strin
       return { columns, sorts }
     }
   } catch {
-    // stockage indisponible : défauts
+    // storage unavailable: defaults
   }
   return { columns: {}, sorts: {} }
 }
@@ -93,7 +93,7 @@ function writeViewPrefs(columns: Record<string, number>, sorts: Record<string, S
   try {
     globalThis.localStorage?.setItem(VIEW_PREFS_KEY, JSON.stringify({ columns, sorts }))
   } catch {
-    // stockage indisponible : sans conséquence
+    // storage unavailable: no consequence
   }
 }
 

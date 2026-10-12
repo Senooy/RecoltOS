@@ -21,7 +21,7 @@ import { Tooltip } from '../../../src/renderer/src/components/ui/Tooltip'
 import { XGlyph } from '../../../src/renderer/src/components/icons'
 
 describe('Button', () => {
-  it('type="button" par défaut et classes de variante', () => {
+  it('type="button" by default and variant classes', () => {
     render(<Button variant="primary">Importer</Button>)
     const b = screen.getByRole('button', { name: 'Importer' })
     expect(b.getAttribute('type')).toBe('button')
@@ -29,7 +29,7 @@ describe('Button', () => {
     expect(b.className).toContain('rounded-full')
   })
 
-  it('loading : spinner, désactivé, aria-busy ; le clic est ignoré', () => {
+  it('loading: spinner, disabled, aria-busy; click is ignored', () => {
     const onClick = vi.fn()
     render(
       <Button loading onClick={onClick}>
@@ -43,7 +43,7 @@ describe('Button', () => {
     expect(onClick).not.toHaveBeenCalled()
   })
 
-  it('tailles et formes', () => {
+  it('sizes and shapes', () => {
     render(
       <>
         <Button size="sm" shape="rounded">
@@ -57,7 +57,7 @@ describe('Button', () => {
     expect(screen.getByText('b').className).toContain('h-9')
   })
 
-  it('asChild rend l’enfant avec le style du bouton', () => {
+  it('asChild renders the child with the button style', () => {
     render(
       <Button asChild variant="primary">
         <a href="https://example.test">Lien</a>
@@ -69,7 +69,7 @@ describe('Button', () => {
 })
 
 describe('IconButton', () => {
-  it('porte aria-label = label (FR) et le déclenche au clic', () => {
+  it('has aria-label = label (FR) and triggers it on click', () => {
     const onClick = vi.fn()
     render(<IconButton icon={<XGlyph />} label="Fermer" onClick={onClick} />)
     const b = screen.getByRole('button', { name: 'Fermer' })
@@ -78,7 +78,7 @@ describe('IconButton', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
-  it('tones et tailles', () => {
+  it('tones and sizes', () => {
     render(
       <>
         <IconButton icon={<XGlyph />} label="a" size="sm" />
@@ -93,7 +93,7 @@ describe('IconButton', () => {
 })
 
 describe('Tooltip (600 ms)', () => {
-  it('apparaît après 600 ms de survol, pas avant', async () => {
+  it('appears after 600 ms of hover, not before', async () => {
     vi.useFakeTimers()
     render(
       <Tooltip content="Réglages" shortcut={['⌘', ',']}>
@@ -113,7 +113,7 @@ describe('Tooltip (600 ms)', () => {
     expect(TOOLTIP_DELAY_MS).toBe(600)
   })
 
-  it('désactivé : rend seulement le déclencheur', () => {
+  it('disabled: only renders the trigger', () => {
     render(
       <Tooltip content="x" disabled>
         <button type="button">cible</button>
@@ -125,25 +125,25 @@ describe('Tooltip (600 ms)', () => {
 })
 
 describe('Kbd', () => {
-  it('xs : un seul <kbd> avec les touches jointes', () => {
+  it('xs: a single <kbd> with the keys joined', () => {
     const { container } = render(<Kbd keys={['⌘', 'K']} />)
     const kbds = container.querySelectorAll('kbd')
     expect(kbds).toHaveLength(1)
     expect(kbds[0]?.textContent).toBe('⌘K')
   })
-  it('md : une boîte par touche, annoncée comme un raccourci', () => {
+  it('md: one box per key, announced as a shortcut', () => {
     const { container } = render(<Kbd keys={['⌘', '⇧', 'S']} size="md" />)
     expect(container.querySelectorAll('kbd')).toHaveLength(3)
     expect(screen.getByRole('img', { name: '⌘ ⇧ S' })).toBeTruthy()
   })
-  it('police mono pour les touches en lettres', () => {
+  it('monospace font for letter keys', () => {
     const { container } = render(<Kbd keys={['esc']} size="sm" />)
     expect(container.querySelector('kbd')?.className).toContain('font-mono')
   })
 })
 
 describe('Switch', () => {
-  it('bascule et reste accessible', () => {
+  it('toggles and stays accessible', () => {
     const onChange = vi.fn()
     render(<Switch aria-label="Lire au survol" checked={false} onCheckedChange={onChange} />)
     const s = screen.getByRole('switch', { name: 'Lire au survol' })
@@ -154,7 +154,7 @@ describe('Switch', () => {
 })
 
 describe('Slider', () => {
-  it('expose valeur, bornes et nom accessible ; le clavier change la valeur', () => {
+  it('exposes value, bounds and accessible name; the keyboard changes the value', () => {
     const onChange = vi.fn()
     render(
       <Slider
@@ -175,14 +175,14 @@ describe('Slider', () => {
     fireEvent.keyDown(thumb, { key: 'ArrowRight' })
     expect(onChange).toHaveBeenCalledWith(5)
   })
-  it.each(['columns', 'zoom', 'settings'] as const)('variante %s se rend', (variant) => {
+  it.each(['columns', 'zoom', 'settings'] as const)('variant %s renders', (variant) => {
     render(<Slider variant={variant} label={variant} min={0} max={10} value={3} />)
     expect(screen.getByRole('slider', { name: variant })).toBeTruthy()
   })
 })
 
 describe('SegmentedSmall', () => {
-  it('sélectionne une option et ne désélectionne jamais', () => {
+  it('selects an option and never deselects', () => {
     const onChange = vi.fn()
     render(
       <SegmentedSmall
@@ -204,7 +204,7 @@ describe('SegmentedSmall', () => {
 })
 
 describe('Input', () => {
-  it('invalid pose aria-invalid ; variante viewer', () => {
+  it('invalid sets aria-invalid; viewer variant', () => {
     render(<Input aria-label="Nom" invalid variant="viewer" />)
     const i = screen.getByLabelText('Nom')
     expect(i.getAttribute('aria-invalid')).toBe('true')
@@ -213,12 +213,12 @@ describe('Input', () => {
 })
 
 describe('Chip', () => {
-  it('statique : pas de bouton ; tag préfixé par #', () => {
+  it('static: no button; tag prefixed with #', () => {
     const { container } = render(<Chip variant="tag" label="design" />)
     expect(container.querySelector('button')).toBeNull()
     expect(container.textContent).toBe('#design')
   })
-  it('cliquable : aria-pressed ; retirable : croix nommée', () => {
+  it('clickable: aria-pressed; removable: named cross', () => {
     const onClick = vi.fn()
     const onRemove = vi.fn()
     render(<Chip label="Images" selected onClick={onClick} onRemove={onRemove} />)
@@ -229,7 +229,7 @@ describe('Chip', () => {
     expect(onClick).toHaveBeenCalledOnce()
     expect(onRemove).toHaveBeenCalledOnce()
   })
-  it('jamais de bouton imbriqué', () => {
+  it('never nests a button', () => {
     const { container } = render(
       <Chip label="Dev" onClick={() => undefined} onRemove={() => undefined} />,
     )
@@ -238,7 +238,7 @@ describe('Chip', () => {
 })
 
 describe('EmptyState, Spinner, PillBar', () => {
-  it('EmptyState : titre, description, action', () => {
+  it('EmptyState: title, description, action', () => {
     render(
       <EmptyState
         title="La corbeille est vide"
@@ -250,7 +250,7 @@ describe('EmptyState, Spinner, PillBar', () => {
     expect(screen.getByText('Rien ici.')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Faire' })).toBeTruthy()
   })
-  it('Spinner : role=status nommé en français ; décoratif sur demande', () => {
+  it('Spinner: role=status named in French; decorative on request', () => {
     const { container } = render(
       <>
         <Spinner />
@@ -260,7 +260,7 @@ describe('EmptyState, Spinner, PillBar', () => {
     expect(screen.getByRole('status', { name: 'Chargement…' })).toBeTruthy()
     expect(container.querySelectorAll('[aria-hidden="true"]').length).toBeGreaterThan(0)
   })
-  it('PillBar : pilule de 40 px, action en pilule noire', () => {
+  it('PillBar: 40 px pill, action as a black pill', () => {
     render(
       <PillBar floating aria-label="Sélection">
         Ajouté à Gaming
@@ -276,13 +276,13 @@ describe('EmptyState, Spinner, PillBar', () => {
 })
 
 describe('Avatar', () => {
-  it('hashHue est déterministe, insensible à la casse et au @', () => {
+  it('hashHue is deterministic, case-insensitive and ignores @', () => {
     expect(hashHue('ClaudeDevs')).toBe(hashHue('@claudedevs'))
     expect(hashHue('a')).not.toBe(hashHue('b'))
     expect(hashHue('x')).toBeGreaterThanOrEqual(0)
     expect(hashHue('x')).toBeLessThan(360)
   })
-  it('initiales', () => {
+  it('initials', () => {
     expect(initials('Claude Devs')).toBe('CD')
     expect(initials('GamesLover with a Preference')).toBe('GP')
     expect(initials('martin')).toBe('M')
@@ -290,14 +290,14 @@ describe('Avatar', () => {
     expect(initials('', '')).toBe('?')
     expect(initials('🔥 Léa Dupont')).toBe('LD')
   })
-  it('repli par initiales sur teinte du handle, sans image', () => {
+  it('fallback to initials on handle hue, without image', () => {
     const { container } = render(<Avatar name="Claude Devs" handle="ClaudeDevs" />)
     const a = container.querySelector('[data-avatar]') as HTMLElement
     expect(a.textContent).toBe('CD')
     expect(a.style.getPropertyValue('--avatar-hue')).toBe(String(hashHue('ClaudeDevs')))
     expect(container.querySelector('img')).toBeNull()
   })
-  it('même handle → même teinte ; handles différents → teintes distinctes', () => {
+  it('same handle → same hue; different handles → distinct hues', () => {
     const { container } = render(
       <>
         <Avatar name="A" handle="same" />
@@ -311,7 +311,7 @@ describe('Avatar', () => {
     expect(hues[0]).toBe(hues[1])
     expect(hues[0]).not.toBe(hues[2])
   })
-  it('image recolt:// affichée, puis repli aux initiales si elle échoue', () => {
+  it('recolt:// image displayed, then fallback to initials if it fails', () => {
     const { container } = render(
       <Avatar name="Claude Devs" handle="cd" src="recolt://lib/avatars/x/1.jpg" />,
     )
@@ -323,8 +323,8 @@ describe('Avatar', () => {
   })
 })
 
-describe('MediaBadge et FormatBadge', () => {
-  it('vidéo : nom accessible « Vidéo » ; carrousel : « 1/6 » ; gif : « GIF »', () => {
+describe('MediaBadge and FormatBadge', () => {
+  it('video: accessible name "Vidéo"; carousel: "1/6"; gif: "GIF"', () => {
     render(
       <>
         <MediaBadge kind="video" />
@@ -336,14 +336,14 @@ describe('MediaBadge et FormatBadge', () => {
     expect(screen.getByText('1/6')).toBeTruthy()
     expect(screen.getByText('GIF')).toBeTruthy()
   })
-  it('FormatBadge en capitales', () => {
+  it('FormatBadge in capitals', () => {
     render(<FormatBadge format="mp4" />)
     expect(screen.getByText('MP4')).toBeTruthy()
   })
 })
 
-describe('Tooltip disabled : arbre stable', () => {
-  it('basculer disabled ne démonte pas le déclencheur (focus et nœud conservés)', () => {
+describe('Tooltip disabled: stable tree', () => {
+  it('toggling disabled does not unmount the trigger (focus and node kept)', () => {
     const { rerender } = render(
       <Tooltip content="Réglages">
         <button type="button">Ouvrir</button>
@@ -360,7 +360,7 @@ describe('Tooltip disabled : arbre stable', () => {
     expect(document.activeElement).toBe(before)
   })
 
-  it('basculer disabled dans les deux sens ne journalise aucun avertissement React/Radix', () => {
+  it('toggling disabled both ways logs no React/Radix warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const tree = (disabled: boolean) => (
@@ -379,8 +379,8 @@ describe('Tooltip disabled : arbre stable', () => {
   })
 })
 
-describe('IconButton : label obligatoire et non vide', () => {
-  it('rejette un label vide ou blanc', () => {
+describe('IconButton: label required and non-empty', () => {
+  it('rejects an empty or blank label', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     expect(() => render(<IconButton icon={<XGlyph />} label="  " />)).toThrow(/label/)
     spy.mockRestore()

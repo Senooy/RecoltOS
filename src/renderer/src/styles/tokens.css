@@ -1,15 +1,15 @@
 /*
- * Design tokens : SOURCE UNIQUE des couleurs et ombres des deux thèmes (dont --accent-blue et les
- * 6 couleurs de notes). Thème porté par
- * `<html data-theme="light|dark">`. Aucune autre feuille ni composant ne définit de couleur dépendant
- * du thème : ils lisent ces variables.
+ * Design tokens: SINGLE SOURCE of the colors and shadows of both themes (including --accent-blue and the
+ * 6 note colors). Theme carried by
+ * `<html data-theme="light|dark">`. No other stylesheet nor component defines a color that depends
+ * on the theme: they read these variables.
  *
- * Thème sombre : les surfaces immersives (étagère, détail, Redécouvrir) servent de base ; le reste
- * du sombre en dérive : segmented #161618 / #2a2a2c / pilule #f3f3f5, kbd #2a2a2c, pilule #18181a,
- * compteur #636365, champs plus clairs que le panneau. Pour ajuster : ne modifier que le bloc
- * `[data-theme='dark']` ci-dessous.
+ * Dark theme: immersive surfaces (shelf, detail, Rediscover) serve as the base; the rest
+ * of the dark theme derives from it: segmented #161618 / #2a2a2c / pill #f3f3f5, kbd #2a2a2c, pill #18181a,
+ * counter #636365, fields lighter than the panel. To adjust: only edit the block
+ * `[data-theme='dark']` below.
  *
- * `.light-island` : sous-arbre toujours rendu en clair (posts blancs sur les surfaces immersives).
+ * `.light-island`: subtree always rendered in light (white posts on immersive surfaces).
  */
 @import 'tailwindcss';
 @import '@fontsource-variable/geist';
@@ -58,7 +58,7 @@
   --skeleton: #efefef;
   --focus: rgba(10, 132, 255, 0.55);
   --canvas-dot: #e3e3e3;
-  /* immersif (identique dans les deux thèmes) */
+  /* immersive (identical in both themes) */
   --shelf-bg: #000;
   --shelf-label: #a1a1a1;
   --shelf-count: #5c5c5c;
@@ -67,7 +67,7 @@
   --viewer-mid: #191718;
   --viewer-glow: rgba(255, 255, 255, 0.11);
   --viewer-divider: #2b2b2d;
-  --viewer-panel: #141315; /* panneau de la vue détail */
+  --viewer-panel: #141315; /* viewer detail panel */
   --viewer-panel-border: #1d1b1c;
   --viewer-card: #2c2c2e;
   --viewer-card-border: #303032;
@@ -91,9 +91,9 @@
   --rd-pill: #171719;
   --rd-pill-kbd: #343436;
   --rd-counter: #aeaeb0;
-  /* sélection Spaces, anneau bleu macOS */
+  /* Spaces selection, macOS blue ring */
   --accent-blue: #0a84ff;
-  /* 6 couleurs de notes (identiques dans les deux thèmes) */
+  /* 6 note colors (identical in both themes) */
   --note-yellow: #fff4b8;
   --note-pink: #ffd6e0;
   --note-green: #d8f5d0;
@@ -101,7 +101,7 @@
   --note-purple: #e6deff;
   --note-gray: #efefef;
 
-  /* ---- Ombres ---- */
+  /* ---- Shadows ---- */
   --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 18px rgba(0, 0, 0, 0.06);
   --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12);
@@ -115,19 +115,19 @@
   --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.03);
   --glass-border: rgba(0, 0, 0, 0.06);
 
-  /* ---- Composants (valeurs claires mesurées écran par écran) ---- */
-  /* survol d'un bouton primaire, surlignage des menus (--hover × 1,25), avatars */
+  /* ---- Components (light values measured screen by screen) ---- */
+  /* primary button hover, menu highlight (--hover × 1.25), avatars */
   --ui-accent-hover: #262626;
   --ui-menu-highlight: rgba(0, 0, 0, 0.05);
   --ui-avatar-s: 20%;
   --ui-avatar-l: 90%;
-  /* segmented central */
+  /* central segmented */
   --seg-bg: var(--bg);
   --seg-border: var(--border);
   --seg-pill: var(--accent);
   --seg-pill-fg: var(--accent-fg);
   --seg-fg: var(--fg);
-  /* palette ⌘K */
+  /* ⌘K palette */
   --palette-bg: linear-gradient(180deg, rgba(252, 252, 252, 0.95), rgba(242, 242, 242, 0.86));
   --palette-rule: rgba(0, 0, 0, 0.06);
   --palette-icon: #4e4c4d;
@@ -135,7 +135,7 @@
   --palette-hint: #9b9b9b;
   --palette-kbd-bg: rgba(0, 0, 0, 0.06);
   --palette-kbd-fg: #9a9a9a;
-  /* Réglages */
+  /* Settings */
   --set-help: #959595;
   --set-label: #969696;
   --set-nav-title: #909090;
@@ -157,7 +157,7 @@
   --set-storage-2: #6e6e6e;
   --set-storage-3: #a3a3a3;
   --set-storage-4: #cfcfcf;
-  /* tons d'état (sync, capture, IA) */
+  /* state tones (sync, capture, AI) */
   --tone-ok: #28a745;
   --tone-ok-dot: #30c552;
   --tone-warn-dot: #f5a524;
@@ -179,13 +179,13 @@
   --sp-select: #0a84ff;
   --sp-note-text: #1d1d1f;
   --sp-note-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.07);
-  /* segmented sur l'étagère (immersif : identique dans les deux thèmes) */
+  /* segmented on the shelf (immersive: identical in both themes) */
   --shelf-seg-bg: #161618;
   --shelf-seg-border: #2a2a2c;
   --shelf-seg-pill: #f3f3f5;
   --shelf-seg-pill-fg: #0a0a0a;
   --shelf-seg-fg: #ffffff;
-  /* panneau « Collections » pendant le glisser d'une carte (bord droit) */
+  /* "Collections" panel while dragging a card (right edge) */
   --drag-panel-bg: #ffffff;
   --drag-panel-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 12px 40px rgba(0, 0, 0, 0.12);
   --drag-panel-row-hover: rgba(0, 0, 0, 0.055);
@@ -231,7 +231,7 @@
   --skeleton: #1c1c1e;
   --canvas-dot: #2a2a2c;
 
-  /* ---- Ombres : anneau blanc, opacités doublées ---- */
+  /* ---- Shadows: white ring, doubled opacities ---- */
   --shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.1);
   --shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(0, 0, 0, 0.12);
   --shadow-stack: 0 1px 2px rgba(0, 0, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.24);
@@ -245,12 +245,12 @@
   --shadow-field: 0 1px 2px rgba(0, 0, 0, 0.2);
   --glass-border: rgba(255, 255, 255, 0.08);
 
-  /* ---- Composants ---- */
+  /* ---- Components ---- */
   --ui-accent-hover: #e5e5e7;
   --ui-menu-highlight: rgba(255, 255, 255, 0.0625);
   --ui-avatar-s: 12%;
   --ui-avatar-l: 24%;
-  /* segmented : comme sur l'étagère sombre */
+  /* segmented: as on the dark shelf */
   --seg-bg: #161618;
   --seg-border: #2a2a2c;
   --seg-pill: #f3f3f5;
@@ -302,7 +302,7 @@
 }
 
 @theme inline {
-  --color-*: initial; /* palette Tailwind désactivée : tokens obligatoires */
+  --color-*: initial; /* Tailwind palette disabled: tokens required */
   --color-transparent: transparent;
   --color-white: #fff;
   --color-black: #000;
@@ -374,13 +374,13 @@ body,
   user-select: text;
   -webkit-user-select: text;
   cursor: text;
-} /* texte copiable */
+} /* copyable text */
 .tnum {
   font-variant-numeric: tabular-nums;
 }
 
-/* Régions de glisser Electron : elles sont calculées depuis le CSS SANS tenir compte de l'empilement.
-   Tout ce qui se superpose à une zone drag doit être explicitement no-drag. */
+/* Electron drag regions: they are computed from the CSS WITHOUT considering stacking.
+   Anything overlapping a drag zone must be explicitly no-drag. */
 .app-drag {
   -webkit-app-region: drag;
 }

@@ -1,6 +1,6 @@
 /**
- * Messages main ↔ utility processes (dérivés). Aucun worker n'ouvre la base.
- * Pas d'`EmbedOps` en V1.
+ * Messages main ↔ utility processes (derived). No worker opens the database.
+ * No `EmbedOps` in V1.
  */
 
 export type WorkerRequest = { id: number; op: string; args: unknown }
@@ -10,9 +10,9 @@ export type WorkerResponse =
   | { id: number; progress: unknown }
 
 export interface ZipEntry {
-  /** Chemin absolu du fichier source. */
+  /** Absolute path of the source file. */
   abs: string
-  /** Chemin dans l'archive. */
+  /** Path inside the archive. */
   name: string
 }
 
@@ -51,7 +51,7 @@ export interface MediaOps {
   }
   /** `posters/` jpg 1280 max. */
   makePoster(a: { src: string; dst: string; atMs: number }): { width: number; height: number }
-  /** `previews/` mp4 540p ≤ 8 s muet (`h264_videotoolbox`, repli libx264). */
+  /** `previews/` mp4 540p ≤ 8 s muted (`h264_videotoolbox`, fallback libx264). */
   makePreview(a: { src: string; dst: string; maxSeconds: 8; height: 540 }): {
     width: number
     height: number
@@ -59,7 +59,7 @@ export interface MediaOps {
     bytes: number
   }
   makeDisplay(a: { src: string; dst: string; maxEdge: 2048 }): { width: number; height: number }
-  /** `avatars/<platform>/<k>.jpg` : carré 128 px, JPEG. */
+  /** `avatars/<platform>/<k>.jpg`: 128 px square, JPEG. */
   makeAvatar(a: { src: string; dst: string; size: 128 }): {
     width: number
     height: number
@@ -75,13 +75,13 @@ export interface MediaOps {
   /** COPYFILE_FICLONE puis rename. */
   cloneFile(a: { src: string; dst: string }): { bytes: number }
   zipLibrary(a: { root: string; entries: ZipEntry[]; out: string }): { bytes: number }
-  /** IA : JPEG q85 ≤ `maxEdge` (1568), sans métadonnées, fond blanc. */
+  /** AI: JPEG q85 ≤ `maxEdge` (1568), without metadata, white background. */
   aiImage(a: { src: string; dst: string; maxEdge: number }): {
     width: number
     height: number
     bytes: number
   }
-  /** IA : une image clé à `atMs` ou `fromEndMs` de la fin, JPEG ≤ `maxEdge` (1024). */
+  /** AI: one key frame at `atMs` or `fromEndMs` from the end, JPEG ≤ `maxEdge` (1024). */
   extractFrame(a: {
     src: string
     dst: string

@@ -1,16 +1,16 @@
 /**
- * Lancement de l'app Electron pour les projets Playwright e2e / visual / perf.
- * Lance `out/main/index.js` (build non empaqueté) avec les variables de testabilité :
- * `RECOLTOS_USER_DATA` (un dossier neuf sous `.tmp/`), `RECOLTOS_E2E=1`, `RECOLTOS_HOME`,
- * `RECOLTOS_WINDOW=1280x820`, `TZ=Europe/Paris`, `LANG=fr_FR.UTF-8`. Collecte `console.error` et
- * `pageerror` (y compris les violations CSP, converties en erreurs par le navigateur).
+ * Launches the Electron app for the Playwright e2e / visual / perf projects.
+ * Launches `out/main/index.js` (unpackaged build) with the testability variables:
+ * `RECOLTOS_USER_DATA` (a new folder under `.tmp/`), `RECOLTOS_E2E=1`, `RECOLTOS_HOME`,
+ * `RECOLTOS_WINDOW=1280x820`, `TZ=Europe/Paris`, `LANG=fr_FR.UTF-8`. Collects `console.error` and
+ * `pageerror` (including CSP violations, turned into errors by the browser).
  *
- * Capture déterministe : les écouteurs `console` / `pageerror` sont posés APRÈS `electron.launch()`,
- * donc les erreurs émises pendant le chargement initial leur échappent (course mesurée : 1 lancement
- * sur 3 seulement les voyait). Playwright retient pourtant les derniers messages et erreurs de
- * chaque page depuis sa création : `flushErrors()` les relit (`page.consoleMessages()`,
- * `page.pageErrors()`) et les fusionne avec `errors` (sans doublon). À appeler avant toute
- * assertion « 0 erreur » et avant la fermeture ; la fixture `e2e-fixtures.ts` le fait.
+ * Deterministic capture: the `console` / `pageerror` listeners are attached AFTER `electron.launch()`,
+ * so errors emitted during the initial load escape them (measured race: 1 launch
+ * in 3 only saw them). Playwright nevertheless retains the latest messages and errors of
+ * each page since its creation: `flushErrors()` re-reads them (`page.consoleMessages()`,
+ * `page.pageErrors()`) and merges them into `errors` (without duplicates). To call before any
+ * "0 errors" assertion and before closing; the `e2e-fixtures.ts` fixture does it.
  */
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test'
 import { createRequire } from 'node:module'
@@ -20,21 +20,21 @@ import { REPO_ROOT } from './paths'
 import { makeTmpDir } from './tmpdir'
 
 export interface LaunchOptions {
-  /** `userData` imposé (sinon dossier neuf supprimé à la fermeture). */
+  /** `userData` imposed (otherwise a new folder deleted on close). */
   userData?: string
-  /** `RECOLTOS_HOME` imposé (sinon un sous-dossier de `userData`). */
+  /** `RECOLTOS_HOME` imposed (otherwise a sub-folder of `userData`). */
   home?: string
-  /** Taille de fenêtre `LxH` (défaut 1280x820). */
+  /** Window size `LxH` (default 1280x820). */
   windowSize?: string
-  /** Densité de pixels : 1 pour les tests (défaut), 2 pour `pnpm run shots`. */
+  /** Pixel density: 1 for tests (default), 2 for `pnpm run shots`. */
   deviceScaleFactor?: 1 | 2
-  /** Variables d'environnement supplémentaires. */
+  /** Additional environment variables. */
   env?: Record<string, string>
-  /** Arguments Electron supplémentaires (après ceux du lanceur). */
+  /** Additional Electron arguments (after those of the launcher). */
   args?: string[]
-  /** Motifs de messages `console.error` tolérés (à justifier dans le test). */
+  /** Tolerated `console.error` message patterns (to justify in the test). */
   allowErrors?: RegExp[]
-  /** Racine du dépôt à lancer (défaut : celle des tests). */
+  /** Repo root to launch (default: the tests' one). */
   root?: string
 }
 
@@ -43,20 +43,20 @@ export interface AppHandle {
   page: Page
   userData: string
   home: string
-  /** Erreurs console / pageerror reçues jusqu'ici (écouteurs en direct), hors motifs tolérés. */
+  /** Console / pageerror errors received so far (live listeners), excluding tolerated patterns. */
   errors: string[]
   /**
-   * Fusionne dans `errors` les erreurs retenues par Playwright pour toutes les fenêtres ouvertes
-   * (y compris celles émises avant la pose des écouteurs) et renvoie la liste complète, sans doublon.
+   * Merges into `errors` the errors retained by Playwright for all open windows
+   * (including those emitted before the listeners were attached) and returns the full list, without duplicates.
    */
   flushErrors: () => Promise<string[]>
   close: () => Promise<void>
 }
 
 /**
- * Variables héritées du shell qui changent le comportement d'Electron au lancement. Elles doivent être
- * ABSENTES (pas vides) de l'environnement passé à `electron.launch` : `ELECTRON_RUN_AS_NODE` est testée
- * par présence, et son héritage (terminaux, IDE) fait échouer `_electron.launch` de façon opaque.
+ * Variables inherited from the shell that change Electron's behaviour at launch. They must be
+ * ABSENT (not empty) from the environment passed to `electron.launch`: `ELECTRON_RUN_AS_NODE` is tested
+ * by presence, and inheriting it (terminals, IDEs) makes `_electron.launch` fail opaquely.
  */
 export const INHERITED_ELECTRON_ENV_TO_DROP: readonly string[] = [
   'ELECTRON_RUN_AS_NODE',
@@ -66,8 +66,8 @@ export const INHERITED_ELECTRON_ENV_TO_DROP: readonly string[] = [
 ]
 
 /**
- * Environnement de l'app lancée : celui du processus de test, sans les variables ci-dessus, puis les
- * réglages de testabilité et enfin `extra` (choix explicite de l'appelant, en dernier).
+ * Environment of the launched app: that of the test process, without the variables above, then the
+ * testability settings and finally `extra` (the caller's explicit choice, last).
  */
 export function buildLaunchEnv(
   processEnv: NodeJS.ProcessEnv,
@@ -89,8 +89,8 @@ export function electronExecutable(root: string = REPO_ROOT): string {
 export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle> {
   const root = options.root ?? REPO_ROOT
   const ownsUserData = !options.userData
-  // `home` est créé à côté de `userData` quand il n'est pas imposé : il est alors supprimé avec lui,
-  // y compris quand `userData` est fourni par l'appelant (sinon il restait sur disque).
+  // `home` is created next to `userData` when not imposed: it is then deleted with it,
+  // including when `userData` is supplied by the caller (otherwise it stayed on disk).
   const ownsHome = !options.home
   const userData = options.userData ?? makeTmpDir('userdata')
   const home = options.home ?? join(userData, '..', `${userData.split('/').pop() ?? 'ud'}-home`)
@@ -114,8 +114,8 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
         '--disable-backgrounding-occluded-windows',
         ...(options.args ?? []),
       ],
-      // `ELECTRON_RENDERER_URL` et les variables de `INHERITED_ELECTRON_ENV_TO_DROP` ne sont jamais
-      // transmises : l'app lancée n'hérite pas de l'environnement du shell ni d'un autre test.
+      // `ELECTRON_RENDERER_URL` and the variables of `INHERITED_ELECTRON_ENV_TO_DROP` are never
+      // passed on: the launched app does not inherit the shell's environment nor another test's.
       env: buildLaunchEnv(
         process.env,
         {
@@ -125,8 +125,8 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
           RECOLTOS_WINDOW: options.windowSize ?? '1280x820',
           TZ: 'Europe/Paris',
           LANG: 'fr_FR.UTF-8',
-          // Langue du système simulée : français, comme les baselines visuelles et les assertions
-          // e2e. Un test en anglais passe `env: { RECOLTOS_LANG: 'en' }` ou le réglage `ui.language`.
+          // Simulated system language: French, like the visual baselines and the
+          // e2e assertions. An English test passes `env: { RECOLTOS_LANG: 'en' }` or the `ui.language` setting.
           RECOLTOS_LANG: 'fr',
         },
         options.env,
@@ -153,8 +153,8 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
   const flushErrors = async (): Promise<string[]> => {
     for (const w of app.windows()) {
       if (w.isClosed()) continue
-      // Les erreurs de chargement (CSP, script inline) sont émises avant `load` : on l'attend, sinon
-      // un appel trop précoce lirait une liste encore vide.
+      // Loading errors (CSP, inline script) are emitted before `load`: we wait for it, otherwise
+      // too early a call would read a still-empty list.
       await w.waitForLoadState('load', { timeout: 15_000 }).catch(() => undefined)
       for (const msg of await w.consoleMessages().catch(() => [])) {
         if (msg.type() === 'error') record(consoleLine(msg.text()))
@@ -168,8 +168,8 @@ export async function launchApp(options: LaunchOptions = {}): Promise<AppHandle>
     cleanupDirs()
   }
 
-  // Si `firstWindow()` échoue (délai dépassé), l'application lancée est fermée et les dossiers
-  // nettoyés avant de relancer l'erreur : sinon un processus Electron reste en vie.
+  // If `firstWindow()` fails (timeout), the launched app is closed and the folders
+  // cleaned up before rethrowing the error: otherwise an Electron process stays alive.
   let page: Page
   try {
     app.on('window', watch)

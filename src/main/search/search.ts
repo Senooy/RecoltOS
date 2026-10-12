@@ -1,10 +1,10 @@
 /**
- * Exécution de `search.query` : FTS5 pondérée bm25 (title 8, notes 3,
- * post_text 4, ocr 2, ai 2, tags 6, url 0,5) + filtres (types, sources, tags, période, collection),
- * masqués et corbeille exclus. Un mot nu égal à une source met les éléments de cette source en
- * tête. Couleur : `PaletteIndex` + ΔE2000 (`color/color-search.ts`), une ou plusieurs
- * couleurs (ET), tolérance réglable ; les éléments sans palette sont exclus et comptés. Sans texte,
- * les résultats d'un filtre couleur sont classés par proximité.
+ * Execution of `search.query`: bm25-weighted FTS5 (title 8, notes 3,
+ * post_text 4, ocr 2, ai 2, tags 6, url 0,5) + filters (types, sources, tags, period, collection),
+ * hidden items and trash excluded. A bare word equal to a source puts the items of that source at
+ * the top. Color: `PaletteIndex` + ΔE2000 (`color/color-search.ts`), one or more
+ * colors (AND), adjustable tolerance; items without a palette are excluded and counted. Without text,
+ * results of a color filter are sorted by proximity.
  */
 import type Database from 'better-sqlite3'
 import { getPaletteIndex } from '../color/palette-index'
@@ -15,7 +15,7 @@ import { cardRowsByIds, filterWhere, type CardRow } from '../db/queries/list'
 import { toFtsQuery, type ParsedQuery } from '../../shared/search-query'
 import { mt } from '../i18n'
 
-/** Plafond interne des identifiants examinés (au-delà, la liste est tronquée). */
+/** Internal cap on examined identifiers (beyond it, the list is truncated). */
 export const SEARCH_CAP = 5000
 
 const LIVE = 'i.deleted_at IS NULL AND i.hidden_at IS NULL'
@@ -24,7 +24,7 @@ const BM25 = 'bm25(items_fts, 8.0, 3.0, 4.0, 2.0, 2.0, 6.0, 0.5)'
 export interface SearchResult {
   rows: CardRow[]
   total: number
-  /** Éléments écartés par le filtre de couleur faute de palette. */
+  /** Items discarded by the color filter for lack of a palette. */
   noPalette: number
   parsed: ParsedQuery
 }
@@ -88,7 +88,7 @@ export function runSearch(
     throw err
   }
 
-  // « instagram » : les éléments Instagram d'abord, puis les correspondances plein texte.
+  // "instagram": Instagram items first, then full-text matches.
   if (parsed.sourceWords.length > 0 && parsed.match) {
     const p2: Record<string, unknown> = { ...params, sw: JSON.stringify(parsed.sourceWords) }
     delete p2.q
@@ -129,7 +129,7 @@ export function runSearch(
   }
 }
 
-/** Suggestions (palette ⌘K, champ de recherche) : tags et collections dont le nom correspond. */
+/** Suggestions (⌘K palette, search field): tags and collections whose name matches. */
 export function suggest(
   db: Database.Database,
   q: string,

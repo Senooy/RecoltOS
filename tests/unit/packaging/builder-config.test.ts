@@ -27,7 +27,7 @@ interface BuilderConfig {
   }
 }
 
-/** Recharge la config avec un environnement donné (elle lit `process.env` à l'évaluation). */
+/** Reloads the config with a given environment (it reads `process.env` at evaluation). */
 function loadConfig(env: Record<string, string | undefined> = {}): BuilderConfig {
   const saved: Record<string, string | undefined> = {}
   for (const key of Object.keys(env)) {
@@ -52,7 +52,7 @@ afterEach(() => {
 })
 
 describe('electron-builder.config.cjs', () => {
-  it("fixe l'identité de l'app et la cible arm64 « dir »", () => {
+  it('sets the app identity and the arm64 "dir" target', () => {
     const c = loadConfig()
     expect(c.appId).toBe('com.recoltos.app')
     expect(c.productName).toBe('RecoltOS')
@@ -62,12 +62,12 @@ describe('electron-builder.config.cjs', () => {
     expect(c.publish).toBeNull()
   })
 
-  it("signe en ad hoc ('-') sans RECOLTOS_SIGN_IDENTITY, jamais avec une identité nulle", () => {
+  it("signs ad hoc ('-') without RECOLTOS_SIGN_IDENTITY, never with a null identity", () => {
     expect(loadConfig({ RECOLTOS_SIGN_IDENTITY: undefined }).mac.identity).toBe('-')
     expect(loadConfig({ RECOLTOS_SIGN_IDENTITY: '' }).mac.identity).toBe('-')
   })
 
-  describe('identité de signature explicite', () => {
+  describe('explicit signing identity', () => {
     let dir = ''
     const fakeSecurity = (output: string, exit = 0): string => {
       dir = mkdtempSync(join(tmpdir(), 'recoltos-sec-'))
@@ -83,7 +83,7 @@ describe('electron-builder.config.cjs', () => {
       dir = ''
     })
 
-    it("utilise l'identité fournie quand le trousseau la contient", () => {
+    it('uses the supplied identity when the keychain contains it', () => {
       const bin = fakeSecurity(listing('RecoltOS Local'))
       expect(
         loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: bin }).mac
@@ -91,14 +91,14 @@ describe('electron-builder.config.cjs', () => {
       ).toBe('RecoltOS Local')
     })
 
-    it("échoue (au lieu d'un build ad hoc silencieux) si l'identité est absente du trousseau", () => {
+    it('fails (instead of a silent ad hoc build) if the identity is missing from the keychain', () => {
       const bin = fakeSecurity('     0 valid identities found')
       expect(() =>
         loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: bin }),
       ).toThrow(/RECOLTOS_SIGN_IDENTITY="RecoltOS Local".*docs\/signature\.md/s)
     })
 
-    it('échoue si seule une autre identité existe, ou si `security` échoue', () => {
+    it('fails if only another identity exists, or if `security` fails', () => {
       const other = fakeSecurity(listing('Autre identité'))
       expect(() =>
         loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: other }),
@@ -110,7 +110,7 @@ describe('electron-builder.config.cjs', () => {
     })
   })
 
-  it('ne rebuild pas les natifs et sort les natifs de app.asar', () => {
+  it('does not rebuild natives and moves natives out of app.asar', () => {
     const c = loadConfig()
     expect(c.npmRebuild).toBe(false)
     expect(c.asarUnpack).toEqual(
@@ -123,7 +123,7 @@ describe('electron-builder.config.cjs', () => {
     )
   })
 
-  it("n'embarque ni ffmpeg, ni modèle, ni onnxruntime", () => {
+  it('does not bundle ffmpeg, a model, or onnxruntime', () => {
     const c = loadConfig()
     const text = JSON.stringify(c)
     expect(text).not.toMatch(/ffmpeg|ffprobe|onnx|\.bin-cache/i)
@@ -132,7 +132,7 @@ describe('electron-builder.config.cjs', () => {
     }
   })
 
-  it("exclut les prébuilds non darwin-arm64 de better-sqlite3 et l'hôte du bundle", () => {
+  it('excludes the non-darwin-arm64 better-sqlite3 prebuilds and the bundle host', () => {
     const { files } = loadConfig()
     expect(files).toContain(
       '!node_modules/better-sqlite3/prebuilds/{linux*,win32*,darwin-x64}.node',
@@ -141,7 +141,7 @@ describe('electron-builder.config.cjs', () => {
     expect(files).toContain('!**/*.map')
   })
 
-  it('ferme runAsNode et l’inspection CLI dans le build livré, les ouvre au profil test', () => {
+  it('closes runAsNode and CLI inspection in the shipped build, opens them for the test profile', () => {
     const shipped = loadConfig({ RECOLTOS_DIST_PROFILE: undefined }).electronFuses
     expect(shipped).toMatchObject({
       runAsNode: false,
@@ -153,12 +153,12 @@ describe('electron-builder.config.cjs', () => {
     expect(test).toMatchObject({ runAsNode: true, enableNodeCliInspectArguments: true })
   })
 
-  it('sort le profil test dans dist/test/ (le build livré n’est jamais remplacé)', () => {
+  it('outputs the test profile to dist/test/ (the shipped build is never replaced)', () => {
     expect(loadConfig({ RECOLTOS_DIST_PROFILE: undefined }).directories.output).toBe('dist')
     expect(loadConfig({ RECOLTOS_DIST_PROFILE: 'test' }).directories.output).toBe('dist/test')
   })
 
-  it('exclut l’outillage de build natif et les autres plateformes', () => {
+  it('excludes the native build tooling and other platforms', () => {
     const files = loadConfig().files
     for (const p of [
       '!node_modules/node-addon-api/**',
@@ -169,7 +169,7 @@ describe('electron-builder.config.cjs', () => {
       expect(files).toContain(p)
   })
 
-  it('texte des permissions en français', () => {
+  it('permission texts in French', () => {
     const info = loadConfig().mac.extendInfo
     for (const [key, value] of Object.entries(info)) {
       if (key.endsWith('UsageDescription')) expect(value).not.toMatch(/This app/)
@@ -177,8 +177,8 @@ describe('electron-builder.config.cjs', () => {
   })
 })
 
-describe('icône RecoltOS', () => {
-  it('build/icon.png est un PNG 1024×1024 et icon.icns un ICNS valide', () => {
+describe('RecoltOS icon', () => {
+  it('build/icon.png is a 1024×1024 PNG and icon.icns a valid ICNS', () => {
     const png = readFileSync(resolve(root, 'build', 'icon.png'))
     expect(png.subarray(1, 4).toString('ascii')).toBe('PNG')
     expect(png.readUInt32BE(16)).toBe(1024)
@@ -188,7 +188,7 @@ describe('icône RecoltOS', () => {
     expect(icns.readUInt32BE(4)).toBe(icns.length)
   })
 
-  it('scripts de paquet : aucune référence à une autre app', () => {
+  it('package scripts: no reference to another app', () => {
     for (const rel of [
       'electron-builder.config.cjs',
       'scripts/make-icon.mts',
@@ -201,20 +201,20 @@ describe('icône RecoltOS', () => {
   })
 })
 
-describe('scripts shell', () => {
-  it.each(['scripts/install-local.sh', 'scripts/make-icns.sh'])('%s : syntaxe sh valide', (rel) => {
+describe('shell scripts', () => {
+  it.each(['scripts/install-local.sh', 'scripts/make-icns.sh'])('%s: valid sh syntax', (rel) => {
     const file = resolve(root, rel)
     expect(existsSync(file)).toBe(true)
     expect(statSync(file).mode & 0o111).not.toBe(0)
     expect(() => execFileSync('sh', ['-n', file])).not.toThrow()
   })
 
-  it('install-local.sh refuse proprement quand le build est absent', () => {
+  it('install-local.sh cleanly refuses when the build is missing', () => {
     const tmp = resolve(root, '.tmp', 'install-local-test')
     let status = 0
     let stderr = ''
     try {
-      // Dossier de travail sans dist/ : on copie le script dans un faux dépôt.
+      // Working folder without dist/: we copy the script into a fake repo.
       execFileSync('sh', [
         '-c',
         `mkdir -p "${tmp}/scripts" && cp "${root}/scripts/install-local.sh" "${tmp}/scripts/"`,

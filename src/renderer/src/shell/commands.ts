@@ -1,5 +1,5 @@
 /**
- * Commandes de la coque (menu natif `evt:menu.command`, FAB, raccourcis de repli).
+ * Shell commands (native menu `evt:menu.command`, FAB, fallback shortcuts).
  */
 import type { MenuCommand } from '../../../shared/shortcuts'
 import { toast } from '../components/ui'
@@ -15,7 +15,7 @@ import { effectiveTheme, usePrefs } from '../state/prefs'
 import { useUi } from '../state/ui'
 import { useUndo } from '../state/undo'
 
-/** Redécouvrir (⇧⌘R, bouton de l'en-tête) : portée = collection ouverte, sinon bibliothèque. */
+/** Rediscover (⇧⌘R, header button): scope = open collection, otherwise library. */
 export function openRediscover(): void {
   const ui = useUi.getState()
   if (ui.overlay?.type === 'rediscover') return
@@ -52,7 +52,7 @@ export async function newCollection(): Promise<void> {
   }
 }
 
-/** Export zip (bibliothèque ou collection) ; la progression arrive par `export.progress`. */
+/** Zip export (library or collection); progress arrives via `export.progress`. */
 export async function exportZip(collectionUuid?: string): Promise<void> {
   try {
     const r = await rpc('data.exportZip', {
@@ -83,7 +83,7 @@ export function toggleTheme(): void {
     .catch(() => undefined)
 }
 
-/** Sélection de toutes les cartes affichées (⌘A hors champ texte). */
+/** Selects all displayed cards (⌘A outside a text field). */
 function selectAllVisible(): void {
   const uuids = Array.from(
     document.querySelectorAll<HTMLElement>('[data-testid="grid"] [data-uuid]'),
@@ -104,14 +104,14 @@ const SPACE_COMMANDS: ReadonlySet<MenuCommand> = new Set<MenuCommand>([
 export function runMenuCommand(cmd: MenuCommand): void {
   const ui = useUi.getState()
   const editing = isEditableTarget(document.activeElement)
-  // Éditeur de space : annuler, rétablir, tout sélectionner, zoom et aperçu vont à la toile.
+  // Space editor: undo, redo, select all, zoom and preview go to the canvas.
   if (ui.route.name === 'space' && !ui.overlay && !editing && SPACE_COMMANDS.has(cmd)) {
     emit('space.command', { cmd })
     return
   }
   switch (cmd) {
     case 'palette':
-      // Un seul déclencheur : l'accélérateur ⌘K du menu natif (pas d'écouteur renderer).
+      // Single trigger: the native menu's ⌘K accelerator (no renderer listener).
       if (ui.overlay?.type === 'palette') ui.closeOverlay()
       else ui.openOverlay({ type: 'palette' })
       return
@@ -180,7 +180,7 @@ export function runMenuCommand(cmd: MenuCommand): void {
     case 'zoomOut':
     case 'zoomReset':
     case 'toggleDetails':
-      // Zoom et panneau Détails : seulement dans la vue détail (sans effet ailleurs).
+      // Zoom and Details panel: only in the detail view (no effect elsewhere).
       if (ui.overlay?.type === 'viewer') emit('overlay.command', { cmd })
       return
     case 'quickLook':

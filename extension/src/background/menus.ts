@@ -1,6 +1,6 @@
 /**
- * Menu contextuel : « Enregistrer dans RecoltOS », « Enregistrer dans la collection › »
- * (10 collections les plus récemment utilisées), « Autre collection… ». Pas d'entrée « sélection ».
+ * Context menu: "Save to RecoltOS", "Save to collection ›"
+ * (10 most recently used collections), "Other collection…". No "selection" entry.
  */
 import type { BridgeCollection } from '../../../src/shared/bridge/save'
 import { api } from '../lib/api'
@@ -13,7 +13,7 @@ export const MENU = {
   colPrefix: 'rcl-col-',
 } as const
 
-/** Titres dans la langue active (relus à chaque construction du menu). */
+/** Titles in the active language (re-read each time the menu is built). */
 export const MENU_TITLES = {
   get save(): string {
     return xt().menu.save
@@ -52,7 +52,7 @@ export function menuItems(collections: readonly BridgeCollection[]): MenuItemDef
 
 let building: Promise<void> = Promise.resolve()
 
-/** Reconstruit le menu (sérialisé : deux appels rapprochés ne se chevauchent pas). */
+/** Rebuilds the menu (serialized: two close calls do not overlap). */
 export function setupMenus(collections: readonly BridgeCollection[]): Promise<void> {
   building = building
     .then(async () => {

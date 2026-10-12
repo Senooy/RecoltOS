@@ -1,6 +1,6 @@
 /**
- * `QuotedTweet` : post cité en bloc bordé (rayon 12), nom + handle en ligne, texte
- * limité à 4 lignes, première image (si téléchargée) pleine largeur, max 180 px.
+ * `QuotedTweet`: quoted post in a bordered block (radius 12), name + handle on one line, text
+ * clamped to 4 lines, first image (if downloaded) full width, max 180 px.
  */
 import { useState } from 'react'
 import type { QuotedPostView } from '../../../../../shared/dto/items'
@@ -14,7 +14,7 @@ export function QuotedTweet({
 }: {
   quoted: QuotedPostView
   tone?: 'light' | 'viewer'
-  /** Texte entier (vue détail). */
+  /** Full text (detail view). */
   full?: boolean
 }) {
   const [imgFailed, setImgFailed] = useState(false)

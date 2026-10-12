@@ -1,10 +1,10 @@
 /**
- * Service IA : exécution des jobs `ai.enrich` / `ai.prompt` de la file
- * unique `jobs`, routage par fournisseur, budget, journal, lots, estimation, aperçu, instantané.
+ * AI service: execution of the `ai.enrich` / `ai.prompt` jobs of the single
+ * `jobs` queue, routing per provider, budget, journal, batches, estimation, preview, snapshot.
  *
- * Règles d'or : AUCUN appel sans `consentVersion` ni avec `provider = 'off'` ; jamais
- * pour un élément ou une collection `ai_excluded`. Les jobs déjà en base (ingestion, import d'une
- * ancienne bibliothèque) sont revérifiés à l'exécution.
+ * Golden rules: NO call without a `consentVersion` nor with `provider = 'off'`; never
+ * for an item or a collection `ai_excluded`. Jobs already in the database (ingestion, import of
+ * an old library) are re-checked at execution time.
  */
 import { randomUUID } from 'node:crypto'
 import { rm } from 'node:fs/promises'
@@ -52,7 +52,10 @@ import { getLang } from '../../shared/i18n/lang'
 import { mt } from '../i18n'
 
 export const AI_JOB_TYPES = ['ai.enrich', 'ai.prompt'] as const
-/** Message affiché quand `claude -p` ne lit plus l'abonnement (mode « bare »), langue active. */
+/**
+ * Message shown when `claude -p` no longer reads the subscription (« bare » mode), in the
+ * active language.
+ */
 export function bareMessage(): string {
   return mt().ai.bare
 }
@@ -62,7 +65,7 @@ const SNAPSHOT_THROTTLE_MS = 250
 export interface AiJobPayload {
   force?: boolean
   fields?: AiField[]
-  /** `autoAnalyzeOnSave` seul : le titre n'est pas appliqué. */
+  /** `autoAnalyzeOnSave` alone: the title is not applied. */
   noTitle?: boolean
   explicitTitle?: boolean
   failedOn?: string[]
@@ -99,7 +102,7 @@ export function isExcluded(lib: LibraryContext, itemId: number): boolean {
   )
 }
 
-/** Charge utile d'un job créé à l'enregistrement (« Déclenchement à l'enregistrement »). */
+/** Payload of a job created on save (« Trigger on save »). */
 export function autoJobPayload(ai: Prefs['ai']): AiJobPayload | null {
   if (ai.autoNameOnSave && ai.autoAnalyzeOnSave) return {}
   if (ai.autoNameOnSave) return { fields: ['title'] }
@@ -151,7 +154,7 @@ export class AiService {
     return join(this.deps.userData, 'cache', 'frames')
   }
 
-  /** Ouverture d'une bibliothèque : rétention du journal, purge des dossiers de job > 1 h. */
+  /** Library opening: journal retention, purge of job folders older than 1 h. */
   async onLibraryOpen(lib: LibraryContext): Promise<void> {
     purgeOldCalls(lib.db, this.now())
     for (const p of ['claude', 'codex'] as const)
@@ -159,7 +162,7 @@ export class AiService {
     this.scheduleSnapshot()
   }
 
-  // ---------------------------------------------------------------- consentement, fournisseurs
+  // ---------------------------------------------------------------- consent, providers
 
   private assertEnabled(): Prefs['ai'] {
     const ai = this.deps.prefs().ai
@@ -209,7 +212,7 @@ export class AiService {
     return { claude, codex }
   }
 
-  /** Test niveau 1 (gratuit) ou niveau 2 (un vrai appel, journalisé). */
+  /** Level 1 test (free) or level 2 test (a real call, logged). */
   async test(p: AiCliId, live: boolean): Promise<ProviderTestResult> {
     const status = await this.statusOf(p)
     if (!live || !status.installed || status.loggedIn === false) {
@@ -284,7 +287,7 @@ export class AiService {
     }
   }
 
-  // ---------------------------------------------------------------- exécution d'un job
+  // ---------------------------------------------------------------- job execution
 
   async handleJob(job: JobRecord, ctx: JobContext): Promise<JobOutcome> {
     this.scheduleSnapshot()
@@ -307,7 +310,7 @@ export class AiService {
     const ai = ctx.prefs().ai
     const payload = job.payload as AiJobPayload & { failedOn: string[] }
     const task: AiTask = job.type === 'ai.prompt' ? 'imagePrompt' : 'analyze'
-    // Revérification à l'exécution : jamais d'appel sans fournisseur ni consentement.
+    // Re-check at execution: never a call without a provider or consent.
     if (ai.provider === 'off' || !ai.consentVersion || ai.consentVersion < AI_CONSENT_VERSION) {
       if (item.ai_state === 'queued') this.setState(lib, item.id, 'none')
       return { status: 'done' }
@@ -320,7 +323,7 @@ export class AiService {
       task === 'analyze' &&
       !payload.force &&
       !payload.fields &&
-      // Déjà décrit dans la langue de l'interface : rien à refaire.
+      // Already described in the interface language: nothing to do.
       item.ai_lang === getLang() &&
       (item.ai_description ?? '') !== ''
     ) {
@@ -355,7 +358,7 @@ export class AiService {
     }
     this.hardCapped = null
     lib.db.prepare('UPDATE jobs SET provider = ? WHERE id = ?').run(provider, job.id)
-    // Le panneau Détails passe de « En file d'attente » à « Analyse en cours ».
+    // The Details panel switches from « Queued » to « Analyzing ».
     ctx.changed([item.uuid], 'updated')
 
     const jobDir = join(this.providers.sandboxDir(provider), 'jobs', String(job.id))
@@ -513,7 +516,7 @@ export class AiService {
         const bare = provider === 'claude' && changed !== undefined && now - changed < 86_400_000
         this.gate.pause(provider, { reason: 'NOT_AUTHENTICATED' })
         this.setProvider(lib, job.id, null)
-        ctx.log.warn(`[ai] ${provider} : ${bare ? bareMessage() : 'non connecté'}`)
+        ctx.log.warn(`[ai] ${provider}: ${bare ? bareMessage() : 'not connected'}`)
         return {
           status: 'defer',
           retryAt: now,
@@ -539,7 +542,7 @@ export class AiService {
         if (job.attempts >= job.maxAttempts) return this.fail(lib, item, error)
         return { status: 'retry', retryAt: now + 2_000, error }
       default:
-        // TOOL_VIOLATION, FILE_MISSING, UNSUPPORTED_CLI, DISABLED : définitif.
+        // TOOL_VIOLATION, FILE_MISSING, UNSUPPORTED_CLI, DISABLED: final.
         return this.fail(lib, item, error)
     }
   }
@@ -557,14 +560,14 @@ export class AiService {
     lib.db.prepare('UPDATE jobs SET provider = ? WHERE id = ?').run(p, jobId)
   }
 
-  /** Crochet d'échec définitif (tentatives épuisées). */
+  /** Final-failure hook (retries exhausted). */
   onJobFailed(job: JobRecord, services: JobServices): void {
     if (job.itemId !== null && job.type === 'ai.enrich')
       services.lib.repos.items.update(job.itemId, { aiState: 'failed' })
     this.scheduleSnapshot()
   }
 
-  // ---------------------------------------------------------------- sélection, estimation, file
+  // ---------------------------------------------------------------- selection, estimation, queue
 
   private idsFor(
     lib: LibraryContext,
@@ -579,7 +582,7 @@ export class AiService {
     const where: string[] = [ELIGIBLE]
     const params: unknown[] = []
     if (f.missingDescription) where.push("coalesce(i.ai_description, '') = ''")
-    // « Régénérer en français » : en anglais, régénère ce qui n'est pas en anglais.
+    // « Regenerate in French »: in English mode, regenerates what is not already in English.
     if (f.regenerateFr) {
       where.push("coalesce(i.ai_description, '') <> '' AND coalesce(i.ai_lang, '') <> ?")
       params.push(getLang())
@@ -837,7 +840,7 @@ export class AiService {
     return n
   }
 
-  /** Aperçu exact de l'envoi : JPEG préparés, prompt système et prompt complet. */
+  /** Exact preview of what is sent: prepared JPEGs, system prompt and full prompt. */
   async previewPayload(
     itemUuid: string | undefined,
     task: AiTask,
@@ -879,7 +882,7 @@ export class AiService {
     }
   }
 
-  // ---------------------------------------------------------------- instantané
+  // ---------------------------------------------------------------- snapshot
 
   snapshot(): QueueSnapshot {
     const s = this.deps.services()
@@ -938,7 +941,7 @@ export class AiService {
     const u = usage(db, prov, now)
     snap.budget.hourUsed = u.hour
     snap.budget.dayUsed = u.day
-    // Lots : clôture des lots terminés, puis le plus récent actif.
+    // Batches: close finished batches, then the most recent active one.
     db.prepare(
       `UPDATE ai_batches SET state = 'done', finished_at = ? WHERE state = 'running' AND NOT EXISTS (
          SELECT 1 FROM jobs j WHERE j.batch_id = ai_batches.id AND j.state IN ('queued','running'))`,
@@ -972,7 +975,7 @@ export class AiService {
       try {
         this.deps.emit('ai.queue', this.snapshot())
       } catch (err) {
-        this.deps.log.warn('[ai] instantané impossible', err)
+        this.deps.log.warn('[ai] snapshot failed', err)
       }
     }, SNAPSHOT_THROTTLE_MS)
     this.snapTimer.unref?.()
@@ -984,7 +987,7 @@ export class AiService {
   }
 }
 
-// ---------------------------------------------------------------- registre
+// ---------------------------------------------------------------- registry
 
 let service: AiService | null = null
 

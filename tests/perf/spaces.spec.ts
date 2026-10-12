@@ -1,13 +1,13 @@
 /**
- * Mesures des Spaces — projet Playwright `perf` (hors `verify`).
- *   S1 : 500 nœuds (480 images, 20 vidéos dont ≤ 2 actives), pan / zoom synthétiques à la molette
- *        pendant 2 × 2 s, durée des images (rAF), mémoire de l'app, `will-change` retiré au repos.
- *        mémoire par type de processus à chaque étape (bibliothèque, vue d'ensemble, 100 %,
- *        exploration de 12 arrêts à 150 %, retour en vue d'ensemble) et variantes d'images montées.
- *   S5 : export PNG d'un monde ~4 000 × 3 000 à 2× (20 images, 1 post, 1 vidéo, notes) par la
- *        fenêtre stage : durée, dimensions, pixel de référence, couture entre tuiles.
- * Bibliothèque : copie APFS de la vraie bibliothèque si `RECOLTOS_S1_USERDATA` est défini (ex.
- * `.tmp/m6-s1`, clone de `.tmp/m3-real`), sinon bibliothèque de démo. Rapport : `.tmp/m6-perf.json`.
+ * Spaces measurements — Playwright `perf` project (outside `verify`).
+ *   S1: 500 nodes (480 images, 20 videos of which ≤ 2 active), synthetic pan / zoom with the wheel
+ *        for 2 × 2 s, frame durations (rAF), app memory, `will-change` removed at rest.
+ *        memory per process type at each step (library, overview, 100 %,
+ *        tour of 12 stops at 150 %, back to overview) and mounted image variants.
+ *   S5: PNG export of a ~4,000 × 3,000 world at 2× (20 images, 1 post, 1 video, notes) through the
+ *        stage window: duration, dimensions, reference pixel, seam between tiles.
+ * Library: APFS copy of the real library if `RECOLTOS_S1_USERDATA` is set (e.g.
+ * `.tmp/m6-s1`, clone of `.tmp/m3-real`), otherwise demo library. Report: `.tmp/m6-perf.json`.
  */
 import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
@@ -90,7 +90,7 @@ function itemNode(c: Card, i: number, x: number, y: number) {
   }
 }
 
-/** Empreinte physique (Mo) de chaque processus, lue par `top` (colonne MEM). */
+/** Physical footprint (MB) of each process, read by `top` (MEM column). */
 function footprintMb(pids: number[]): Map<number, number> {
   const out = execFileSync(
     'top',
@@ -117,7 +117,7 @@ test.use(
           userData,
           windowSize: '1512x945',
           deviceScaleFactor: dsf,
-          // Commutateurs Chromium à essayer (mesure seulement), séparés par des espaces.
+          // Chromium switches to try (measurement only), separated by spaces.
           args: process.env.RECOLTOS_S1_ARGS?.split(' ').filter(Boolean),
         },
       }
@@ -132,12 +132,12 @@ test.afterAll(() => {
   fs.writeFileSync(path.join(REPO_ROOT, '.tmp/m6-perf.json'), JSON.stringify(report, null, 2))
 })
 
-test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
+test('S1: 500 nodes, pan / zoom, memory', async ({ app, page }) => {
   test.setTimeout(240_000)
   await expect(page.locator(t('app-shell'))).toBeVisible()
-  // Mémoire par type de processus (Mo) : `workingSetSize` (résident, compte le code partagé dans
-  // chaque processus ; métrique de référence) et empreinte physique (`top`, colonne « Mémoire » du
-  // Moniteur d'activité, plus stable), tas JS et variantes d'images montées.
+  // Memory per process type (MB): `workingSetSize` (resident, counts shared code in each
+  // process; reference metric) and physical footprint (`top`, the « Mémoire » column of
+  // Activity Monitor, more stable), JS heap and mounted image variants.
   const memory = async () => {
     const metrics = await app.evaluate(({ app: a }) =>
       a.getAppMetrics().map((m) => ({ type: m.type, pid: m.pid, kb: m.memory.workingSetSize })),
@@ -174,7 +174,7 @@ test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
         videos: document.querySelectorAll('[data-testid="space-world"] video').length,
       }
     })
-  // Bibliothèque (grille) avant d'ouvrir la toile : socle de l'app.
+  // Library (grid) before opening the canvas: the app baseline.
   await page.waitForTimeout(3000)
   const libraryIdle = { memory: await memory() }
   const { imgs, vids, total } = await pickItems(page, 480, 20)
@@ -239,7 +239,7 @@ test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
       maxms: Math.round(s[s.length - 1]! * 10) / 10,
     }
   }
-  // Vue d'ensemble (toutes les images visibles) puis 100 %.
+  // Overview (all images visible), then 100 %.
   await page.keyboard.press('Shift+Digit1')
   await page.waitForTimeout(3000)
   const overviewIdle = { memory: await memory(), images: await images() }
@@ -249,8 +249,8 @@ test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
   const z100 = { pan: stats(await run('pan', 2000)), zoom: stats(await run('zoom', 2000)) }
   await page.waitForTimeout(3000)
   const z100Idle = { memory: await memory(), images: await images() }
-  // Exploration : 12 arrêts à 150 % répartis sur la toile, puis retour à la vue d'ensemble
-  // (accumulation d'images décodées ou gardées hors écran).
+  // Tour: 12 stops at 150 % spread across the canvas, then back to the overview
+  // (accumulation of decoded images or images kept off-screen).
   for (let k = 0; k < 12; k++) {
     await page.evaluate((i) => {
       const cam = (
@@ -310,7 +310,7 @@ test('S1 : 500 nœuds, pan / zoom, mémoire', async ({ app, page }) => {
   expect(idle.videos).toBeLessThanOrEqual(2)
 })
 
-test('S5 : export PNG 4 000 × 3 000 à 2×, tuiles sans couture', async ({ app, page }) => {
+test('S5: PNG export 4,000 × 3,000 at 2×, seamless tiles', async ({ app, page }) => {
   test.setTimeout(240_000)
   await expect(page.locator(t('app-shell'))).toBeVisible()
   const { imgs, vids } = await pickItems(page, 20, 1)
@@ -327,7 +327,7 @@ test('S5 : export PNG 4 000 × 3 000 à 2×, tuiles sans couture', async ({ app,
   const nodes: Record<string, unknown>[] = [...imgs, ...vids, ...tweets].map((c, i) =>
     itemNode(c, 1000 + i, (i % 6) * 640 + 40, Math.floor(i / 6) * 700 + 40),
   )
-  // Note jaune à cheval sur la frontière verticale des deux premières tuiles (couture).
+  // Yellow note straddling the vertical border of the first two tiles (seam).
   nodes.push({
     uuid: randomUUID(),
     type: 'note',
@@ -370,7 +370,7 @@ test('S5 : export PNG 4 000 × 3 000 à 2×, tuiles sans couture', async ({ app,
   expect(r.ok, r.error?.message).toBe(true)
   const buf = fs.readFileSync(out)
   const png = PNG.sync.read(buf)
-  // Pixel de référence : intérieur de la note jaune (#fff4b8).
+  // Reference pixel: inside of the yellow note (#fff4b8).
   const s = png.width / (4000 + 96)
   const px = (x: number, y: number) => {
     const o = (Math.round(y) * png.width + Math.round(x)) * 4
@@ -378,7 +378,7 @@ test('S5 : export PNG 4 000 × 3 000 à 2×, tuiles sans couture', async ({ app,
   }
   const noteY = (2750 + 48) * s
   const ref = px((1300 + 48) * s, noteY)
-  // Couture : la colonne 2 560 est une frontière de tuile (1 280 px CSS × 1 ou 2 selon la capture).
+  // Seam: column 2,560 is a tile border (1,280 CSS px × 1 or 2 depending on the capture).
   const seam = [px(2559, noteY), px(2560, noteY), px(2561, noteY)]
   report.s5 = {
     ms,

@@ -1,11 +1,11 @@
 /**
- * Mise en place commune des tests Node :
- *  - fuseau UTC (déterminisme des dates) ;
- *  - aucun accès réseau externe : `fetch` n'accepte que la boucle locale et les domaines factices
- *    `*.test` / `*.example` (les serveurs de test écoutent sur 127.0.0.1) ;
- *  - jamais de variable d'environnement RECOLTOS_* héritée du shell de l'utilisateur ;
- *  - suppression des dossiers `makeTmpDir` à la fin de chaque fichier de test (le hook `exit` du
- *    processus ne tourne pas dans les workers vitest).
+ * Common setup of Node tests:
+ *  - UTC timezone (deterministic dates);
+ *  - no external network access: `fetch` only accepts the loopback and the fake domains
+ *    `*.test` / `*.example` (test servers listen on 127.0.0.1);
+ *  - never a RECOLTOS_* environment variable inherited from the user's shell;
+ *  - deletion of `makeTmpDir` folders at the end of each test file (the process `exit` hook
+ *    does not run in vitest workers).
  */
 import { afterAll } from 'vitest'
 import { removeAllTmpDirs } from '../helpers/tmpdir'

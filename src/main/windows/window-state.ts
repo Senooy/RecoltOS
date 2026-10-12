@@ -1,6 +1,6 @@
 /**
- * `window-state.json` : bornes, écran, maximisé ; restauré au lancement
- * (sauf en e2e). Fonctions pures testables + E/S atomiques.
+ * `window-state.json`: bounds, display, maximized; restored at launch
+ * (except in e2e). Testable pure functions + atomic I/O.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -43,11 +43,11 @@ function intersection(a: Rect, b: Rect): number {
 }
 
 /**
- * Bornes à appliquer au lancement.
- * - Position sauvegardée conservée si au moins 25 % de la fenêtre (et 100×60 px) reste visible
- *   sur un écran actuel ; taille bornée à la workArea de cet écran (et au minimum 1040×620).
- * - Sinon (écran débranché, fichier absent ou invalide) : `DEFAULT_WINDOW` (1280×820), position
- *   laissée à macOS (centrage). La taille sauvegardée n'est jamais reprise sur un écran inconnu.
+ * Bounds to apply at launch.
+ * - Saved position is kept if at least 25 % of the window (and 100×60 px) stays visible
+ *   on a current display; size is clamped to that display's workArea (and at least 1040×620).
+ * - Otherwise (display unplugged, file missing or invalid): `DEFAULT_WINDOW` (1280×820), position
+ *   left to macOS (centering). The saved size is never reused on an unknown display.
  */
 export function pickRestoreBounds(
   state: WindowState | null,
@@ -94,7 +94,7 @@ export function readWindowState(userData: string): WindowState | null {
   }
 }
 
-/** Écriture atomique : `.tmp` puis `rename`. */
+/** Atomic write: `.tmp` then `rename`. */
 export function writeWindowState(userData: string, state: WindowState): void {
   const file = path.join(userData, WINDOW_STATE_FILE)
   const tmp = `${file}.tmp`

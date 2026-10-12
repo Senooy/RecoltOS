@@ -1,4 +1,4 @@
-/** Bibliothèque de test pour l'IA : vraie base, media-worker en processus, fichiers synthétiques. */
+/** Test library for AI: real database, media-worker in process, synthetic files. */
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -48,7 +48,7 @@ export function makeAiLib(): AiLib {
   }
 }
 
-/** Écrit une image unie (avec EXIF d'orientation) sous `items/` et renvoie son chemin relatif. */
+/** Writes a plain image (with EXIF orientation) under `items/` and returns its relative path. */
 export async function writeImage(
   lib: LibraryContext,
   rel: string,

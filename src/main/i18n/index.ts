@@ -1,7 +1,7 @@
 /**
- * Textes du process main dans la langue active (`getLang()` de `shared/i18n/lang`). Sans import
- * `electron` : utilisable par la base, l'import, l'ingestion, l'IA, la sync et les workers.
- * `mt()` est relu à chaque message (changement de langue à chaud).
+ * Main process texts in the active language (`getLang()` from `shared/i18n/lang`). Without import
+ * `electron`: usable by the database, import, ingestion, AI, sync and workers.
+ * `mt()` is re-read on each message (live language change).
  */
 import { getLang, type Lang } from '../../shared/i18n/lang'
 import { mainEn } from './en'
@@ -11,19 +11,19 @@ export type MainMessages = typeof mainEn
 
 const CATALOGS: Record<Lang, MainMessages> = { fr: mainFr, en: mainEn }
 
-/** Catalogue de la langue active (ou de `lang`). */
+/** Catalog of the active language (or of `lang`). */
 export function mt(lang: Lang = getLang()): MainMessages {
   return CATALOGS[lang]
 }
 
-/** Locale `Intl` de la langue active : `fr-FR` ou `en-US`. */
+/** `Intl` locale of the active language: `fr-FR` or `en-US`. */
 export function intlLocale(lang: Lang = getLang()): string {
   return lang === 'fr' ? 'fr-FR' : 'en-US'
 }
 
 let systemLang: Lang = 'fr'
 
-/** Langue du système (première langue préférée du Mac, ou `RECOLTOS_LANG`), posée au démarrage. */
+/** System language (first preferred language of the Mac, or `RECOLTOS_LANG`), set at startup. */
 export function getSystemLang(): Lang {
   return systemLang
 }

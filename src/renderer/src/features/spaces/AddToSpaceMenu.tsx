@@ -1,7 +1,7 @@
 /**
- * Sous-menu « Ajouter à un space › » du menu contextuel des cartes (extension
- * RecoltOS) : liste des spaces + « Nouveau space… ». Les éléments sont posés en grille à droite du
- * contenu du space, sans l'ouvrir (toast « 5 éléments ajoutés à « X » · Ouvrir »).
+ * "Add to a space ›" submenu of the cards' context menu (RecoltOS extension): list of spaces +
+ * "New space…". Items are placed in a grid to the right of the space's content, without opening
+ * it (toast "5 items added to “X” · Open").
  */
 import { ChartPie, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'

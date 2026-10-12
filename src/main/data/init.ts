@@ -1,8 +1,8 @@
 /**
- * Domaine `data` : instantané quotidien `-daily` (3 s après l'ouverture d'une
- * bibliothèque, hors e2e) puis rétention. La bibliothèque est déjà ouverte quand ce
- * domaine démarre (`library` le précède dans `bootstrap/services.ts`) : l'instantané est donc
- * aussi planifié ici pour la bibliothèque active, pas seulement dans `afterOpen` (bascules).
+ * `data` domain: daily `-daily` snapshot (3 s after a library is opened, outside e2e), then
+ * retention. The library is already open when this domain starts (`library` precedes it in
+ * `bootstrap/services.ts`): the snapshot is therefore also scheduled here for the active library,
+ * not only in `afterOpen` (switches).
  */
 import type { Disposer, ServiceContext } from '../bootstrap/context'
 import {
@@ -21,13 +21,13 @@ export function initData(ctx: ServiceContext): Disposer {
     if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
       timer = null
-      // Relire la bibliothèque active : ne jamais garder une connexion (library-context).
+      // Re-read the active library: never keep a connection (library-context).
       const active = getActiveLibrary()
       if (!active || active.id !== lib.id) return
       try {
         dailySnapshot(active, Date.now())
       } catch (err) {
-        ctx.log.warn('[data] instantané quotidien impossible', err)
+        ctx.log.warn('[data] unable to take daily snapshot', err)
       }
     }, DAILY_DELAY_MS)
   }

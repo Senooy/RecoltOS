@@ -1,10 +1,10 @@
 /**
- * Viewport de la toile : caméra appliquée IMPÉRATIVEMENT sur `.space-world`
- * (aucun état React par image), fond à points recalé par variables CSS, culling AABB avec
- * hystérésis (vue + 50 %, recalcul seulement quand la caméra sort du dernier rectangle ; un nœud
- * hors du rectangle est démonté, ce qui libère son image), ≤ 2 vidéos actives, gestes au pointeur (pan, déplacement avec magnétisme, redimensionnement, rotation,
- * marquee, création), molette (⌃ = pincement, ⌘ ou réglage = zoom, sinon défilement).
- * `will-change: transform` seulement pendant un geste (texte net après zoom).
+ * Canvas viewport: camera applied IMPERATIVELY on `.space-world`
+ * (no React state per image), dot background realigned via CSS variables, AABB culling with
+ * hysteresis (view + 50 %, recomputed only when the camera leaves the last rectangle; a node
+ * outside the rectangle is unmounted, which frees its image), ≤ 2 active videos, pointer gestures (pan, move with snapping, resize, rotation,
+ * marquee, creation), wheel (⌃ = pinch, ⌘ or setting = zoom, otherwise scroll).
+ * `will-change: transform` only during a gesture (crisp text after zoom).
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -38,9 +38,9 @@ import {
 
 const MOVE_THRESHOLD = 3
 const SETTLE_MS = 150
-/** Lecteurs vidéo actifs au plus ; les autres vidéos montrent leur affiche. */
+/** Active video players at most; other videos show their poster. */
 const MAX_VIDEOS = 2
-/** Côté à l'écran (px CSS) à partir duquel une vidéo non survolée est jugée « zoomée ». */
+/** On-screen size (CSS px) from which a video that is not hovered is considered "zoomed". */
 const VIDEO_ZOOMED_PX = 480
 
 type Gesture =
@@ -64,11 +64,11 @@ type Gesture =
   | { kind: 'create'; startScreen: Vec }
 
 export interface ViewportHandle {
-  /** Point monde sous un point client. */
+  /** World point under a client point. */
   clientToWorld(x: number, y: number): Vec
 }
 
-/** Minimum UI par type. */
+/** Minimum UI per type. */
 function minFor(n: SpaceNode): number {
   if (n.type === 'note') return 80
   if (n.type === 'item' && n.style.contentHeight === undefined && n.width > n.height * 2) return 24
@@ -122,7 +122,7 @@ export function Viewport({
   if (handleRef)
     handleRef.current = { clientToWorld: (x, y) => toWorld({ clientX: x, clientY: y }) }
 
-  // Taille de la vue.
+  // View size.
   useLayoutEffect(() => {
     const el = rootRef.current
     if (!el) return
@@ -133,7 +133,7 @@ export function Viewport({
     return () => ro.disconnect()
   }, [])
 
-  // Caméra → transform du monde, fond, culling (sans re-rendre les nœuds).
+  // Camera → world transform, background, culling (without re-rendering the nodes).
   useLayoutEffect(() => {
     let settleTimer: ReturnType<typeof setTimeout> | null = null
     let last: Camera | null = null
@@ -180,7 +180,7 @@ export function Viewport({
     }
   }, [])
 
-  // Molette (non passive).
+  // Wheel (non-passive).
   useEffect(() => {
     const el = rootRef.current
     if (!el) return
@@ -206,8 +206,8 @@ export function Viewport({
     return out.map((n) => n.uuid)
   }, [nodes, cull, selection])
 
-  // Vidéos actives : à l'écran ET survolées, sélectionnées ou grandes à l'écran (zoomées) ; survol /
-  // sélection d'abord, puis plus grande surface ; ≤ MAX_VIDEOS. Les autres gardent leur affiche.
+  // Active videos: on screen AND hovered, selected or large on screen (zoomed); hover /
+  // selection first, then largest area; ≤ MAX_VIDEOS. Others keep their poster.
   const settledZoom = useCamera((s) => s.settled.zoom)
   useEffect(() => {
     if (settledZoom < 0.2) {
@@ -245,7 +245,7 @@ export function Viewport({
       useVideos.setState({ ids })
   }, [visibleIds, settledZoom, hoverId, selection])
 
-  // --- Gestes ---------------------------------------------------------------------------
+  // --- Gestures ---------------------------------------------------------------------------
 
   const othersRects = (exclude: Set<string>): Rect[] => {
     const st = useSpace.getState()
@@ -265,7 +265,7 @@ export function Viewport({
     const st = useSpace.getState()
     const local = toLocal(e)
     const world = screenToWorld(useCamera.getState().camera, local)
-    // Pan : clic molette, outil Main, Espace maintenu.
+    // Pan: middle click, Hand tool, Space held.
     if (e.button === 1 || st.tool === 'hand' || spaceHeld) {
       e.preventDefault()
       gesture.current = {
@@ -299,7 +299,7 @@ export function Viewport({
     }
     const nodeEl = target.closest('[data-node]')
     const id = nodeEl?.getAttribute('data-node') ?? null
-    if (id && st.editingId === id) return // édition de texte : le navigateur gère
+    if (id && st.editingId === id) return // text editing: the browser handles it
     if (st.editingId) {
       commitEditing()
       useSpace.setState({ editingId: null })
@@ -341,7 +341,7 @@ export function Viewport({
       rootRef.current?.setPointerCapture(e.pointerId)
       return
     }
-    // Vide : marquee.
+    // Empty: marquee.
     const base = e.shiftKey ? st.selection : []
     if (!e.shiftKey) setSelection([])
     gesture.current = { kind: 'marquee', start: world, base }

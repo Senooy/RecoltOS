@@ -1,9 +1,9 @@
 /**
- * Ramasse-miettes des assets Spaces : supprime les fichiers de
- * `spaces/assets/<ab>/` dont l'empreinte n'apparaît dans aucun `space_nodes.asset_rel`
- * (dérivés `.thumb.*` / `.orig.*` compris), et les fichiers temporaires de `tmp/spaces/`.
- * Lancé UNIQUEMENT à l'ouverture de la bibliothèque : l'annulation d'une session en cours peut
- * toujours restaurer un nœud dont l'asset n'est plus référencé en base.
+ * Garbage collector for Spaces assets: removes the files in `spaces/assets/<ab>/` whose hash
+ * appears in no `space_nodes.asset_rel` (derivatives `.thumb.*` / `.orig.*` included), and the
+ * temporary files in `tmp/spaces/`.
+ * Run ONLY when the library is opened: cancelling an ongoing session can still restore a node
+ * whose asset is no longer referenced in the database.
  */
 import { readdir, rm, rmdir } from 'node:fs/promises'
 import path from 'node:path'

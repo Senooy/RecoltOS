@@ -1,5 +1,5 @@
 /**
- * Fixtures de sync synthétiques : déterministes et sans secret.
+ * Synthetic sync fixtures: deterministic and secret-free.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -21,14 +21,14 @@ function walk(dir: string): string[] {
   })
 }
 
-describe('fixtures de sync', () => {
-  it('ne contiennent ni cookie ni jeton (ct0, sessionid, Bearer)', () => {
+describe('sync fixtures', () => {
+  it('contain no cookie nor token (ct0, sessionid, Bearer)', () => {
     for (const f of walk(DIR)) {
       expect(readFileSync(f, 'utf8'), f).not.toMatch(/ct0|sessionid|Bearer/)
     }
   })
 
-  it('sont à jour avec le générateur', () => {
+  it('are up to date with the generator', () => {
     const groups: [string, Record<string, unknown>][] = [
       ['x', xFixtures()],
       ['x/bundle', xBundleFixtures()],
@@ -44,7 +44,7 @@ describe('fixtures de sync', () => {
     }
   })
 
-  it('couvrent les cas attendus', () => {
+  it('cover the expected cases', () => {
     const names = walk(DIR).map((p) => p.slice(DIR.length + 1))
     for (const n of [
       'x/simple.json',

@@ -1,6 +1,6 @@
 /**
- * Réglages › Tags : filtre, liste (`#` + nom renommable en ligne + compteur + menu
- * Renommer / Fusionner avec… / Supprimer), « Nouveau tag ».
+ * Settings › Tags: filter, list (`#` + inline-renamable name + counter + menu
+ * « Renommer / Fusionner avec… / Supprimer » menu), « Nouveau tag ».
  */
 import { Ellipsis, GitMerge, Pencil, Plus, Trash } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'

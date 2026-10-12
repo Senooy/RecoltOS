@@ -1,6 +1,6 @@
 /**
- * Arbre des collections côté renderer : chargé à la demande, rechargé sur `collections.changed`,
- * `items.changed` (couvertures et compteurs) et `library.switched`.
+ * Collection tree on the renderer side: loaded on demand, reloaded on `collections.changed`,
+ * `items.changed` (covers and counters) and `library.switched`.
  */
 import { create } from 'zustand'
 import type { CollectionNode } from '../../../shared/dto/collections'
@@ -19,13 +19,13 @@ export const useCollections = create<CollectionsState>()((set) => ({
     try {
       set({ tree: await rpc('collections.tree'), loaded: true })
     } catch (err) {
-      if (!isNotImplemented(err)) console.warn('[collections] lecture impossible', err)
+      if (!isNotImplemented(err)) console.warn('[collections] could not read', err)
       set({ loaded: true })
     }
   },
 }))
 
-/** Liste à plat (sous-collections indentées), dans l'ordre de l'arbre. */
+/** Flat list (sub-collections indented), in tree order. */
 export function flattenTree(
   tree: readonly CollectionNode[],
   depth = 0,
@@ -39,7 +39,7 @@ const reload = () => {
   timer = setTimeout(() => void useCollections.getState().load(), 150)
 }
 
-/** Abonnements (à appeler une fois par la coque). */
+/** Subscriptions (to call once per shell). */
 export function followCollections(): () => void {
   const offs = [
     subscribe('collections.changed', reload),

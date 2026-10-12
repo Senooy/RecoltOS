@@ -1,13 +1,13 @@
 /**
- * Configuration electron-builder (fuses du build livré, `fileAssociations`, `check-dist`, budgets
- * de taille).
+ * electron-builder configuration (shipped build fuses, `fileAssociations`, `check-dist`,
+ * size budgets).
  *
- * - arm64 uniquement, cible `dir` : `dist/mac-arm64/RecoltOS.app` ; image disque via `pnpm run dist:dmg` (pas de mise à jour automatique).
- * - Identité de signature : `RECOLTOS_SIGN_IDENTITY` (certificat local « RecoltOS Local », voir
- *   `docs/signature.md`), sinon `'-'` = signature ad hoc explicite (dev seulement). `identity: null`
- *   est piégé : sur arm64 il ne laisse que la signature du linker, refusée au lancement.
- * - Binaires ffmpeg / ffprobe : système, jamais embarqués. Pas de modèle ni d'onnxruntime
- *   (recherche visuelle retirée de la V1).
+ * - arm64 only, target `dir`: `dist/mac-arm64/RecoltOS.app`; disk image via `pnpm run dist:dmg` (no automatic update).
+ * - Signing identity: `RECOLTOS_SIGN_IDENTITY` (local certificate "RecoltOS Local", see
+ *   `docs/signature.md`), otherwise `'-'` = explicit ad hoc signature (dev only). `identity: null`
+ *   is a trap: on arm64 it only leaves the linker signature, which is refused at launch.
+ * - ffmpeg / ffprobe binaries: system-provided, never bundled. No model nor onnxruntime
+ *   (visual search removed from V1).
  */
 const fs = require('node:fs')
 const path = require('node:path')
@@ -16,16 +16,16 @@ const { execFileSync } = require('node:child_process')
 const root = __dirname
 
 /**
- * Hôte natif de l'extension (exécutable Node SEA séparé) : produit par `build:host`
- * dans `out/native-host/recolt-host`, copié seul vers `Contents/Resources/native-host/`.
+ * Native host of the extension (separate Node SEA executable): produced by `build:host`
+ * into `out/native-host/recolt-host`, copied alone to `Contents/Resources/native-host/`.
  */
 const nativeHost = fs.existsSync(path.join(root, 'out', 'native-host', 'recolt-host'))
   ? [{ from: 'out/native-host', to: 'native-host', filter: ['recolt-host'] }]
   : []
 
 /**
- * Extension navigateur buildée (`build:ext` → `dist-extension/{chromium,firefox}/`), et
- * l'extension Firefox signée si `pnpm run sign:firefox` a été fait (`dist-extension/signed/*.xpi`).
+ * Built browser extension (`build:ext` → `dist-extension/{chromium,firefox}/`), and
+ * the signed Firefox extension if `pnpm run sign:firefox` was run (`dist-extension/signed/*.xpi`).
  */
 const extension = [
   ...(fs.existsSync(path.join(root, 'dist-extension', 'chromium'))
@@ -37,17 +37,17 @@ const extension = [
 ]
 
 /**
- * Identité de signature demandée. electron-builder 26 ne bloque pas si l'identité nommée est absente ou
- * non approuvée du trousseau : il logue « skipped macOS application code signing », sort avec 0 et produit
- * un .app en signature ad hoc (cdhash instable, permissions TCC perdues). On échoue donc ici, tôt et
- * clairement.
+ * Requested signing identity. electron-builder 26 does not block if the named identity is missing or
+ * not trusted by the keychain: it logs "skipped macOS application code signing", exits with 0 and produces
+ * an .app with an ad hoc signature (unstable cdhash, TCC permissions lost). So we fail here, early and
+ * clearly.
  *
- * Correspondance : seul le nom exact du certificat ou son hash complet (40 hex) est accepté. electron-builder
- * accepte une sous-chaîne ; on est volontairement plus strict pour ne jamais signer avec une identité proche
- * de celle demandée.
+ * Matching: only the exact certificate name or its full hash (40 hex) is accepted. electron-builder
+ * accepts a substring; we are deliberately stricter so we never sign with an identity close
+ * to the requested one.
  *
- * `RECOLTOS_SECURITY_BIN` remplace `security`, et seulement sous Vitest ou NODE_ENV=test : ce hook de test
- * ne doit pas être actif dans un build de production.
+ * `RECOLTOS_SECURITY_BIN` replaces `security`, and only under Vitest or NODE_ENV=test: this test hook
+ * must not be active in a production build.
  */
 const testHooksEnabled = process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST)
 
@@ -76,15 +76,15 @@ function resolveSignIdentity() {
     )
   }
   const developerId = found[2].startsWith('Developer ID Application:')
-  // electron-builder refuse le préfixe Apple dans le nom : le hash garde une sélection exacte.
+  // electron-builder rejects the Apple prefix in the name: the hash keeps an exact selection.
   return { identity: developerId ? found[1] : identity, developerId }
 }
 
 /**
- * Profils de fuses : `RECOLTOS_DIST_PROFILE=test` (`pnpm run dist:test`, réservé aux tests Playwright
- * de l'app empaquetée) laisse `runAsNode` et l'inspection CLI ouverts et sort dans `dist/test/` pour
- * ne jamais remplacer le build livré ; le build livré (`dist/mac-arm64/`) les ferme.
- * L'hôte natif est un exécutable SEA séparé : il ne dépend pas de `runAsNode`.
+ * Fuse profiles: `RECOLTOS_DIST_PROFILE=test` (`pnpm run dist:test`, reserved for Playwright tests
+ * of the packaged app) leaves `runAsNode` and CLI inspection open and outputs to `dist/test/` so as
+ * to never replace the shipped build; the shipped build (`dist/mac-arm64/`) closes them.
+ * The native host is a separate SEA executable: it does not depend on `runAsNode`.
  */
 const testProfile = process.env.RECOLTOS_DIST_PROFILE === 'test'
 const signing = resolveSignIdentity()
@@ -103,7 +103,7 @@ module.exports = {
   directories: { buildResources: 'build', output: testProfile ? 'dist/test' : 'dist' },
   artifactName: '${productName}-${version}-${arch}.${ext}',
   asar: true,
-  // Les natifs (better-sqlite3 : prebuild N-API ; sharp : @img/*) sont préconstruits : aucun rebuild.
+  // Native modules (better-sqlite3: N-API prebuild; sharp: @img/*) are prebuilt: no rebuild.
   npmRebuild: false,
   nodeGypRebuild: false,
   buildDependenciesFromSource: false,
@@ -114,7 +114,7 @@ module.exports = {
   afterAllArtifactBuild: releaseHooks.notarizeDmg,
   dmg: { sign: signing.developerId, writeUpdateInfo: false },
   electronLanguages: ['fr', 'en'],
-  // Fuses : option intégrée d'electron-builder (clés camelCase), aucun hook after-pack.
+  // Fuses: built-in electron-builder option (camelCase keys), no after-pack hook.
   electronFuses: {
     runAsNode: testProfile,
     enableNodeCliInspectArguments: testProfile,
@@ -132,7 +132,7 @@ module.exports = {
     '!out/.build-hash',
     '!**/*.map',
     '!node_modules/**/{test,tests,__tests__,docs,example,examples}/**',
-    // rien qui ne serve qu'à compiler (en-têtes, gyp, sources natives) ni d'autre plateforme.
+    // nothing that only serves compilation (headers, gyp, native sources) nor other platforms.
     '!node_modules/**/{README,CHANGELOG,HISTORY,CONTRIBUTING}*',
     '!node_modules/**/*.{d.ts,d.mts,d.cts,gyp,gypi,h,hpp,cc,c}',
     '!node_modules/node-addon-api/**',
@@ -148,8 +148,8 @@ module.exports = {
     '**/node_modules/@img/**',
   ],
   extraResources: [...nativeHost, ...extension],
-  // « Ouvrir avec RecoltOS » : `Alternate` = présent dans « Ouvrir avec » sans
-  // devenir l'app par défaut ; `Viewer` explicite (le défaut est `Editor`).
+  // "Open with RecoltOS": `Alternate` = listed in "Open with" without
+  // becoming the default app; explicit `Viewer` (the default is `Editor`).
   fileAssociations: [
     {
       ext: [
@@ -192,7 +192,7 @@ module.exports = {
         'RecoltOS enregistre tes captures dans ce dossier si tu l’as choisi.',
       NSDocumentsFolderUsageDescription: 'RecoltOS importe les fichiers que tu lui confies.',
       NSDownloadsFolderUsageDescription: 'RecoltOS importe les fichiers que tu lui confies.',
-      // Remplace les textes anglais par défaut d'Electron : aucun texte anglais visible.
+      // Replaces Electron's default English texts: no English text visible.
       NSCameraUsageDescription: "RecoltOS n'utilise pas la caméra.",
       NSMicrophoneUsageDescription: "RecoltOS n'utilise pas le micro.",
       NSAudioCaptureUsageDescription: "RecoltOS n'enregistre pas le son.",

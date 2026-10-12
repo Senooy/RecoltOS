@@ -1,6 +1,6 @@
 /**
- * Adresses des plateformes. Le build de TEST (`build:ext --test-base http://127.0.0.1:<port>`)
- * remplace tout par un faux serveur local (`__RECOLTOS_TEST_BASE__`) : aucun appel réel en test.
+ * Platform addresses. The TEST build (`build:ext --test-base http://127.0.0.1:<port>`)
+ * replaces everything with a fake local server (`__RECOLTOS_TEST_BASE__`): no real call in tests.
  */
 import type { BridgePlatform } from '../../../src/shared/bridge/constants'
 
@@ -12,13 +12,13 @@ export const TEST_BASE: string | null =
     : null
 
 export interface PlatformEndpoints {
-  /** Origine du site (cookies, `Origin`/`Referer` réécrits). */
+  /** Site origin (cookies, rewritten `Origin`/`Referer`). */
   origin: string
-  /** Pages du site (onglets ouverts, repli). */
+  /** Site pages (open tabs, fallback). */
   tabPatterns: string[]
-  /** Domaines à qui s'appliquent les règles d'en-têtes (`requestDomains`). */
+  /** Domains the header rules apply to (`requestDomains`). */
   domains: string[]
-  /** Autorisations d'hôte nécessaires à la sync en arrière-plan. */
+  /** Host permissions needed for background sync. */
   permissions: string[]
 }
 
@@ -26,9 +26,9 @@ const PROD: Record<BridgePlatform, PlatformEndpoints & Record<string, string | s
   x: {
     origin: 'https://x.com',
     home: 'https://x.com/',
-    /** Service worker public : contient le jeton du client web. */
+    /** Public service worker: contains the web client token. */
     sw: 'https://x.com/sw.js',
-    /** Passerelle GraphQL (accepte aussi les requêtes persistées du client x-web). */
+    /** GraphQL gateway (also accepts persisted queries from the x-web client). */
     graphql: 'https://x.com/i/api/graphql',
     referer: 'https://x.com/i/bookmarks',
     tabPatterns: ['https://x.com/*', 'https://twitter.com/*'],
@@ -46,7 +46,7 @@ const PROD: Record<BridgePlatform, PlatformEndpoints & Record<string, string | s
   cosmos: {
     origin: 'https://www.cosmos.so',
     graphql: 'https://api.cosmos.so/graphql',
-    /** Jeton d'accès (JWT) à partir du cookie httpOnly de la session. */
+    /** Access token (JWT) taken from the session's httpOnly cookie. */
     refresh: 'https://www.cosmos.so/api/refresh-token',
     referer: 'https://www.cosmos.so/',
     tabPatterns: ['https://www.cosmos.so/*', 'https://cosmos.so/*'],
@@ -98,7 +98,7 @@ export function endpoint(p: BridgePlatform, key: string): string {
   return v
 }
 
-/** Plateforme d'une URL de page (x.com, instagram.com, cosmos.so). */
+/** Platform of a page URL (x.com, instagram.com, cosmos.so). */
 export function platformOfUrl(url: string | undefined): BridgePlatform | null {
   if (!url) return null
   let host = ''

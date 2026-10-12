@@ -1,6 +1,6 @@
 /**
- * Dialogues IA montés une fois dans la coque : feuille « Changer », « Enrichir la
- * bibliothèque » et « Ce qui sera envoyé » (aperçu exact).
+ * AI dialogs mounted once in the shell: "Change" sheet, "Enrich the
+ * library" and "What will be sent" (exact preview).
  */
 import { useEffect, useState } from 'react'
 import type { AiEstimate } from '../../../../shared/dto/ai'

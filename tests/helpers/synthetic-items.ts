@@ -1,13 +1,13 @@
 /**
- * Éléments synthétiques déterministes (PRNG à graine) : AUCUNE donnée réelle, que des chaînes
- * inventées et des URL `https://example.test/…`. Sans dépendance à vitest, au DOM ni à Electron :
- * importé à la fois par les tests (tsconfig.tests) et par les scripts (`make-fixtures.mts`,
+ * Deterministic synthetic items (seeded PRNG): NO real data, only made-up strings
+ * and `https://example.test/…` URLs. No dependency on vitest, the DOM nor Electron:
+ * imported both by the tests (tsconfig.tests) and by the scripts (`make-fixtures.mts`,
  * `seed-bench.mts`, tsconfig.node).
  *
- * Répartition de référence : 408 éléments vivants
- *   vidéo/instagram 141, image/x 76, vidéo/x 68, tweet/x 54 (les « posts texte »), image/instagram 38,
- *   image/cosmos 29, url/x 2 ; 17 collections (252 appartenances, 250 éléments distincts).
- * étend ce fichier (volumes, états). Les 10 000 éléments du banc de perf = `count: 10_000`.
+ * Reference breakdown: 408 live items
+ *   video/instagram 141, image/x 76, video/x 68, tweet/x 54 (the "text posts"), image/instagram 38,
+ *   image/cosmos 29, url/x 2; 17 collections (252 memberships, 250 distinct items).
+ * Extend this file (volumes, states). The 10,000 items of the perf bench = `count: 10_000`.
  */
 import { hexToLab, labToLch, rgbToHex, hueBucket, type Lab } from '../../src/shared/color'
 
@@ -27,7 +27,7 @@ export interface SyntheticAuthorRef {
   avatarUrl: string | null
 }
 
-/** Forme `PostMetaSchema` v1 (src/shared/post-meta.ts), construite à la main pour rester sans dépendance. */
+/** `PostMetaSchema` v1 shape (src/shared/post-meta.ts), hand-built to stay dependency-free. */
 export interface SyntheticPostMeta {
   v: 1
   platform: 'x' | 'instagram' | 'cosmos' | 'web'
@@ -57,7 +57,7 @@ export interface SyntheticMedia {
 }
 
 export interface SyntheticItem {
-  /** Rang dans la bibliothèque (0 = le plus récent). */
+  /** Rank in the library (0 = most recent). */
   index: number
   uuid: string
   kind: SyntheticKind
@@ -66,7 +66,7 @@ export interface SyntheticItem {
   sourceUrl: string
   title: string | null
   notes: string | null
-  /** Dimensions du média principal ; `null` pour les posts texte et les liens. */
+  /** Dimensions of the main media; `null` for text posts and links. */
   width: number | null
   height: number | null
   mime: string | null
@@ -88,7 +88,7 @@ export interface SyntheticItem {
 export interface SyntheticCollection {
   uuid: string
   name: string
-  /** Indices (`SyntheticItem.index`) des membres. */
+  /** Indices (`SyntheticItem.index`) of the members. */
   itemIndexes: number[]
 }
 
@@ -100,16 +100,16 @@ export interface SyntheticLibrary {
 
 export interface SyntheticOptions {
   seed?: number
-  /** Nombre d'éléments vivants (408 par défaut). */
+  /** Number of live items (408 by default). */
   count?: number
-  /** Éléments supplémentaires en corbeille / masqués (0 par défaut ; 9 et 1 sur la photo réelle). */
+  /** Extra items in trash / hidden (0 by default; 9 and 1 on the real snapshot). */
   trashed?: number
   hidden?: number
-  /** Horloge injectée (ms epoch) : borne haute des dates de création. */
+  /** Injected clock (ms epoch): upper bound of creation dates. */
   now?: number
 }
 
-/** Photo de référence : le total vaut 408. */
+/** Reference snapshot: the total is 408. */
 export const REFERENCE_DISTRIBUTION: readonly {
   kind: SyntheticKind
   source: SyntheticSource
@@ -125,7 +125,7 @@ export const REFERENCE_DISTRIBUTION: readonly {
 ]
 export const REFERENCE_COUNT = 408
 
-/** Collections de la bibliothèque synthétique (noms génériques). */
+/** Collections of the synthetic library (generic names). */
 export const REFERENCE_COLLECTIONS: readonly { name: string; n: number }[] = [
   { name: 'Jeux vidéo', n: 36 },
   { name: 'Graphisme', n: 32 },
@@ -146,7 +146,7 @@ export const REFERENCE_COLLECTIONS: readonly { name: string; n: number }[] = [
   { name: 'Humour', n: 2 },
 ]
 
-/** Fenêtre de dates de la photo : 2026-06-30 → 2026-09-24. */
+/** Date window of the snapshot: 2026-06-30 → 2026-09-24. */
 export const DEFAULT_NOW = Date.UTC(2026, 8, 24, 21, 0, 0)
 const DEFAULT_START = Date.UTC(2026, 5, 30, 8, 0, 0)
 
@@ -155,7 +155,7 @@ const DEFAULT_START = Date.UTC(2026, 5, 30, 8, 0, 0)
 
 export type Rng = () => number
 
-/** mulberry32 : déterministe, 32 bits. */
+/** mulberry32: deterministic, 32 bits. */
 export function makeRng(seed: number): Rng {
   let a = seed >>> 0
   return () => {
@@ -171,7 +171,7 @@ const int = (rng: Rng, min: number, max: number): number =>
   min + Math.floor(rng() * (max - min + 1))
 const pick = <T>(rng: Rng, list: readonly T[]): T => list[Math.floor(rng() * list.length)] as T
 
-/** UUID de forme v4 tiré du PRNG (déterministe). */
+/** v4-shaped UUID drawn from the PRNG (deterministic). */
 export function seededUuid(rng: Rng): string {
   const h = (n: number) =>
     Array.from({ length: n }, () => Math.floor(rng() * 16).toString(16)).join('')
@@ -179,7 +179,7 @@ export function seededUuid(rng: Rng): string {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Contenus inventés
+// Made-up contents
 
 const WORDS = [
   'lumière',
@@ -242,7 +242,7 @@ function makePalette(rng: Rng): { hexes: string[]; labs: Lab[] } {
   return { hexes, labs: hexes.map((h) => hexToLab(h)) }
 }
 
-/** Plus grand reste : répartit `total` selon les poids, somme exacte. */
+/** Largest remainder: splits `total` according to the weights, exact sum. */
 export function scaleCounts(weights: readonly number[], total: number): number[] {
   const sum = weights.reduce((a, b) => a + b, 0)
   const raw = weights.map((w) => (w / sum) * total)
@@ -258,7 +258,7 @@ export function scaleCounts(weights: readonly number[], total: number): number[]
 }
 
 // ---------------------------------------------------------------------------------------------
-// Génération
+// Generation
 
 const RATIOS: readonly [number, number][] = [
   [4, 5],
@@ -297,7 +297,7 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
   const extraHidden = options.hidden ?? 0
   const rng = makeRng(seed)
 
-  // 1. Quotas par (kind, source), puis mélange des positions.
+  // 1. Quotas per (kind, source), then shuffle the positions.
   const quotas = scaleCounts(
     REFERENCE_DISTRIBUTION.map((d) => d.n),
     count,
@@ -318,7 +318,7 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
     slots[j] = a
   }
 
-  // 2. Dates décroissantes (index 0 = plus récent), espacement irrégulier.
+  // 2. Decreasing dates (index 0 = most recent), irregular spacing.
   const span = Math.max(1, now - DEFAULT_START)
   const items: SyntheticItem[] = slots.map((slot, index) => {
     const createdAt = Math.round(
@@ -347,7 +347,7 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
         }))
       : []
 
-    // Palette : toutes les images et tous les posts ; les vidéos n'en ont pas avant media.derive.
+    // Palette: all images and all posts; videos have none before media.derive.
     const hasPalette = slot.kind !== 'video' && slot.kind !== 'url'
     const pal = hasPalette ? makePalette(rng) : null
     const lch = pal?.labs[0] ? labToLch(pal.labs[0]) : null
@@ -437,7 +437,7 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
     }
   })
 
-  // 3. Les derniers éléments tirés deviennent corbeille puis masqués (jamais en collection).
+  // 3. The last items drawn become trash, then hidden (never in a collection).
   const liveCount = count
   for (let k = 0; k < extraTrashed; k++) {
     const it = items[liveCount + k]
@@ -448,7 +448,7 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
     if (it) it.hiddenAt = now - (k + 1) * 7_200_000
   }
 
-  // 4. Collections : mêmes proportions que la photo (252 appartenances pour 250 éléments distincts à 408).
+  // 4. Collections: same proportions as the snapshot (252 memberships for 250 distinct items out of 408).
   const collectionSizes = scaleCounts(
     REFERENCE_COLLECTIONS.map((c) => c.n),
     Math.round((252 * count) / REFERENCE_COUNT),
@@ -473,7 +473,7 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
     return { uuid: seededUuid(rng), name: c.name, itemIndexes: [...new Set(itemIndexes)] }
   })
 
-  // 5. Quelques tags utilisateur.
+  // 5. A few user tags.
   const tagNames = ['inspiration', 'à-lire', 'typographie', 'référence', 'couleurs']
   const tags = tagNames.map((name) => ({
     uuid: seededUuid(rng),
@@ -487,11 +487,11 @@ export function makeSyntheticLibrary(options: SyntheticOptions = {}): SyntheticL
   return { items, collections, tags }
 }
 
-/** Les éléments vivants (ni corbeille ni masqués). */
+/** Live items (neither trash nor hidden). */
 export const liveItems = (lib: SyntheticLibrary): SyntheticItem[] =>
   lib.items.filter((i) => i.trashedAt === null && i.hiddenAt === null)
 
-/** La bibliothèque de démonstration de 408 éléments (dont 54 posts texte). */
+/** The demo library of 408 items (including 54 text posts). */
 export function makeSyntheticItems(options: SyntheticOptions = {}): SyntheticItem[] {
   return makeSyntheticLibrary(options).items
 }

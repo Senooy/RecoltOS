@@ -1,9 +1,9 @@
 /**
- * Isolation de codex : `--ignore-user-config` ne suffit pas, il faut désactiver
- * chaque fonctionnalité active susceptible d'exécuter, naviguer ou charger des extensions. La liste
- * est CALCULÉE à l'exécution depuis `codex features list` : seules les lignes de
- * `DISABLE_CANDIDATES` en `stable` / `experimental` à `true` (jamais un nom `removed` ou inconnu,
- * qui ferait échouer la commande). Cache par version de codex.
+ * Isolating codex: `--ignore-user-config` is not enough; each active feature that
+ * could run, navigate or load extensions must be disabled. The list
+ * is COMPUTED at runtime from `codex features list`: only the lines of
+ * `DISABLE_CANDIDATES` in `stable` / `experimental` set to `true` (never a `removed` or unknown name,
+ * which would make the command fail). Cache per codex version.
  */
 export const DISABLE_CANDIDATES = [
   'shell_tool',

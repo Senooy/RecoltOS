@@ -1,6 +1,6 @@
 /**
- * Handlers `ai.*`. Toute action qui déclenche un appel (enqueue,
- * batch.start, test live) exige `consentVersion` et `provider ≠ 'off'` (vérifié par le service).
+ * `ai.*` handlers. Any action that triggers a call (enqueue,
+ * batch.start, live test) requires `consentVersion` and `provider ≠ 'off'` (checked by the service).
  */
 import { AI_CONSENT_VERSION } from '../../../shared/ai-types'
 import { requireAiService } from '../../ai/service'

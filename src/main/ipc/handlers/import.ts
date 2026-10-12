@@ -1,6 +1,6 @@
 /**
- * Handlers `import.gatheros.*` : détection (copie de la base, jamais la source),
- * lancement en tâche de fond (`import.progress`), annulation, rapport, import interrompu à reprendre.
+ * Handlers `import.gatheros.*`: detection (copy of the database, never the source),
+ * background launch (`import.progress`), cancellation, report, interrupted import to resume.
  */
 import { shell } from 'electron'
 import { requireLibrary } from '../../library/library-context'

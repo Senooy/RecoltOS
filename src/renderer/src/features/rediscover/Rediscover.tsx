@@ -1,12 +1,12 @@
 /**
- * Redécouvrir : voile `--rd-scrim` + flou 40 au-dessus de l'app,
- * compteur « 1 / 408 », 3 cibles (Collection ↑, Corbeille ←, Garder →), pile de 3 cartes, geste
- * motion (rotation x/20, validation au-delà de 120 pt ou 600 pt/s, retour en `spring.swipe`),
- * sélecteur de collection ancré sur la cible du haut, raccourcis cachés ↓ (passer) et ⌘Z,
- * pilule d'aide, écran de fin, préchargement de 3 images.
+ * Rediscover: `--rd-scrim` scrim + 40 blur above the app,
+ * counter "1 / 408", 3 targets (Collection ↑, Trash ←, Keep →), stack of 3 cards, gesture
+ * motion (rotation x/20, validation beyond 120 pt or 600 pt/s, return with `spring.swipe`),
+ * collection picker anchored on the top target, shortcuts hidden ↓ (skip) and ⌘Z,
+ * help pill, end screen, preloading of 3 images.
  *
- * Pendant le glisser, la carte suit le pointeur et pivote, la
- * cible visée s'allume, et les cartes suivantes s'écartent en éventail du côté opposé.
+ * While dragging, the card follows the pointer and rotates, the
+ * targeted one lights up, and the following cards fan out on the opposite side.
  */
 import {
   ArrowDown,
@@ -48,12 +48,12 @@ const SPRING = { type: 'spring', stiffness: 300, damping: 30 } as const
 const PAGE = 50
 const CARD_MAX_W = 460
 const CARD_MAX_H = 440
-/** Seuil d'allumage d'une cible pendant le glisser. */
+/** Threshold to light up a target while dragging. */
 const AIM_DIST = 48
 
 export type Aim = 'keep' | 'trash' | 'collection' | null
 
-/** Cible visée par un déplacement (dx, dy). */
+/** Target aimed at by a move (dx, dy). */
 export function aimOf(dx: number, dy: number): Aim {
   if (Math.abs(dx) >= Math.abs(dy)) {
     if (dx > AIM_DIST) return 'keep'
@@ -63,7 +63,7 @@ export function aimOf(dx: number, dy: number): Aim {
   return dy < -AIM_DIST ? 'collection' : null
 }
 
-/** Décision au relâcher (distance ou vitesse), sinon `null` (retour en ressort). */
+/** Release decision (distance or speed), otherwise `null` (spring return). */
 export function decide(
   offset: { x: number; y: number },
   velocity: { x: number; y: number },
@@ -80,7 +80,7 @@ function motionOff(): boolean {
   return isReducedMotion() || document.documentElement.dataset.e2e === '1'
 }
 
-/** Image fixe de la carte (une vidéo n'a jamais son original dans un `<img>`). */
+/** Static image of the card (a video never has its original in an `<img>`). */
 function stillSrc(c: ItemCard): string | undefined {
   return c.kind === 'video'
     ? mediaSrc(c.largeUrl ?? c.posterUrl ?? c.thumbUrl)
@@ -104,7 +104,7 @@ function CardFace({ card, top }: { card: ItemCard; top: boolean }) {
   if (card.kind === 'tweet') {
     return <TweetCard card={card} variant="overlay" className="rd-tweet-only w-[400px]" />
   }
-  // Aperçu vidéo en boucle (hors e2e : rendu déterministe des références visuelles).
+  // Looping video preview (outside e2e: deterministic rendering of the visual references).
   const video =
     card.kind === 'video' && top && document.documentElement.dataset.e2e !== '1'
       ? mediaSrc(card.previewUrl)
@@ -166,7 +166,7 @@ function Target({
   )
 }
 
-/** Carte de la pile à la profondeur `depth` (0 = dessus). */
+/** Card of the stack at depth `depth` (0 = top). */
 function StackCard({
   card,
   depth,
@@ -270,7 +270,7 @@ export default function Rediscover() {
     })
   }, [load])
 
-  // Pages suivantes et préchargement des 3 images à venir.
+  // Next pages and preloading of the 3 upcoming images.
   useEffect(() => {
     if (cards.length < total && index > cards.length - 10 && !loadingMore.current) {
       loadingMore.current = true
@@ -284,7 +284,7 @@ export default function Rediscover() {
     }
   }, [index, cards, total, load])
 
-  // Apparition : voile flouté en fondu (~150 ms).
+  // Appearance: blurred scrim fading in (~150 ms).
   useEffect(() => {
     rootRef.current?.animate([{ opacity: 0 }, { opacity: 1 }], {
       duration: motionOff() ? 80 : 160,
@@ -306,8 +306,8 @@ export default function Rediscover() {
   }, [])
 
   const current = cards[index]
-  // Pile et position lues au moment de l'action (une touche peut arriver avant que l'effet clavier
-  // ne soit réabonné avec la nouvelle pile : la carte agie doit être celle qui est affichée).
+  // Stack and position read at the moment of the action (a key may arrive before the keyboard effect
+  // is re-subscribed with the new stack: the acted-on card must be the one displayed).
   const live = useRef({ cards, index })
   live.current = { cards, index }
 
@@ -323,7 +323,7 @@ export default function Rediscover() {
     void animate(y, 0, SPRING)
   }, [x, y, reset])
 
-  /** Applique l'action (base + journal), fait partir la carte, puis passe à la suivante. */
+  /** Applies the action (base + log), sends the card away, then moves to the next one. */
   const commit = useCallback(
     async (
       action: 'keep' | 'trash' | 'collection' | 'skip',
@@ -423,7 +423,7 @@ export default function Rediscover() {
     }
   }, [pick, springBack])
 
-  // Clavier : ← → ↑ (cibles), ↓ passer (caché), Échap (⌘Z passe par le menu natif).
+  // Keyboard: ← → ↑ (targets), ↓ skip (hidden), Esc (⌘Z goes through the native menu).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return

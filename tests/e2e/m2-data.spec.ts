@@ -1,6 +1,6 @@
 /**
- * M2 : Réglages › Données (export zip, instantané, restauration), Tags, Stockage,
- * Apparence (thème immédiat + nativeTheme, colonnes par défaut appliquées à la grille).
+ * M2: Settings › Data (zip export, snapshot, restore), Tags, Storage,
+ * Appearance (immediate theme + nativeTheme, default columns applied to the grid).
  */
 import Database from 'better-sqlite3'
 import { execFileSync } from 'node:child_process'
@@ -19,17 +19,17 @@ async function openSettings(page: Page, section: string) {
   await expect(page.locator(t(`settings-section-${section}`))).toBeVisible()
 }
 
-/** Le dialogue d'enregistrement natif est remplacé par un chemin fixé (main). */
+/** The native save dialog is replaced by a fixed path (main). */
 async function stubSaveDialog(app: ElectronApplication, file: string) {
   await app.evaluate(({ dialog }, target) => {
     dialog.showSaveDialog = () => Promise.resolve({ canceled: false, filePath: target })
   }, file)
 }
 
-test.describe('Réglages › Données, Tags, Apparence', () => {
+test.describe('Settings › Data, Tags, Appearance', () => {
   test.use({ demoLibrary: { count: 60, collections: 6 } })
 
-  test('export zip valide puis instantané et restauration', async ({
+  test('valid zip export then snapshot and restore', async ({
     app,
     page,
     userData,
@@ -48,7 +48,7 @@ test.describe('Réglages › Données, Tags, Apparence', () => {
     const total = (db.prepare('SELECT count(*) n FROM items').get() as { n: number }).n
     expect(jsonl.trim().split('\n')).toHaveLength(total)
 
-    // Instantané, puis une écriture, puis restauration : l'écriture disparaît.
+    // Snapshot, then a write, then restore: the write disappears.
     await page.locator(t('data-snapshot')).click()
     await expect(page.locator(t('snapshot-row'))).toHaveCount(1)
     await page.evaluate(() =>
@@ -76,15 +76,12 @@ test.describe('Réglages › Données, Tags, Apparence', () => {
       preDb.prepare("SELECT count(*) n FROM collections WHERE name = 'Après instantané'").get(),
     ).toEqual({ n: 1 })
     preDb.close()
-    // L'app est restée utilisable.
+    // The app stayed usable.
     await page.keyboard.press('Escape')
     await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible()
   })
 
-  test('tags : création, renommage en ligne, fusion, suppression', async ({
-    page,
-    openDbReadonly,
-  }) => {
+  test('tags: creation, inline rename, merge, deletion', async ({ page, openDbReadonly }) => {
     await openSettings(page, 'tags')
     const create = async (name: string) => {
       await page.locator(t('settings-tag-new')).click()
@@ -99,7 +96,7 @@ test.describe('Réglages › Données, Tags, Apparence', () => {
     await page.locator(t('settings-tag-input')).fill('aurore')
     await page.keyboard.press('Enter')
     await expect(page.locator(t('settings-tag-row'), { hasText: 'aurore' })).toBeVisible()
-    // Fusion « crepuscule » → « aurore ».
+    // Merge "crepuscule" → "aurore".
     await page
       .locator(t('settings-tag-row'), { hasText: 'crepuscule' })
       .getByRole('button', { name: /Actions du tag/ })
@@ -111,7 +108,7 @@ test.describe('Réglages › Données, Tags, Apparence', () => {
     expect(
       db.prepare("SELECT count(*) n FROM tags WHERE name IN ('aube','crepuscule')").get(),
     ).toEqual({ n: 0 })
-    // Suppression.
+    // Deletion.
     await page
       .locator(t('settings-tag-row'), { hasText: 'aurore' })
       .getByRole('button', { name: /Actions du tag/ })
@@ -121,7 +118,7 @@ test.describe('Réglages › Données, Tags, Apparence', () => {
     await expect(page.locator(t('settings-tag-row'), { hasText: 'aurore' })).toHaveCount(0)
   })
 
-  test('apparence : thème immédiat + nativeTheme ; stockage : médias distants', async ({
+  test('appearance: immediate theme + nativeTheme; storage: remote media', async ({
     app,
     page,
   }) => {

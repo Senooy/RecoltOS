@@ -1,4 +1,4 @@
-/** fonctions pures de `scripts/check-dist.mts` (lecture d'asar, autonomie des bundles). */
+/** Pure functions of `scripts/check-dist.mts` (asar reading, bundle self-containment). */
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -10,7 +10,7 @@ afterEach(() => {
   for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true })
 })
 
-/** Asar minimal : en-tête pickle (taille, longueur, JSON aligné sur 4) puis contenus. */
+/** Minimal asar: pickle header (size, length, JSON aligned on 4) then contents. */
 function makeAsar(files: Record<string, string>, unpacked: string[] = []): string {
   const tree: { files: Record<string, unknown> } = { files: {} }
   const chunks: Buffer[] = []
@@ -47,7 +47,7 @@ function makeAsar(files: Record<string, string>, unpacked: string[] = []): strin
 }
 
 describe('readAsar', () => {
-  it('liste les fichiers emballés, met à part les décompressés et lit un contenu', () => {
+  it('lists packed files, sets unpacked ones apart and reads a content', () => {
     const f = makeAsar(
       {
         'out/preload/index.js': 'require("electron")',
@@ -65,7 +65,7 @@ describe('readAsar', () => {
 })
 
 describe('foreignRequires', () => {
-  it('accepte electron et les modules Node, signale le reste', () => {
+  it('accepts electron and Node modules, reports the rest', () => {
     expect(
       foreignRequires('require("electron");require("node:path");require("fs/promises")'),
     ).toEqual([])
@@ -77,7 +77,7 @@ describe('foreignRequires', () => {
 })
 
 describe('budgets de taille', () => {
-  it('sont figés et cohérents', () => {
+  it('are frozen and consistent', () => {
     expect(SIZE_BUDGETS_MB.appAsar).toBeLessThan(SIZE_BUDGETS_MB.app)
     expect(SIZE_BUDGETS_MB.nativeHost).toBeLessThanOrEqual(120)
   })

@@ -1,13 +1,13 @@
 /**
- * `Avatar` : image (`recolt://…`) ou, à défaut / en cas d'erreur, initiales sur une
- * teinte dérivée d'un hash du handle (même handle → même couleur). Les avatars Instagram sont
- * presque tous expirés : le repli par initiales est le cas courant, jamais un trou.
+ * `Avatar`: image (`recolt://…`) or, failing that / on error, initials on a
+ * hue derived from a hash of the handle (same handle → same color). Instagram avatars are
+ * almost all expired: the initials fallback is the common case, never a hole.
  */
 import { useState, type CSSProperties } from 'react'
 import { cn } from '../../lib/cn'
 import './ui.css'
 
-/** FNV-1a 32 bits : déterministe, sans dépendance. */
+/** FNV-1a 32-bit: deterministic, no dependency. */
 function fnv1a(input: string): number {
   let h = 0x811c9dc5
   for (let i = 0; i < input.length; i++) {
@@ -17,12 +17,12 @@ function fnv1a(input: string): number {
   return h >>> 0
 }
 
-/** Teinte 0–359 pour un handle (insensible à la casse et au « @ » initial). */
+/** Hue 0–359 for a handle (case-insensitive, ignores a leading « @ »). */
 export function hashHue(handle: string): number {
   return fnv1a(handle.trim().replace(/^@/, '').toLowerCase()) % 360
 }
 
-/** « GamesLover with a Preference » → « GP » (premier et dernier mot) ; un seul mot → 1 lettre ; vide → « ? ». */
+/** « GamesLover with a Preference » → « GP » (first and last word); one word → 1 letter; empty → « ? ». */
 export function initials(name: string, handle?: string): string {
   const words = name
     .replace(/^@/, '')
@@ -40,12 +40,12 @@ export function initials(name: string, handle?: string): string {
 }
 
 export interface AvatarProps {
-  /** URL `recolt://…` ou null (jamais d'URL http(s)). */
+  /** `recolt://…` URL or null (never an http(s) URL). */
   src?: string | null
   name: string
-  /** Handle sans ou avec « @ » : sert à la couleur de repli. */
+  /** Handle with or without « @ »: used for the fallback color. */
   handle?: string
-  /** Diamètre en px (36 sur les cartes X). */
+  /** Diameter in px (36 on X cards). */
   size?: number
   className?: string
 }

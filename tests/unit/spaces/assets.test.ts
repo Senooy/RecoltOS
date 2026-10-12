@@ -1,7 +1,7 @@
 /**
- * assets des Spaces (copie par empreinte, octets magiques, HEIC/TIFF → affichables par
- * sips, vignettes), ramasse-miettes (seuls les orphelins), format du presse-papiers interne, import
- * des boards GatherOS (lignes à width/height/rotation NULL).
+ * Spaces assets (copy by fingerprint, magic bytes, HEIC/TIFF → displayable by
+ * sips, thumbnails), garbage collection (orphans only), internal clipboard format, import
+ * of GatherOS boards (rows with NULL width/height/rotation).
  */
 import Database from 'better-sqlite3'
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
@@ -44,8 +44,8 @@ const deps = (hh: JobsHarness, keepOriginals = false) => ({
   keepOriginals,
 })
 
-describe('assets des spaces', () => {
-  it('copie par empreinte, idempotente, vignette webp, original intact', async () => {
+describe('spaces assets', () => {
+  it('copy by fingerprint, idempotent, webp thumbnail, original intact', async () => {
     h = makeHarness()
     const src = join(tmp.dir, 'photo.png')
     await writeImage(src, { width: 1200, height: 600, format: 'png' })
@@ -67,7 +67,7 @@ describe('assets des spaces', () => {
     expect(readdirSync(shardDir).sort()).toHaveLength(2)
   })
 
-  it('type par octets magiques : un .png qui est du texte est refusé ; dossier refusé', async () => {
+  it('type by magic bytes: a .png that is text is refused; folder refused', async () => {
     h = makeHarness()
     const fake = join(tmp.dir, 'faux.png')
     writeFileSync(fake, 'pas une image du tout')
@@ -79,7 +79,7 @@ describe('assets des spaces', () => {
   })
 
   it.runIf(HAS_SIPS)(
-    'TIFF → PNG affichable ; HEIC → JPEG ; original seulement si keepOriginals',
+    'TIFF → displayable PNG; HEIC → JPEG; original only if keepOriginals',
     async () => {
       h = makeHarness()
       const t = await importAssetFile(deps(h), fx.tiff)
@@ -98,7 +98,7 @@ describe('assets des spaces', () => {
     },
   )
 
-  it('octets du presse-papiers → asset ; fichier temporaire supprimé', async () => {
+  it('clipboard bytes → asset; temporary file removed', async () => {
     h = makeHarness()
     const src = join(tmp.dir, 'clip.png')
     await writeImage(src, { width: 64, height: 64, format: 'png' })
@@ -107,7 +107,7 @@ describe('assets des spaces', () => {
     expect(readdirSync(join(h.lib.root, 'tmp/spaces'))).toEqual([])
   })
 
-  it('GC : ne supprime que les assets orphelins (dérivés compris)', async () => {
+  it('GC: only removes orphan assets (derived files included)', async () => {
     h = makeHarness()
     const p1 = join(tmp.dir, 'g1.png')
     const p2 = join(tmp.dir, 'g2.png')
@@ -138,7 +138,7 @@ describe('assets des spaces', () => {
     }
     applyBatch(h.lib, { spaceUuid: uuid, upsert: [node], delete: [] })
     const r = await gcSpaceAssets(h.lib)
-    expect(r.removed).toBe(2) // asset 2 + sa vignette
+    expect(r.removed).toBe(2) // asset 2 + its thumbnail
     expect(existsSync(join(h.lib.root, a1.assetRel))).toBe(true)
     expect(existsSync(join(h.lib.root, a2.assetRel))).toBe(false)
     const doc = getSpace(h.lib, uuid)
@@ -147,8 +147,8 @@ describe('assets des spaces', () => {
   })
 })
 
-describe('presse-papiers interne', () => {
-  it('aller-retour du HTML marqué ; texte échappé ; HTML étranger ignoré', () => {
+describe('internal clipboard', () => {
+  it('round trip of the marked HTML; text escaped; foreign HTML ignored', () => {
     const json = JSON.stringify([{ uuid: 'x', content: 'é <b>&' }])
     const html = encodeNodesHtml(json, 'a <script> & "b"')
     expect(html).toContain('a &lt;script&gt; &amp; &quot;b&quot;')
@@ -158,8 +158,8 @@ describe('presse-papiers interne', () => {
   })
 })
 
-describe('import des boards GatherOS', () => {
-  it('fixture avec width/height/rotation NULL : importée sans erreur, skipped journalisé, idempotent', () => {
+describe('GatherOS boards import', () => {
+  it('fixture with NULL width/height/rotation: imported without error, skipped logged, idempotent', () => {
     const hh = makeHarness()
     h = hh
     const legacy = new Database(':memory:')

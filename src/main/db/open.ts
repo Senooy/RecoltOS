@@ -1,7 +1,7 @@
 /**
- * Ouverture d'une base de bibliothèque : pragmas, migrations (snapshot `-pre-vN`),
- * cache de requêtes préparées avec journal des requêtes lentes (> 16 ms, dev).
- * Pas d'import `electron` : le journal est injecté par l'appelant (`library/`).
+ * Opening a library database: pragmas, migrations (`-pre-vN` snapshot),
+ * prepared-statement cache with a slow-query log (> 16 ms, dev).
+ * No `electron` import: the log is injected by the caller (`library/`).
  */
 import Database from 'better-sqlite3'
 import fs from 'node:fs'
@@ -17,14 +17,14 @@ export type SlowQueryLogger = (sql: string, ms: number) => void
 
 export interface OpenOptions {
   readonly?: boolean
-  /** `busy_timeout` en ms (défaut 5 000 ; abaissé dans les tests). */
+  /** `busy_timeout` in ms (default 5 000; lowered in tests). */
   busyTimeout?: number
-  /** Journal des requêtes lentes (dev) ; absent = aucun chronométrage. */
+  /** Slow-query log (dev); absent = no timing. */
   onSlowQuery?: SlowQueryLogger
   slowQueryMs?: number
 }
 
-/** Applique les pragmas (WAL, clés étrangères, délai d'attente) sur une connexion ouverte. */
+/** Applies the pragmas (WAL, foreign keys, busy timeout) on an open connection. */
 export function applyPragmas(db: Database.Database, busyTimeout = DEFAULT_BUSY_TIMEOUT_MS): void {
   if (!db.readonly) {
     db.pragma('journal_mode = WAL')
@@ -38,8 +38,8 @@ export function applyPragmas(db: Database.Database, busyTimeout = DEFAULT_BUSY_T
 }
 
 /**
- * Accès aux requêtes préparées UNE fois par connexion. En dev, `run/get/all`
- * sont chronométrés et toute exécution au-delà du seuil est journalisée.
+ * Prepared statements are accessed ONCE per connection. In dev, `run/get/all`
+ * are timed and any execution over the threshold is logged.
  */
 export interface Prepared {
   (sql: string): Database.Statement
@@ -70,7 +70,7 @@ function instrument(
   return stmt
 }
 
-/** Cache de requêtes préparées attaché à la connexion (partagé par tous les repos). */
+/** Prepared-statement cache attached to the connection (shared by all repos). */
 export function preparedFor(db: Database.Database): Prepared {
   let cache = caches.get(db)
   if (!cache) {
@@ -90,7 +90,7 @@ export function preparedFor(db: Database.Database): Prepared {
   }
 }
 
-/** Ouvre (ou crée) une base SQLite et applique les pragmas. */
+/** Opens (or creates) a SQLite database and applies the pragmas. */
 export function openDatabase(file: string, opts: OpenOptions = {}): Database.Database {
   if (!opts.readonly) fs.mkdirSync(path.dirname(file), { recursive: true })
   const db = new Database(file, opts.readonly ? { readonly: true, fileMustExist: true } : {})
@@ -115,8 +115,8 @@ export interface OpenedLibraryDb {
 }
 
 /**
- * Ouvre `<root>/recolt.db`, applique les migrations (snapshot dans `<root>/snapshots/` si la base
- * n'est pas vide) et vérifie que les clés étrangères sont actives.
+ * Opens `<root>/recolt.db`, applies the migrations (snapshot in `<root>/snapshots/` if the database
+ * is not empty) and checks that foreign keys are active.
  */
 export function openLibraryDb(root: string, opts: OpenLibraryDbOptions = {}): OpenedLibraryDb {
   const file = path.join(root, DB_FILE)

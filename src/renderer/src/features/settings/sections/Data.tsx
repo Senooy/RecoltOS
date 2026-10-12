@@ -1,6 +1,6 @@
 /**
- * Réglages › Données : export zip (progression), instantanés (création,
- * liste, « Restaurer… » avec confirmation), import GatherOS, dossier des données, vérification.
+ * Settings › Data: zip export (progress), snapshots (creation,
+ * list, "Restore…" with confirmation), GatherOS import, data folder, verification.
  */
 import { useCallback, useEffect, useState } from 'react'
 import type { SnapshotInfo } from '../../../../../shared/ipc/data'

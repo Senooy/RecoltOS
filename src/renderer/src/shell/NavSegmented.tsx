@@ -1,7 +1,7 @@
 /**
- * `NavSegmented` : 480×52 centré (centre y=55), loupe Ø42 puis Bibliothèque /
- * Collections / Spaces (140×42), pilule active animée (`layoutId`), icône 18 px sur le segment actif
- * seulement. Variante `dark` (étagère).
+ * `NavSegmented`: 480×52 centered (center y=55), Ø42 magnifier then Library /
+ * Collections / Spaces (140×42), animated active pill (`layoutId`), 18 px icon on the active
+ * segment only. `dark` variant (shelf).
  */
 import { ChartPie, Folder, Library, Search } from 'lucide-react'
 import { LayoutGroup, motion } from 'motion/react'
@@ -10,7 +10,7 @@ import { cn } from '../lib/cn'
 
 export type NavValue = 'search' | 'library' | 'collections' | 'spaces'
 
-/** Libellés lus au rendu : ils suivent la langue active. */
+/** Labels read at render time: they follow the active language. */
 const segments = () =>
   [
     { value: 'library', label: tr.nav.library, Icon: Library },

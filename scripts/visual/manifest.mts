@@ -1,12 +1,12 @@
-/** Racine du dépôt et manifeste des captures de `shots`. */
+/** Repository root and manifest of `shots` captures. */
 import { resolve } from 'node:path'
 
 export const ROOT = resolve(import.meta.dirname, '../..')
 
 /**
- * Fusionne les résultats d'un lancement de `shots` dans le manifeste existant. Clé = scène + thème :
- * une scène relancée remplace son entrée, les autres restent (sinon `shots --scene a` effacerait les
- * captures d'un lancement précédent).
+ * Merges the results of a `shots` run into the existing manifest. Key = scene + theme:
+ * a re-run scene replaces its entry, the others stay (otherwise `shots --scene a` would erase the
+ * captures of a previous run).
  */
 export function mergeManifest<T extends { scene: string; theme: string }>(
   existing: readonly T[],

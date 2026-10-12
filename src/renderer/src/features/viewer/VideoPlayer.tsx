@@ -1,8 +1,8 @@
 /**
- * `VideoPlayer` : barre de 44 pt SOUS le média (4 pt d'écart, retrait de 12 pt de
- * chaque côté), rayon 10, fond `--viewer-control` ; lecture/pause, « 0:00 / 0:35 » tabulaire, piste
- * de 3 px (progression blanche, pouce Ø 12, bulle de temps au survol), son (`prefs.videoMuted`).
- * La vidéo elle-même est rendue par la scène ; ce composant ne fait que la piloter.
+ * `VideoPlayer`: 44 pt bar BELOW the media (4 pt gap, 12 pt inset on
+ * each side), radius 10, background `--viewer-control`; play/pause, tabular "0:00 / 0:35", track
+ * 3 px (white progress, Ø 12 thumb, time bubble on hover), sound (`prefs.videoMuted`).
+ * The video itself is rendered by the scene; this component only controls it.
  */
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent, type RefObject } from 'react'

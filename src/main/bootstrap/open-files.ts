@@ -1,6 +1,6 @@
 /**
- * File d'attente des fichiers ouverts avant que le domaine import-ux soit prêt
- * (`open-file` arrive parfois avant `ready` sur macOS). Consommé par `import-ux/init.ts`.
+ * Queue of files opened before the import-ux domain is ready
+ * (`open-file` sometimes arrives before `ready` on macOS). Consumed by `import-ux/init.ts`.
  */
 
 import path from 'node:path'
@@ -17,7 +17,7 @@ export function queueOpenFiles(paths: string[]): void {
   else pending.push(...clean)
 }
 
-/** Enregistre le consommateur et lui livre immédiatement les chemins en attente. */
+/** Registers the consumer and immediately delivers the pending paths to it. */
 export function onOpenFiles(h: OpenFilesHandler): () => void {
   handler = h
   if (pending.length > 0) h(pending.splice(0, pending.length))
@@ -27,17 +27,17 @@ export function onOpenFiles(h: OpenFilesHandler): () => void {
 }
 
 export interface FilesFromArgvOptions {
-  /** `app.getAppPath()` : le dossier de l'app, et tout ce qu'il contient, n'est jamais un fichier ouvert. */
+  /** `app.getAppPath()`: the app folder, and everything in it, is never an opened file. */
   appPath?: string
 }
 
-/** Entrée de script (`electron <fichier.js>`, p. ex. Playwright) : jamais un fichier à importer. */
+/** Script entry (`electron <file.js>`, e.g. Playwright): never a file to import. */
 const SCRIPT_ENTRY_RE = /\.[cm]?js$/i
 
 /**
- * Chemins de fichiers dans un argv de `second-instance` (on ignore les options, l'exécutable en
- * `argv[0]`, l'entrée du script en `argv[1]` et tout chemin situé dans le dossier de l'app).
- * vérifie encore l'existence et le type (fichier ou dossier) avant d'importer.
+ * File paths in a `second-instance` argv (options are ignored, the executable is in
+ * `argv[0]`, the script entry is in `argv[1]`, and any path inside the app folder is skipped).
+ * Still checks existence and type (file or folder) before importing.
  */
 export function filesFromArgv(argv: readonly string[], opts: FilesFromArgvOptions = {}): string[] {
   const appPath = opts.appPath ? path.resolve(opts.appPath) : null

@@ -1,9 +1,9 @@
 /**
- * Domaine `bridge` : `host.json` (socket et spool lus par l'hôte
- * natif, réécrit à chaque lancement), manifests (app packagée, `RECOLTOS_INSTALL_DEV_HOST=1` ou `RECOLTOS_HOME` de test),
- * copie de l'extension dans un chemin fixe, `BridgeServer` (socket), spool `inbox/`, enregistrements
- * de l'extension. Désactivé sous `RECOLTOS_E2E=1` sauf `RECOLTOS_BRIDGE=1` (tests du pont).
- * `--uninstall-native-hosts` : retire les manifests puis quitte.
+ * `bridge` domain: `host.json` (socket and spool read by the native
+ * host, rewritten at each launch), manifests (packaged app, `RECOLTOS_INSTALL_DEV_HOST=1` or test
+ * `RECOLTOS_HOME`), copy of the extension to a fixed path, `BridgeServer` (socket), `inbox/` spool,
+ * extension registrations. Disabled under `RECOLTOS_E2E=1` unless `RECOLTOS_BRIDGE=1` (bridge tests).
+ * `--uninstall-native-hosts`: removes the manifests, then quits.
  */
 import { app } from 'electron'
 import { writeFileSync } from 'node:fs'
@@ -33,7 +33,7 @@ import { BridgeServer } from './server'
 
 export const UNINSTALL_FLAG = '--uninstall-native-hosts'
 
-/** Applications de navigateur installées (Firefox : son dossier `Mozilla/` peut manquer). */
+/** Installed browser applications (Firefox: its `Mozilla/` folder may be missing). */
 export async function installedBrowserApps(home: string): Promise<Set<string>> {
   const out = new Set<string>()
   await Promise.all(
@@ -44,7 +44,7 @@ export async function installedBrowserApps(home: string): Promise<Set<string>> {
   return out
 }
 
-/** (Ré)installe les manifests ; rend les navigateurs couverts. */
+/** (Re)installs the manifests; returns the covered browsers. */
 export async function reinstallHosts(): Promise<string[]> {
   const rt = getBridgeRuntime()
   if (!rt) return []
@@ -69,7 +69,7 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
   }
   if (ctx.flags.e2e && process.env.RECOLTOS_BRIDGE !== '1') return
 
-  // Hors app packagée : racine du dépôt (`out/main/index.js` → `../..`), quel que soit le lanceur.
+  // Outside the packaged app: repository root (`out/main/index.js` → `../..`), whatever the launcher.
   const appRoot = isPackaged ? app.getAppPath() : path.resolve(__dirname, '..', '..')
   const resourcesPath = process.resourcesPath
   const pathsOpts = { isPackaged, resourcesPath, appRoot }
@@ -99,12 +99,12 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
     stale: new Set(),
   })
 
-  // Manifests : jamais en dev sans accord explicite ; `RECOLTOS_HOME` = dossier de test.
+  // Manifests: never in dev without explicit consent; `RECOLTOS_HOME` = test folder.
   const allowManifests = isPackaged || ctx.flags.installDevHost || ctx.flags.home !== null
   if (allowManifests) {
     void reinstallHosts().catch((err: unknown) => ctx.log.warn('[bridge] manifests', err))
   }
-  // Copie de l'extension embarquée vers le chemin fixe montré par « Révéler le dossier ».
+  // Copy the bundled extension to the fixed path shown by the « Révéler le dossier » action.
   for (const target of ['chromium', 'firefox'] as const) {
     void installExtension(
       bundledExtensionDir(target, pathsOpts),
@@ -122,7 +122,7 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
   })
   server.handle('hello', (m, client) => {
     const p = m.payload
-    // En dev, jamais de rechargement demandé.
+    // In dev, never request a reload.
     const needsReload = isPackaged && isOlderVersion(p.extVersion, EXTENSION_VERSION)
     server.send(client.connId, 'hello.ack', helloAck(needsReload), m.id)
     server.send(client.connId, 'collections.list.result', { collections: saves.collections() })
@@ -162,7 +162,7 @@ export async function initBridge(ctx: ServiceContext): Promise<Disposer | void> 
   const offCollections = onCollectionsChanged(() => {
     server.broadcast('collections.changed', { collections: saves.collections() })
   })
-  // Langue changée : `hello.ack` renvoyé aux extensions connectées (sauf celles à recharger).
+  // Language changed: `hello.ack` sent to connected extensions (except those to reload).
   const offLang = onLangChange(() => {
     const stale = getBridgeRuntime()?.stale
     for (const c of server.clients()) {

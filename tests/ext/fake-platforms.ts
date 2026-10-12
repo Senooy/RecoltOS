@@ -1,7 +1,7 @@
 /**
- * Faux serveur local pour l'extension de test (`build:ext --test-base`) : une image, une page, et les
- * endpoints de sync X / Instagram / Cosmos rejoués depuis les fixtures SYNTHÉTIQUES. Journalise les
- * requêtes (méthode, chemin, en-têtes utiles) pour vérifier cookies, CSRF et `Origin`.
+ * Fake local server for the test extension (`build:ext --test-base`): one image, one page, and the
+ * X / Instagram / Cosmos sync endpoints replayed from the SYNTHETIC fixtures. Logs the
+ * requests (method, path, useful headers) to check cookies, CSRF and `Origin`.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import http from 'node:http'
@@ -24,9 +24,9 @@ export interface FakePlatforms {
   base: string
   port: number
   log: Logged[]
-  /** Rapports `POST /selftest` des builds `--selftest`. */
+  /** Reports from `POST /selftest` of `--selftest` builds. */
   selfTests: unknown[]
-  /** Réponse forcée pour un chemin (statut + corps). */
+  /** Forced response for a path (status + body). */
   override(prefix: string, status: number, body: unknown): void
   close(): Promise<void>
 }
@@ -34,7 +34,7 @@ export interface FakePlatforms {
 const FIX = join(REPO_ROOT, 'tests/fixtures/sync')
 const fixture = (p: string) => readFileSync(join(FIX, p))
 
-/** PNG 64×64 opaque (couleur unie) pour l'enregistrement d'image. */
+/** Opaque 64×64 PNG (solid color) for the image record. */
 export function testPng(): Buffer {
   return readFileSync(join(REPO_ROOT, 'build/icon.png'))
 }
@@ -96,7 +96,7 @@ export async function startFakePlatforms(port = 0, hostName = '127.0.0.1'): Prom
         '<!doctype html><html><head><title>Page de test</title><meta property="og:image" content="/img.png"></head><body><img id="i" src="/img.png" width="64" height="64"></body></html>',
       )
     }
-    // ---- X : client x-web factice, passerelle des requêtes persistées
+    // ---- X: fake x-web client, gateway for persisted requests
     if (p === '/x/') {
       res.writeHead(200, { 'content-type': 'text/html' })
       return res.end(
@@ -135,7 +135,7 @@ export async function startFakePlatforms(port = 0, hostName = '127.0.0.1'): Prom
         ),
       )
     }
-    // ---- Cosmos : jeton d'accès (JWT factice non signé) puis GraphQL
+    // ---- Cosmos: access token (fake unsigned JWT) then GraphQL
     if (p === '/cosmos/api/refresh-token') {
       const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url')
       return json(200, {

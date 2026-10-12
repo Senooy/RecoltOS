@@ -1,8 +1,8 @@
 /**
- * Réglages : modale 750×570 (rayon 14), barre latérale de 196 px (9 sections,
- * sans Compte / Abonnement / Mises à jour), gabarit `SettingsRow`. Sections livrées en M1 :
- * Apparence, Bibliothèques (avec l'import GatherOS), À propos ; M2 : Tags, Stockage, Données.
- * IA, Capture et Synchronisation affichent un message jusqu'à leurs jalons.
+ * Settings: 750×570 modal (radius 14), 196 px sidebar (9 sections,
+ * without Account / Subscription / Updates), `SettingsRow` template. Sections shipped in M1:
+ * Appearance, Libraries (with the GatherOS import), About; M2: Tags, Storage, Data.
+ * AI, Capture and Sync display a message until their milestones.
  */
 import {
   Camera,
@@ -33,7 +33,7 @@ import { AiSettings } from '../ai/AiSettings'
 import { SyncSettings } from '../sync/SyncSettings'
 import './settings.css'
 
-/** Libellés lus au rendu : ils suivent la langue active. */
+/** Labels read at render time: they follow the active language. */
 const nav = (): { key: SettingsSection; label: string; Icon: typeof Palette }[] => [
   { key: 'appearance', label: tr.settings.nav.appearance, Icon: Palette },
   { key: 'libraries', label: tr.settings.nav.libraries, Icon: Library },

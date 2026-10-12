@@ -1,7 +1,7 @@
 /**
- * `IconButton` : bouton d'icône carré/rond. `label` est OBLIGATOIRE (FR) :
- * il devient `aria-label` ET infobulle (avec le raccourci). tones : ghost / outline / glass /
- * viewer ; tailles sm 24 / md 28 / lg 32. Glyphes à trait 1,75 comme les captures.
+ * `IconButton`: square/round icon button. `label` is REQUIRED (French):
+ * it becomes `aria-label` AND tooltip (with the shortcut). tones: ghost / outline / glass /
+ * viewer; sizes sm 24 / md 28 / lg 32. Glyphs with a 1.75 stroke like the captures.
  */
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ComponentProps, ReactNode } from 'react'
@@ -42,13 +42,13 @@ export interface IconButtonProps
   extends
     Omit<ComponentProps<'button'>, 'aria-label' | 'children' | 'title'>,
     VariantProps<typeof iconButtonVariants> {
-  /** Icône (lucide, SVG…). */
+  /** Icon (lucide, SVG…). */
   icon: ReactNode
-  /** Nom accessible FR + texte de l'infobulle. */
+  /** Accessible name (French) + tooltip text. */
   label: string
-  /** Raccourci affiché dans l'infobulle. */
+  /** Shortcut shown in the tooltip. */
   shortcut?: readonly string[]
-  /** `false` : pas d'infobulle (le bouton garde son `aria-label`). */
+  /** `false`: no tooltip (the button keeps its `aria-label`). */
   tooltip?: boolean
   tooltipSide?: 'top' | 'right' | 'bottom' | 'left'
 }

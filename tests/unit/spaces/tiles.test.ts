@@ -1,12 +1,12 @@
 /**
- * tuilage de l'export PNG sans Electron (échelle bornée, caméras à multiples entiers de la
- * tuile, assemblage sans couture ni débordement).
+ * Tiling of the PNG export without Electron (bounded scale, cameras at whole multiples of the
+ * tile, seamless assembly with no overflow).
  */
 import { describe, expect, it } from 'vitest'
 import { EXPORT_PAD, placeTile, planExport } from '../../../src/main/spaces/tiles'
 
-describe('tuilage de l’export', () => {
-  it('dimensions, tuiles, caméras décalées de tuiles entières', () => {
+describe('export tiling', () => {
+  it('dimensions, tiles, cameras offset by whole tiles', () => {
     const p = planExport({ x: 100, y: 50, width: 1600, height: 1100 }, 1, 1, { w: 1280, h: 800 })
     expect(p).toMatchObject({ scale: 1, reduced: false, width: 1696, height: 1196 })
     expect(p.tiles).toHaveLength(4)
@@ -16,13 +16,13 @@ describe('tuilage de l’export', () => {
     expect(b!.ox).toBe(1280)
   })
 
-  it('Retina (capture ×2) : zoom = échelle / 2, tuiles de 2 560 px', () => {
+  it('Retina (×2 capture): zoom = scale / 2, 2,560 px tiles', () => {
     const p = planExport({ x: 0, y: 0, width: 4000, height: 3000 }, 2, 2, { w: 1280, h: 800 })
     expect(p.tilePx).toEqual({ w: 2560, h: 1600 })
     expect(p.tiles[0]!.camera.zoom).toBeCloseTo(p.scale / 2, 12)
   })
 
-  it('échelle réduite au-delà de 8 192 px ou 40 Mpx', () => {
+  it('scale reduced beyond 8,192 px or 40 Mpx', () => {
     const big = planExport({ x: 0, y: 0, width: 4000, height: 3000 }, 3, 1, { w: 1280, h: 800 })
     expect(big.reduced).toBe(true)
     expect(big.width * big.height).toBeLessThanOrEqual(40e6 + big.width + big.height)
@@ -30,11 +30,11 @@ describe('tuilage de l’export', () => {
     expect(Math.max(wide.width, wide.height)).toBeLessThanOrEqual(8192)
   })
 
-  it('placeTile : copie des lignes utiles, bord droit / bas tronqués', () => {
+  it('placeTile: copies the useful rows, right / bottom edges truncated', () => {
     const W = 5
     const H = 3
     const out = Buffer.alloc(W * H * 4)
-    const tile = Buffer.alloc(4 * 4 * 4, 7) // tuile 4 × 4 remplie de 7
+    const tile = Buffer.alloc(4 * 4 * 4, 7) // 4 × 4 tile filled with 7
     placeTile(out, W, H, tile, 4, { ox: 4, oy: 1 })
     for (let y = 0; y < H; y++) {
       for (let x = 0; x < W; x++) {

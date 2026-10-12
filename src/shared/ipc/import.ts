@@ -1,5 +1,5 @@
 /**
- * Contrat `import.gatheros.*`. GatherOS en lecture seule, copie de la base.
+ * `import.gatheros.*` contract. GatherOS read-only, database copy.
  */
 import { z } from 'zod'
 import { Empty, Void, type ContractShape, type EventShape } from './define'
@@ -24,18 +24,18 @@ export const ImportOptions = z.object({
   includeTrash: z.boolean().default(true),
   includeHidden: z.boolean().default(true),
   importSpaces: z.boolean().default(true),
-  /** Exemples livrés par GatherOS (tag `__starter__`), exclus par défaut. */
+  /** Examples shipped with GatherOS (tag `__starter__`), excluded by default. */
   skipStarterContent: z.boolean().default(true),
-  /** Titres, descriptions, OCR et prompts. */
+  /** Titles, descriptions, OCR and prompts. */
   importAiFields: z.boolean().default(true),
-  /** Réglages GatherOS par liste blanche ; ne peut jamais activer un fournisseur IA. */
+  /** GatherOS settings via allowlist; can never enable an AI provider. */
   importPrefs: z.boolean().default(false),
-  /** Avancé : recrée ce que l'utilisateur a supprimé depuis le dernier import. */
+  /** Advanced: recreates what the user deleted since the last import. */
   ignoreTombstones: z.boolean().default(false),
 })
 export type ImportOptions = z.output<typeof ImportOptions>
 
-/** Comptes de la carte de détection, après exclusion des exemples de démarrage. */
+/** Counts for the detection card, after excluding the starter examples. */
 export const ImportPreview = z.object({
   items: z.number().int(),
   images: z.number().int(),
@@ -65,16 +65,16 @@ export const ImportReport = z.object({
   state: z.enum(['running', 'files_done', 'done', 'failed', 'cancelled']),
   startedAt: z.number().int(),
   finishedAt: z.number().int().nullable(),
-  /** Compteurs par entité (items, media, files, collections, memberships, tags, skipped…). */
+  /** Counters per entity (items, media, files, collections, memberships, tags, skipped...). */
   counts: z.record(z.string(), z.number().int()),
   warnings: z.array(z.string()),
   error: z.string().nullable(),
-  /** Liens du résumé : éléments sans fichier, doublons d'URL. */
+  /** Summary links: items without a file, duplicate URLs. */
   missingFiles: z.array(z.object({ itemUuid: z.string(), file: z.string() })).default([]),
   urlDuplicates: z.array(z.object({ url: z.string(), itemUuids: z.array(z.string()) })).default([]),
-  /** Éléments importés sans description (bouton « Enrichir N éléments avec l'IA… »). */
+  /** Imported items without a description (button "Enrich N items with AI..."). */
   missingDescription: z.number().int().default(0),
-  /** Rapport JSON complet (`import/report-<ts>.json`), relatif à la bibliothèque. */
+  /** Full JSON report (`import/report-<ts>.json`), relative to the library. */
   reportRel: z.string().nullable().default(null),
 })
 export type ImportReport = z.output<typeof ImportReport>
@@ -86,14 +86,14 @@ export const importContract = {
       found: z.boolean(),
       path: z.string().nullable(),
       running: z.boolean(),
-      /** Nom d'hôte du verrou (`SingletonLock`) quand GatherOS tourne. */
+      /** Host name of the lock (`SingletonLock`) when GatherOS is running. */
       runningHost: z.string().nullable().default(null),
       schemaVersion: z.number().int().nullable(),
       libraryName: z.string().nullable().default(null),
       counts: ImportPreview.nullable(),
     }),
   },
-  /** `libraryId` = bibliothèque GatherOS source (défaut : l'active de GatherOS). */
+  /** `libraryId` = source GatherOS library (default: GatherOS's active one). */
   'import.gatheros.start': {
     input: z.object({
       libraryId: z
@@ -101,14 +101,14 @@ export const importContract = {
         .regex(/^[A-Za-z0-9_-]{1,80}$/)
         .optional(),
       options: ImportOptions.prefault({}),
-      /** `new` : crée d'abord la bibliothèque « Importée de GatherOS » et bascule dessus. */
+      /** `new`: first creates the "Imported from GatherOS" library and switches to it. */
       target: z.enum(['active', 'new']).default('active'),
     }),
     output: z.object({ runId: z.number().int() }),
   },
   'import.gatheros.cancel': { input: Empty, output: Void },
   'import.gatheros.lastReport': { input: Empty, output: ImportReport.nullable() },
-  /** Import interrompu (`import_runs.state='running'`) à reprendre au lancement. */
+  /** Interrupted import (`import_runs.state='running'`) to resume at launch. */
   'import.gatheros.pending': {
     input: Empty,
     output: z.object({ runId: z.number().int(), phase: z.string().nullable() }).nullable(),

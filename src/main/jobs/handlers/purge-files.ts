@@ -1,7 +1,7 @@
 /**
- * Job `purge.files` : inséré dans la MÊME transaction que le `DELETE FROM items`,
- * il supprime ensuite les fichiers (`rm`) ou les envoie dans la Corbeille macOS (`trash`, purge
- * automatique). Idempotent : un fichier déjà absent est ignoré.
+ * Job `purge.files`: enqueued in the SAME transaction as the `DELETE FROM items`; it then
+ * deletes the files (`rm`) or sends them to the macOS Trash (`trash`, automatic purge).
+ * Idempotent: a file that is already gone is ignored.
  */
 import { rm } from 'node:fs/promises'
 import { moveToTrash } from '../../platform/trash'
@@ -17,16 +17,13 @@ export const purgeFiles: JobHandler = async (job, ctx) => {
     try {
       abs.push(ctx.lib.paths.abs(f))
     } catch {
-      ctx.log.warn(`[jobs] purge : chemin refusé ${f}`)
+      ctx.log.warn(`[jobs] purge: path refused ${f}`)
     }
   }
   if (mode === 'trash') {
     const report = await moveToTrash(abs, ctx.trashItem)
     if (report.failed.length > 0) {
-      ctx.log.warn(
-        `[jobs] purge : ${report.failed.length} fichier(s) non déplacé(s)`,
-        report.failed,
-      )
+      ctx.log.warn(`[jobs] purge: ${report.failed.length} file(s) not moved`, report.failed)
     }
   } else {
     for (const a of abs) await rm(a, { force: true })

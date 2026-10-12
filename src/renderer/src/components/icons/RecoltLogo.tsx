@@ -1,14 +1,14 @@
 /**
- * Logo RecoltOS « Germe double » : une graine pointue et deux feuilles symétriques (même silhouette
- * que l'icône de l'app, `scripts/make-icon.mts`), en version plate : tuile arrondie `--fg`, symbole `--bg`.
- * Les couleurs suivent les tokens : il s'inverse avec le thème.
+ * RecoltOS logo "Double sprout": a pointed seed and two symmetric leaves (same silhouette
+ * as the app icon, `scripts/make-icon.mts`), in flat version: rounded tile `--fg`, symbol `--bg`.
+ * Colors follow the tokens: it inverts with the theme.
  */
 import type { SVGProps } from 'react'
 
 export interface RecoltLogoProps extends Omit<SVGProps<SVGSVGElement>, 'width' | 'height'> {
-  /** Côté en px (28 dans l'en-tête, 56 dans À propos). */
+  /** Side in px (28 in the header, 56 in About). */
   size?: number
-  /** Nom accessible ; absent = décoratif. */
+  /** Accessible name; absent = decorative. */
   label?: string
 }
 

@@ -1,6 +1,6 @@
 /**
- * État de l'extension annoncé à l'app (`hello`, `ext.status`) : session par plateforme (présence d'un
- * cookie de session, jamais sa valeur), autorisations d'hôte (Firefox MV3 : optionnelles), navigateur.
+ * Extension state reported to the app (`hello`, `ext.status`): session per platform (presence of a
+ * session cookie, never its value), host permissions (Firefox MV3: optional), browser.
  */
 import {
   BRIDGE_PLATFORMS,
@@ -34,8 +34,8 @@ export async function platformState(p: BridgePlatform): Promise<PlatformState> {
     ])
     return { loggedIn: !!sid, accountId: sid ? uid : null, permission }
   }
-  // Cosmos : jeton d'accès encore valable, sinon un cookie de session du site (le cookie de
-  // rafraîchissement est httpOnly : seul son nom est lu, jamais sa valeur).
+  // Cosmos: access token still valid, otherwise a site session cookie (the refresh
+  // cookie is httpOnly: only its name is read, never its value).
   const usable = cosmosTokenUsable(await storedCosmosToken())
   const names = usable ? [] : await cookieNames('cosmos')
   const me = await getLocal<{ id: string | number; username?: string }>('cosmos.me')
@@ -70,7 +70,7 @@ async function browserInfo(): Promise<{ name: string; version: string }> {
       const b = await rt.getBrowserInfo()
       return { name: b.name, version: b.version }
     } catch {
-      // repli ci-dessous
+      // fallback below
     }
   }
   const nav = globalThis.navigator as Navigator & {
@@ -114,5 +114,5 @@ export async function helloPayload(): Promise<PayloadOf<'hello'>> {
   }
 }
 
-/** Cookies qui changent l'état de session (déclenchent `ext.status`). */
+/** Cookies that change the session state (trigger `ext.status`). */
 export const SESSION_COOKIES = new Set(['auth_token', 'twid', 'sessionid', 'ds_user_id'])

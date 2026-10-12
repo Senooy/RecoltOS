@@ -21,10 +21,10 @@ function fakeMedia(initialDark: boolean) {
 
 const root = () => ({ dataset: {} as Record<string, string> }) as unknown as HTMLElement
 
-describe('thème « system » : suit le changement d’apparence', () => {
+describe('« system » theme: follows the appearance change', () => {
   afterEach(() => vi.unstubAllGlobals())
 
-  it('réapplique data-theme quand la media query change', () => {
+  it('reapplies data-theme when the media query changes', () => {
     const m = fakeMedia(true)
     const el = root()
     const prefs: Prefs = { ...DEFAULT_PREFS, theme: 'system' }
@@ -37,7 +37,7 @@ describe('thème « system » : suit le changement d’apparence', () => {
     expect(m.count()).toBe(0)
   })
 
-  it('ne touche à rien quand le thème est forcé', () => {
+  it('leaves everything alone when the theme is forced', () => {
     const m = fakeMedia(true)
     const el = root()
     const prefs: Prefs = { ...DEFAULT_PREFS, theme: 'dark' }

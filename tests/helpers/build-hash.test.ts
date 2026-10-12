@@ -15,7 +15,7 @@ function project(): string {
 }
 
 describe('build-hash', () => {
-  it('stable, et sensible au contenu, aux nouveaux fichiers et à package.json', () => {
+  it('stable, and sensitive to content, new files and package.json', () => {
     const dir = project()
     const h0 = computeBuildHash(dir)
     expect(computeBuildHash(dir)).toBe(h0)
@@ -29,7 +29,7 @@ describe('build-hash', () => {
     expect(computeBuildHash(dir)).not.toBe(h2)
   })
 
-  it('ignore out/, node_modules et les tests (pas de rebuild pour un spec)', () => {
+  it('ignores out/, node_modules and the tests (no rebuild for a spec)', () => {
     const dir = project()
     const h0 = computeBuildHash(dir)
     mkdirSync(join(dir, 'out'), { recursive: true })
@@ -39,7 +39,7 @@ describe('build-hash', () => {
     expect(computeBuildHash(dir)).toBe(h0)
   })
 
-  it('couvre les sources réelles', () => {
+  it('covers the real sources', () => {
     const files = listBuildInputs(REPO_ROOT)
     expect(files.some((f) => f.endsWith('src/main/index.ts'))).toBe(true)
     expect(files.some((f) => f.endsWith('electron.vite.config.ts'))).toBe(true)

@@ -1,8 +1,8 @@
 /**
- * Ordre chronologique des publications synchronisées : `created_at` attribué par rapport
- * au voisin déjà connu. `incremental` : ancre fixée au début du run, les nouveautés passent en tête
- * dans l'ordre de la plateforme. `backfill`, `deep` et `passive` avec curseur : l'ancre suit le dernier
- * voisin connu (recalage 1 ms dessous) et est persistée entre les tranches de backfill.
+ * Chronological order of synced posts: `created_at` assigned relative to
+ * the already-known neighbour. `incremental`: anchor fixed at the start of the run, new items go first
+ * in the platform's order. `backfill`, `deep` and `passive` with a cursor: the anchor follows the last
+ * known neighbour (1 ms re-anchoring below) and is persisted between backfill slices.
  */
 export type RunMode = 'incremental' | 'backfill' | 'deep' | 'passive'
 
@@ -30,14 +30,14 @@ export function startOrder(
 export interface Placed {
   sourceKey: string
   createdAt: number
-  /** Placé sous un voisin plus ancien que le début du run (backfill / deep). */
+  /** Placed below an older neighbour than the start of the run (backfill / deep). */
   recovered: boolean
 }
 
 /**
- * Attribue `createdAt` aux NOUVELLES publications (dans l'ordre de la plateforme, du plus récent au
- * plus ancien). Les connues recalent l'ancre (hors incrémental) ; écartées et connues sans élément ne
- * font rien. Modifie `cur` (persisté par l'appelant pour le backfill).
+ * Assigns `createdAt` to NEW posts (in the platform's order, from newest to
+ * oldest). Known ones re-anchor (outside incremental); discarded and known ones without an element
+ * do nothing. Modifies `cur` (persisted by the caller for backfill).
  */
 export function assignCreatedAt(
   mode: RunMode,

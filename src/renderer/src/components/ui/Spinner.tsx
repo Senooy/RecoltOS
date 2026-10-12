@@ -1,6 +1,6 @@
 /**
- * Indicateur de chargement : arc de cercle qui tourne (couleur = `currentColor`).
- * Mouvement réduit : l'arc reste fixe (`ui.css`), le nom accessible suffit.
+ * Loading indicator: a rotating circular arc (color = `currentColor`).
+ * Reduced motion: the arc stays fixed (`ui.css`), the accessible name is enough.
  */
 import type { ComponentProps } from 'react'
 import { cn } from '../../lib/cn'
@@ -8,9 +8,9 @@ import { UI_LABELS } from './labels'
 import './ui.css'
 
 export interface SpinnerProps extends Omit<ComponentProps<'span'>, 'children'> {
-  /** Côté en px (16 par défaut). */
+  /** Side length in px (16 by default). */
   size?: number
-  /** Nom accessible ; `null` pour un spinner décoratif (le parent porte déjà l'état). */
+  /** Accessible name; `null` for a decorative spinner (the parent already conveys the state). */
   label?: string | null
 }
 

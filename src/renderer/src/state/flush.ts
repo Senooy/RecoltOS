@@ -1,7 +1,7 @@
 /**
- * Vidage avant fermeture : main envoie `app:flush-request(token)` ; chaque
- * domaine enregistre un vidage (Spaces : `commitEditing()` puis `persistence.flush()`) ; le
- * renderer répond `flushDone(token)` quand tout est terminé (main attend 2 s au plus).
+ * Flush before closing: main sends `app:flush-request(token)`; each domain registers a flush
+ * (Spaces: `commitEditing()` then `persistence.flush()`); the renderer replies `flushDone(token)`
+ * once everything is finished (main waits 2 s at most).
  */
 import type { RecoltApi } from '../../../preload/api'
 

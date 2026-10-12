@@ -1,17 +1,17 @@
 /**
- * Fenêtres hors écran : capture de page, rendu de carte post, stage Spaces.
- * Partition non persistante `recolt-offscreen-<n>`, sandbox, SANS preload (jamais
- * `window.recolt`), permissions refusées, navigation initiée par la page et téléchargements
- * bloqués, délai de 20 s, destruction après usage.
+ * Off-screen windows: page capture, post card rendering, Spaces stage.
+ * Non-persistent partition `recolt-offscreen-<n>`, sandbox, WITHOUT preload (never
+ * `window.recolt`), permissions denied, page-initiated navigation and downloads
+ * blocked, 20 s timeout, destroyed after use.
  *
- * Redirections : un `preventDefault` sur `will-redirect` annule TOUTE la navigation
- * (`loadURL` rejeté avec `ERR_FAILED`) ; on n'accepte donc que les redirections http(s) → http(s),
- * dans la limite de `MAX_REDIRECTS` sauts (http→https, liens courts, slash final).
+ * Redirects: a `preventDefault` on `will-redirect` cancels the WHOLE navigation
+ * (`loadURL` rejected with `ERR_FAILED`); so we only accept http(s) → http(s) redirects,
+ * within the limit of `MAX_REDIRECTS` hops (http→https, short links, trailing slash).
  *
- * Sessions : Electron ne libère jamais une `Session`. Les partitions sont donc recyclées via un
- * petit parc (`partitionPool`) : une partition est prise pour la durée d'un appel, vidée
- * (`clearStorageData` + `clearCache`) puis rendue. Le nombre de sessions créées est borné par la
- * concurrence maximale observée, pas par le nombre d'appels (rendu de centaines de cartes).
+ * Sessions: Electron never frees a `Session`. Partitions are therefore recycled via a
+ * small pool (`partitionPool`): a partition is taken for the duration of a call, cleared
+ * (`clearStorageData` + `clearCache`) then returned. The number of sessions created is bounded by the
+ * maximum observed concurrency, not by the number of calls (rendering hundreds of cards).
  */
 import { BrowserWindow, session, type Session } from 'electron'
 import path from 'node:path'
@@ -25,7 +25,7 @@ export const MAX_REDIRECTS = 10
 export interface OffscreenOptions {
   width: number
   height: number
-  /** Rendu hors écran Chromium (`webPreferences.offscreen`). */
+  /** Chromium off-screen rendering (`webPreferences.offscreen`). */
   offscreen?: boolean
   deviceScaleFactor?: number
   javascript?: boolean
@@ -34,7 +34,7 @@ export interface OffscreenOptions {
 
 export type OffscreenRoute = 'tweet-card' | 'space-stage'
 
-/** URL de `renderer/offscreen.html?render=<route>` (serveur Vite en dev, `file://` en prod). */
+/** URL of `renderer/offscreen.html?render=<route>` (Vite server in dev, `file://` in prod). */
 export function offscreenUrl(route: OffscreenRoute, params: Record<string, string> = {}): string {
   const q = new URLSearchParams({ render: route, lang: getLang(), ...params }).toString()
   const dev = process.env.ELECTRON_RENDERER_URL
@@ -42,7 +42,7 @@ export function offscreenUrl(route: OffscreenRoute, params: Record<string, strin
   return `${pathToFileURL(path.join(__dirname, '../renderer/offscreen.html')).toString()}?${q}`
 }
 
-/** Redirection acceptée : http(s) → http(s) ; ni `file:`, ni `data:`, ni schéma applicatif. */
+/** Accepted redirect: http(s) → http(s); neither `file:`, nor `data:`, nor an app scheme. */
 export function isAllowedRedirect(url: string): boolean {
   try {
     const { protocol } = new URL(url)
@@ -53,15 +53,15 @@ export function isAllowedRedirect(url: string): boolean {
 }
 
 let partitionCounter = 0
-/** Partitions inactives, prêtes à être réutilisées. */
+/** Idle partitions, ready to be reused. */
 const partitionPool: string[] = []
 
 /**
- * Configuration additionnelle de chaque session hors écran. `protocol.handle` ne vaut que pour la
- * session sur laquelle il est appelé : sans ce point d'accroche, `recolt://` (avatars et médias de
- * la carte de post, vignettes du stage Spaces) échoue dans les partitions hors écran. y
- * enregistre `recolt:` (lecture seule, mêmes racines que la session par défaut).
- * La fonction est appelée sur chaque partition créée, et sur celles déjà créées à l'enregistrement.
+ * Additional configuration of each off-screen session. `protocol.handle` only applies to the
+ * session it is called on: without this hook, `recolt://` (avatars and media of
+ * the post card, Spaces stage thumbnails) fails in off-screen partitions. It
+ * registers `recolt:` there (read-only, same roots as the default session).
+ * The function is called on each partition created, and on those already created at registration.
  */
 export type OffscreenSessionSetup = (ses: Session) => void
 const sessionSetups: OffscreenSessionSetup[] = []
@@ -72,7 +72,7 @@ export function registerOffscreenSessionSetup(fn: OffscreenSessionSetup): void {
   for (const ses of createdSessions) fn(ses)
 }
 
-/** Tests uniquement. */
+/** Tests only. */
 export function resetOffscreenForTests(): void {
   sessionSetups.length = 0
   createdSessions.length = 0
@@ -80,7 +80,7 @@ export function resetOffscreenForTests(): void {
   partitionCounter = 0
 }
 
-/** Prend une partition du parc ou en crée une (exporté pour les tests). */
+/** Takes a partition from the pool or creates one (exported for tests). */
 export function acquirePartition(): string {
   const reused = partitionPool.pop()
   if (reused) return reused
@@ -103,13 +103,13 @@ async function releasePartition(partition: string): Promise<void> {
     ])
     partitionPool.push(partition)
   } catch {
-    // Partition possiblement polluée : on ne la réutilise pas.
+    // Partition possibly polluted: we do not reuse it.
   }
 }
 
 /**
- * Ouvre une fenêtre hors écran, exécute `run`, puis la détruit (toujours).
- * Rejette avec `AppError('timeout')` au-delà de `timeoutMs`.
+ * Opens an off-screen window, runs `run`, then destroys it (always).
+ * Rejects with `AppError('timeout')` beyond `timeoutMs`.
  */
 export async function withOffscreenWindow<T>(
   opts: OffscreenOptions,
@@ -137,7 +137,7 @@ export async function withOffscreenWindow<T>(
   })
   const wc = win.webContents
   wc.setWindowOpenHandler(() => ({ action: 'deny' }))
-  // `will-navigate` ne se déclenche que pour les navigations initiées par la page.
+  // `will-navigate` only fires for navigations initiated by the page.
   wc.on('will-navigate', (event) => event.preventDefault())
   let redirects = 0
   wc.on('will-redirect', (event, url) => {

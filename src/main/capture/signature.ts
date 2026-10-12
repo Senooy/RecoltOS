@@ -1,6 +1,6 @@
 /**
- * Nature de la signature de l'app : `codesign -dv --verbose=2 <bundle>` →
- * `adhoc` (« Signature=adhoc »), `identity` (Authority=…), `unsigned`, ou `dev` (non empaquetée).
+ * Kind of app signature: `codesign -dv --verbose=2 <bundle>` →
+ * `adhoc` ("Signature=adhoc"), `identity` (Authority=…), `unsigned`, or `dev` (not packaged).
  */
 import { execFile } from 'node:child_process'
 import path from 'node:path'
@@ -14,7 +14,7 @@ export function parseCodesign(output: string, exitCode: number | null): Signatur
   return 'identity'
 }
 
-/** Racine `.app` d'un exécutable (`…/RecoltOS.app/Contents/MacOS/RecoltOS`). */
+/** `.app` root of an executable (`…/RecoltOS.app/Contents/MacOS/RecoltOS`). */
 export function bundleOf(exePath: string): string | null {
   const i = exePath.indexOf('.app/')
   return i < 0 ? null : exePath.slice(0, i + 4)

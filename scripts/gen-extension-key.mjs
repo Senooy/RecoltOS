@@ -1,16 +1,16 @@
-// Génère la clé de l'extension (champ `key` du manifest) pour un identifiant d'extension STABLE
-// (`allowed_origins` du manifest de l'hôte natif).
+// Generates the extension key (`key` field of the manifest) for a STABLE extension ID
+// (`allowed_origins` of the native host manifest).
 //
 //   node scripts/gen-extension-key.mjs [--pem-out <fichier.pem>]
 //
-// Affiche le `key` (clé publique SPKI en base64) et l'identifiant d'extension qui en découle
-// (SHA-256 de la clé publique, 16 premiers octets, alphabet a–p). La clé privée n'est ni affichée ni
-// écrite, sauf avec --pem-out (à garder hors du dépôt : seule la clé publique est nécessaire).
+// Prints the `key` (base64 SPKI public key) and the extension ID derived from it
+// (SHA-256 of the public key, first 16 bytes, alphabet a–p). The private key is neither printed
+// nor written, except with --pem-out (keep it out of the repository: only the public key is needed).
 import { createHash, generateKeyPairSync } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 
-/** Identifiant Chrome : 32 caractères a–p dérivés du SHA-256 de la clé publique DER. */
+/** Chrome ID: 32 characters a–p derived from the SHA-256 of the DER public key. */
 export function extensionIdFromPublicKey(der) {
   const hex = createHash('sha256').update(der).digest('hex').slice(0, 32)
   return [...hex]

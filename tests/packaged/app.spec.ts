@@ -1,10 +1,10 @@
 /**
- * App PACKAGÉE :
- *  - build LIVRÉ (`pnpm run pack` / `dist`, fuses `runAsNode` et inspection CLI fermés) : lancé
- *    comme par le Finder (aucun Playwright, impossible avec ces fuses), il rend la grille d'une
- *    bibliothèque de démo : la marque `grid-painted` arrive dans `logs/perf.jsonl` ;
- *  - build de TEST (`pnpm run dist:test` → `dist/test/`, fuses ouverts) piloté par Playwright :
- *    cartes de la grille visibles. Ignoré si `dist/test/` est absent.
+ * PACKAGED app:
+ *  - SHIPPED build (`pnpm run pack` / `dist`, fuses `runAsNode` and CLI inspection closed): launched
+ *    as from Finder (no Playwright, impossible with these fuses), it renders the grid of a
+ *    demo library: the `grid-painted` mark appears in `logs/perf.jsonl`;
+ *  - TEST build (`pnpm run dist:test` → `dist/test/`, fuses open) driven by Playwright:
+ *    grid cards visible. Skipped if `dist/test/` is absent.
  */
 import { _electron as electron, expect, test } from '@playwright/test'
 import { spawn, type ChildProcess } from 'node:child_process'
@@ -23,8 +23,8 @@ test.afterEach(() => {
   child = null
 })
 
-test('build livré : la grille est rendue (grid-painted) avec les fuses fermés', async () => {
-  test.skip(!existsSync(SHIPPED), 'app packagée absente (pnpm run pack)')
+test('shipped build: the grid is rendered (grid-painted) with fuses closed', async () => {
+  test.skip(!existsSync(SHIPPED), 'packaged app missing (pnpm run pack)')
   test.setTimeout(120_000)
   const userData = makeTmpDir('pkg-grid-ud')
   const home = makeTmpDir('pkg-grid-home')
@@ -44,7 +44,7 @@ test('build livré : la grille est rendue (grid-painted) avec les fuses fermés'
     .toContain('"grid-painted"')
 })
 
-test('build de test (dist:test) : Playwright pilote l’app packagée, grille visible', async () => {
+test('test build (dist:test): Playwright drives the packaged app, grid visible', async () => {
   test.skip(!existsSync(TESTBUILD), 'build de test absent (pnpm run dist:test)')
   test.setTimeout(120_000)
   const userData = makeTmpDir('pkg-pw-ud')

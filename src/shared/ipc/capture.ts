@@ -1,4 +1,4 @@
-/** Contrat `capture.*`. */
+/** `capture.*` contract. */
 import { z } from 'zod'
 import { CaptureResult, CaptureStatus, ScreenAccess, ShortcutResult } from '../dto/capture'
 import { Uuid } from '../enums'
@@ -12,7 +12,7 @@ export const captureContract = {
   },
   'capture.status': { input: Empty, output: CaptureStatus },
   'capture.setShortcut': {
-    // Validé par le handler (`invalid` / `reserved` renvoyés dans le résultat, pas en erreur).
+    // Validated by the handler (`invalid` / `reserved` returned in the result, not as an error).
     input: z.object({ accel: z.string().min(1).max(64), label: z.string().min(1).max(20) }),
     output: ShortcutResult,
   },

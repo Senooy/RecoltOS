@@ -1,6 +1,6 @@
 /**
- * `MediaBadge` : badges en coin des cartes. `video` : 24×20, icône caméra 13 px ;
- * `carousel` : « 1/N », 22 px de haut ; `gif` : « GIF ». Fond `--badge-bg` + flou 8 px, texte blanc.
+ * `MediaBadge`: corner badges for cards. `video`: 24×20, camera icon 13 px;
+ * `carousel`: "1/N", 22 px high; `gif`: "GIF". Background `--badge-bg` + 8 px blur, white text.
  */
 import { Video } from 'lucide-react'
 import { cn } from '../../lib/cn'
@@ -10,7 +10,7 @@ export type MediaBadgeKind = 'video' | 'carousel' | 'gif'
 
 export interface MediaBadgeProps {
   kind: MediaBadgeKind
-  /** Carrousel : « 1/6 ». Facultatif pour video et gif. */
+  /** Carousel: "1/6". Optional for video and gif. */
   label?: string
   className?: string
 }

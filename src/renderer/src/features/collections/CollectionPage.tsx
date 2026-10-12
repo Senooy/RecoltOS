@@ -1,8 +1,8 @@
 /**
- * Vue Collection : sous-barre (retour Ø30 à x=33, titre éditable en ligne,
- * menu « … », curseur de colonnes et tri persistés par collection), label « DANS CETTE
- * COLLECTION » à y≈180, pilules de sous-collections + « Nouvelle collection » (36 px), masonry à
- * y≈257 avec le menu contextuel « collection ». Ouvrir la collection met à jour son `viewed_at`.
+ * Collection view: sub-bar (back Ø30 at x=33, inline-editable title,
+ * « … » menu, column slider and sort persisted per collection), label « IN THIS
+ * COLLECTION » at y≈180, sub-collection pills + « New collection » (36 px), masonry at
+ * y≈257 with the « collection » context menu. Opening the collection updates its `viewed_at`.
  */
 import {
   ChevronLeft,
@@ -43,7 +43,7 @@ function fail(err: unknown): void {
   toast(err instanceof RpcError ? err.message : tr.errors.generic)
 }
 
-/** Pilule d'une sous-collection (mini-vignette Ø22, nom, compteur) ; cible de dépôt interne. */
+/** Pill of a sub-collection (Ø22 mini thumbnail, name, counter); internal drop target. */
 function SubCollectionPill({ node }: { node: CollectionNode }) {
   const navigate = useUi((s) => s.navigate)
   const [target, setTarget] = useState(false)
@@ -85,7 +85,7 @@ function SubCollectionPill({ node }: { node: CollectionNode }) {
   )
 }
 
-/** « + Nouvelle collection » : crée une sous-collection en ligne. */
+/** « + New collection »: creates a sub-collection inline. */
 function NewSubPill({ parentUuid }: { parentUuid: string }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState('')
@@ -138,7 +138,7 @@ function NewSubPill({ parentUuid }: { parentUuid: string }) {
   )
 }
 
-/** « Changer la couverture… » : choix parmi les membres (ou retour au mode automatique). */
+/** « Change the cover… »: choice among the members (or back to automatic mode). */
 function CoverPicker({
   node,
   items,
@@ -236,7 +236,7 @@ function CollectionView({ uuid }: { uuid: string }) {
     void rpc('collections.markViewed', { uuid }).catch(() => undefined)
   }, [uuid])
 
-  // Collection supprimée ailleurs : retour à l'étagère.
+  // Collection deleted elsewhere: back to the shelf.
   useEffect(() => {
     if (loaded && !node) {
       toast(tr.collectionUi.notFound)

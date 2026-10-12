@@ -1,4 +1,4 @@
-/* Redécouvrir. Surface immersive. */
+/* Rediscover. Immersive surface. */
 
 .rd-root {
   position: fixed;
@@ -57,7 +57,7 @@
   background: #262628;
 }
 
-/* ---- Cibles ---- */
+/* ---- Targets ---- */
 .rd-target-wrap {
   position: absolute;
   transform: translate(-50%, -30px);
@@ -114,7 +114,7 @@
   justify-content: center;
 }
 
-/* ---- Pile ---- */
+/* ---- Stack ---- */
 .rd-stack {
   position: absolute;
   z-index: 30;
@@ -188,7 +188,7 @@
   color: var(--rd-label);
 }
 
-/* ---- Aide ---- */
+/* ---- Help ---- */
 .rd-pill {
   position: absolute;
   left: 50%;
@@ -222,7 +222,7 @@
   margin-left: 2px;
 }
 
-/* ---- Fin ---- */
+/* ---- End ---- */
 .rd-done {
   position: absolute;
   left: 50%;

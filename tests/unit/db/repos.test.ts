@@ -21,7 +21,7 @@ const tombs = () =>
     .all() as { entity: string; origin_id: string }[]
 
 describe('items', () => {
-  it('insertWithMedia : couverture = position 0, media_count, une transaction', () => {
+  it('insertWithMedia: cover = position 0, media_count, one transaction', () => {
     const { items, media } = lib.repos
     const r = items.insertWithMedia({ kind: 'image', title: 'Carrousel', uuid: uuidN(1) }, [
       { mediaType: 'image', fileRel: 'items/00/a.jpg', width: 10, height: 20 },
@@ -43,7 +43,7 @@ describe('items', () => {
     expect(items.getByUuid(items.insert({ kind: 'tweet' }).uuid)?.media_count).toBe(0)
   })
 
-  it('insertWithMedia : un média invalide annule tout', () => {
+  it('insertWithMedia: an invalid media cancels everything', () => {
     const { items } = lib.repos
     expect(() =>
       items.insertWithMedia({ kind: 'image' }, [
@@ -71,7 +71,7 @@ describe('items', () => {
     expect(items.upsertByOrigin(input, [], { respectTombstones: false }).status).toBe('created')
   })
 
-  it('update : champs JSON, booléens, name_key, updated_at ; patch vide', () => {
+  it('update: JSON fields, booleans, name_key, updated_at; empty patch', () => {
     const { items } = lib.repos
     const id = items.insert({ kind: 'image' }).id
     expect(items.getById(id)?.name_key).toBe(UNTITLED_NAME_KEY)
@@ -100,12 +100,12 @@ describe('items', () => {
     })
     items.update(id, { postMeta: null })
     expect(items.getById(id)?.post_meta).toBeNull()
-    expect(items.update(id, { createdAt: 1 } as never)).toBe(true) // ignoré (non modifiable)
+    expect(items.update(id, { createdAt: 1 } as never)).toBe(true) // ignored (not modifiable)
     expect(items.getById(id)?.created_at).toBe(T0)
     expect(items.update(9999, { title: 'x' })).toBe(false)
   })
 
-  it('corbeille : sync_dismissed pour les sources synchronisées, restauration', () => {
+  it('trash: sync_dismissed for synced sources, restoration', () => {
     const { items, sync } = lib.repos
     const x = items.insert({ kind: 'tweet', source: 'x', externalId: '123' }).id
     const local = items.insert({ kind: 'image' }).id
@@ -121,7 +121,7 @@ describe('items', () => {
     expect(items.getById(x)?.deleted_at).toBeNull()
   })
 
-  it('masquage et vues', () => {
+  it('hiding and views', () => {
     const { items } = lib.repos
     const id = items.insert({ kind: 'image' }).id
     expect(items.setHidden([id], true)).toBe(1)
@@ -137,7 +137,7 @@ describe('items', () => {
     )
   })
 
-  it('purge : fichiers + job purge.files dans la même transaction ; pierre tombale item', () => {
+  it('purge: files + purge.files job in the same transaction; item tombstone', () => {
     const { items, collections, jobs } = lib.repos
     const g = items.insertWithMedia({ kind: 'video', origin: 'gatheros', originId: 'save-1' }, [
       {
@@ -165,14 +165,14 @@ describe('items', () => {
     expect(job.payload).toMatchObject({ mode: 'trash', files: res.files, failedOn: [] })
     expect(lib.db.prepare('SELECT count(*) AS n FROM item_media').get()).toEqual({ n: 0 })
     expect(lib.db.prepare('SELECT count(*) AS n FROM collection_items').get()).toEqual({ n: 0 })
-    // Cascade : la pierre tombale de l'item suffit, pas d'appartenance fantôme.
+    // Cascade: the item's tombstone is enough, no ghost membership.
     expect(tombs()).toEqual([{ entity: 'item', origin_id: 'save-1' }])
     expect(items.purge([])).toEqual({ purged: 0, files: [], jobId: null })
     const noFiles = items.insert({ kind: 'tweet' }).id
     expect(items.purge([noFiles]).jobId).toBeNull()
   })
 
-  it('purge transactionnelle : un échec d’insertion du job annule la suppression', () => {
+  it('transactional purge: a job insertion failure cancels the deletion', () => {
     const { items } = lib.repos
     const id = items.insertWithMedia({ kind: 'image' }, [{ mediaType: 'image', fileRel: 'f' }]).id
     lib.db.exec("CREATE TRIGGER boom BEFORE INSERT ON jobs BEGIN SELECT RAISE(ABORT, 'boom'); END;")
@@ -188,7 +188,7 @@ describe('items', () => {
 })
 
 describe('media', () => {
-  it('ajout, mise à jour, suppression : media_count et couverture suivent', () => {
+  it('add, update, delete: media_count and cover follow', () => {
     const { items, media } = lib.repos
     const r = items.insertWithMedia({ kind: 'image' }, [{ mediaType: 'image' }])
     const second = media.insert(r.id, { mediaType: 'image', contentHash: 'h1' })
@@ -224,7 +224,7 @@ describe('media', () => {
 })
 
 describe('authors', () => {
-  it('upsert par (plateforme, handle) insensible à la casse ; avatar', () => {
+  it('upsert by (platform, handle), case-insensitive; avatar', () => {
     const { authors } = lib.repos
     const id = authors.upsert({
       platform: 'x',
@@ -240,7 +240,7 @@ describe('authors', () => {
     })
     expect(authors.needingAvatar().map((a) => a.id)).toEqual([id])
     authors.setAvatar(id, 'ok', 'avatars/x/abc.jpg', T0 + 1)
-    // Nouvelle URL alors que l'avatar est valide : on garde « ok ».
+    // New URL while the avatar is valid: we keep "ok".
     authors.upsert({ platform: 'x', handle: 'ADA', avatarUrl: 'https://a/2' })
     expect(authors.getByHandle('x', '@ada')).toMatchObject({
       avatar_status: 'ok',
@@ -262,7 +262,7 @@ describe('authors', () => {
 })
 
 describe('collections', () => {
-  it('création, ordre des frères, parent inexistant', () => {
+  it('creation, sibling order, non-existent parent', () => {
     const { collections } = lib.repos
     const a = collections.create({ name: 'A' })
     const b = collections.create({ name: 'B' })
@@ -279,7 +279,7 @@ describe('collections', () => {
     )
   })
 
-  it('refus de cycle par CTE (soi-même, descendant) ; déplacement valide', () => {
+  it('cycle rejected by CTE (self, descendant); valid move', () => {
     const { collections } = lib.repos
     const a = collections.create({ name: 'A' }).id
     const b = collections.create({ name: 'B', parentId: a }).id
@@ -292,7 +292,7 @@ describe('collections', () => {
     expect(collections.getById(a)?.parent_id).toBeNull()
     expect(collections.descendantIds(a)).toEqual([b, c])
     expect(collections.setParent(c, d)).toBe(true)
-    expect(collections.setParent(a, c)).toBe(true) // c n'est plus sous a
+    expect(collections.setParent(a, c)).toBe(true) // c is no longer under a
     expect(collections.setParent(a, null)).toBe(true)
     expect(collections.children(d).map((x) => x.id)).toEqual([c])
     expect(collections.update(a, {})).toBe(false)
@@ -303,7 +303,7 @@ describe('collections', () => {
     expect(collections.getById(a)).toMatchObject({ name: 'A2', color: '#ff0000', ai_excluded: 1 })
   })
 
-  it('suppression avec descendants : pierres tombales de tous (gatheros)', () => {
+  it('deletion with descendants: tombstones for all of them (gatheros)', () => {
     const { collections, items } = lib.repos
     const p = collections.create({ name: 'P', origin: 'gatheros', originId: 'cP' }).id
     const k = collections.create({ name: 'K', parentId: p, origin: 'gatheros', originId: 'cK' }).id
@@ -326,7 +326,7 @@ describe('collections', () => {
     expect(() => collections.delete(p)).toThrow(expect.objectContaining({ code: 'not_found' }))
   })
 
-  it('suppression keepChildren : les enfants remontent', () => {
+  it('keepChildren deletion: children move up', () => {
     const { collections } = lib.repos
     const root = collections.create({ name: 'R' }).id
     const p = collections.create({ name: 'P', parentId: root }).id
@@ -335,7 +335,7 @@ describe('collections', () => {
     expect(collections.getById(k)?.parent_id).toBe(root)
   })
 
-  it('appartenances : ajout idempotent, retrait → pierre tombale membership, déplacement', () => {
+  it('memberships: idempotent add, removal → membership tombstone, move', () => {
     const { collections, items } = lib.repos
     const c = collections.create({ name: 'C', origin: 'gatheros', originId: 'col' }).id
     const c2 = collections.create({ name: 'C2' }).id
@@ -351,7 +351,7 @@ describe('collections', () => {
     expect(collections.itemIds(c)).toEqual([])
     expect(collections.itemIds(c2)).toEqual([local])
     expect(() => collections.addItems(999, [local])).toThrow()
-    // Déplacement vers la même collection, membre gatheros vivant : aucune pierre tombale posée.
+    // Move to the same collection, live gatheros member: no tombstone placed.
     const c3 = collections.create({ name: 'C3', origin: 'gatheros', originId: 'col3' }).id
     const g3 = items.insert({ kind: 'image', origin: 'gatheros', originId: 'save3' }).id
     collections.addItems(c3, [g3])
@@ -365,7 +365,7 @@ describe('collections', () => {
     })
   })
 
-  it('upsertByOrigin et markViewed', () => {
+  it('upsertByOrigin and markViewed', () => {
     const { collections } = lib.repos
     const a = collections.upsertByOrigin({ name: 'A', origin: 'gatheros', originId: 'x' })
     expect(a.status).toBe('created')
@@ -377,7 +377,7 @@ describe('collections', () => {
     expect(collections.getById(a.id!)?.viewed_at).toBe(5)
   })
 
-  it('réordonnancement : avant un frère, en dernier, renumérotation', () => {
+  it('reordering: before a sibling, last, renumbering', () => {
     const { collections } = lib.repos
     const [a, b, c] = ['A', 'B', 'C'].map((name) => collections.create({ name }).id) as [
       number,
@@ -403,7 +403,7 @@ describe('collections', () => {
 })
 
 describe('tags', () => {
-  it('normalisation et noms réservés', () => {
+  it('normalization and reserved names', () => {
     expect(normalizeTagName('  #Belle  Image ')).toBe('belle-image')
     expect(normalizeTagName('Café')).toBe('café')
     expect(() => normalizeTagName(' # ')).toThrow(expect.objectContaining({ code: 'validation' }))
@@ -419,7 +419,7 @@ describe('tags', () => {
     expect(tags.ensure('cosmos', { allowReserved: true }).created).toBe(true)
   })
 
-  it('ajout, retrait, renommage (conflit), fusion, suppression, comptes', () => {
+  it('add, remove, rename (conflict), merge, delete, counts', () => {
     const { tags, items } = lib.repos
     const a = items.insert({ kind: 'image' }).id
     const b = items.insert({ kind: 'image' }).id
@@ -452,7 +452,7 @@ describe('tags', () => {
 })
 
 describe('jobs', () => {
-  it('dédoublonnage actif, priorité DESC, claim, retry, échec, ménage', () => {
+  it('active dedup, priority DESC, claim, retry, failure, cleanup', () => {
     const { jobs, items } = lib.repos
     const item = items.insert({ kind: 'image' }).id
     const low = jobs.enqueue({
@@ -476,7 +476,7 @@ describe('jobs', () => {
     expect(jobs.claimNext('media.derive', T0 + 1000)?.id).toBe(later)
     expect(jobs.countsByType()['media.derive']).toEqual({ queued: 0, running: 3, failed: 0 })
 
-    // Un job terminé libère la clé de dédoublonnage.
+    // A finished job releases the dedup key.
     jobs.complete(low)
     expect(jobs.enqueue({ type: 'media.derive', itemId: item, dedupeKey: 'media:1' })).not.toBe(low)
 
@@ -503,7 +503,7 @@ describe('jobs', () => {
     expect(() => jobs.enqueue({ type: 'embed.item' as never })).toThrow(/CHECK/)
   })
 
-  it('requeueFailed : ne viole pas ux_jobs_active quand la clé est déjà active ou en double', () => {
+  it('requeueFailed: does not violate ux_jobs_active when the key is already active or duplicated', () => {
     const { jobs } = lib.repos
     const fail = (id: number) => {
       jobs.claimNext('media.derive')
@@ -517,7 +517,7 @@ describe('jobs', () => {
     expect(jobs.get(a)?.state).toBe('cancelled')
     expect(jobs.get(b)?.state).toBe('queued')
 
-    // Deux `failed` de même clé : seul le plus récent est relancé.
+    // Two `failed` with the same key: only the most recent one is requeued.
     jobs.claimNext('media.derive')
     jobs.fail(b, { code: 'io', message: 'x' })
     const c = jobs.enqueue({ type: 'media.derive', dedupeKey: 'item:1' })
@@ -533,7 +533,7 @@ describe('jobs', () => {
     expect(jobs.get(nokey)?.state).toBe('queued')
   })
 
-  it('charge utile illisible → failedOn vide', () => {
+  it('unreadable payload → empty failedOn', () => {
     const { jobs } = lib.repos
     const id = jobs.enqueue({ type: 'remote.fetch', payload: { url: 'u', failedOn: ['cdn1'] } })
     expect(jobs.get(id)?.payload).toEqual({ url: 'u', failedOn: ['cdn1'] })
@@ -543,7 +543,7 @@ describe('jobs', () => {
 })
 
 describe('settings', () => {
-  it('JSON, validation, préfixes', () => {
+  it('JSON, validation, prefixes', () => {
     const { settings } = lib.repos
     expect(settings.get('absent')).toBeUndefined()
     settings.set('jobs.paused', { 'ai.enrich': { until: null, reason: 'x' } })
@@ -564,7 +564,7 @@ describe('settings', () => {
 })
 
 describe('sync', () => {
-  it('état, éléments connus, rejetés, journal', () => {
+  it('state, known items, rejected, log', () => {
     const { sync, items } = lib.repos
     expect(sync.getState('x')).toMatchObject({ enabled: 0, status: 'idle', budget_used: 0 })
     expect(sync.patchState('x', { enabled: true, status: 'ok', totalSynced: 4 })).toMatchObject({
@@ -596,7 +596,7 @@ describe('sync', () => {
 })
 
 describe('spaces', () => {
-  it('création, nœuds (upsert, suppression), cascade, item purgé', () => {
+  it('creation, nodes (upsert, deletion), cascade, purged item', () => {
     const { spaces, items } = lib.repos
     const s = spaces.create({ name: 'Moodboard' })
     const item = items.insert({ kind: 'image' }).id
@@ -651,7 +651,7 @@ describe('spaces', () => {
 })
 
 describe('tombstones', () => {
-  it('ajout, présence, ensemble, retrait, effacement', () => {
+  it('add, presence, set, removal, clearing', () => {
     const { tombstones } = lib.repos
     expect(tombstones.add('gatheros', 'item', 'a')).toBe(true)
     expect(tombstones.add('gatheros', 'item', 'a')).toBe(false)
@@ -666,7 +666,7 @@ describe('tombstones', () => {
 })
 
 describe('util', () => {
-  it('JSON, booléens, tranches', () => {
+  it('JSON, booleans, slices', () => {
     expect(toJson(undefined)).toBeNull()
     expect(fromJson('{')).toBeNull()
     expect(fromJson(null)).toBeNull()
@@ -677,7 +677,7 @@ describe('util', () => {
   })
 })
 
-describe('intégrité après un scénario complet', () => {
+describe('integrity after a full scenario', () => {
   it('foreign_keys = 1, integrity_check = ok, foreign_key_check vide', () => {
     const { items, collections, tags } = lib.repos
     const a = items.insertWithMedia({ kind: 'image' }, [{ mediaType: 'image' }]).id
@@ -693,15 +693,15 @@ describe('intégrité après un scénario complet', () => {
   })
 })
 
-describe('renumérotation et erreurs de validation', () => {
-  it('renumérotation : tous les frères repositionnés reçoivent updated_at', () => {
+describe('renumbering and validation errors', () => {
+  it('renumbering: all repositioned siblings receive updated_at', () => {
     const { collections } = lib.repos
     const [a, b, c] = ['A', 'B', 'C'].map((name) => collections.create({ name }).id) as [
       number,
       number,
       number,
     ]
-    // Écart trop faible entre A et B : `reorder` doit renuméroter les frères.
+    // Gap too small between A and B: `reorder` must renumber the siblings.
     lib.db.prepare('UPDATE collections SET order_index = ? WHERE id = ?').run(1, a)
     lib.db.prepare('UPDATE collections SET order_index = ? WHERE id = ?').run(1 + 1e-7, b)
     lib.db.prepare('UPDATE collections SET order_index = ? WHERE id = ?').run(3, c)
@@ -711,7 +711,7 @@ describe('renumérotation et erreurs de validation', () => {
     for (const id of [a, b, c]) expect(collections.getById(id)?.updated_at).toBe(T0 + 777)
   })
 
-  it('authors.upsert et settings.set lèvent une AppError validation', () => {
+  it('authors.upsert and settings.set throw an AppError validation', () => {
     expect(() => lib.repos.authors.upsert({ platform: 'x', handle: ' @ ' })).toThrow(
       expect.objectContaining({ code: 'validation' }),
     )
@@ -720,14 +720,14 @@ describe('renumérotation et erreurs de validation', () => {
     )
   })
 
-  it('jobs.enqueue sans priorité : JOB_PRIORITY.BACKGROUND', () => {
+  it('jobs.enqueue without priority: JOB_PRIORITY.BACKGROUND', () => {
     const id = lib.repos.jobs.enqueue({ type: 'media.derive' })
     expect(lib.repos.jobs.get(id)?.priority).toBe(JOB_PRIORITY.BACKGROUND)
   })
 })
 
-describe('collections : nom vide refusé (écriture gelée)', () => {
-  it('create et update refusent un nom vide ou blanc, sans rien écrire', () => {
+describe('collections: empty name rejected (frozen write API)', () => {
+  it('create and update reject an empty or blank name, without writing anything', () => {
     const { collections } = lib.repos
     const a = collections.create({ name: 'A' })
     expect(() => collections.create({ name: '' })).toThrow(

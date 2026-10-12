@@ -1,6 +1,6 @@
 /**
- * Mise à jour sans boucle : un seul `runtime.reload()` par version livrée ; ensuite
- * `ext.stale` (extension chargée depuis un autre dossier).
+ * Update without a loop: a single `runtime.reload()` per shipped version; after that,
+ * `ext.stale` (extension loaded from another folder).
  */
 import { api } from '../lib/api'
 

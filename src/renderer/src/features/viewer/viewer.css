@@ -1,7 +1,7 @@
 /*
- * Vue détail. Surfaces immersives : indépendantes du thème. Le fond est l'ambiance tirée du média
- * (`AmbienceLayer`) ; panneau, champs et contrôles sont du verre teinté par `--viewer-tint*` (posées en
- * ligne par `Viewer` depuis l'ambiance, avec un fondu de 450 ms).
+ * Detail view. Immersive surfaces: independent of the theme. The background is the ambience
+ * drawn from the media (`AmbienceLayer`); panel, fields and controls are glass tinted by
+ * `--viewer-tint*` (set inline by `Viewer` from the ambience, with a 450 ms fade).
  */
 
 @property --viewer-tint {
@@ -33,7 +33,7 @@
   color: var(--viewer-fg);
   -webkit-user-select: none;
   user-select: none;
-  /* Filets et textes secondaires lisibles (AA) sur n'importe quelle teinte. */
+  /* Dividers and secondary texts readable (AA) on any tint. */
   --viewer-line: rgba(255, 255, 255, 0.09);
   --viewer-line-strong: rgba(255, 255, 255, 0.15);
   --viewer-fg-muted: #ababae;
@@ -49,9 +49,9 @@
 }
 
 /*
- * Fond opaque : le flou de ce qui est derrière (la grille) ne se voit que pendant les fondus
- * d'ouverture et de fermeture (`is-fading`, posé par `Viewer`). Vue ouverte, pas de filtre plein
- * écran : la grille, entièrement masquée, n'est plus ni rastérisée ni floutée à chaque image.
+ * Opaque background: the blur of what is behind (the grid) is only visible during the opening
+ * and closing fades (`is-fading`, set by `Viewer`). View open, no full-screen filter: the grid,
+ * fully hidden, is no longer rasterised or blurred on every frame.
  */
 .viewer-backdrop {
   position: absolute;
@@ -64,7 +64,7 @@
   backdrop-filter: blur(24px);
 }
 
-/* ---- Ambiance (deux canvas 96 × 60 étirés par le compositeur, fondu enchaîné) ---- */
+/* ---- Ambience (two 96 × 60 canvases stretched by the compositor, cross-fade) ---- */
 .viewer-ambience {
   position: absolute;
   inset: 0;
@@ -79,7 +79,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  /* Calques stables pendant toute la vue (pas de promotion à chaque fondu). */
+  /* Layers stable for the whole view (no promotion on each fade). */
   will-change: opacity;
 }
 .viewer-ambience-grain {
@@ -155,7 +155,7 @@
   }
 }
 
-/* ---- Barre du haut (45 pt, posée sur l'ambiance, filet clair translucide) ---- */
+/* ---- Top bar (45 pt, placed over the ambience, translucent light rule) ---- */
 .viewer-topbar {
   position: absolute;
   left: 0;
@@ -299,7 +299,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- Lecteur vidéo (44 pt, sous le média) ---- */
+/* ---- Video player (44 pt, below the media) ---- */
 .viewer-player {
   border-radius: 10px;
   background: var(--viewer-tint);
@@ -376,7 +376,7 @@
   white-space: nowrap;
 }
 
-/* ---- Panneau Détails ---- */
+/* ---- Details panel ---- */
 .viewer-panel {
   position: absolute;
   overflow-y: auto;
@@ -550,7 +550,7 @@
   padding-top: 11px;
 }
 
-/* ---- Pastilles de la palette (sous l'aperçu) ---- */
+/* ---- Palette swatches (below the preview) ---- */
 .viewer-swatch {
   width: 22px;
   height: 22px;
@@ -564,7 +564,7 @@
   transform: scale(1.12);
 }
 
-/* ---- Pipette ---- */
+/* ---- Eyedropper ---- */
 .viewer-root[data-picking] .viewer-media,
 .viewer-root[data-picking] .viewer-media.is-zoomed {
   cursor:

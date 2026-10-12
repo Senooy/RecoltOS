@@ -18,7 +18,7 @@ import { makeTmpDir } from './tmpdir'
 type Row = Record<string, number | string | null>
 
 describe('make-fixtures', () => {
-  it('bibliothèque de démo : base valide, médias présents, avatars en cache local', async () => {
+  it('demo library: valid database, media present, avatars cached locally', async () => {
     const out = makeTmpDir('demo')
     const res = await makeDemoLibrary(out, { count: 40, collections: 4 })
     expect(res.items).toBe(40)
@@ -44,7 +44,7 @@ describe('make-fixtures', () => {
         if (findFfmpeg()) expect(Number(m.file_size)).toBeGreaterThan(500)
       }
     }
-    // Avatars X en cache local ; Instagram « expiré » (monogramme), comme la bibliothèque réelle.
+    // X avatars cached locally; Instagram « expiré » (monogram), as in the real library.
     for (const a of all('SELECT platform, handle, avatar_rel, avatar_status FROM authors')) {
       if (a.platform === 'instagram') {
         expect(a.avatar_status).toBe('expired')
@@ -57,12 +57,12 @@ describe('make-fixtures', () => {
         expect(statSync(join(res.libraryDir, String(a.avatar_rel))).size).toBeGreaterThan(100)
       }
     }
-    // Aucune URL distante dans les colonnes de chemin (le renderer ne reçoit jamais d'http).
+    // No remote URL in the path columns (the renderer never receives http).
     expect(all("SELECT count(*) n FROM item_media WHERE file_rel LIKE 'http%'")[0]?.n).toBe(0)
     db.close()
   })
 
-  it('le cache est stable et clone la même base', async () => {
+  it('the cache is stable and clones the same database', async () => {
     const opts = { count: 25, collections: 3 }
     const a = await makeDemoLibrary(makeTmpDir('demo-a'), opts)
     const b = await makeDemoLibrary(makeTmpDir('demo-b'), opts)
@@ -76,7 +76,7 @@ describe('make-fixtures', () => {
     )
   })
 
-  it('CLI : --out et --if-missing (dev:demo)', () => {
+  it('CLI: --out and --if-missing (dev:demo)', () => {
     const out = makeTmpDir('demo-cli')
     const run = () =>
       spawnSync(
@@ -95,10 +95,10 @@ describe('make-fixtures', () => {
       )
     const first = run()
     expect(first.status, first.stderr).toBe(0)
-    expect(first.stdout).toContain('20 éléments')
-    expect(run().stdout).toContain('existe déjà')
+    expect(first.stdout).toContain('20 items')
+    expect(run().stdout).toContain('already exists')
 
-    // user_version antérieur à la dernière migration : régénération, pas réutilisation.
+    // user_version older than the latest migration: regeneration, not reuse.
     const dbFile = join(out, 'libraries/default/recolt.db')
     const raw = new Database(dbFile)
     raw.pragma('user_version = 0')
@@ -106,11 +106,11 @@ describe('make-fixtures', () => {
     expect(isDemoLibraryCurrent(out)).toBe(false)
     const stale = run()
     expect(stale.status, stale.stderr).toBe(0)
-    expect(stale.stdout).toContain('périmé')
+    expect(stale.stdout).toContain('stale')
     expect(isDemoLibraryCurrent(out)).toBe(true)
   })
 
-  it('isDemoLibraryCurrent : absent, corrompu ou à jour', () => {
+  it('isDemoLibraryCurrent: missing, corrupt or up to date', () => {
     expect(isDemoLibraryCurrent(makeTmpDir('demo-current-absent'))).toBe(false)
 
     const corrupt = makeTmpDir('demo-current-corrupt')
@@ -126,7 +126,7 @@ describe('make-fixtures', () => {
     expect(isDemoLibraryCurrent(ok)).toBe(true)
   })
 
-  it('cache : un .building-<pid> mort (build interrompu) est nettoyé au build suivant', async () => {
+  it('cache: a dead .building-<pid> (interrupted build) is cleaned up on the next build', async () => {
     const opts = { count: 27, collections: 3 }
     const cache = join(
       REPO_ROOT,
@@ -142,7 +142,7 @@ describe('make-fixtures', () => {
   })
 })
 
-describe('CLI : options numériques validées', () => {
+describe('CLI: numeric options validated', () => {
   it.each([
     ['--count', 'abc'],
     ['--count', '-3'],
@@ -150,7 +150,7 @@ describe('CLI : options numériques validées', () => {
     ['--collections', 'x'],
     ['--trashed', ''],
     ['--hidden', '2e'],
-  ])('%s %s : sortie 2 avec message d’usage, aucune bibliothèque créée', (flag, value) => {
+  ])('%s %s: exit 2 with usage message, no library created', (flag, value) => {
     const out = makeTmpDir('fixtures-badnum')
     const r = spawnSync(
       join(REPO_ROOT, 'node_modules/.bin/tsx'),

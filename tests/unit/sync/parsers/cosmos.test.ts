@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- fixtures JSON mutées en place (copie `structuredClone` typée `any`) */
 /**
- * Parseur Cosmos sur les fixtures synthétiques.
+ * Cosmos parser on the synthetic fixtures.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -18,7 +18,7 @@ const parse = (name: string) => {
 const cExtra = (e: unknown) => e as CosmosPostExtra
 
 describe('parseCosmosSavesPage — fixtures', () => {
-  it('image : clé cosmos:<id>, URL /e/<id>, original sans ?format=webp, repli jpeg', () => {
+  it('image: cosmos:<id> key, URL /e/<id>, original without ?format=webp, jpeg fallback', () => {
     const p = parse('image.json').posts[0]!
     expect(p.sourceKey).toBe('cosmos:1400000001')
     expect(p.sourceUrl).toBe('https://www.cosmos.so/e/1400000001')
@@ -38,7 +38,7 @@ describe('parseCosmosSavesPage — fixtures', () => {
     expect(p.postMeta).toMatchObject({ platform: 'cosmos', url: p.sourceUrl, postedAt: null })
   })
 
-  it('multi : media et multipleMedia dédupliqués (3 images)', () => {
+  it('multi: media and multipleMedia deduplicated (3 images)', () => {
     const p = parse('multi.json').posts[0]!
     expect(p.media.map((m) => m.url)).toEqual([
       'https://cdn.cosmos.so/0f0e0d0c-bbbb-4b3a-9f8e-7d6c5b4a3006',
@@ -47,7 +47,7 @@ describe('parseCosmosSavesPage — fixtures', () => {
     ])
   })
 
-  it('vidéo : mux.downloadableUrl, poster sans format ; replis mp4Url puis video.url', () => {
+  it('video: mux.downloadableUrl, poster without format; fallbacks mp4Url then video.url', () => {
     const p = parse('video.json').posts[0]!
     expect(p.kind).toBe('video')
     expect(p.media).toHaveLength(1)
@@ -66,7 +66,7 @@ describe('parseCosmosSavesPage — fixtures', () => {
     )
   })
 
-  it('site web : kind url, lien et titre ; source.author vide → pas d’auteur', () => {
+  it('website: kind url, link and title; empty source.author → no author', () => {
     const p = parse('lien.json').posts[0]!
     expect(p.kind).toBe('url')
     expect(p.text).toBe('Site de référence 2')
@@ -77,7 +77,7 @@ describe('parseCosmosSavesPage — fixtures', () => {
     })
   })
 
-  it('tuile texte : ignorée et comptée, l’image voisine est gardée', () => {
+  it('text tile: ignored and counted, the neighbouring image is kept', () => {
     const r = parse('texte.json')
     expect(r.posts.map((p) => p.sourceKey)).toEqual(['cosmos:1400000005'])
     expect(r.stats).toMatchObject({ entries: 2, parsed: 1, ignored: 1, malformed: 0 })
@@ -85,7 +85,7 @@ describe('parseCosmosSavesPage — fixtures', () => {
     expect(r.posts[0]!.position).toBe(0)
   })
 
-  it('pagination : curseur sur page 1, null en fin', () => {
+  it('pagination: cursor on page 1, null at the end', () => {
     const r = parse('page-1.json')
     expect(r.posts).toHaveLength(8)
     expect(r.nextCursor).toBe('Y29zbW9zLXBhZ2UtMg')
@@ -93,7 +93,7 @@ describe('parseCosmosSavesPage — fixtures', () => {
     expect(parse('page-fin.json').nextCursor).toBeNull()
   })
 
-  it('non connecté → auth_required ; réponse `me` → api_changed', () => {
+  it('not logged in → auth_required; `me` response → api_changed', () => {
     expect(parseCosmosSavesPage(fixture('cosmos', 'non-connecte.json'))).toMatchObject({
       ok: false,
       error: { code: 'auth_required' },
@@ -105,8 +105,8 @@ describe('parseCosmosSavesPage — fixtures', () => {
   })
 })
 
-describe('parseCosmosSavesPage — robustesse', () => {
-  it('éléments corrompus isolés, curseur conservé', () => {
+describe('parseCosmosSavesPage — robustness', () => {
+  it('corrupted items isolated, cursor kept', () => {
     const j = mutable('cosmos', 'page-1.json')
     const items = j.data.allElementsV2.items
     delete items[1].id
@@ -120,7 +120,7 @@ describe('parseCosmosSavesPage — robustesse', () => {
     expect(r.nextCursor).toBe('Y29zbW9zLXBhZ2UtMg')
   })
 
-  it('page vide avec curseur → fin ; curseur identique au demandé → fin', () => {
+  it('empty page with cursor → end; cursor identical to the requested one → end', () => {
     const j = mutable('cosmos', 'page-1.json')
     expect(
       expectOk(parseCosmosSavesPage(j, { requestCursor: 'Y29zbW9zLXBhZ2UtMg' })).nextCursor,
@@ -129,7 +129,7 @@ describe('parseCosmosSavesPage — robustesse', () => {
     expect(expectOk(parseCosmosSavesPage(j)).nextCursor).toBeNull()
   })
 
-  it('cosmosOriginal : seul le paramètre format est retiré, et seulement sur cosmos.so', () => {
+  it('cosmosOriginal: only the format parameter is removed, and only on cosmos.so', () => {
     expect(cosmosOriginal('https://cdn.cosmos.so/a?format=webp&w=10')).toBe(
       'https://cdn.cosmos.so/a?w=10',
     )
@@ -139,17 +139,17 @@ describe('parseCosmosSavesPage — robustesse', () => {
     expect(cosmosOriginal(null)).toBeNull()
   })
 
-  it('formes inconnues → api_changed sans exception', () => {
+  it('unknown shapes → api_changed without exception', () => {
     for (const bad of [null, 1, 'z', [], {}, { data: null }, { data: { allElementsV2: {} } }]) {
       expect(parseCosmosSavesPage(bad)).toMatchObject({ ok: false, error: { code: 'api_changed' } })
     }
   })
 })
 
-describe('parseCosmosSavesPage — schéma relevé le 2026-10-12', () => {
-  // Fixture SYNTHÉTIQUE dont la forme suit la requête de l'extension, validée contre le schéma
-  // public d'api.cosmos.so (médias typés, `source.author` objet, tuiles typées).
-  it('image, vidéo Mux, GIF animé, site web, tuile texte ignorée', () => {
+describe('parseCosmosSavesPage — schema recorded on 2026-10-12', () => {
+  // SYNTHETIC fixture whose shape follows the extension's request, validated against the
+  // public schema of api.cosmos.so (typed media, `source.author` object, typed tiles).
+  it('image, Mux video, animated GIF, website, text tile ignored', () => {
     const r = parse('schema-2026.json')
     expect(r.nextCursor).toBe('Y3Vyc2V1ci0y')
     expect(r.stats).toMatchObject({ entries: 5, parsed: 4, ignored: 1 })

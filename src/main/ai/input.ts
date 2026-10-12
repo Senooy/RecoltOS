@@ -1,7 +1,7 @@
 /**
- * Construction de l'`AiInput` d'un élément : médias préparés dans le dossier du job,
- * contexte minimal (hôte seul, jamais l'URL complète ; légende et auteur du post ; durée ; carrousel),
- * vocabulaire. Ne lit que la base et les fichiers de la bibliothèque.
+ * Builds the `AiInput` of an item: media prepared in the job folder,
+ * minimal context (host only, never the full URL; post caption and author; duration; carousel),
+ * vocabulary. Only reads the database and the library files.
  */
 import { existsSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
@@ -83,7 +83,7 @@ function existing(lib: LibraryContext, rels: (string | null)[]): string | null {
       const abs = lib.paths.abs(r)
       if (existsSync(abs)) return abs
     } catch {
-      // chemin invalide : ignoré
+      // invalid path: ignored
     }
   }
   return null
@@ -102,7 +102,7 @@ export interface BuiltInput {
   item: ItemRow
 }
 
-/** Construit l'entrée et prépare les JPEG dans `jobDir` (créé). */
+/** Builds the input and prepares the JPEGs in `jobDir` (created). */
 export async function buildAiInput(
   deps: BuildInputDeps,
   item: ItemRow,
@@ -172,7 +172,7 @@ export async function buildAiInput(
     for (const f of kf.frames) await prep(f, i++, AI_FRAME_MAX_EDGE)
     if (kf.durationSec) ctx.videoDurationSec = Math.round(kf.durationSec * 10) / 10
   } else {
-    // image ou url : couverture, ou carrousel (diapositives locales).
+    // image or url: cover, or carousel (local slides).
     const slides: Slide[] = []
     for (const m of rows) {
       if (m.status !== 'ok' && m.status !== 'processing') continue

@@ -1,4 +1,4 @@
-/** Contrat `libraries.*` (handler). Dossiers iCloud Drive / Dropbox refusés. */
+/** `libraries.*` contract (handler). iCloud Drive / Dropbox folders refused. */
 import { z } from 'zod'
 import { LibraryId } from '../enums'
 import { AbsPath, Empty, Void, type ContractShape } from './define'
@@ -6,7 +6,7 @@ import { AbsPath, Empty, Void, type ContractShape } from './define'
 export const LibraryInfo = z.object({
   id: LibraryId,
   name: z.string(),
-  /** `null` = emplacement par défaut `userData/libraries/<id>`. */
+  /** `null` = default location `userData/libraries/<id>`. */
   path: z.string().nullable(),
   itemCount: z.number().int().min(0),
 })
@@ -24,10 +24,10 @@ export const librariesContract = {
     output: LibraryInfo,
   },
   'libraries.switch': { input: z.object({ id: LibraryId }), output: Void },
-  /** Ouvre un dossier de bibliothèque existant ; `null` si annulé. */
+  /** Opens an existing library folder; `null` if cancelled. */
   'libraries.openFolder': { input: Empty, output: LibraryInfo.nullable() },
   'libraries.rename': { input: z.object({ id: LibraryId, name: Name }), output: LibraryInfo },
-  /** Les fichiers ne sont jamais supprimés depuis l'app (`deleteFiles: false`). */
+  /** Files are never deleted from the app (`deleteFiles: false`). */
   'libraries.remove': {
     input: z.object({ id: LibraryId, deleteFiles: z.literal(false) }),
     output: Void,

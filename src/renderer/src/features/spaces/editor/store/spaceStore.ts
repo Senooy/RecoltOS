@@ -1,8 +1,8 @@
 /**
- * Store de l'éditeur : zustand + immer. `nodes` = état committé suivi par
- * l'historique ; `preview` = état éphémère d'un geste (hors historique) ; un seul `commit` par geste
- * (une entrée d'historique, un seul marquage `dirty`). La caméra vit dans un store à part
- * (`useCamera`) mis à jour à chaque image sans re-rendre les nœuds.
+ * Editor store: zustand + immer. `nodes` = committed state tracked by
+ * the history; `preview` = ephemeral state of a gesture (outside history); a single `commit` per gesture
+ * (one history entry, a single `dirty` mark). The camera lives in a separate store
+ * (`useCamera`) updated on each frame without re-rendering the nodes.
  */
 import { produce, type Draft } from 'immer'
 import { create } from 'zustand'
@@ -31,9 +31,9 @@ export interface SpaceState {
   guides: Guide[]
   marquee: Rect | null
   drawerOpen: boolean
-  /** Incrémenté à chaque changement de l'historique (boutons annuler / rétablir). */
+  /** Incremented on each history change (undo / redo buttons). */
   historyVersion: number
-  /** Survol (priorité des vidéos actives). */
+  /** Hover (priority of active videos). */
   hoverId: string | null
 }
 
@@ -59,7 +59,7 @@ export const useSpace = create<SpaceState>()(() => initial())
 
 export interface CameraState {
   camera: Camera
-  /** Caméra en fin de geste (niveau de détail, culling fin). */
+  /** Camera at the end of a gesture (level of detail, fine culling). */
   settled: Camera
   moving: boolean
   view: { w: number; h: number }
@@ -83,7 +83,7 @@ export const persistence = new Persistence({
   onRetry: () => notify.retry(),
 })
 
-/** Branchements fournis par l'éditeur (RPC, toasts) : le store reste testable sans IPC. */
+/** Hooks provided by the editor (RPC, toasts): the store stays testable without IPC. */
 let sendBatch: (p: BatchPayload) => Promise<unknown> = () => Promise.resolve()
 const notify = { invalid: (_n: number) => undefined as void, retry: () => undefined as void }
 
@@ -97,7 +97,7 @@ export function configureStore(o: {
   notify.retry = o.onRetry
 }
 
-/** Charge un document (après vidage de l'espace précédent). */
+/** Loads a document (after flushing the previous space). */
 export function loadDoc(doc: {
   uuid: string
   name: string
@@ -128,15 +128,15 @@ export function resetStore(): void {
 }
 
 export interface CommitOptions {
-  /** Coalescence d'historique (flèches). */
+  /** History coalescing (arrows). */
   key?: string
-  /** Sélection après le commit. */
+  /** Selection after the commit. */
   select?: string[]
 }
 
 /**
- * Applique une mutation aux nœuds committés : une entrée d'historique, un marquage `dirty`.
- * Rend les uuid touchés.
+ * Applies a mutation to the committed nodes: one history entry, a `dirty` mark.
+ * Returns the touched uuids.
  */
 export function commit(
   label: string,
@@ -228,19 +228,19 @@ export function setCamera(camera: Camera, o: { settle?: boolean; moving?: boolea
   }))
 }
 
-/** z suivant (au-dessus de tout). */
+/** Next z (above everything). */
 export function nextZ(): number {
   let z = -1
   for (const n of Object.values(useSpace.getState().nodes)) if (n.z > z) z = n.z
   return z + 1
 }
 
-/** Nœuds triés par z croissant. */
+/** Nodes sorted by ascending z. */
 export function sortedNodes(nodes: Record<string, SpaceNode>): SpaceNode[] {
   return Object.values(nodes).sort((a, b) => a.z - b.z || (a.uuid < b.uuid ? -1 : 1))
 }
 
-/** Validation de l'édition de texte en cours (note, texte, forme) : branchée par le nœud édité. */
+/** Validation of the text edit in progress (note, text, shape): hooked up by the edited node. */
 let editingCommit: (() => void) | null = null
 
 export function registerEditingCommit(fn: (() => void) | null): void {

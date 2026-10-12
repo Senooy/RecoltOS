@@ -8,7 +8,7 @@ import { makeTmpDir, removeTmpDir, withTmpDir } from './tmpdir'
 import { makeClock } from './clock'
 
 describe('synthetic-media', () => {
-  it('webp / jpeg / png aux dimensions demandées, dégradé non uniforme', async () => {
+  it('webp / jpeg / png at the requested dimensions, non-uniform gradient', async () => {
     for (const format of ['webp', 'jpeg', 'png'] as const) {
       const meta = await sharp(await makeImage({ width: 40, height: 30, format })).metadata()
       expect([meta.format, meta.width, meta.height]).toEqual([format, 40, 30])
@@ -21,7 +21,7 @@ describe('synthetic-media', () => {
     expect(grad.channels[0]?.stdev ?? 0).toBeGreaterThan(20)
   })
 
-  it('writeImage écrit dans un sous-dossier créé', async () => {
+  it('writeImage writes into a created subfolder', async () => {
     await withTmpDir(async (dir) => {
       const f = join(dir, 'a', 'b.webp')
       const n = await writeImage(f)
@@ -29,7 +29,7 @@ describe('synthetic-media', () => {
     })
   })
 
-  it('makeVideo : mp4 de 3 s avec ffmpeg système, sinon false', () => {
+  it('makeVideo: 3 s mp4 with system ffmpeg, otherwise false', () => {
     const dir = makeTmpDir('video')
     const f = join(dir, 'v.mp4')
     const ok = makeVideo(f)
@@ -41,7 +41,7 @@ describe('synthetic-media', () => {
 })
 
 describe('remote-server', () => {
-  it('sert avatars et médias, 403 expiré, 404, journal des requêtes', async () => {
+  it('serves avatars and media, 403 expired, 404, request log', async () => {
     const srv = await startRemoteServer()
     try {
       const avatar = await fetch(srv.url('/avatar/auteur_001.jpg'))
@@ -62,28 +62,28 @@ describe('remote-server', () => {
   })
 })
 
-describe('tmpdir / clock / garde réseau', () => {
-  it('les dossiers temporaires vivent sous .tmp/tests du dépôt', () => {
+describe('tmpdir / clock / network guard', () => {
+  it('temporary folders live under .tmp/tests in the repo', () => {
     const d = makeTmpDir('x')
     expect(d).toMatch(/\.tmp\/tests\/x-/)
     removeTmpDir(d)
     expect(existsSync(d)).toBe(false)
   })
 
-  it('horloge injectée', () => {
+  it('injected clock', () => {
     const c = makeClock(1000)
     expect(c.advance(500)).toBe(1500)
     c.set(10)
     expect(c.now()).toBe(10)
   })
 
-  it('fetch refuse un hôte externe (tests/setup/node.ts)', async () => {
+  it('fetch refuses an external host (tests/setup/node.ts)', async () => {
     await expect(fetch('https://pbs.twimg.com/profile_images/x.jpg')).rejects.toThrow(
       /Réseau externe interdit/,
     )
   })
 
-  it('les scripts factices sont exécutables', () => {
+  it('fake scripts are executable', () => {
     const f = join(import.meta.dirname, 'fake-bin', 'claude')
     expect(statSync(f).mode & 0o111).not.toBe(0)
     expect(readFileSync(f, 'utf8')).toContain('--bare')

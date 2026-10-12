@@ -1,4 +1,4 @@
-/** Briques communes aux contrats IPC par domaine. */
+/** Shared building blocks for the per-domain IPC contracts. */
 import { z } from 'zod'
 import '../zod-locale'
 
@@ -9,13 +9,13 @@ export interface ChannelDef {
 export type ContractShape = Record<string, ChannelDef>
 export type EventShape = Record<string, z.ZodType>
 
-/** Entrée vide : `rpc('items.counts')` ou `rpc('items.counts', {})`. */
+/** Empty input: `rpc('items.counts')` or `rpc('items.counts', {})`. */
 export const Empty = z.object({}).default({})
-/** Sortie sans valeur. */
+/** Output without value. */
 export const Void = z.void()
 export const Count = z.object({ count: z.number().int().min(0) })
 
-/** Chemin absolu de fichier reçu du renderer (revalidé côté main : realpath + racine). */
+/** Absolute file path received from the renderer (re-validated in main: realpath + root). */
 export const AbsPath = z
   .string()
   .min(1)

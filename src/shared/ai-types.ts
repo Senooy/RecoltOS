@@ -1,6 +1,6 @@
 /**
- * Types IA (renommages : `saveId` → `itemUuid`). Recherche visuelle supprimée.
- * Interdits : mode « bare » de claude ; codex toujours isolé ; aucun appel sans consentement.
+ * AI types (renames: `saveId` → `itemUuid`). Visual search removed.
+ * Forbidden: claude's "bare" mode; codex always isolated; no call without consent.
  */
 import { z } from 'zod'
 
@@ -29,18 +29,18 @@ export interface AiPost {
 export interface AiInput {
   itemUuid: string
   kind: 'image' | 'video' | 'tweet' | 'url'
-  /** 0 (post texte), 1 (image, url), 1 à 3 (vidéo, carrousel) ; redimensionnés, EXIF retiré. */
+  /** 0 (text post), 1 (image, url), 1 to 3 (video, carousel); resized, EXIF stripped. */
   media: AiMedia[]
   context: {
     sourceLabel?: 'X' | 'Instagram' | 'Cosmos' | 'Web'
-    /** Nom d'hôte seul, jamais l'URL complète. */
+    /** Host name only, never the full URL. */
     sourceHost?: string
     pageTitle?: string
     videoDurationSec?: number
     carousel?: { total: number; slideNumbers: number[] }
     post?: AiPost
   }
-  /** Tags existants proposés au modèle (≤ 60). */
+  /** Existing tags proposed to the model (≤ 60). */
   vocabulary: string[]
 }
 
@@ -77,9 +77,9 @@ export interface AiCallOptions {
   model?: string
   effort?: 'low' | 'medium'
   jobId?: number
-  /** Dossier du job (`<sandbox>/jobs/<id>`) : JPEG préparés, `schema.json`, `out.json` (codex). */
+  /** Job folder (`<sandbox>/jobs/<id>`): prepared JPEGs, `schema.json`, `out.json` (codex). */
   jobDir?: string
-  /** 2ᵉ essai après une sortie invalide : prompt renforcé. */
+  /** 2nd attempt after invalid output: reinforced prompt. */
   retry?: boolean
 }
 
@@ -120,7 +120,7 @@ export const ProviderStatus = z.object({
   installed: z.boolean(),
   path: z.string().optional(),
   version: z.string().optional(),
-  /** Copies trouvées par le shell de login (feuille « Changer »). */
+  /** Copies found by the login shell ("Change" sheet). */
   candidates: z.array(z.object({ path: z.string(), version: z.string().optional() })).optional(),
   loggedIn: z.boolean().optional(),
   /** 'max', 'ChatGPT'… */
@@ -143,7 +143,7 @@ export interface AiProvider {
   readonly id: AiProviderId
   status(): Promise<ProviderStatus>
   test(o: { live: boolean }): Promise<ProviderTestResult>
-  /** Appel unique utilisé par la file (titre + description + tags + OCR). */
+  /** Single call used by the queue (title + description + tags + OCR). */
   analyze(i: AiInput, o: AiCallOptions): Promise<AiResult<AiAnalysis>>
   describe(i: AiInput, o: AiCallOptions): Promise<AiResult<{ description: string }>>
   title(i: AiInput, o: AiCallOptions): Promise<AiResult<{ title: string }>>
@@ -163,5 +163,5 @@ export const PauseReason = z.enum([
 ])
 export type PauseReason = z.output<typeof PauseReason>
 
-/** Version du texte de consentement : la changer redemande l'accord. */
+/** Version of the consent text: changing it requests consent again. */
 export const AI_CONSENT_VERSION = 1

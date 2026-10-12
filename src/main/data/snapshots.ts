@@ -1,8 +1,8 @@
 /**
- * Instantanés de la base : `VACUUM INTO snapshots/recolt-<YYYYMMDD-HHmmss>[-raison].db`
- * (cohérent en WAL, ne bloque pas les lecteurs). Automatiques : `-daily` au premier lancement du
- * jour, `-pre-vN` (migrations), `-pre-import`, `-pre-purge`, `-pre-restore`. Rétention : 7 derniers
- * `daily`, 20 manuels les plus récents, tous les `pre-*` des 30 derniers jours. Pas d'import electron.
+ * Database snapshots: `VACUUM INTO snapshots/recolt-<YYYYMMDD-HHmmss>[-reason].db`
+ * (consistent under WAL, does not block readers). Automatic: `-daily` on the first launch of the
+ * day, `-pre-vN` (migrations), `-pre-import`, `-pre-purge`, `-pre-restore`. Retention: the last 7
+ * `daily`, the 20 most recent manual ones, all `pre-*` from the last 30 days. No electron import.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -21,7 +21,7 @@ type SnapLib = Pick<LibraryContext, 'db' | 'paths'>
 
 const dirOf = (lib: Pick<LibraryContext, 'paths'>) => lib.paths.dir('snapshots')
 
-/** `recolt-20261011-183000-pre-v1-2.db` → raison `pre-v1` (suffixe de collision retiré). */
+/** `recolt-20261011-183000-pre-v1-2.db` → reason `pre-v1` (collision suffix removed). */
 export function parseSnapshotName(
   name: string,
 ): { createdAt: number; reason: string | null } | null {
@@ -43,7 +43,7 @@ export function parseSnapshotName(
   return { createdAt, reason }
 }
 
-/** Fichier d'instantané validé (nom strict, dans `snapshots/`). */
+/** Validated snapshot file (strict name, in `snapshots/`). */
 export function snapshotFile(lib: Pick<LibraryContext, 'paths'>, name: string): string {
   if (!SNAPSHOT_RE.test(name) || name.includes('/')) {
     throw new AppError('validation', mt().errors.snapshotNameInvalid)
@@ -94,14 +94,14 @@ export function createSnapshot(lib: SnapLib, reason: string, at: number): Snapsh
   }
 }
 
-/** Supprime un instantané et ses compagnons `-wal` / `-shm` éventuels (`pre-restore`). */
+/** Deletes a snapshot and its `-wal` / `-shm` companions, if any (`pre-restore`). */
 export function deleteSnapshot(lib: Pick<LibraryContext, 'paths'>, name: string): void {
   const file = snapshotFile(lib, name)
   if (!fs.existsSync(file)) throw new AppError('not_found', mt().errors.snapshotNotFound)
   for (const f of [file, `${file}-wal`, `${file}-shm`]) fs.rmSync(f, { force: true })
 }
 
-/** Instantanés à supprimer selon la rétention. */
+/** Snapshots to delete according to retention. */
 export function retentionVictims(list: readonly SnapshotInfo[], now: number): string[] {
   const sorted = [...list].sort((a, b) => b.createdAt - a.createdAt)
   const daily = sorted.filter((s) => s.reason === 'daily')
@@ -120,13 +120,13 @@ export function applyRetention(lib: Pick<LibraryContext, 'paths'>, now: number):
     try {
       deleteSnapshot(lib, name)
     } catch {
-      // déjà supprimé
+      // already deleted
     }
   }
   return victims
 }
 
-/** `-daily` au premier lancement du jour (bibliothèque non vide), puis rétention. */
+/** `-daily` on the first launch of the day (non-empty library), then retention. */
 export function dailySnapshot(lib: SnapLib, now: number): SnapshotInfo | null {
   const today = snapshotStamp(now).slice(0, 8)
   const done = listSnapshots(lib).some(

@@ -1,6 +1,6 @@
 /**
- * Journal du process main (electron-log, fichier sous `userData/logs/`).
- * Ne jamais journaliser de secret (cookies, `ct0`, `sessionid`, `Bearer`, jetons d'extension).
+ * Main process log (electron-log, file under `userData/logs/`).
+ * Never log a secret (cookies, `ct0`, `sessionid`, `Bearer`, extension tokens).
  */
 import log from 'electron-log/main'
 
@@ -15,7 +15,7 @@ let initialized = false
 
 export function initLog(): Logger {
   if (!initialized) {
-    // Pas de preload injecté par electron-log : le seul preload est le nôtre (sandbox).
+    // No preload injected by electron-log: the only preload is ours (sandbox).
     log.initialize({ preload: false })
     log.transports.file.level = 'info'
     log.transports.console.level = process.env.NODE_ENV === 'production' ? 'warn' : 'info'

@@ -1,5 +1,5 @@
 /**
- * Écrit le JSON Schema v1 du protocole extension ↔ app (`src/shared/bridge/schema/v1.json`).
+ * Writes the v1 JSON Schema of the extension ↔ app protocol (`src/shared/bridge/schema/v1.json`).
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'

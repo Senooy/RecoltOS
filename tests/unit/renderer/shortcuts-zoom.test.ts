@@ -21,27 +21,27 @@ const zoom = (e: KeyboardLike): { in: boolean; out: boolean } => ({
   out: matchesShortcut(e, def('zoomOut')),
 })
 
-describe('zoom ⌘+ / ⌘- (par e.key, sans repli positionnel)', () => {
+describe('zoom ⌘+ / ⌘- (by e.key, no positional fallback)', () => {
   it('QWERTY', () => {
     expect(zoom(press('=', 'Equal'))).toEqual({ in: true, out: false })
     expect(zoom(press('+', 'Equal', { shiftKey: true }))).toEqual({ in: true, out: false })
     expect(zoom(press('-', 'Minus'))).toEqual({ in: false, out: true })
     expect(zoom(press('_', 'Minus', { shiftKey: true }))).toEqual({ in: false, out: true })
   })
-  it('AZERTY : ⌘- → zoom arrière seul (la touche « - » a code Equal)', () => {
+  it('AZERTY: ⌘- → zoom out only (the "-" key has code Equal)', () => {
     expect(zoom(press('-', 'Equal'))).toEqual({ in: false, out: true })
   })
-  it('AZERTY : ⌘= → zoom avant seul', () => {
+  it('AZERTY: ⌘= → zoom in only', () => {
     expect(zoom(press('=', 'Slash'))).toEqual({ in: true, out: false })
   })
-  it('AZERTY : ⌘) (code Minus) ne déclenche aucun zoom', () => {
+  it('AZERTY: ⌘) (code Minus) triggers no zoom', () => {
     expect(zoom(press(')', 'Minus'))).toEqual({ in: false, out: false })
   })
-  it('pavé numérique', () => {
+  it('numeric keypad', () => {
     expect(zoom(press('+', 'NumpadAdd'))).toEqual({ in: true, out: false })
     expect(zoom(press('-', 'NumpadSubtract'))).toEqual({ in: false, out: true })
   })
-  it('sans ⌘ : aucun zoom', () => {
+  it('without ⌘: no zoom', () => {
     expect(zoom(press('=', 'Equal', { metaKey: false }))).toEqual({ in: false, out: false })
   })
 })

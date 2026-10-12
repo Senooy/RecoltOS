@@ -1,18 +1,18 @@
 /**
- * Hook de contenu, monde MAIN, `document_start` : enveloppe `fetch` et `XMLHttpRequest`
- * pour les seules URL surveillées (`WATCH`) et transmet au pont de contenu (monde ISOLATED) l'URL, la
- * méthode, le corps, le statut, la réponse JSON et quelques en-têtes UTILES (gabarits, jetons) par
- * `window.postMessage` marqué. Rien d'autre n'est lu ; la page peut forger ces messages : le pont et
- * l'arrière-plan revalident tout.
+ * Content hook, MAIN world, `document_start`: wraps `fetch` and `XMLHttpRequest`
+ * for the watched URLs only (`WATCH`) and passes to the content bridge (ISOLATED world) the URL, the
+ * method, the body, the status, the JSON response and a few USEFUL headers (templates, tokens) via
+ * a tagged `window.postMessage`. Nothing else is read; the page may forge these messages: the bridge and
+ * the background re-validate everything.
  */
-/* eslint-disable @typescript-eslint/unbound-method -- enveloppe volontaire des méthodes natives */
+/* eslint-disable @typescript-eslint/unbound-method -- deliberate wrapping of native methods */
 ;(() => {
   const w = window as Window & { __recoltosHooked?: boolean }
   if (w.__recoltosHooked) return
   w.__recoltosHooked = true
   const WATCH = [
-    // X : ancien client (`x.com/i/api/graphql/<id>/Bookmarks`) et client x-web (requêtes Relay
-    // persistées sur `api.x.com/graphql/<id>/<nom>` ou `x.com/i/api/graphql/…`).
+    // X: old client (`x.com/i/api/graphql/<id>/Bookmarks`) and x-web client (Relay requests
+    // persisted on `api.x.com/graphql/<id>/<name>` or `x.com/i/api/graphql/…`).
     /\/graphql\/[^/?]+\/(Bookmarks|bookmarksQuery|CreateBookmark|bookmarkButtonAddMutation|TweetDetail|TweetResultByRestId|HomeTimeline(?:Query)?|HomeLatestTimeline(?:Query)?|UserTweets)\b/,
     /\/api\/v1\/feed\/saved\/posts\//,
     /\/api\/v1\/web\/save\/\d+\/(save|unsave)\//,
@@ -71,7 +71,7 @@
           .catch(() => undefined)
       }
     } catch {
-      // jamais d'effet sur la page
+      // never any effect on the page
     }
     return res
   }
@@ -115,7 +115,7 @@
             json,
           })
         } catch {
-          // idem
+          // same
         }
       })
     }

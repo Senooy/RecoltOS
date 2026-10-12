@@ -1,8 +1,8 @@
 /**
- * Tiroir Bibliothèque : carte flottante à droite (inset 12 px, 340 px,
- * rayon 16, ombre de modale), recherche, sélecteur Tout / une collection, masonry 2 colonnes,
- * pastille ✓ sur les éléments déjà présents. Glisser vers la toile (`application/x-recoltos-items`,
- * sélection multiple ⌘/⇧-clic), double-clic = ajout au centre de la vue.
+ * Library drawer: floating card on the right (inset 12 px, 340 px,
+ * radius 16, modal shadow), search, All / one collection selector, 2-column masonry,
+ * ✓ badge on items already present. Drag to the canvas (`application/x-recoltos-items`,
+ * multi-selection ⌘/⇧-click), double-click = add at the center of the view.
  */
 import { Check, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
@@ -21,7 +21,7 @@ export const ITEMS_MIME = 'application/x-recoltos-items'
 const COL_W = 150
 const GAP = 8
 
-/** Cartes chargées par le tiroir (glisser → toile sans nouvel aller-retour IPC), bornées. */
+/** Cards loaded by the drawer (drag → canvas without a new IPC round trip), bounded. */
 const cache = new Map<string, ItemCard>()
 const CACHE_MAX = 2_000
 export const cachedCards = (): ReadonlyMap<string, ItemCard> => cache

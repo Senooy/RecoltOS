@@ -1,6 +1,6 @@
 /**
- * `chrome.*` minimal pour tester le code de l'extension sous Node (vitest) : port natif scripté,
- * stockage en mémoire, cookies, menus, permissions.
+ * Minimal `chrome.*` to test the extension code under Node (vitest): scripted native port,
+ * in-memory storage, cookies, menus, permissions.
  */
 type Fn = (...a: never[]) => unknown
 
@@ -19,11 +19,11 @@ export class FakePort {
     this.posted.push(m)
   }
   disconnect() {}
-  /** Message hôte → extension. */
+  /** Host → extension message. */
   receive(m: unknown) {
     for (const f of this.msgL) (f as (x: unknown) => void)(m)
   }
-  /** Déconnexion par le navigateur (avec `lastError`). */
+  /** Disconnection by the browser (with `lastError`). */
   drop(message: string, fake: FakeChrome) {
     fake.lastError = { message }
     for (const f of this.discL) (f as (x: unknown) => void)(this)
@@ -40,7 +40,7 @@ export class FakeChrome {
   menus: { id: string; parentId?: string; title: string }[] = []
   reloads = 0
   granted = true
-  /** Noms d'hôtes natifs inexistants (connexion → déconnexion « not found »). */
+  /** Non-existent native host names (connection → disconnection "not found"). */
   missingHosts = new Set<string>()
 
   private store(map: Map<string, unknown>) {

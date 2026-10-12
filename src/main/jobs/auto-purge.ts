@@ -1,8 +1,8 @@
 /**
- * Purge automatique de la corbeille : `trashAutoEmptyDays` = 0 (jamais, défaut), 7, 30
- * ou 90. Au démarrage puis toutes les 6 h ; fichiers envoyés dans la Corbeille macOS (`mode:'trash'`,
- * récupérables) ; snapshot `-pre-purge` (`VACUUM INTO`) au-delà de 50 éléments ; lots de 500 ids
- * (un lot = une transaction = un job `purge.files`).
+ * Automatic trash purge: `trashAutoEmptyDays` = 0 (never, default), 7, 30 or 90.
+ * At startup, then every 6 h; files sent to the macOS Trash (`mode:'trash'`, recoverable);
+ * `-pre-purge` snapshot (`VACUUM INTO`) above 50 items; batches of 500 ids
+ * (one batch = one transaction = one `purge.files` job).
  */
 import { chunks } from '../db/repos/util'
 import { snapshotPath, vacuumInto } from '../db/migrate'
@@ -16,7 +16,7 @@ export interface AutoPurgeResult {
   snapshot: string | null
 }
 
-/** Une passe : renvoie le nombre d'éléments purgés (0 si la durée vaut 0). */
+/** One pass: returns the number of purged items (0 if the duration is 0). */
 export function runAutoPurge(
   s: JobServices,
   now = Date.now(),
@@ -53,11 +53,11 @@ export function startAutoPurge(o: {
     try {
       const r = runAutoPurge(s)
       if (r.purged > 0) {
-        o.log.info(`[jobs] purge automatique : ${r.purged} élément(s)`)
+        o.log.info(`[jobs] automatic purge : ${r.purged} item(s)`)
         o.emitChanged(r.uuids)
       }
     } catch (err) {
-      o.log.error('[jobs] purge automatique impossible', err)
+      o.log.error('[jobs] automatic purge failed', err)
     }
   }
   const first = setTimeout(pass, 5_000)

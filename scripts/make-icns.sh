@@ -1,11 +1,11 @@
 #!/bin/sh
-# Convertit build/icon.png (1024×1024) en build/icon.icns (macOS : sips + iconutil, aucun outil tiers).
-# Lancement depuis n'importe où : `pnpm run icon` (make-icon.mts puis ce script).
+# Converts build/icon.png (1024×1024) to build/icon.icns (macOS: sips + iconutil, no third-party tool).
+# Can be run from anywhere: `pnpm run icon` (make-icon.mts, then this script).
 set -eu
 cd "$(dirname "$0")/.."
 SRC=build/icon.png
 SET=build/icon.iconset
-[ -f "$SRC" ] || { echo "make-icns : $SRC introuvable (lance d'abord make-icon.mts)" >&2; exit 1; }
+[ -f "$SRC" ] || { echo "make-icns: $SRC not found (run make-icon.mts first)" >&2; exit 1; }
 rm -rf "$SET"
 mkdir -p "$SET"
 for s in 16 32 128 256 512; do
@@ -15,4 +15,4 @@ for s in 16 32 128 256 512; do
 done
 iconutil -c icns "$SET" -o build/icon.icns
 rm -rf "$SET"
-echo "icône générée : build/icon.icns"
+echo "icon generated: build/icon.icns"

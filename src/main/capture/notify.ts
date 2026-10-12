@@ -1,8 +1,8 @@
 /**
- * Notification de capture : référence forte (une `Notification` collectée perd ses
- * écouteurs), clic → fenêtre recréée si besoin puis vue détail (`evt:nav.openItem`) ; `failed`
- * (app non signée, notifications refusées) → repli : fenêtre affichée sans voler le focus + rebond
- * du Dock. Le toast in-app est géré par le renderer (`evt:capture.done`).
+ * Capture notification: strong reference (a garbage-collected `Notification` loses its
+ * listeners), click → window recreated if needed, then detail view (`evt:nav.openItem`); `failed`
+ * (unsigned app, notifications refused) → fallback: window shown without stealing focus + bounce
+ * in the Dock. The in-app toast is handled by the renderer (`evt:capture.done`).
  */
 import { randomUUID } from 'node:crypto'
 import { Notification, app, shell, type BrowserWindow } from 'electron'

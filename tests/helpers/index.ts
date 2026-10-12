@@ -1,6 +1,6 @@
 /**
- * Point d'entrée des helpers de test. Importable depuis vitest ET depuis Playwright (qui
- * charge les fichiers de test en CJS) : aucun `import.meta` ici ni dans les modules réexportés.
+ * Entry point of the test helpers. Importable from vitest AND from Playwright (which
+ * loads test files as CJS): no `import.meta` here nor in the re-exported modules.
  */
 import { join } from 'node:path'
 import { REPO_ROOT } from './paths'
@@ -14,5 +14,5 @@ export * from './synthetic-items'
 export * from './synthetic-media'
 export * from './tmpdir'
 
-/** Faux binaires (`claude`, `codex`, `ffmpeg`…) à placer en tête du `PATH` des tests. */
+/** Fake binaries (`claude`, `codex`, `ffmpeg`…) to put at the head of the tests' `PATH`. */
 export const FAKE_BIN_DIR = join(REPO_ROOT, 'tests/helpers/fake-bin')

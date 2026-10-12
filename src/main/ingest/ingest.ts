@@ -1,12 +1,12 @@
 /**
- * Pipeline d'ingestion unique : acquisition vers `tmp/<uuid>.part` (clonage APFS +
- * sha256 dans le media-worker), typage par le contenu, dédoublonnage par hash (restauration depuis
- * la corbeille), métadonnées, commit atomique, transaction (`items`, `item_media`, couverture,
- * tags, collection), porte IA, `items.changed{created}` AVANT les dérivés, puis job `media.derive`.
+ * Single ingestion pipeline: acquisition to `tmp/<uuid>.part` (APFS cloning +
+ * sha256 in the media-worker), content typing, deduplication by hash (restore from
+ * the trash), metadata, atomic commit, transaction (`items`, `item_media`, cover,
+ * tags, collection), AI gate, `items.changed{created}` BEFORE the derivatives, then the `media.derive` job.
  *
- * Entrées livrées en M1 : `file`, `capture`, `clipboard`, `url` (média direct ou capture de page
- * si `captureUrl` est fourni). M5 : `extension` (`SaveRequest` de l'extension, `ingestExtension`) ;
- * les publications synchronisées passent par `sync/ingest.ts` (une transaction par page).
+ * Entry points delivered in M1: `file`, `capture`, `clipboard`, `url` (direct media or page capture
+ * if `captureUrl` is provided). M5: `extension` (`SaveRequest` from the extension, `ingestExtension`);
+ * synced posts go through `sync/ingest.ts` (one transaction per page).
  */
 import { mkdir, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname } from 'node:path'
@@ -39,7 +39,7 @@ export interface IngestOptions {
   spaceUuid?: string
   title?: string
   tags?: string[]
-  /** Note de l'utilisateur (popup de l'extension). */
+  /** User note (extension popup). */
   notes?: string
 }
 
@@ -56,14 +56,14 @@ export interface PageCapture {
 
 export interface IngestDeps extends JobServices {
   now?: () => number
-  /** Capture d'une page HTML (fenêtre hors écran 1440×900) ; absent → `unsupported`. */
+  /** Capture of an HTML page (off-screen window 1440×900); absent → `unsupported`. */
   captureUrl?: (url: string) => Promise<PageCapture>
 }
 
 const MEDIA_TIMEOUT = { timeoutMs: 120_000 } as const
 
 interface LocalSource {
-  /** Fichier à copier (jamais modifié) ou fichier temporaire déjà dans `tmp/` (déplacé). */
+  /** File to copy (never modified) or temporary file already in `tmp/` (moved). */
   abs: string
   owned: boolean
   name: string
@@ -76,7 +76,7 @@ interface LocalSource {
   postMeta?: PostMeta | null
 }
 
-/** Item vivant ou en corbeille portant ce hash de contenu. */
+/** Live or trashed item carrying this content hash. */
 function findByHash(deps: IngestDeps, sha: string) {
   return deps.lib.db
     .prepare(
@@ -106,15 +106,15 @@ async function ingestLocal(
   const partAbs = lib.paths.abs(rel.tmp(`${mediaUuid}.part`))
   let decodedAbs: string | null = null
   try {
-    // 1. Acquisition (clonage APFS dans le worker, ou déplacement d'un fichier temporaire).
+    // 1. Acquisition (APFS cloning in the worker, or moving a temporary file).
     if (src.owned) await rename(src.abs, partAbs)
     else await deps.media('cloneFile', { src: src.abs, dst: partAbs }, MEDIA_TIMEOUT)
     const { sha256, bytes } = await deps.media('hashFile', { abs: partAbs }, MEDIA_TIMEOUT)
 
-    // 2. Typage par le contenu.
+    // 2. Typing by content.
     const type: DetectedType = await requireType(await readHead(partAbs), src.name)
 
-    // 3. Dédoublonnage par contenu (restauration depuis la corbeille).
+    // 3. Deduplication by content (restore from the trash).
     const dup = findByHash(deps, sha256)
     if (dup) {
       await rm(partAbs, { force: true })
@@ -130,7 +130,7 @@ async function ingestLocal(
       return { itemUuid: dup.uuid, status }
     }
 
-    // 4. Métadonnées (sips d'abord pour HEIC/HEIF/PSD).
+    // 4. Metadata (sips first for HEIC/HEIF/PSD).
     let width: number | null = null
     let height: number | null = null
     let isAnimated = false
@@ -161,7 +161,7 @@ async function ingestLocal(
       playable = p.playable
     }
 
-    // 5. Commit des fichiers : l'original n'est jamais ré-encodé.
+    // 5. Commit the files: the original is never re-encoded.
     const fileRel = rel.original(mediaUuid, type.ext)
     const fileAbs = lib.paths.abs(fileRel)
     await mkdir(dirname(fileAbs), { recursive: true })
@@ -178,7 +178,7 @@ async function ingestLocal(
       )
     }
 
-    // 6. Transaction en base.
+    // 6. Database transaction.
     const at = now()
     const prefs = deps.prefs()
     const kind = src.kindOverride ?? type.mediaType
@@ -368,7 +368,7 @@ export async function ingest(
   }
 }
 
-/** Source d'un enregistrement d'après l'hôte de la page. */
+/** Source of a record based on the page host. */
 export function sourceFromPageUrl(pageUrl: string): ItemSourceValue {
   let host = ''
   try {
@@ -386,10 +386,10 @@ export function sourceFromPageUrl(pageUrl: string): ItemSourceValue {
 const DATA_URL = /^data:([a-z0-9.+/-]+)?(;base64)?,/i
 
 /**
- * Enregistrement venu de l'extension (`save.create`) : image / vidéo (URL http(s)
- * téléchargée par l'app, `data:`, inline ≤ 8 Mio ou fichier assemblé par `media.chunk`), page
- * (capture d'onglet), lien (capture hors écran par l'app). Les publications (`kind: 'post'`) passent
- * par la sync (`sync/ingest.ts`).
+ * Record coming from the extension (`save.create`): image / video (http(s) URL
+ * downloaded by the app, `data:`, inline ≤ 8 MiB or file assembled by `media.chunk`), page
+ * (tab capture), link (off-screen capture by the app). Posts (`kind: 'post'`) go
+ * through sync (`sync/ingest.ts`).
  */
 export async function ingestExtension(
   req: SaveRequest,

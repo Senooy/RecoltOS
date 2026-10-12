@@ -1,6 +1,6 @@
 /**
- * Registre des fournisseurs : un `CliRuntime` par CLI (binaire résolu en cache, cwd fixe
- * `<userData>/ai-sandbox/<id>/` en 0700, sans `.git`, `.claude/` ni `.mcp.json`).
+ * Provider registry: one `CliRuntime` per CLI (binary resolved and cached, fixed cwd
+ * `<userData>/ai-sandbox/<id>/` at 0700, without `.git`, `.claude/` or `.mcp.json`).
  */
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -25,7 +25,7 @@ export interface ProvidersDeps {
 
 export interface ProviderRegistry {
   get(id: AiCliId): CliProviderBase
-  /** Oublie les binaires résolus (changement de chemin, « Vérifier »). */
+  /** Forgets the resolved binaries (path change, "Check" action). */
   refresh(): void
   resolved(id: AiCliId): Promise<ResolvedCli | null>
   sandboxDir(id: AiCliId): string
@@ -44,7 +44,7 @@ export function createProviders(deps: ProvidersDeps): ProviderRegistry {
     if (hit && hit.key === key) return hit.p
     const p = resolveCli(id, prefs, deps.detect ?? {}).catch(() => null)
     cache.set(id, { key, p })
-    // Un échec n'est pas mis en cache durablement.
+    // A failure is not cached durably.
     void p.then((r) => {
       if (!r && cache.get(id)?.p === p) cache.delete(id)
     })

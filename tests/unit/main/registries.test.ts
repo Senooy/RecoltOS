@@ -9,7 +9,7 @@ import { handlers, handlersByDomain } from '../../../src/main/ipc/handlers'
 import { jobHandlers, type JobContext } from '../../../src/main/jobs/handlers'
 import { dispatch } from '../../../src/main/ipc/router'
 
-/** Domaines IPC déjà implémentés (les autres sont encore des stubs `not_implemented`). */
+/** IPC domains already implemented (the others are still `not_implemented` stubs). */
 const IMPLEMENTED_DOMAINS: readonly string[] = [
   'prefs',
   'libraries',
@@ -29,7 +29,7 @@ const IMPLEMENTED_DOMAINS: readonly string[] = [
   'spaces',
   'sync',
 ]
-/** Jobs IA : `not_implemented` tant qu'aucun service IA n'est enregistré (hors Electron). */
+/** AI jobs: `not_implemented` as long as no AI service is registered (outside Electron). */
 const STUB_JOB_TYPES: readonly string[] = ['ai.enrich', 'ai.prompt']
 
 function fakeCtx(userData: string = makeTmpDir('recolt-registries-')): ServiceContext {
@@ -50,12 +50,12 @@ function fakeCtx(userData: string = makeTmpDir('recolt-registries-')): ServiceCo
   }
 }
 
-describe('registre des handlers IPC', () => {
-  it('un fichier de handlers par domaine figé', () => {
+describe('IPC handler registry', () => {
+  it('one handler file per domain, frozen', () => {
     expect(Object.keys(handlersByDomain).sort()).toEqual([...DOMAINS].sort())
   })
 
-  it('chaque canal du contrat a un handler ; les domaines encore en stub lèvent not_implemented', async () => {
+  it('every channel of the contract has a handler; domains still stubbed raise not_implemented', async () => {
     expect(Object.keys(handlers).sort()).toEqual([...CHANNELS].sort())
     for (const ch of CHANNELS) {
       const domainHandlers = handlersByDomain[
@@ -75,11 +75,11 @@ describe('registre des handlers IPC', () => {
     }
   })
 
-  it('via dispatch, un canal stub renvoie { ok:false, code:not_implemented }', async () => {
+  it('via dispatch, a stub channel returns { ok:false, code:not_implemented }', async () => {
     const stub = CHANNELS.find(
       (c) => !IMPLEMENTED_DOMAINS.includes(domainOf(c)) && contract[c].input.safeParse({}).success,
     )
-    if (!stub) return // tous les domaines sont livrés
+    if (!stub) return // all domains are delivered
     const r = await dispatch(stub, {}, {}, { handlers, validateOutput: true })
     expect(r).toEqual({
       ok: false,
@@ -88,8 +88,8 @@ describe('registre des handlers IPC', () => {
   })
 })
 
-describe('registre des jobs', () => {
-  it('table type → handler complète, stubs not_implemented', async () => {
+describe('jobs registry', () => {
+  it('type → handler table complete, stubs not_implemented', async () => {
     expect(Object.keys(jobHandlers).sort()).toEqual([...JOB_TYPES].sort())
     for (const t of JOB_TYPES) {
       if (!STUB_JOB_TYPES.includes(t)) continue
@@ -100,14 +100,14 @@ describe('registre des jobs', () => {
   })
 })
 
-describe('registre des services', () => {
-  it('services.ts référence chaque init<Domaine>() dans l’ordre figé, sans embed', () => {
+describe('services registry', () => {
+  it('services.ts references each init<Domain>() in frozen order, without embed', () => {
     expect(SERVICES.map((s) => s.domain)).toEqual([...SERVICE_DOMAINS])
     expect(SERVICE_DOMAINS).not.toContain('embed')
     for (const s of SERVICES) expect(s.init).toBeTypeOf('function')
   })
 
-  it('initServices appelle chaque init dans l’ordre, isole les échecs et libère en sens inverse', async () => {
+  it('initServices calls each init in order, isolates failures and releases in reverse order', async () => {
     const calls: string[] = []
     const registry = SERVICE_DOMAINS.map((domain) => ({
       domain,
@@ -133,7 +133,7 @@ describe('registre des services', () => {
     )
   })
 
-  it('le registre réel démarre sans erreur (stubs)', async () => {
+  it('the real registry starts without error (stubs)', async () => {
     const h = await initServices(fakeCtx())
     try {
       expect(h.failed).toEqual([])

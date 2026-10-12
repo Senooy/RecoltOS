@@ -1,6 +1,6 @@
 /**
- * Repo de base `spaces` + `space_nodes` (schéma complet dès 0001). Le domaine Spaces
- * (`src/main/spaces/repo.ts`, lots `applyBatch`, assets, GC) s'appuie sur ces primitives.
+ * Base `spaces` + `space_nodes` repo (full schema from 0001). The Spaces domain
+ * (`src/main/spaces/repo.ts`, `applyBatch` batches, assets, GC) relies on these primitives.
  */
 import type Database from 'better-sqlite3'
 import { newUuid } from '../../../shared/ids'
@@ -82,7 +82,7 @@ export function createSpacesRepo(db: Database.Database, opts: RepoOptions = {}) 
     getByUuid(uuid: string): SpaceRow | undefined {
       return q('SELECT * FROM spaces WHERE uuid = ?').get(uuid) as SpaceRow | undefined
     },
-    /** Spaces vivants, du plus récemment modifié au plus ancien. */
+    /** Live spaces, from most recently modified to oldest. */
     list(): SpaceRow[] {
       return q(
         'SELECT * FROM spaces WHERE deleted_at IS NULL ORDER BY updated_at DESC, id DESC',
@@ -116,12 +116,12 @@ export function createSpacesRepo(db: Database.Database, opts: RepoOptions = {}) 
           .changes > 0
       )
     },
-    /** Suppression définitive (nœuds en cascade). */
+    /** Permanent deletion (nodes cascade). */
     delete(id: number): boolean {
       return q('DELETE FROM spaces WHERE id = ?').run(id).changes > 0
     },
 
-    /** Crée ou remplace des nœuds par `uuid` (une transaction). */
+    /** Creates or replaces nodes by `uuid` (one transaction). */
     upsertNodes(spaceId: number, nodes: readonly SpaceNodeInput[], at: number = now()): number {
       return db.transaction(() => {
         const stmt = q(

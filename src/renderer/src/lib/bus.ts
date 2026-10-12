@@ -1,16 +1,16 @@
 /**
- * Bus d'événements interne au renderer (sans IPC) : grille ↔ vue détail (défilement vers une
- * carte, cascade de réapparition), commandes du menu natif relayées au calque ouvert.
+ * Internal event bus of the renderer (no IPC): grid ↔ detail view (scroll to a
+ * card, staggered fade-in cascade), native menu commands relayed to the open layer.
  */
 
 export interface BusEvents {
-  /** La grille montée fait défiler sa zone jusqu'à la carte (fermeture du Viewer). */
+  /** The mounted grid scrolls its area to the card (Viewer closed). */
   'grid.scrollTo': { uuid: string }
-  /** Les cartes visibles réapparaissent en fondu échelonné, sauf `except` (cible du FLIP). */
+  /** Visible cards fade back in, staggered, except `except` (FLIP target). */
   'grid.cascade': { except: string | null }
-  /** Commande du menu natif destinée au calque ouvert (zoom, panneau Détails…). */
+  /** Native menu command for the open layer (zoom, Details panel…). */
   'overlay.command': { cmd: string }
-  /** Commande du menu natif destinée à l'éditeur de space ouvert (annuler, zoom…). */
+  /** Native menu command for the open space editor (undo, zoom…). */
   'space.command': { cmd: string }
 }
 

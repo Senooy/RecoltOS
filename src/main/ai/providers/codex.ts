@@ -1,10 +1,11 @@
 /**
- * Fournisseur Codex : TOUJOURS isolé, aucun repli sans isolation.
+ * Codex provider: ALWAYS isolated, no fallback without isolation.
  * `codex exec --ephemeral --ignore-user-config --ignore-rules --skip-git-repo-check --sandbox read-only
- *  --color never -C <sandbox> [-m <modèle>] -c model_reasoning_effort="low" -c web_search="disabled"
+ *  --color never -C <sandbox> [-m <model>] -c model_reasoning_effort="low" -c web_search="disabled"
  *  -c project_doc_max_bytes=0 <--disable F…> --output-schema <job>/schema.json -o <job>/out.json --json
- *  -i <img>… -- "<SYSTEM_FR>\n\n<PROMPT>"`, stdin FERMÉ (sinon codex l'ajoute au prompt).
- * Pas de `CODEX_HOME` séparé (le renouvellement du jeton déconnecterait le Codex de l'utilisateur).
+ *  -i <img>… -- "<SYSTEM_FR>\n\n<PROMPT>"`, stdin CLOSED
+ * (otherwise codex appends it to the prompt).
+ * No separate `CODEX_HOME` (token renewal would log the user's own Codex out).
  */
 import { realpathSync } from 'node:fs'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -75,9 +76,9 @@ export class CodexCliProvider extends CliProviderBase {
     try {
       real = realpathSync(bin)
     } catch {
-      // lien cassé
+      // broken link
     }
-    // codex est un script `#!/usr/bin/env node` : le `node` voisin du lien doit être dans le PATH.
+    // codex is a `#!/usr/bin/env node` script: the `node` next to the link must be in PATH.
     return buildCliEnv(await this.rt.loginPath(), [dirname(bin), dirname(real)])
   }
 

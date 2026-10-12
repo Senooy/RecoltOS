@@ -1,7 +1,7 @@
 /**
- * Lecture du presse-papiers par main (API asynchrone d'Electron 44 :
- * `clipboard.read()` → `ClipboardItem`). Priorité pour ⌘V : fichiers du Finder, puis image, puis
- * URL http(s). Aucun accès depuis le renderer.
+ * Clipboard reading by main (asynchronous Electron 44 API:
+ * `clipboard.read()` → `ClipboardItem`). Priority for ⌘V: Finder files, then image, then
+ * http(s) URL. No access from the renderer.
  */
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
@@ -28,7 +28,7 @@ async function blobOf(item: ClipboardItem, type: string): Promise<Buffer | null>
   }
 }
 
-/** Image du presse-papiers convertie en PNG, ou `null`. */
+/** Clipboard image converted to PNG, or `null`. */
 export async function readClipboardImage(): Promise<Buffer | null> {
   for (const it of await items()) {
     for (const t of IMAGE_TYPES) {
@@ -48,7 +48,7 @@ export async function clipboardImageHash(): Promise<string | null> {
   return png ? createHash('sha1').update(png).digest('hex') : null
 }
 
-/** Chemins de fichiers copiés depuis le Finder. */
+/** File paths copied from the Finder. */
 export async function readClipboardFiles(): Promise<string[]> {
   const out: string[] = []
   for (const it of await items()) {
@@ -62,7 +62,7 @@ export async function readClipboardFiles(): Promise<string[]> {
         try {
           out.push(fileURLToPath(s))
         } catch {
-          // URL de fichier invalide
+          // invalid file URL
         }
       }
     }
@@ -70,7 +70,7 @@ export async function readClipboardFiles(): Promise<string[]> {
   return [...new Set(out)]
 }
 
-/** URL http(s) du presse-papiers (texte), ou `null`. */
+/** http(s) URL from the clipboard (text), or `null`. */
 export async function readClipboardUrl(): Promise<string | null> {
   let text = ''
   try {

@@ -1,6 +1,6 @@
 /**
- * Handlers `prefs.*` : lecture et patch profond des préférences. L'entrée est déjà validée
- * par `PrefsPatchInput` (clés réservées refusées) ; `mergePrefs` revalide l'ensemble.
+ * Handlers `prefs.*`: reading and deep patching of the preferences. The input is already validated
+ * by `PrefsPatchInput` (reserved keys refused); `mergePrefs` re-validates the whole set.
  */
 import { requirePrefsStore } from '../../prefs/store'
 import type { DomainHandlers } from '../router'

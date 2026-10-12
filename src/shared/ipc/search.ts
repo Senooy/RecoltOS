@@ -1,4 +1,4 @@
-/** Contrat `search.*` (FTS5 seule, `{items,total}` ; pas de `search.similar`). */
+/** `search.*` contract (FTS5 only, `{items,total}`; no `search.similar`). */
 import { z } from 'zod'
 import { TagInfo } from '../dto/collections'
 import { ItemCard, NamedRef } from '../dto/items'
@@ -15,7 +15,7 @@ export const searchContract = {
     output: z.object({
       items: z.array(ItemCard),
       total: z.number().int().min(0),
-      /** Éléments écartés par le filtre de couleur faute de palette. */
+      /** Items discarded by the color filter for lack of a palette. */
       noPalette: z.number().int().min(0).default(0),
     }),
   },

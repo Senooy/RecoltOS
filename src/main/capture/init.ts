@@ -1,7 +1,7 @@
 /**
- * Domaine `capture` : service de capture, raccourci global (inactif sous
- * `RECOLTOS_E2E`), menu « Capturer l'écran » cohérent avec la disposition, dossier de dépôt
- * initialisé sur le Bureau au premier lancement, notifications.
+ * `capture` domain: capture service, global shortcut (inactive under `RECOLTOS_E2E`),
+ * the « Capturer l'écran » menu item consistent with the layout, drop folder initialized
+ * to the Desktop on first launch, notifications.
  */
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -38,7 +38,7 @@ export function isShortcutRegistered(): boolean {
   return registered
 }
 
-/** En e2e : aucun raccourci système ; `RECOLTOS_SHORTCUT_TAKEN` simule un conflit (tests). */
+/** In e2e: no system shortcut; `RECOLTOS_SHORTCUT_TAKEN` simulates a conflict (tests). */
 function e2eShortcuts(env = process.env): GlobalShortcutLike {
   return {
     register: (accel) => accel !== env.RECOLTOS_SHORTCUT_TAKEN,
@@ -46,7 +46,7 @@ function e2eShortcuts(env = process.env): GlobalShortcutLike {
   }
 }
 
-/** Rang de l'écran sous le curseur (`-D`, 1 = principal). */
+/** Index of the screen under the cursor (`-D`, 1 = main). */
 function displayIndex(): number {
   try {
     const primary = screen.getPrimaryDisplay()
@@ -58,7 +58,7 @@ function displayIndex(): number {
   }
 }
 
-/** Applique un nouveau raccourci (immédiat) ; enregistré dans les prefs seulement s'il est pris. */
+/** Applies a new shortcut (immediately); saved to the prefs only if it is successfully registered. */
 export function setCaptureShortcut(accel: string, label: string): ShortcutResult {
   if (!shortcuts || !service) return { ok: false, error: 'invalid' }
   const svc = service
@@ -112,7 +112,7 @@ export function initCapture(ctx: ServiceContext): () => void {
     log: ctx.log,
   })
 
-  // Dossier de dépôt : le Bureau est proposé au premier lancement.
+  // Drop folder: the Desktop is proposed on first launch.
   const cap = prefs.get().capture
   if (!cap.dropFolderInit && !ctx.flags.e2e) {
     prefs.set({
@@ -125,7 +125,7 @@ export function initCapture(ctx: ServiceContext): () => void {
   const svc = service
   const r = shortcuts.set(shortcut, () => void svc.run({ trigger: 'shortcut' }))
   registered = r.ok
-  if (!r.ok) ctx.log.warn(`[capture] raccourci ${shortcut} non enregistré : ${r.error}`)
+  if (!r.ok) ctx.log.warn(`[capture] shortcut ${shortcut} not registered: ${r.error}`)
   rebuildMenu({ capture: menuAccelerator(shortcut, shortcutLabel) ?? null })
 
   return () => {

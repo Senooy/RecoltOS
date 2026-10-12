@@ -1,5 +1,5 @@
 /**
- * importeur GatherOS sur la fixture synthétique anonymisée.
+ * GatherOS importer on the anonymized synthetic fixture.
  */
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
@@ -46,8 +46,8 @@ function deps(h: JobsHarness, extra: Partial<ImportDeps> = {}): ImportDeps {
 
 const one = (h: JobsHarness, sql: string) => (h.t.db.prepare(sql).get() as { n: number }).n
 
-describe('importeur GatherOS (fixture)', () => {
-  it('importe la fixture : comptes, médias, post_meta, collections, tags, rejetés, aucun ai.enrich', async () => {
+describe('GatherOS importer (fixture)', () => {
+  it('imports the fixture: accounts, media, post_meta, collections, tags, rejected, no ai.enrich', async () => {
     h = makeHarness()
     const legacy = await makeLegacyLibrary(makeTmpDir('gatheros-'))
     const before = ['', '-wal', '-shm'].map((s) => sha(legacy.dbPath + s))
@@ -63,12 +63,12 @@ describe('importeur GatherOS (fixture)', () => {
     expect(one(h, 'SELECT count(*) n FROM items')).toBe(10)
     expect(one(h, 'SELECT count(*) n FROM items WHERE deleted_at IS NOT NULL')).toBe(1)
     expect(one(h, 'SELECT count(*) n FROM items WHERE hidden_at IS NOT NULL')).toBe(1)
-    // items.uuid = origin_id = id GatherOS.
+    // items.uuid = origin_id = GatherOS id.
     expect(
       one(h, "SELECT count(*) n FROM items WHERE uuid = origin_id AND origin = 'gatheros'"),
     ).toBe(10)
 
-    // Carrousel : slides locales copiées, posters importés, distantes en `remote` avec `media.download`.
+    // Carousel: local slides copied, posters imported, remote ones in `remote` with `media.download`.
     const seed = loadSeed()
     const slides = seed.saves.reduce((n, s) => {
       const m = s.tweet_meta ? (JSON.parse(s.tweet_meta) as { media?: unknown[] }).media : undefined
@@ -89,7 +89,7 @@ describe('importeur GatherOS (fixture)', () => {
     expect(one(h, 'SELECT count(*) n FROM item_media WHERE legacy_thumb_rel IS NOT NULL')).toBe(10)
     expect(one(h, "SELECT count(*) n FROM jobs WHERE type = 'ai.enrich'")).toBe(0)
 
-    // post_meta v1 relisible pour chaque élément qui avait un tweet_meta.
+    // post_meta v1 readable again for each item that had a tweet_meta.
     const posts = h.t.db
       .prepare('SELECT post_meta FROM items WHERE post_meta IS NOT NULL')
       .all() as { post_meta: string }[]
@@ -105,13 +105,13 @@ describe('importeur GatherOS (fixture)', () => {
     expect(quoted?.quoted?.author?.handle).toMatch(/^handle_q/)
     expect(quoted?.author?.handle).not.toMatch(/^@/)
 
-    // Collections : parents et couvertures, appartenances (masqué et corbeille compris).
+    // Collections: parents and covers, memberships (hidden and trash included).
     expect(one(h, 'SELECT count(*) n FROM collections')).toBe(4)
     expect(one(h, 'SELECT count(*) n FROM collections WHERE parent_id IS NOT NULL')).toBe(1)
     expect(one(h, 'SELECT count(*) n FROM collections WHERE cover_item_id IS NOT NULL')).toBe(1)
     expect(one(h, 'SELECT count(*) n FROM collection_items')).toBe(8)
 
-    // Tags : sources → chips (pas de tag), démarrage ignoré ; rejetés.
+    // Tags: sources → chips (no tag), startup ignored; rejected.
     expect(h.t.db.prepare('SELECT name FROM tags').all()).toEqual([])
     expect(
       h.t.db.prepare('SELECT source, external_id FROM sync_dismissed ORDER BY source').all(),
@@ -126,7 +126,7 @@ describe('importeur GatherOS (fixture)', () => {
     )
   })
 
-  it('ré-import : 0 création, 0 fichier copié ; purge puis ré-import : non recréé', async () => {
+  it('re-import: 0 created, 0 file copied; purge then re-import: not recreated', async () => {
     h = makeHarness()
     const legacy = await makeLegacyLibrary(makeTmpDir('gatheros-'))
     const src = pickLibrary(legacy.root)
@@ -150,7 +150,7 @@ describe('importeur GatherOS (fixture)', () => {
     expect(one(h, 'SELECT count(*) n FROM items')).toBe(9)
   })
 
-  it('annulation en phase files puis reprise : total correct', async () => {
+  it('cancellation during the files phase then resume: correct total', async () => {
     h = makeHarness()
     const legacy = await makeLegacyLibrary(makeTmpDir('gatheros-'))
     const src = pickLibrary(legacy.root)
@@ -176,7 +176,7 @@ describe('importeur GatherOS (fixture)', () => {
     expect(one(h, 'SELECT count(*) n FROM items')).toBe(10)
   })
 
-  it('options : sans corbeille ni masqués', async () => {
+  it('options: without trash or hidden items', async () => {
     h = makeHarness()
     const legacy = await makeLegacyLibrary(makeTmpDir('gatheros-'))
     const r = await runGatherosImport(
@@ -192,8 +192,8 @@ describe('importeur GatherOS (fixture)', () => {
   })
 })
 
-describe('détection et verrou', () => {
-  it('pid après le DERNIER tiret ; GatherOS en cours détecté avec un hôte à tirets', async () => {
+describe('detection and lock', () => {
+  it('pid after the LAST dash; running GatherOS detected with a host containing dashes', async () => {
     expect(parseSingletonLock('macbook-pro-de-test.home-26365')).toEqual({
       host: 'macbook-pro-de-test.home',
       pid: 26365,
@@ -208,7 +208,7 @@ describe('détection et verrou', () => {
       pgrep: () => Promise.resolve(false),
     })
     expect(running).toEqual({ running: true, host: 'mon-mac-de-test.local', pid: 4242 })
-    // pid réutilisé par un autre processus : pas GatherOS.
+    // pid reused by another process: not GatherOS.
     const reused = await detectRunning(legacy.root, {
       kill: () => undefined,
       psComm: () => Promise.resolve('/usr/bin/vim\n'),
@@ -217,7 +217,7 @@ describe('détection et verrou', () => {
     expect(reused.running).toBe(false)
   })
 
-  it('aperçu de détection sur une copie ; réglages par liste blanche sans le jeton d’extension', async () => {
+  it('detection preview on a copy; settings by allowlist without the extension token', async () => {
     const legacy = await makeLegacyLibrary(makeTmpDir('gatheros-'))
     const { preview, schemaVersion } = previewGatheros(
       pickLibrary(legacy.root),
@@ -230,7 +230,7 @@ describe('détection et verrou', () => {
     expect(JSON.stringify(prefs)).not.toContain(FAKE_EXTENSION_TOKEN)
   })
 
-  it('règles de correspondance', () => {
+  it('matching rules', () => {
     expect(mapDismissedKey('ig:Abc')).toEqual({ source: 'instagram', externalId: 'Abc' })
     expect(mapDismissedKey('x:123')).toEqual({ source: 'x', externalId: '123' })
     expect(mapDismissedKey('987')).toEqual({ source: 'x', externalId: '987' })
@@ -251,8 +251,8 @@ describe('détection et verrou', () => {
   })
 })
 
-describe('fixture anonymisée (anti-fuite)', () => {
-  it('seed.json : chaque valeur texte suit un motif synthétique', () => {
+describe('anonymized fixture (anti-leak)', () => {
+  it('seed.json: each text value follows a synthetic pattern', () => {
     const seed = loadSeed()
     const allowed = [
       /^[0-9a-f-]{36}$/,
@@ -266,7 +266,7 @@ describe('fixture anonymisée (anti-fuite)', () => {
       /^moodmark-file:\/\/local\/\{\{LIB\}\}\/images\/[0-9a-f-]{36}\.(jpg|mp4|webp|png)$/,
       /^@?(handle|author)_q?\d+$/,
       /^(image|video|tweet|url|x|instagram|cosmos)$/,
-      /^\[\[?[-\d.,e[\]#a-f"]*\]$/, // palettes (couleurs)
+      /^\[\[?[-\d.,e[\]#a-f"]*\]$/, // palettes (colors)
       /^[0-9a-f]{64}$/,
       /^$/,
     ]

@@ -36,7 +36,7 @@ afterEach(() => {
 const onDisk = () => JSON.parse(fs.readFileSync(file, 'utf8')) as Record<string, unknown>
 
 describe('prefs/store', () => {
-  it('fichier absent : défauts ; patch profond écrit atomiquement et notifie', () => {
+  it('missing file: defaults; deep patch written atomically and notifies', () => {
     const store = createPrefsStore({ file })
     expect(store.get()).toEqual(DEFAULT_PREFS)
     expect(fs.existsSync(file)).toBe(false)
@@ -49,7 +49,7 @@ describe('prefs/store', () => {
     expect(onDisk()).toEqual(next)
     expect(fs.existsSync(`${file}.tmp`)).toBe(false)
     expect(listener).toHaveBeenCalledWith(next, DEFAULT_PREFS)
-    // Patch sans effet : ni écriture ni notification.
+    // No-op patch: no write nor notification.
     const mtime = fs.statSync(file).mtimeMs
     expect(store.set({ theme: 'dark' })).toBe(next)
     expect(listener).toHaveBeenCalledTimes(1)
@@ -57,18 +57,18 @@ describe('prefs/store', () => {
     off()
     store.set({ theme: 'light' })
     expect(listener).toHaveBeenCalledTimes(1)
-    // Relu par un nouveau magasin.
+    // Read back by a new store.
     expect(createPrefsStore({ file }).get().theme).toBe('light')
   })
 
-  it('patch invalide : ZodError, rien n’est écrit ni modifié', () => {
+  it('invalid patch: ZodError, nothing written or changed', () => {
     const store = createPrefsStore({ file })
     expect(() => store.set({ defaultColumns: 12 })).toThrow()
     expect(store.get()).toEqual(DEFAULT_PREFS)
     expect(fs.existsSync(file)).toBe(false)
   })
 
-  it('JSON illisible : mis de côté, défauts ; champ invalide : réparé sans perdre le reste', () => {
+  it('unreadable JSON: set aside, defaults; invalid field: repaired without losing the rest', () => {
     fs.writeFileSync(file, '{oups')
     const warn = vi.fn()
     expect(createPrefsStore({ file, log: { warn, error: vi.fn() }, now: () => 7 }).get()).toEqual(
@@ -90,7 +90,7 @@ describe('prefs/store', () => {
     expect(onDisk().defaultColumns).toBe(4)
   })
 
-  it('un écouteur en échec n’empêche pas les autres', () => {
+  it('a failing listener does not prevent the others', () => {
     const error = vi.fn()
     const store = createPrefsStore({ file, log: { warn: vi.fn(), error } })
     const ok = vi.fn()
@@ -109,7 +109,7 @@ describe('prefs/store', () => {
   })
 })
 
-describe('initPrefs + handlers prefs.*', () => {
+describe('initPrefs + prefs.* handlers', () => {
   const ctx = (emit: ServiceContext['emit']): ServiceContext => ({
     userData: dir,
     flags: {
@@ -128,7 +128,7 @@ describe('initPrefs + handlers prefs.*', () => {
   const call = (channel: string, input: unknown = {}) =>
     dispatch(channel, input, {}, { handlers: prefsHandlers, validateOutput: true })
 
-  it('prefs.changed émis, thème natif synchronisé, clés réservées refusées', async () => {
+  it('prefs.changed emitted, native theme synced, reserved keys refused', async () => {
     fs.writeFileSync(file, JSON.stringify({ theme: 'light' }))
     const emit = vi.fn()
     const dispose = initPrefs(ctx(emit))
@@ -155,7 +155,7 @@ describe('initPrefs + handlers prefs.*', () => {
     expect(getPrefsStore()).toBeNull()
   })
 
-  it('langue du système : première langue préférée du Mac, sauf RECOLTOS_LANG', () => {
+  it('system language: first preferred language of the Mac, except RECOLTOS_LANG', () => {
     expect(detectSystemLang(null)).toBe('fr')
     expect(detectSystemLang('en')).toBe('en')
     const spy = vi
@@ -167,7 +167,7 @@ describe('initPrefs + handlers prefs.*', () => {
     spy.mockRestore()
   })
 
-  it('langue : système simulé, puis ui.language appliqué à chaud (onLangChange)', async () => {
+  it('language: simulated system, then ui.language applied live (onLangChange)', async () => {
     const seen: string[] = []
     const off = onLangChange((l) => seen.push(l))
     const base = ctx(vi.fn())
@@ -188,7 +188,7 @@ describe('initPrefs + handlers prefs.*', () => {
   })
 })
 
-describe('prefs.json écrit au premier lancement et après réparation', () => {
+describe('prefs.json written at first launch and after repair', () => {
   const serviceCtx = (): ServiceContext => ({
     userData: dir,
     flags: {
@@ -205,25 +205,25 @@ describe('prefs.json écrit au premier lancement et après réparation', () => {
     log: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   })
 
-  it('repairedAtOpen : absent, mis de côté ou réparé → vrai ; fichier valide → faux', () => {
+  it('repairedAtOpen: missing, set aside or repaired → true; valid file → false', () => {
     expect(createPrefsStore({ file }).repairedAtOpen).toBe(true)
     fs.writeFileSync(file, '{oups')
     expect(createPrefsStore({ file, now: () => 3 }).repairedAtOpen).toBe(true)
     fs.writeFileSync(file, JSON.stringify({ theme: 'dark', defaultColumns: 99 }))
     expect(createPrefsStore({ file }).repairedAtOpen).toBe(true)
-    // Un fichier produit par le magasin lui-même est relu tel quel.
+    // A file produced by the store itself is read back as is.
     const store = createPrefsStore({ file })
     store.set({ theme: 'light' })
     expect(createPrefsStore({ file }).repairedAtOpen).toBe(false)
   })
 
-  it('initPrefs crée prefs.json au premier lancement', async () => {
+  it('initPrefs creates prefs.json at first launch', async () => {
     const dispose = initPrefs(serviceCtx())
     expect(onDisk()).toEqual(DEFAULT_PREFS)
     await dispose()
   })
 
-  it('initPrefs réécrit un fichier mis de côté : le fichier est reconstitué sur disque', async () => {
+  it('initPrefs rewrites a set-aside file: the file is rebuilt on disk', async () => {
     fs.writeFileSync(file, '{oups')
     const dispose = initPrefs(serviceCtx())
     expect(fs.readdirSync(dir).some((f) => f.startsWith('prefs.json.bad-'))).toBe(true)
@@ -231,7 +231,7 @@ describe('prefs.json écrit au premier lancement et après réparation', () => {
     await dispose()
   })
 
-  it('initPrefs réécrit un champ réparé sans perdre le reste', async () => {
+  it('initPrefs rewrites a repaired field without losing the rest', async () => {
     fs.writeFileSync(file, JSON.stringify({ theme: 'dark', defaultColumns: 99 }))
     const dispose = initPrefs(serviceCtx())
     expect(onDisk()).toMatchObject({ theme: 'dark', defaultColumns: DEFAULT_PREFS.defaultColumns })

@@ -15,7 +15,7 @@ const real = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) a
 const clone = (): PackageJsonLike => structuredClone(real)
 
 describe('checkPackage', () => {
-  it('le package.json réel est conforme', () => {
+  it('the real package.json is compliant', () => {
     expect(checkPackage(real)).toEqual([])
   })
 
@@ -30,19 +30,19 @@ describe('checkPackage', () => {
     },
   )
 
-  it('accepte les préversions et métadonnées exactes', () => {
+  it('accepts prereleases and exact metadata', () => {
     const pkg = clone()
     pkg.devDependencies = { ...pkg.devDependencies, a: '1.0.0-rc.1', b: '2.3.4+build.5' }
     expect(checkPackage(pkg)).toEqual([])
   })
 
-  it('refuse une dépendance d’exécution hors liste blanche', () => {
+  it('rejects a runtime dependency not on the allowlist', () => {
     const pkg = clone()
     pkg.dependencies = { ...pkg.dependencies, zod: '4.6.5' }
     expect(checkPackage(pkg).join('\n')).toContain('dependencies.zod : hors liste blanche')
   })
 
-  it('refuse une collision avec une commande intégrée de pnpm, sauf « pack »', () => {
+  it('rejects a clash with a built-in pnpm command, except « pack »', () => {
     expect(PNPM_BUILTINS).toContain('doctor')
     const pkg = clone()
     pkg.scripts = { ...pkg.scripts, doctor: 'x', rebuild: 'y' }
@@ -51,7 +51,7 @@ describe('checkPackage', () => {
     expect(checkPackage({ ...real, scripts: { pack: 'electron-builder' } })).toEqual([])
   })
 
-  it('refuse un autre packageManager et "type": "module"', () => {
+  it('rejects another packageManager and "type": "module"', () => {
     expect(checkPackage({ ...real, packageManager: 'pnpm@9.15.0+sha512.76e2' })).toHaveLength(1)
     expect(checkPackage({ ...real, packageManager: undefined })).toHaveLength(1)
     expect(checkPackage({ ...real, type: 'module' })[0]).toContain('"type": "module"')
@@ -66,7 +66,7 @@ describe('check:pkg (CLI)', () => {
       { cwd: REPO_ROOT, encoding: 'utf8' },
     )
 
-  it('sort 0 sur le package.json réel et 1 quand un « ^ » est introduit', () => {
+  it('exits 0 on the real package.json and 1 when a « ^ » is introduced', () => {
     expect(cli(join(REPO_ROOT, 'package.json')).status).toBe(0)
     const dir = makeTmpDir('pkg')
     const bad = clone()
@@ -80,7 +80,7 @@ describe('check:pkg (CLI)', () => {
   })
 })
 
-describe('check:pkg : overrides et entrée CLI', () => {
+describe('check:pkg: overrides and CLI entry', () => {
   it.each([
     ['overrides', { overrides: { zod: '^4.6.5' } }],
     ['overrides', { overrides: { zod: '4.6.5 || 4.6.4' } }],
@@ -92,7 +92,7 @@ describe('check:pkg : overrides et entrée CLI', () => {
     expect(errors[0]).toContain(`${label}.zod`)
   })
 
-  it('accepte des forçages exacts (npm et pnpm)', () => {
+  it('accepts exact overrides (npm and pnpm)', () => {
     expect(
       checkPackage({
         ...clone(),
@@ -109,31 +109,31 @@ describe('check:pkg : overrides et entrée CLI', () => {
       { cwd: REPO_ROOT, encoding: 'utf8' },
     )
 
-  it('fichier absent ou JSON invalide : sortie 1 avec message, sans trace de pile', () => {
+  it('missing file or invalid JSON: exit 1 with a message, no stack trace', () => {
     const dir = makeTmpDir('pkg-missing')
     const absent = cli(['--file', join(dir, 'introuvable.json')])
     expect(absent.status).toBe(1)
-    expect(absent.stderr).toContain('lecture impossible')
+    expect(absent.stderr).toContain('cannot read')
     expect(absent.stderr).not.toContain('    at ')
 
     const broken = join(dir, 'broken.json')
     writeFileSync(broken, '{ "name": ')
     const r = cli(['--file', broken])
     expect(r.status).toBe(1)
-    expect(r.stderr).toContain('lecture impossible')
+    expect(r.stderr).toContain('cannot read')
     expect(r.stderr).not.toContain('    at ')
   })
 
-  it('--file sans valeur : refusé (sortie 2), pas de repli silencieux sur package.json', () => {
+  it('--file without a value: rejected (exit 2), no silent fallback to package.json', () => {
     const r = cli(['--file'])
     expect(r.status).toBe(2)
-    expect(r.stderr).toContain('--file exige un chemin')
+    expect(r.stderr).toContain('--file requires a path')
     expect(r.stdout).toBe('')
     expect(cli(['--file', '--autre']).status).toBe(2)
   })
 })
 
-describe('check:pkg : pnpm-workspace.yaml (overrides, catalog, catalogs)', () => {
+describe('check:pkg: pnpm-workspace.yaml (overrides, catalog, catalogs)', () => {
   const cli = (file: string) =>
     spawnSync(
       join(REPO_ROOT, 'node_modules/.bin/tsx'),
@@ -141,11 +141,11 @@ describe('check:pkg : pnpm-workspace.yaml (overrides, catalog, catalogs)', () =>
       { cwd: REPO_ROOT, encoding: 'utf8' },
     )
 
-  it('le pnpm-workspace.yaml réel est conforme', () => {
+  it('the real pnpm-workspace.yaml is compliant', () => {
     expect(checkWorkspace(readFileSync(join(REPO_ROOT, 'pnpm-workspace.yaml'), 'utf8'))).toEqual([])
   })
 
-  it('refuse un « ^ » sous overrides et sous catalog', () => {
+  it('rejects a « ^ » under overrides and catalog', () => {
     const o = checkWorkspace('overrides:\n  zod: ^4.6.5\n')
     expect(o).toHaveLength(1)
     expect(o[0]).toContain('overrides.zod')
@@ -154,20 +154,20 @@ describe('check:pkg : pnpm-workspace.yaml (overrides, catalog, catalogs)', () =>
     expect(c[0]).toContain('catalog.react')
   })
 
-  it('refuse une plage sous catalogs.<nom>, accepte les versions exactes', () => {
+  it('rejects a range under catalogs.<name>, accepts exact versions', () => {
     const text = "catalogs:\n  default:\n    zod: 4.6.5\n    react: '~19.2.0'\n"
     const errors = checkWorkspace(text)
     expect(errors).toHaveLength(1)
     expect(errors[0]).toContain('catalogs.default.react')
   })
 
-  it('échoue fermé sur une forme non analysable dans une section contrôlée', () => {
+  it('fails closed on an unparseable shape in a controlled section', () => {
     const errors = checkWorkspace('overrides:\n  - zod\n')
     expect(errors.length).toBeGreaterThan(0)
     expect(errors[0]).toContain('pnpm-workspace.yaml ligne')
   })
 
-  it('ignore les autres réglages (listes, allowBuilds) hors section contrôlée', () => {
+  it('ignores other settings (lists, allowBuilds) outside the controlled section', () => {
     expect(
       checkWorkspace(
         'supportedArchitectures:\n  cpu:\n    - arm64\nallowBuilds:\n  electron: true\n',
@@ -175,7 +175,7 @@ describe('check:pkg : pnpm-workspace.yaml (overrides, catalog, catalogs)', () =>
     ).toEqual([])
   })
 
-  it('CLI : un « ^ » dans pnpm-workspace.yaml voisin fait échouer check:pkg', () => {
+  it('CLI: a « ^ » in a neighboring pnpm-workspace.yaml makes check:pkg fail', () => {
     const dir = makeTmpDir('pkg-ws')
     writeFileSync(join(dir, 'package.json'), JSON.stringify(clone()))
     writeFileSync(join(dir, 'pnpm-workspace.yaml'), 'overrides:\n  zod: ^4.6.5\n')

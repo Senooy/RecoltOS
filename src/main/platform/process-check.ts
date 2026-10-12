@@ -1,6 +1,6 @@
 /**
- * Détection d'un processus par nom exact (`pgrep -x`), utilisée pour GatherOS
- * (importeur « quitte GatherOS », coexistence SYNC). Sans shell ; `exec` injectable.
+ * Detects a process by exact name (`pgrep -x`), used for GatherOS
+ * (importer "quit GatherOS", SYNC coexistence). No shell; `exec` injectable.
  */
 import { execFile } from 'node:child_process'
 
@@ -25,14 +25,14 @@ const defaultExec: ExecFileFn = (cmd, args) =>
     })
   })
 
-/** Nom de processus acceptable : pas d'option, pas de motif, longueur bornée. */
+/** Acceptable process name: no option, no pattern, bounded length. */
 export function isSafeProcessName(name: string): boolean {
   return /^[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}$/.test(name)
 }
 
 /**
- * `true` si un processus s'appelle exactement `name`. `pgrep` : 0 = trouvé, 1 = aucun ;
- * tout autre code est une erreur.
+ * `true` if a process is named exactly `name`. `pgrep`: 0 = found, 1 = none;
+ * any other code is an error.
  */
 export async function isProcessRunning(
   name: string,
@@ -45,7 +45,7 @@ export async function isProcessRunning(
   throw new Error(`pgrep a échoué (code ${code})`)
 }
 
-/** Dépendance `isRunning` injectée dans l'importeur. */
+/** `isRunning` dependency injected into the importer. */
 export function isGatherOSRunning(exec?: ExecFileFn): Promise<boolean> {
   return isProcessRunning(GATHEROS_PROCESS, exec)
 }

@@ -1,10 +1,10 @@
 /**
- * Gestionnaire de bibliothèques : registre `libraries.json`, ouverture
- * de la bibliothèque active, création, bascule (`closeLibrary` puis ouverture, `library.switched`),
- * ajout d'un dossier existant, renommage, retrait (les fichiers ne sont jamais supprimés).
- * Les dossiers synchronisés (iCloud Drive, Dropbox, CloudStorage) sont refusés : une base SQLite en
- * WAL synchronisée par un service de fichiers se corrompt.
- * Pas d'import `electron` : `emit` et le journal sont injectés (testable sous Node).
+ * Library manager: `libraries.json` registry, opening
+ * of the active library, creation, switch (`closeLibrary` then opening, `library.switched`),
+ * adding an existing folder, renaming, removal (files are never deleted).
+ * Synced folders (iCloud Drive, Dropbox, CloudStorage) are refused: a SQLite database in
+ * WAL mode synced by a file service gets corrupted.
+ * No `electron` import: `emit` and the log are injected (testable under Node).
  */
 import Database from 'better-sqlite3'
 import fs from 'node:fs'
@@ -29,7 +29,7 @@ import { defaultLibraryRoot, LIBRARY_DIRS, libraryPaths, userDataPaths } from '.
 import { mt } from '../i18n'
 
 export const DEFAULT_LIBRARY_ID = 'default'
-/** Nom de la bibliothèque par défaut, dans la langue active au moment de sa création. */
+/** Name of the default library, in the active language at the time of its creation. */
 export function defaultLibraryName(): string {
   return mt().library.defaultName
 }
@@ -37,7 +37,7 @@ export function defaultLibraryName(): string {
 const RegistryEntry = z.object({
   id: LibraryId,
   name: z.string().min(1),
-  /** `null` = `userData/libraries/<id>` ; sinon chemin absolu externe. */
+  /** `null` = `userData/libraries/<id>`; otherwise an external absolute path. */
   path: z.string().startsWith('/').nullable(),
   createdAt: z.number().int().nonnegative(),
 })
@@ -50,7 +50,7 @@ export const LibrariesRegistry = z.object({
 })
 export type LibrariesRegistry = z.output<typeof LibrariesRegistry>
 
-/** Même règle que le nom du contrat IPC (`shared/ipc/libraries.ts`) : rogné, 1 à 100 caractères. */
+/** Same rule as the IPC contract name (`shared/ipc/libraries.ts`): trimmed, 1 to 100 characters. */
 const LibraryName = z.string().trim().min(1).max(100)
 
 function parseName(name: unknown): string {
@@ -61,7 +61,7 @@ function parseName(name: unknown): string {
   return r.data
 }
 
-/** Lecture tolérante : seules les entrées valides sont gardées (une entrée abîmée ne vide pas le registre). */
+/** Lenient read: only valid entries are kept (a damaged entry does not empty the registry). */
 const LenientRegistry = z.object({
   version: z.literal(1),
   active: z.unknown().optional(),
@@ -69,12 +69,12 @@ const LenientRegistry = z.object({
 })
 
 // ---------------------------------------------------------------------------------------------
-// Dossiers synchronisés
+// Synced folders
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Chemin réel de l'ancêtre existant le plus proche, avec la casse du disque
- * (`realpathSync.native` la rétablit sur macOS, contrairement à la version JS).
+ * Real path of the nearest existing ancestor, with the disk's casing
+ * (`realpathSync.native` restores it on macOS, unlike the JS version).
  */
 function realpathOfNearest(p: string): string {
   let cur = path.resolve(p)
@@ -91,7 +91,7 @@ function realpathOfNearest(p: string): string {
   }
 }
 
-/** APFS ignore la casse : toutes les comparaisons de chemins se font en minuscules. */
+/** APFS ignores case: all path comparisons are done in lowercase. */
 const fold = (s: string): string => s.toLowerCase()
 
 const isUnder = (p: string, dir: string): boolean => {
@@ -100,7 +100,7 @@ const isUnder = (p: string, dir: string): boolean => {
   return a === b || a.startsWith(b + path.sep)
 }
 
-/** Segments de dossiers synchronisés (comparés sans tenir compte de la casse). */
+/** Synced folder segments (compared case-insensitively). */
 const SYNCED_SEGMENTS: readonly RegExp[] = [
   /^dropbox( \(.+\))?$/i,
   /^com~apple~clouddocs$/i,
@@ -109,9 +109,9 @@ const SYNCED_SEGMENTS: readonly RegExp[] = [
 ]
 
 /**
- * Vrai si `target` est dans un dossier synchronisé : iCloud Drive (`~/Library/Mobile Documents`,
- * Bureau / Documents synchronisés par iCloud), `~/Library/CloudStorage` (File Provider), anciens
- * dossiers `~/Dropbox`, `~/OneDrive`, `~/Google Drive`, ou un ancêtre marqué `.dropbox`.
+ * True if `target` is in a synced folder: iCloud Drive (`~/Library/Mobile Documents`,
+ * Desktop / Documents synced by iCloud), `~/Library/CloudStorage` (File Provider), legacy
+ * folders `~/Dropbox`, `~/OneDrive`, `~/Google Drive`, or an ancestor marked `.dropbox`.
  */
 export function isSyncedFolder(target: string, home: string = os.homedir()): boolean {
   const candidates = new Set([path.resolve(target), realpathOfNearest(target)])
@@ -145,15 +145,15 @@ function assertNotSynced(target: string, home: string): void {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Conversion des erreurs système / SQLite
+// Conversion of system / SQLite errors
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Convertit une erreur système (`EACCES`…) ou SQLite (`SQLITE_NOTADB`…) en `AppError` au message
- * français : le routeur IPC transmet tel quel tout objet portant `code` et `message`
- * chaînes. Les `AppError` et les erreurs sans `code` textuel (qui deviennent `internal` côté
- * routeur) sont renvoyées inchangées. L'erreur d'origine est gardée, décrite en objet simple
- * (clonable par l'IPC), dans `details`.
+ * Converts a system error (`EACCES`…) or SQLite error (`SQLITE_NOTADB`…) into an `AppError` with a French message:
+ * the IPC router passes through as-is any object carrying `code` and `message`
+ * strings. `AppError`s and errors without a textual `code` (which become `internal` on the
+ * router side) are returned unchanged. The original error is kept, described as a plain object
+ * (cloneable via IPC), in `details`.
  */
 export function toAppError(err: unknown): unknown {
   if (err instanceof AppError) return err
@@ -188,12 +188,12 @@ export function toAppError(err: unknown): unknown {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Gestionnaire
+// Manager
 // ---------------------------------------------------------------------------------------------
 
 export interface LibraryManagerDeps {
   userData: string
-  /** `RECOLTOS_HOME` en test, sinon `os.homedir()`. */
+  /** `RECOLTOS_HOME` in tests, otherwise `os.homedir()`. */
   home?: string
   now?: () => number
   emit?(event: 'library.switched', payload: { libraryId: string }): void
@@ -211,7 +211,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
   const files = userDataPaths(deps.userData)
   let registry: LibrariesRegistry | null = null
   let ctx: LibraryContext | null = null
-  /** Sérialise ouverture / bascule / création. */
+  /** Serializes opening / switching / creation. */
   let queue: Promise<unknown> = Promise.resolve()
 
   const serial = <T>(fn: () => Promise<T>): Promise<T> => {
@@ -247,7 +247,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       raw = JSON.parse(fs.readFileSync(files.libraries, 'utf8'))
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
-        deps.log?.warn('[library] libraries.json illisible, mis de côté', err)
+        deps.log?.warn('[library] libraries.json unreadable, set aside', err)
         quarantine(files.libraries, now())
       }
       save(defaultRegistry())
@@ -266,7 +266,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         } else {
           dropped++
           deps.log?.warn(
-            '[library] entrée de libraries.json invalide, écartée',
+            '[library] invalid libraries.json entry, dropped',
             e.success ? 'identifiant en double' : e.error.issues,
           )
         }
@@ -274,8 +274,8 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     }
     if (!lenient.success || entries.length === 0) {
       deps.log?.warn(
-        '[library] libraries.json invalide, mis de côté',
-        lenient.success ? 'aucune entrée valide' : lenient.error.issues,
+        '[library] invalid libraries.json, set aside',
+        lenient.success ? 'no valid entry' : lenient.error.issues,
       )
       quarantine(files.libraries, now())
       save(defaultRegistry())
@@ -289,7 +289,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       libraries: entries,
     }
     if (dropped > 0) {
-      // Garde l'original de côté puis réécrit le registre nettoyé.
+      // Keeps the original aside, then rewrites the cleaned registry.
       quarantine(files.libraries, now())
       save(r)
       return r
@@ -307,9 +307,9 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
   const rootOf = (e: RegistryEntry) => e.path ?? defaultLibraryRoot(deps.userData, e.id)
 
   /**
-   * Refuse un dossier choisi situé dans `userData/libraries` ou dans la racine d'une bibliothèque
-   * déjà enregistrée : `tmp/` et `items/` y sont gérés (staging, restaurations), un nettoyage par
-   * une autre bibliothèque détruirait la bibliothèque imbriquée. Comparaison insensible à la casse.
+   * Refuses a chosen folder located in `userData/libraries` or at the root of a library
+   * already registered: `tmp/` and `items/` are managed there (staging, restores), a cleanup by
+   * another library would destroy the nested library. Case-insensitive comparison.
    */
   const assertNotManaged = (target: string): void => {
     const candidates = [...new Set([path.resolve(target), realpathOfNearest(target)])]
@@ -323,7 +323,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     }
   }
 
-  /** Options d'ouverture communes à `openEntry` et à la réouverture de `closeActive`. */
+  /** Opening options shared by `openEntry` and the reopening in `closeActive`. */
   const dbOptions = () => ({
     ...(deps.onSlowQuery ? { onSlowQuery: deps.onSlowQuery } : {}),
     ...(deps.busyTimeout !== undefined ? { busyTimeout: deps.busyTimeout } : {}),
@@ -331,8 +331,8 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
   })
 
   /**
-   * Retour arrière d'une création : retire le dossier créé, ou, s'il existait (vide), seulement
-   * ce que la création y a écrit. Les fichiers cachés préexistants sont conservés.
+   * Rollback of a creation: removes the created folder, or, if it already existed (empty), only
+   * what the creation wrote there. Pre-existing hidden files are kept.
    */
   const discardCreatedRoot = (root: string, existed: boolean): void => {
     try {
@@ -344,7 +344,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         if (!f.startsWith('.')) fs.rmSync(path.join(root, f), { recursive: true, force: true })
       }
     } catch (err) {
-      deps.log?.warn('[library] nettoyage de la création annulée impossible', err)
+      deps.log?.warn('[library] cleanup of the cancelled creation impossible', err)
     }
   }
 
@@ -378,9 +378,9 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
   })
 
   /**
-   * Ouvre une bibliothèque (dossiers, migrations, repos) et la rend active.
-   * Sauf `create` et `default` (créée au premier lancement), une bibliothèque dont le dossier ou
-   * `recolt.db` a disparu est refusée : sinon SQLite recréerait une base vide sans prévenir.
+   * Opens a library (folders, migrations, repos) and makes it active.
+   * Except `create` and `default` (created at first launch), a library whose folder or
+   * `recolt.db` has disappeared is refused: otherwise SQLite would silently recreate an empty database.
    */
   const openEntry = async (
     e: RegistryEntry,
@@ -396,7 +396,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     fs.mkdirSync(path.join(paths.dir('spaces'), 'assets'), { recursive: true })
     const { db, migration } = openLibraryDb(root, dbOptions())
     if (migration.applied.length > 0) {
-      deps.log?.info(`[library] ${e.id} migrée v${migration.from} → v${migration.to}`)
+      deps.log?.info(`[library] ${e.id} migrated v${migration.from} → v${migration.to}`)
     }
     const next: LibraryContext = {
       id: e.id,
@@ -411,13 +411,13 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     try {
       await runAfterOpen(next)
     } catch (err) {
-      // Ouverture incomplète : la base est fermée et aucune bibliothèque n'est active.
+      // Incomplete opening: the database is closed and no library is active.
       ctx = null
       setActiveLibrary(null)
       try {
         next.db.close()
       } catch {
-        // déjà fermée
+        // already closed
       }
       throw err
     }
@@ -429,9 +429,9 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     if (!current) return
     const hooks = aggregatedCloseHooks()
     /**
-     * Après un `wal_not_empty`, `closeLibrary` a rouvert la base (`closable.db`) : la connexion de
-     * `current` est fermée. Le contexte reçoit la nouvelle connexion, et les domaines sont
-     * prévenus par `afterOpen` (ils ne doivent pas garder l'ancienne), avant la relance.
+     * After a `wal_not_empty`, `closeLibrary` reopened the database (`closable.db`): the connection of
+     * `current` is closed. The context receives the new connection, and the domains are
+     * notified by `afterOpen` (they must not keep the old one), before the restart.
      */
     const adoptReopened = async (): Promise<void> => {
       if (closable.db === current.db) return
@@ -440,7 +440,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       try {
         await runAfterOpen(current)
       } catch (err) {
-        deps.log?.error('[library] afterOpen en échec après réouverture annulée', err)
+        deps.log?.error('[library] afterOpen failed after cancelled reopening', err)
       }
     }
     const closable = {
@@ -465,10 +465,10 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       })
     } catch (err) {
       if (closable.db !== current.db) {
-        // Annulé (wal_not_empty) et base rouverte : la bibliothèque reste active.
+        // Cancelled (wal_not_empty) and database reopened: the library stays active.
         await adoptReopened()
       } else if (!current.db.open) {
-        // Annulé et réouverture impossible : la bibliothèque n'est plus utilisable.
+        // Cancelled and reopening impossible: the library is no longer usable.
         ctx = null
         setActiveLibrary(null)
       }
@@ -478,14 +478,14 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     setActiveLibrary(null)
   }
 
-  /** Relance workers puis file de jobs après une fermeture suivie d'une ouverture réussie. */
+  /** Restarts workers then the job queue after a close followed by a successful opening. */
   const restartBackground = async (): Promise<void> => {
     const hooks = aggregatedCloseHooks()
     try {
       await hooks.startWorkers()
       await hooks.resumeJobs()
     } catch (err) {
-      deps.log?.error('[library] relance des workers / de la file impossible', err)
+      deps.log?.error('[library] restart of workers / job queue failed', err)
     }
   }
 
@@ -497,7 +497,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     try {
       await openEntry(target, opts)
     } catch (err) {
-      deps.log?.error(`[library] ouverture de ${id} impossible`, err)
+      deps.log?.error(`[library] opening of ${id} failed`, err)
       if (previous) {
         await openEntry(previous)
         await restartBackground()
@@ -522,7 +522,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     registry: () => structuredClone(load()),
     active: () => ctx,
 
-    /** Démarrage : ouvre la bibliothèque active ; repli sur `default` si elle est indisponible. */
+    /** Startup: opens the active library; falls back to `default` if it is unavailable. */
     open(): Promise<LibraryContext> {
       return serial(async () => {
         if (ctx) return ctx
@@ -544,17 +544,17 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       })
     },
 
-    /** Fermeture propre (sortie de l'app). */
+    /** Clean close (app exit). */
     close(): Promise<void> {
       return serial(() => closeActive(false))
     },
 
-    /** Ferme pour remplacer le fichier de base (restauration) ; `wal_not_empty` si bloqué. */
+    /** Closes to replace the database file (restore); `wal_not_empty` if blocked. */
     closeForReplace(): Promise<void> {
       return serial(() => closeActive(true))
     },
 
-    /** Rouvre la bibliothèque active après un remplacement (restauration). */
+    /** Reopens the active library after a replacement (restore). */
     reopen(): Promise<LibraryContext> {
       return serial(async () => {
         const r = load()
@@ -572,8 +572,8 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
     },
 
     /**
-     * Crée une bibliothèque puis bascule dessus. `dir` absent : `userData/libraries/<id>` ;
-     * sinon le dossier lui-même (inexistant ou vide), refusé s'il est synchronisé.
+     * Creates a library then switches to it. Without `dir`: `userData/libraries/<id>`;
+     * otherwise the folder itself (non-existent or empty), refused if it is synced.
      */
     create(input: { name: string; path?: string }): Promise<LibraryInfo> {
       return serial(async () => {
@@ -595,8 +595,8 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
             throw new AppError('conflict', mt().errors.chooseEmptyFolder)
           }
         }
-        // Emplacement par défaut (`userData/libraries/<id>`) : pas de contrôle, comme `open()`
-        // (l'app y vit déjà ; en dev, `RECOLTOS_USER_DATA` peut être sous un dossier synchronisé).
+        // Default location (`userData/libraries/<id>`): no check, like `open()`
+        // (the app already lives there; in dev, `RECOLTOS_USER_DATA` may be under a synced folder).
         const e: RegistryEntry = { id, name, path: custom, createdAt: now() }
         const root = rootOf(e)
         const existed = fs.existsSync(root)
@@ -618,7 +618,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       return serial(() => switchTo(id))
     },
 
-    /** Ajoute un dossier contenant `recolt.db` (ou le retrouve) puis bascule dessus. */
+    /** Adds a folder containing `recolt.db` (or finds it) then switches to it. */
     addExisting(dir: string): Promise<LibraryInfo> {
       return serial(async () => {
         const root = path.resolve(dir)
@@ -641,7 +641,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
         try {
           await switchTo(e.id)
         } catch (err) {
-          // Retour arrière : une entrée ajoutée par cet appel et inouvrable ne reste pas au registre.
+          // Rollback: an entry added by this call and unopenable does not stay in the registry.
           if (added) {
             const cur = load()
             const id = e.id
@@ -667,7 +667,7 @@ export function createLibraryManager(deps: LibraryManagerDeps) {
       return info(next)
     },
 
-    /** Retire du registre (fichiers conservés). La bibliothèque ouverte ne peut pas être retirée. */
+    /** Removes from the registry (files kept). The open library cannot be removed. */
     remove(id: string): void {
       const r = load()
       entry(id)

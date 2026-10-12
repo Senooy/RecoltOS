@@ -1,22 +1,23 @@
 /**
- * Source UNIQUE des raccourcis : le menu natif, le renderer
- * et le raccourci global lisent cette table. Un raccourci `menu` n'est jamais rebindé
- * côté renderer (l'accélérateur du menu consomme la touche), sauf repli explicite `rendererFallback`.
+ * SINGLE source of the shortcuts: the native menu, the renderer
+ * and the global shortcut read this table. A `menu` shortcut is never rebound
+ * on the renderer side (the menu accelerator consumes the key), except with an explicit
+ * `rendererFallback`.
  *
- * AZERTY : chiffres comparés par `e.code` (`Digit1`…), lettres par `e.key.toLowerCase()`.
+ * AZERTY: digits compared by `e.code` (`Digit1`…), letters by `e.key.toLowerCase()`.
  */
 import { getLang } from './i18n/lang'
 
 export type ShortcutScope = 'menu' | 'renderer' | 'global'
 
 export type KeyMatch =
-  /** Lettre imprimée (`e.key.toLowerCase()`, ou `getLayoutMap()`), jamais `e.code`. */
+  /** Printed letter (`e.key.toLowerCase()`, or `getLayoutMap()`), never `e.code`. */
   | { kind: 'letter'; key: string }
-  /** Chiffre par position physique (`e.code === 'Digit<n>'`, `e.key === '<n>'` accepté). */
+  /** Digit by physical position (`e.code === 'Digit<n>'`, `e.key === '<n>'` accepted). */
   | { kind: 'digit'; digit: number }
-  /** Touche nommée (`e.key`) : Escape, ArrowLeft, Backspace, ' '… */
+  /** Named key (`e.key`): Escape, ArrowLeft, Backspace, ' '… */
   | { kind: 'key'; key: string }
-  /** Zoom : '+', '=', `Equal`, `NumpadAdd` / '-', `Minus`, `NumpadSubtract`. */
+  /** Zoom: '+', '=', `Equal`, `NumpadAdd` / '-', `Minus`, `NumpadSubtract`. */
   | { kind: 'zoom'; dir: 'in' | 'out' }
 
 export interface Modifiers {
@@ -28,15 +29,15 @@ export interface Modifiers {
 
 export interface ShortcutDef {
   id: string
-  /** Accélérateur Electron (menu / global), `null` pour un raccourci renderer pur. */
+  /** Electron accelerator (menu / global), `null` for a pure renderer shortcut. */
   accel: string | null
-  /** Accélérateur caché supplémentaire (ex. `CmdOrCtrl+=` pour le zoom avant). */
+  /** Extra hidden accelerator (e.g. `CmdOrCtrl+=` for zoom in). */
   hiddenAccel?: string
-  /** Libellé affiché (glyphes macOS). */
+  /** Displayed label (macOS glyphs). */
   label: string
   scope: ShortcutScope
   match: KeyMatch & Modifiers
-  /** Le renderer gère aussi la touche (ex. ⌘1/2/3 si le menu ne la reçoit pas). */
+  /** The renderer also handles the key (e.g. ⌘1/2/3 if the menu does not receive it). */
   rendererFallback?: boolean
 }
 
@@ -220,8 +221,8 @@ export type ShortcutId = (typeof SHORTCUTS)[number]['id']
 export const SHORTCUT_IDS = SHORTCUTS.map((s) => s.id) as readonly ShortcutId[]
 
 /**
- * Commandes que le menu natif relaie au renderer via `evt:menu.command` (toutes les entrées
- * `scope: 'menu'` + quelques items de menu sans raccourci). Testé contre `SHORTCUTS`.
+ * Commands the native menu relays to the renderer via `evt:menu.command` (all the
+ * `scope: 'menu'` entries + a few menu items without a shortcut). Tested against `SHORTCUTS`.
  */
 export const MENU_COMMANDS = [
   'palette',
@@ -252,7 +253,7 @@ export const MENU_COMMANDS = [
 ] as const
 export type MenuCommand = (typeof MENU_COMMANDS)[number]
 
-/** Libellé affiché d'un raccourci : glyphes identiques, seule la touche Échap se traduit (« Esc »). */
+/** Displayed label of a shortcut: same glyphs; only the Escape key is translated (« Esc »). */
 export function displayShortcutLabel(label: string): string {
   return label === 'Échap' && getLang() !== 'fr' ? 'Esc' : label
 }
@@ -264,8 +265,8 @@ export function getShortcut(id: ShortcutId): ShortcutDef {
 }
 
 /**
- * Éditeur Spaces : lettres = touche imprimée (`baseChar`), chiffres = `e.code`.
- * Pas de ⌘1 pour « 100 % » (⌘1 = Bibliothèque).
+ * Spaces editor: letters = printed key (`baseChar`), digits = `e.code`.
+ * No ⌘1 for « 100 % » (⌘1 = Library).
  */
 export const SPACES_SHORTCUTS = [
   { id: 'tool.select', label: 'V', match: { kind: 'letter', key: 'v' } },

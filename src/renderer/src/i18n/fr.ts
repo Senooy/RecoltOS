@@ -1,8 +1,8 @@
 /**
- * Agrégateur des textes FR : `fr/base.ts` + un fichier par domaine
- * UI, liste FIGÉE ci-dessous. Chaque fichier de domaine exporte un objet de namespaces.
- * Le catalogue anglais (`en.ts`, `en/<domaine>.ts`) a exactement les mêmes clés ; les composants
- * lisent la langue active par `tr` (`i18n/index.ts`), jamais `fr` directement.
+ * Aggregator of the FR texts: `fr/base.ts` + one file per UI domain,
+ * FROZEN list below. Each domain file exports an object of namespaces.
+ * The English catalogue (`en.ts`, `en/<domain>.ts`) has exactly the same keys; components
+ * read the active language via `tr` (`i18n/index.ts`), never `fr` directly.
  */
 import { ai } from './fr/ai'
 import { base } from './fr/base'

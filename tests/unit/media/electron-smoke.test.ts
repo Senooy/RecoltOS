@@ -1,11 +1,11 @@
 /**
- * critères 4 et 5 côté Electron réel : `utilityProcess` (via `makeUtilityFork`), RPC,
- * SIGKILL pendant `makePreview` → `worker_crashed` puis redémarrage, aperçu 540p lisible par
+ * Criteria 4 and 5 on real Electron: `utilityProcess` (via `makeUtilityFork`), RPC,
+ * SIGKILL during `makePreview` → `worker_crashed` then restart, 540p preview readable by
  * Chromium (`<video>` readyState ≥ 3, 960×540).
  *
- * Le process Electron est lancé depuis `tests/unit/media/electron/smoke-main.ts` (bundlé par
- * esbuild dans `.tmp/`, à l'intérieur du dépôt pour que `sharp` se résolve). Skip explicite si
- * le binaire Electron ou ffmpeg/ffprobe manquent (la raison est écrite dans le journal de test).
+ * The Electron process is launched from `tests/unit/media/electron/smoke-main.ts` (bundled by
+ * esbuild into `.tmp/`, inside the repo so that `sharp` resolves). Explicit skip if the
+ * Electron binary or ffmpeg/ffprobe is missing (the reason is written to the test log).
  */
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -19,7 +19,7 @@ import { makeTmp } from './helpers'
 
 const ROOT = resolve(import.meta.dirname, '../../..')
 
-/** Chemin du binaire Electron, ou undefined si le paquet n'a pas téléchargé son binaire. */
+/** Path to the Electron binary, or undefined if the package did not download its binary. */
 function electronBinary(): string | undefined {
   try {
     const p = createRequire(import.meta.url)('electron') as unknown
@@ -36,7 +36,7 @@ const SKIP_REASON = !ELECTRON
   : !HAS_FFMPEG
     ? 'ffmpeg/ffprobe système absents'
     : ''
-if (SKIP_REASON) console.warn(`[electron-smoke] ignoré : ${SKIP_REASON}`)
+if (SKIP_REASON) console.warn(`[electron-smoke] skipped: ${SKIP_REASON}`)
 
 const tmp = makeTmp('recolt-electron-smoke-')
 const work = join(ROOT, '.tmp', `electron-smoke-${process.pid}`)
@@ -91,8 +91,8 @@ afterAll(() => {
   rmSync(work, { recursive: true, force: true })
 })
 
-describe.skipIf(SKIP_REASON !== '')('media-worker dans Electron (utilityProcess réel)', () => {
-  it('RPC, SIGKILL pendant makePreview → worker_crashed + redémarrage, aperçu lisible par Chromium', async () => {
+describe.skipIf(SKIP_REASON !== '')('media-worker in Electron (real utilityProcess)', () => {
+  it('RPC, SIGKILL during makePreview → worker_crashed + restart, preview readable by Chromium', async () => {
     const dir = join(tmp.dir, 'run')
     mkdirSync(join(dir, 'user'), { recursive: true })
     const preview = join(dir, 'preview.mp4')
@@ -130,9 +130,9 @@ describe.skipIf(SKIP_REASON !== '')('media-worker dans Electron (utilityProcess 
     expect(out.error).toBeUndefined()
     expect(code).toBe(0)
 
-    // Critère RPC : hash identique à celui calculé côté test.
+    // RPC criterion: hash identical to the one computed on the test side.
     expect(out.hashFileSha256).toBe(srcSha)
-    // Critère crash : worker_crashed et job 11 interrompu, puis redémarrage et appel réussi.
+    // Crash criterion: worker_crashed and job 11 interrupted, then restart and successful call.
     expect(out.crashes.length).toBeGreaterThanOrEqual(1)
     expect(
       out.crashes.some((c) => c.interrupted.some((i) => i.op === 'makePreview' && i.jobId === 11)),
@@ -143,7 +143,7 @@ describe.skipIf(SKIP_REASON !== '')('media-worker dans Electron (utilityProcess 
     expect(out.afterCrashPreview).toMatchObject({ width: 960, height: 540 })
     expect(out.afterCrashPreview!.bytes).toBeGreaterThan(0)
     expect(existsSync(preview)).toBe(true)
-    // Critère Chromium : l'aperçu est décodé par <video>, 960×540.
+    // Chromium criterion: the preview is decoded by <video>, 960×540.
     expect(out.chromium).toMatchObject({ videoWidth: 960, videoHeight: 540, errorCode: null })
     expect(out.chromium!.readyState).toBeGreaterThanOrEqual(3)
   }, 180_000)

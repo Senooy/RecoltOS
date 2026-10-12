@@ -1,6 +1,6 @@
 /**
- * Styles par défaut des nœuds Spaces, partagés par le main
- * (`addItems`, assets, import des boards) et l'éditeur.
+ * Default styles of Spaces nodes, shared by main
+ * (`addItems`, assets, boards import) and the editor.
  */
 import type { z } from 'zod'
 import type { ImageStyle, ItemStyle, NoteStyle, ShapeStyle, TextStyle } from './spaces-schema'

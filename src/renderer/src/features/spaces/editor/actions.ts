@@ -1,7 +1,7 @@
 /**
- * Opérations de l'éditeur : création de nœuds, suppression, duplication,
- * déplacement au clavier, ordre, alignement, verrou, style, presse-papiers, ajout d'éléments de la
- * bibliothèque et de fichiers, zoom. Chaque opération = un seul `commit` (une entrée d'historique).
+ * Editor operations: node creation, deletion, duplication,
+ * keyboard movement, order, alignment, lock, style, clipboard, adding items from the
+ * library and files, zoom. Each operation = a single `commit` (one history entry).
  */
 import type { AssetInfo } from '../../../../../shared/dto/spaces'
 import type { ItemCard } from '../../../../../shared/dto/items'
@@ -86,7 +86,7 @@ export function makeText(at: Vec): SpaceNode {
   return { ...base(at, 160, 40), type: 'text', content: '', style: defaultTextStyle() }
 }
 
-/** Crée le nœud de l'outil au point monde et passe en édition (note, texte, forme). */
+/** Creates the tool's node at the world point and enters edit mode (note, text, shape). */
 export function createAt(tool: Tool, at: Vec): string | null {
   let node: SpaceNode
   if (tool === 'note') node = makeNote(at)
@@ -138,7 +138,7 @@ export function deleteSelection(): void {
   )
 }
 
-/** Copie décalée des nœuds (nouveaux uuid, au-dessus) ; rend les nouveaux uuid. */
+/** Offset copy of nodes (new uuids, on top); returns the new uuids. */
 function cloneNodes(nodes: readonly SpaceNode[], dx: number, dy: number): SpaceNode[] {
   let z = nextZ()
   const now = Date.now()
@@ -170,7 +170,7 @@ export function duplicateSelection(offset = 24): string[] {
   return copies.map((c) => c.uuid)
 }
 
-/** Duplique sur place (⌥+glisser) : la copie reste sélectionnée et sera déplacée. */
+/** Duplicates in place (⌥+drag): the copy stays selected and will be moved. */
 export function duplicateInPlace(ids: readonly string[]): string[] {
   const s = useSpace.getState()
   const nodes = ids.map((id) => s.nodes[id]).filter((n): n is SpaceNode => Boolean(n))
@@ -238,7 +238,7 @@ export function toggleLock(): void {
   })
 }
 
-/** Fusionne `patch` dans le style des nœuds sélectionnés du type donné. */
+/** Merges `patch` into the style of the selected nodes of the given type. */
 export function setStyle(
   types: readonly SpaceNode['type'][],
   patch: Record<string, unknown>,
@@ -268,14 +268,14 @@ export function selectAll(): void {
   useSpace.setState((s) => ({ selection: Object.keys(s.nodes), editingId: null }))
 }
 
-// --- Caméra -------------------------------------------------------------------------------
+// --- Camera -------------------------------------------------------------------------------
 
 const viewCenter = (): Vec => {
   const v = useCamera.getState().view
   return { x: v.w / 2, y: v.h / 2 }
 }
 
-/** Centre de la vue en coordonnées monde. */
+/** Center of the view in world coordinates. */
 export function viewCenterWorld(): Vec {
   return screenToWorld(useCamera.getState().camera, viewCenter())
 }
@@ -312,9 +312,9 @@ export function fitSelection(): void {
   )
 }
 
-// --- Bibliothèque et fichiers ------------------------------------------------------------
+// --- Library and files ------------------------------------------------------------
 
-/** Éléments de la bibliothèque posés en grille centrée sur `at` (un seul commit). */
+/** Library items placed in a grid centered on `at` (a single commit). */
 export function addItemsAt(cards: readonly ItemCard[], at: Vec = viewCenterWorld()): string[] {
   if (cards.length === 0 || !guardCap(cards.length)) return []
   addItemCards(cards)
@@ -373,7 +373,7 @@ function imageNodes(assets: readonly AssetInfo[], at: Vec): SpaceNode[] {
   }))
 }
 
-/** Fichiers du Finder → assets (jamais dans la bibliothèque) → nœuds image au point. */
+/** Finder files → assets (never in the library) → image nodes at the point. */
 export async function addFilesAt(
   paths: readonly string[],
   at: Vec = viewCenterWorld(),
@@ -423,7 +423,7 @@ export function placeAssetsAt(assets: readonly AssetInfo[], at: Vec = viewCenter
   })
 }
 
-/** « Ajouter à la bibliothèque » : l'asset devient un élément, le nœud devient `item`. */
+/** "Add to library": the asset becomes an item, the node becomes `item`. */
 export async function promoteNodes(ids: readonly string[]): Promise<void> {
   const space = useSpace.getState().spaceUuid
   if (!space) return
@@ -468,7 +468,7 @@ export async function promoteNodes(ids: readonly string[]): Promise<void> {
   toast(t().addedToLibrary)
 }
 
-// --- Presse-papiers ------------------------------------------------------------------------
+// --- Clipboard ------------------------------------------------------------------------
 
 interface ClipPayload {
   v: 1
@@ -496,7 +496,7 @@ export async function copySelection(cut = false): Promise<void> {
   }
 }
 
-/** ⌘V : nœuds internes, fichiers, image, texte (ordre de priorité du main). */
+/** ⌘V: internal nodes, files, image, text (priority order of main). */
 export async function pasteClipboard(at?: Vec): Promise<void> {
   let c: Awaited<ReturnType<typeof rpc<'spaces.readClipboard'>>>
   try {

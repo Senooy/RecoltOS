@@ -1,7 +1,7 @@
 /**
- * Ouverture d'un élément demandée par main (notification de capture, « Ouvrir avec ») : l'événement
- * `nav.openItem` est émis ET l'élément est gardé en attente, pour une fenêtre recréée dont le
- * renderer n'écoute pas encore (`system.takePendingNav` au montage). Le renderer consomme l'attente.
+ * Opening an item requested by main (capture notification, "Open with"): the `nav.openItem`
+ * event is emitted AND the item is kept pending, for a recreated window whose
+ * renderer does not listen yet (`system.takePendingNav` on mount). The renderer consumes the pending item.
  */
 import { emitEvent } from './events'
 

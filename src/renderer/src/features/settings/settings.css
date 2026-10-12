@@ -1,8 +1,8 @@
 /*
- * Réglages : typographie (Geist) — titre 21 px gras,
- * description 12, libellés et navigation 13, aides et groupes 11, boutons et champs 11,5.
- * Hors couche Tailwind : s'impose aux tailles `text-ui` / `text-small` des primitives (Button,
- * SegmentedSmall, Select) dans la colonne de contenu, sans toucher aux composants partagés.
+ * Settings: typography (Geist) — title 21 px bold,
+ * description 12, labels and navigation 13, hints and groups 11, buttons and fields 11.5.
+ * Outside the Tailwind layer: overrides the `text-ui` / `text-small` sizes of the primitives
+ * (Button, SegmentedSmall, Select) in the content column, without touching shared components.
  */
 :where(.settings-content) :where(button, input, select, textarea) {
   font-size: 11.5px;

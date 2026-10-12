@@ -1,8 +1,8 @@
 /**
- * Repo `tags` + `item_tags`. Noms normalisés (trim, NFC, minuscules,
- * espaces → `-`, `#` initial retiré) ; `x`, `instagram`, `cosmos` et `bookmark` sont réservés aux
- * chips de source virtuelles (`AppError('tag_reserved')`). Les triggers de 0001 réindexent la FTS
- * à chaque lien ajouté / retiré et au renommage.
+ * `tags` + `item_tags` repo. Normalized names (trim, NFC, lowercase,
+ * spaces → `-`, leading `#` removed); `x`, `instagram`, `cosmos` and `bookmark` are reserved for
+ * virtual source chips (`AppError('tag_reserved')`). The 0001 triggers reindex the FTS
+ * on each link added / removed and on renaming.
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
@@ -27,7 +27,7 @@ export interface TagWithCount extends TagRow {
   count: number
 }
 
-/** Normalise un nom de tag ; lève `validation` si vide ou trop long. */
+/** Normalizes a tag name; throws `validation` if empty or too long. */
 export function normalizeTagName(raw: string): string {
   const name = raw
     .normalize('NFC')
@@ -87,7 +87,7 @@ export function createTagsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return q('SELECT * FROM tags WHERE uuid = ?').get(uuid) as TagRow | undefined
     },
 
-    /** Ajoute les tags `names` aux items (crée les tags manquants). Renvoie les ids de tags. */
+    /** Adds the `names` tags to the items (creates missing tags). Returns the tag ids. */
     addToItems(
       itemIds: readonly number[],
       names: readonly string[],
@@ -112,7 +112,7 @@ export function createTagsRepo(db: Database.Database, opts: RepoOptions = {}) {
       ).run(idList(itemIds), idList(tagIds)).changes
     },
 
-    /** Renomme (réindexation FTS par `trg_tags_fts_au`) ; nom déjà pris → `conflict`. */
+    /** Renames (FTS reindexed by `trg_tags_fts_au`); name already taken → `conflict`. */
     rename(id: number, raw: string): TagRow {
       return db.transaction(() => {
         const name = checkedName(raw, false)
@@ -129,7 +129,7 @@ export function createTagsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return q('UPDATE tags SET color = ? WHERE id = ?').run(color, id).changes > 0
     },
 
-    /** Fusionne `sourceIds` dans `targetId` : liens réaffectés (FTS réindexée), sources supprimées. */
+    /** Merges `sourceIds` into `targetId`: links reassigned (FTS reindexed), sources deleted. */
     merge(sourceIds: readonly number[], targetId: number): number {
       return db.transaction(() => {
         const sources = sourceIds.filter((id) => id !== targetId)
@@ -150,7 +150,7 @@ export function createTagsRepo(db: Database.Database, opts: RepoOptions = {}) {
       return q('DELETE FROM tags WHERE id = ?').run(id).changes > 0
     },
 
-    /** Tags avec le nombre d'items vivants (non supprimés, non masqués). */
+    /** Tags with the number of live items (not deleted, not hidden). */
     listWithCounts(): TagWithCount[] {
       return q(
         `SELECT t.*, count(i.id) AS count FROM tags t

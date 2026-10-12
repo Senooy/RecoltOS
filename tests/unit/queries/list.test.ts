@@ -1,6 +1,6 @@
 /**
- * requêtes de liste (portées, 7 tris keyset), compteurs, couvertures, DTO sans http(s),
- * purge automatique.
+ * list queries (scopes, 7 keyset sorts), counters, covers, DTOs without http(s),
+ * automatic purge.
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import { ItemCard, ItemDetail } from '../../../src/shared/dto/items'
@@ -26,7 +26,7 @@ function seeded(count = 120) {
   h = makeHarness()
   const lib = makeSyntheticLibrary({ count })
   const ids = seedSyntheticLibrary(h.t.db, lib, { withDerived: true })
-  // Vues et couleurs variées pour les tris « consultés » et « couleur ».
+  // Varied views and colors for the "viewed" and "color" sorts.
   h.t.db.exec(
     `UPDATE items SET view_count = id % 7, viewed_at = CASE WHEN id % 3 = 0 THEN 1700000000000 + id * 1000 END`,
   )
@@ -45,8 +45,8 @@ const all = (input: Parameters<typeof listItems>[1], limit: number) => {
   return out
 }
 
-describe('listes et tris', () => {
-  it('les 7 tris : pagination keyset stable (pages de 7 = liste complète)', () => {
+describe('lists and sorts', () => {
+  it('the 7 sorts: stable keyset pagination (pages of 7 = full list)', () => {
     seeded(90)
     for (const sort of SORT_MODES as readonly SortMode[]) {
       const full = listItems(h!.t.db, {
@@ -80,7 +80,7 @@ describe('listes et tris', () => {
     expect(names.map((r) => r.name_key)).toEqual([...names.map((r) => r.name_key)].sort())
   })
 
-  it('un masqué apparaît dans sa collection mais pas dans Tout / Enregistrés / Non classés', () => {
+  it('a hidden item appears in its collection but not in All / Saved / Unclassified', () => {
     seeded(40)
     const db = h!.t.db
     const col = db.prepare('SELECT id, uuid FROM collections LIMIT 1').get() as {
@@ -116,7 +116,7 @@ describe('listes et tris', () => {
     expect(c.hidden).toBe(uuids('hidden').length)
   })
 
-  it('count d’une collection = membres directs non supprimés ; chips de source', () => {
+  it('collection count = direct non-deleted members; source chips', () => {
     seeded(60)
     const db = h!.t.db
     const lib = { id: 'ltest', root: h!.lib.root }
@@ -144,7 +144,7 @@ describe('listes et tris', () => {
     expect(sourceChips(db).find((c) => c.source === 'instagram')?.count ?? 0).toBe(ig)
   })
 
-  it('couverture choisie en premier, puis les plus récents (corbeille exclue)', () => {
+  it('chosen cover first, then the most recent (trash excluded)', () => {
     seeded(30)
     const db = h!.t.db
     const col = h!.t.repos.collections.create({ name: 'Cible' })
@@ -173,7 +173,7 @@ describe('listes et tris', () => {
     expect(node.count).toBe(4)
   })
 
-  it('aucune URL http(s) dans un ItemCard / ItemDetail sérialisé (post_meta avec URLs distantes)', () => {
+  it('no http(s) URL in a serialized ItemCard / ItemDetail (post_meta with remote URLs)', () => {
     seeded(60)
     const db = h!.t.db
     const lib = { id: 'ltest', root: h!.lib.root }
@@ -194,7 +194,7 @@ describe('listes et tris', () => {
     expect(cards.every((c) => c.displayDate === c.createdAt)).toBe(true)
   })
 
-  it('page de 120 cartes < 5 ms SQL sur 10 000 lignes', () => {
+  it('page of 120 cards < 5 ms SQL on 10,000 rows', () => {
     seeded(10_000)
     const db = h!.t.db
     db.exec('ANALYZE')
@@ -208,12 +208,12 @@ describe('listes et tris', () => {
       cursor = r.nextCursor
     }
     times.sort((a, b) => a - b)
-    expect(times[2]!).toBeLessThan(5 * 4) // marge CI : la médiane mesurée localement est < 5 ms
+    expect(times[2]!).toBeLessThan(5 * 4) // CI margin: the locally measured median is < 5 ms
   }, 60_000)
 })
 
-describe('purge automatique', () => {
-  it('défaut 0 = jamais ; 7 jours → fichiers dans la Corbeille macOS', async () => {
+describe('automatic purge', () => {
+  it('default 0 = never; 7 days → files moved to the macOS Trash', async () => {
     h = makeHarness()
     const trashed: string[] = []
     h.services.trashItem = (abs) => {

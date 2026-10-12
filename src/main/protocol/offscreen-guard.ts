@@ -1,21 +1,21 @@
 /**
- * Garde de `recolt://` sur les sessions hors écran.
+ * Guard for `recolt://` on off-screen sessions.
  *
- * Les partitions hors écran (parc recyclé de `windows/offscreen.ts`) servent à la fois aux routes
- * internes (`offscreen.html?render=tweet-card|space-stage`, qui ont besoin de `recolt://`) et à la
- * capture de pages http(s) distantes, qui ne doivent JAMAIS lire la bibliothèque : le schéma est
- * `corsEnabled` + `supportFetchAPI` et répond `ACAO: *`, donc une page distante pourrait sonder
- * des chemins devinables (avatars `avatars/<plateforme>/<sha1(handle)[0:16]>.jpg`) par `fetch`
- * ou `<img>` (onload/onerror, `naturalWidth`).
+ * Off-screen partitions (recycled pool from `windows/offscreen.ts`) serve both the internal
+ * routes (`offscreen.html?render=tweet-card|space-stage`, which need `recolt://`) and the capture
+ * of remote http(s) pages, which must NEVER read the library: the scheme is `corsEnabled` +
+ * `supportFetchAPI` and answers `ACAO: *`, so a remote page could probe guessable paths (avatars
+ * `avatars/<plateforme>/<sha1(handle)[0:16]>.jpg`) via `fetch` or `<img>` (onload/onerror,
+ * `naturalWidth`).
  *
- * `Origin` / `Referer` ne conviennent pas (une page maîtrise sa `referrer-policy`, et un `<img>`
- * sans `crossorigin` n'envoie pas `Origin`). On se fie à l'URL de la page de premier niveau de la
- * fenêtre qui utilise la session : une partition n'héberge qu'une fenêtre à la fois, et la page
- * distante ne peut pas devenir `offscreen.html` (`will-navigate` bloqué, redirections limitées à
- * http(s) par `isAllowedRedirect`). Sans fenêtre identifiable, on refuse (fail closed).
+ * `Origin` / `Referer` are not suitable (a page controls its `referrer-policy`, and an `<img>`
+ * without `crossorigin` does not send `Origin`). We rely on the top-level page URL of the window
+ * that uses the session: a partition hosts only one window at a time, and the remote page cannot
+ * become `offscreen.html` (`will-navigate` blocked, redirects limited to http(s) by
+ * `isAllowedRedirect`). Without an identifiable window, we refuse (fail closed).
  */
 
-/** `true` si `url` est la page interne `offscreen.html` (fichier packagé ou serveur Vite de dev). */
+/** `true` if `url` is the internal page `offscreen.html` (packaged file or Vite dev server). */
 export function isInternalOffscreenUrl(url: string, rendererUrl: string | null): boolean {
   let u: URL
   try {
@@ -37,15 +37,15 @@ export function isInternalOffscreenUrl(url: string, rendererUrl: string | null):
 }
 
 export interface OffscreenGuardDeps<S> {
-  /** URL de premier niveau de chaque fenêtre vivante qui utilise `ses`. */
+  /** Top-level URL of each live window that uses `ses`. */
   pageUrlsOf(ses: S): string[]
   rendererUrl: string | null
   onDenied?(reason: string, url: string): void
 }
 
 /**
- * Enveloppe `inner` : la requête n'est servie que si toutes les pages de la session sont la page
- * interne `offscreen.html`. Aucune page, ou une page distante → 403.
+ * Wraps `inner`: the request is only served if all pages of the session are the internal
+ * `offscreen.html` page. No page, or a remote page → 403.
  */
 export function guardOffscreenHandler<S>(
   ses: S,

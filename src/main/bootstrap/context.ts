@@ -1,5 +1,5 @@
 /**
- * Contexte passé à chaque `init<Domaine>()` (registre `services.ts`).
+ * Context passed to each `init<Domain>()` (`services.ts` registry).
  */
 import type { BrowserWindow } from 'electron'
 import type { EventName, EventPayload } from '../../shared/ipc'
@@ -11,7 +11,7 @@ export interface ServiceContext {
   flags: RuntimeFlags
   isPackaged: boolean
   getMainWindow(): BrowserWindow | null
-  /** Émet `evt:<name>` vers les fenêtres de l'app (payload validé en dev). */
+  /** Emits `evt:<name>` to the app's windows (payload validated in dev). */
   emit<E extends EventName>(event: E, payload: EventPayload<E>): void
   log: Logger
 }

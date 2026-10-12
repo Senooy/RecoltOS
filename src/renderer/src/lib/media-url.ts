@@ -1,7 +1,7 @@
 /**
- * URL des médias côté renderer. Les DTO portent déjà des URL `recolt://` résolues
- * par main (repli compris) : le renderer ne construit aucun chemin et refuse tout http(s).
- * Mode maquette (dev) : `recolt://mock/...` → `/__mock/media/...` (middleware Vite, même origine).
+ * Media URLs on the renderer side. DTOs already carry `recolt://` URLs resolved
+ * by main (fallback included): the renderer builds no path and refuses any http(s).
+ * Mock mode (dev): `recolt://mock/...` → `/__mock/media/...` (Vite middleware, same origin).
  */
 import type { ItemCard } from '../../../shared/dto/items'
 
@@ -9,11 +9,11 @@ export function isRecoltUrl(url: string | null | undefined): url is string {
   return typeof url === 'string' && url.startsWith('recolt://')
 }
 
-/** `src` utilisable dans `<img>`/`<video>`, ou `undefined` (monogramme / squelette). */
+/** `src` usable in `<img>`/`<video>`, or `undefined` (monogram / skeleton). */
 export function mediaSrc(url: string | null | undefined): string | undefined {
   if (!url) return undefined
   if (/^https?:/i.test(url)) {
-    if (import.meta.env.DEV) console.error(`[media-url] URL http(s) refusée dans un DTO : ${url}`)
+    if (import.meta.env.DEV) console.error(`[media-url] http(s) URL refused in a DTO: ${url}`)
     return undefined
   }
   if (import.meta.env.DEV && url.startsWith('recolt://mock/')) {
@@ -22,12 +22,12 @@ export function mediaSrc(url: string | null | undefined): string | undefined {
   return url
 }
 
-/** Vignette de grille : `thumb` (déjà résolu par main), sinon affiche vidéo. */
+/** Grid thumbnail: `thumb` (already resolved by main), otherwise the video poster. */
 export function cardThumbSrc(card: Pick<ItemCard, 'thumbUrl' | 'posterUrl'>): string | undefined {
   return mediaSrc(card.thumbUrl ?? card.posterUrl)
 }
 
-/** Grande image (viewer, Retina) : `large`, sinon original, sinon vignette. */
+/** Large image (viewer, Retina): `large`, otherwise original, otherwise thumbnail. */
 export function cardLargeSrc(
   card: Pick<ItemCard, 'largeUrl' | 'originalUrl' | 'thumbUrl'>,
 ): string | undefined {

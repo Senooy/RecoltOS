@@ -1,5 +1,5 @@
 /**
- * Contrat `ingest.*` : `files` dès M1 ; `pickFiles`, `pickFolder`, `url`, `clipboard` en M3.
+ * `ingest.*` contract: `files` from M1; `pickFiles`, `pickFolder`, `url`, `clipboard` in M3.
  */
 import { z } from 'zod'
 import { IngestProgress, IngestReport } from '../dto/items'
@@ -13,7 +13,7 @@ export const ingestContract = {
     input: z.object({ paths: z.array(AbsPath).min(1).max(10_000), ...Target }),
     output: IngestReport,
   },
-  /** `null` si l'utilisateur annule le sélecteur. */
+  /** `null` if the user cancels the picker. */
   'ingest.pickFiles': { input: z.object(Target).default({}), output: IngestReport.nullable() },
   'ingest.pickFolder': { input: z.object(Target).default({}), output: IngestReport.nullable() },
   'ingest.url': { input: z.object({ url: WebUrl, ...Target }), output: IngestReport },

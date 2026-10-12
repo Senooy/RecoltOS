@@ -1,12 +1,12 @@
 /**
- * `cn()` : clsx + tailwind-merge avec le thème `text` étendu.
- * Sans l'extension, tailwind-merge classe `text-caption`… comme des COULEURS et supprime
- * silencieusement l'un des deux dans `cn('text-caption', 'text-fg-faint')`.
+ * `cn()`: clsx + tailwind-merge with the `text` theme extended.
+ * Without the extension, tailwind-merge classes `text-caption`… as COLORS and silently removes
+ * one of the two in `cn('text-caption', 'text-fg-faint')`.
  */
 import { clsx, type ClassValue } from 'clsx'
 import { extendTailwindMerge } from 'tailwind-merge'
 
-/** Tailles de texte du design system (tokens `--text-*` de `tokens.css`). */
+/** Design system text sizes (`--text-*` tokens from `tokens.css`). */
 export const TEXT_SIZES = [
   'micro',
   'caption',

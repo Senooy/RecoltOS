@@ -1,7 +1,7 @@
 /**
- * handlers `system.*` via `dispatch` (validation zod des entrées et sorties), Electron
- * simulé. `copyImage` d'un webp passe par le vrai `toPng` (sharp, en processus) : le PNG écrit dans
- * le presse-papiers est décodable et non vide. Le collage réel est couvert par l'e2e
+ * `system.*` handlers via `dispatch` (zod validation of inputs and outputs), Electron
+ * simulated. `copyImage` of a webp goes through the real `toPng` (sharp, in-process): the PNG
+ * written to the clipboard is decodable and non-empty. The real paste is covered by the e2e
  * `tests/unit/protocol/e2e/recolt-protocol.spec.ts`.
  */
 import { mkdirSync } from 'node:fs'
@@ -138,7 +138,7 @@ afterAll(() => {
 })
 
 describe('system.copyImage', () => {
-  it('webp : toPng (sharp) puis ClipboardItem image/png non vide', async () => {
+  it('webp: toPng (sharp) then non-empty ClipboardItem image/png', async () => {
     const r = await call('system.copyImage', { itemUuid: uuids.image })
     expect(r).toEqual({ ok: true, data: undefined })
     expect(toPngCalls[0]!.abs).toBe(join(lib.root, `items/11/${IMG}.webp`))
@@ -154,12 +154,12 @@ describe('system.copyImage', () => {
     expect(meta).toMatchObject({ format: 'png', width: 64, height: 48 })
   })
 
-  it('vidéo : le poster est copié', async () => {
+  it('video: the poster is copied', async () => {
     expect((await call('system.copyImage', { itemUuid: uuids.video })).ok).toBe(true)
     expect(toPngCalls[0]!.abs).toBe(join(lib.root, `posters/22/${VID}.jpg`))
   })
 
-  it('post texte → not_found ; sans worker → worker_unavailable', async () => {
+  it('text post → not_found; without worker → worker_unavailable', async () => {
     expect(await call('system.copyImage', { itemUuid: uuids.text })).toMatchObject({
       ok: false,
       error: { code: 'not_found' },
@@ -172,15 +172,15 @@ describe('system.copyImage', () => {
   })
 })
 
-describe('system.* (Finder, liens, Quick Look, édition)', () => {
-  it('revealInFinder : original dans le Finder', async () => {
+describe('system.* (Finder, links, Quick Look, editing)', () => {
+  it('revealInFinder: original in the Finder', async () => {
     expect((await call('system.revealInFinder', { itemUuid: uuids.image })).ok).toBe(true)
     expect(electron.shell.showItemInFolder).toHaveBeenCalledWith(
       join(lib.root, `items/11/${IMG}.webp`),
     )
   })
 
-  it('openExternal : http(s) seulement (contrat + défense)', async () => {
+  it('openExternal: http(s) only (contract + defence)', async () => {
     expect((await call('system.openExternal', { url: 'https://example.com/a' })).ok).toBe(true)
     expect(electron.shell.openExternal).toHaveBeenCalledWith('https://example.com/a')
     for (const url of ['file:///etc/passwd', 'javascript:alert(1)', 'recolt://default/x']) {
@@ -189,7 +189,7 @@ describe('system.* (Finder, liens, Quick Look, édition)', () => {
     expect(electron.shell.openExternal).toHaveBeenCalledTimes(1)
   })
 
-  it('quickLook : previewFile(original, titre) sur la fenêtre de l’émetteur', async () => {
+  it('quickLook: previewFile(original, title) on the sender’s window', async () => {
     const win = { previewFile: vi.fn() }
     electron.BrowserWindow.fromWebContents.mockReturnValue(win)
     const sender = { id: 1 }
@@ -201,7 +201,7 @@ describe('system.* (Finder, liens, Quick Look, édition)', () => {
     )
   })
 
-  it('edit : appelle webContents.<cmd>() de l’émetteur', async () => {
+  it('edit: calls webContents.<cmd>() of the sender', async () => {
     const sender = {
       isDestroyed: () => false,
       undo: vi.fn(),
@@ -223,19 +223,19 @@ describe('system.* (Finder, liens, Quick Look, édition)', () => {
     expect(electron.clipboard.writeText).toHaveBeenCalledWith('bonjour')
   })
 
-  it('openLogs : ouvre le dossier du journal', async () => {
+  it('openLogs: opens the log folder', async () => {
     expect((await call('system.openLogs')).ok).toBe(true)
     expect(electron.shell.openPath).toHaveBeenCalledWith('/tmp/recolt-logs-test')
   })
 
-  it('appInfo : versions', async () => {
+  it('appInfo: versions', async () => {
     const r = await call('system.appInfo')
     expect(r).toMatchObject({ ok: true, data: { version: '0.0.0', isPackaged: false } })
   })
 })
 
 describe('system.saveAs', () => {
-  it('copie l’original à l’endroit choisi, nom proposé depuis le titre', async () => {
+  it('copies the original to the chosen location, name suggested from the title', async () => {
     const dest = join(makeTmpDir('recolt-saveas-'), 'copie.webp')
     electron.BrowserWindow.fromWebContents.mockReturnValue(null)
     electron.dialog.showSaveDialog.mockResolvedValue({ canceled: false, filePath: dest })
@@ -246,12 +246,12 @@ describe('system.saveAs', () => {
     expect((await sharp(dest).metadata()).format).toBe('webp')
   })
 
-  it('annulé → null', async () => {
+  it('cancelled → null', async () => {
     electron.dialog.showSaveDialog.mockResolvedValue({ canceled: true, filePath: '' })
     expect(await call('system.saveAs', { itemUuid: uuids.image })).toEqual({ ok: true, data: null })
   })
 
-  it('suggestedFileName : sans séparateur, ni point initial ; repli sur le nom du fichier', () => {
+  it('suggestedFileName: no separator, no leading dot; falls back to the file name', () => {
     expect(suggestedFileName('a/b:c\u0000d', '/x/y.jpg')).toBe('a b c d.jpg')
     expect(suggestedFileName('...cache', '/x/y.jpg')).toBe('cache.jpg')
     expect(suggestedFileName(null, '/x/uuid.mp4')).toBe('uuid.mp4')
@@ -260,7 +260,7 @@ describe('system.saveAs', () => {
 })
 
 describe('system.redetectTools', () => {
-  it('détection neuve, mise en cache dans prefs.tools, renvoie les chemins', async () => {
+  it('fresh detection, cached in prefs.tools, returns the paths', async () => {
     const store = createPrefsStore({ file: join(makeTmpDir('recolt-prefs-'), 'prefs.json') })
     setPrefsStore(store)
     try {

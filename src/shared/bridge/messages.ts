@@ -1,6 +1,6 @@
 /**
- * Charges utiles de chaque `type` de message et validation complète
- * `enveloppe + payload`.
+ * Payloads of each message `type` and full validation of
+ * `envelope + payload`.
  */
 import { z } from 'zod'
 import {
@@ -38,7 +38,7 @@ import {
 export const HostHello = z.object({
   protocol: z.number().int(),
   browser: z.string().max(40),
-  /** Origine (`chrome-extension://…/`) ou identifiant Firefox appelant. */
+  /** Caller origin (`chrome-extension://…/`) or Firefox identifier. */
   origin: z.string().max(200),
   hostVersion: z.string().max(20),
   pid: z.number().int(),
@@ -47,14 +47,14 @@ export type HostHello = z.output<typeof HostHello>
 
 export const AppStatus = z.object({ connected: z.boolean() })
 
-/** État d'une plateforme vu par l'extension (cookies lus à la demande, jamais transmis). */
+/** Platform state as seen by the extension (cookies read on demand, never transmitted). */
 export const PlatformState = z.object({
-  /** Cookie de session présent. */
+  /** Session cookie present. */
   loggedIn: z.boolean(),
-  /** Identifiant de compte NON secret (id numérique de `twid`, `ds_user_id`, `me.id`). */
+  /** NON-secret account identifier (numeric id of `twid`, `ds_user_id`, `me.id`). */
   accountId: z.string().max(64).nullable().optional(),
   handle: z.string().max(100).nullable().optional(),
-  /** Autorisations d'hôte accordées (Firefox MV3 : optionnelles). */
+  /** Host permissions granted (Firefox MV3: optional). */
   permission: z.boolean().optional(),
 })
 export type PlatformState = z.output<typeof PlatformState>
@@ -98,8 +98,8 @@ export const HelloAck = z.object({
     wantedAuthors: z.array(AuthorRef).max(MAX_WANTED_AUTHORS),
   }),
   /**
-   * Langue de l'interface de l'app (`fr` | `en`) : popup, menus et toasts de l'extension la
-   * suivent. Optionnelle (compatibilité avec les apps plus anciennes) ; renvoyée à chaque changement.
+   * App interface language (`fr` | `en`): the extension popup, menus and toasts
+   * follow it. Optional (compatibility with older apps); sent back on each change.
    */
   lang: z.enum(['fr', 'en']).optional(),
 })
@@ -112,7 +112,7 @@ export const ExtStale = z.object({
 
 const Nothing = z.object({}).passthrough().optional()
 
-/** Schéma du `payload` de chaque type (validation par l'app ; l'hôte ne regarde que `type`). */
+/** Schema of each type's `payload` (validated by the app; the host only checks `type`). */
 export const MESSAGE_SCHEMAS = {
   'host.hello': HostHello,
   'app.status': AppStatus,
@@ -155,7 +155,7 @@ export type TypedMessage<T extends MessageType = MessageType> = {
 export type ParseResult =
   { ok: true; message: TypedMessage } | { ok: false; id: string | null; error: string }
 
-/** Valide l'enveloppe puis le `payload` selon `type` ; ne lève jamais. */
+/** Validates the envelope then the `payload` according to `type`; never throws. */
 export function parseMessage(raw: unknown): ParseResult {
   const env = Envelope.safeParse(raw)
   if (!env.success) {

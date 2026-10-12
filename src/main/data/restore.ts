@@ -1,14 +1,14 @@
 /**
- * Restauration d'un instantané :
- *  1. copie vers `tmp/restore-<ts>.db` puis `PRAGMA quick_check` sur la copie (abandon sinon) ;
- *  2. `closeForReplace()` : pause des jobs, arrêt des workers, checkpoint TRUNCATE, `-wal` vide
- *     exigé (sinon `wal_not_empty`, la bibliothèque reste ouverte et rien n'a bougé) ;
- *  3. `recolt.db` + `-wal` + `-shm` déplacés ENSEMBLE vers `snapshots/recolt-<ts>-pre-restore.db*` ;
- *  4. copie vérifiée renommée en `recolt.db`, tout `-wal` / `-shm` résiduel supprimé ;
- *  5. réouverture (migrations rejouées), FTS reconstruite, `verify` (médias manquants) ;
- *  6. le gestionnaire relance workers et file puis émet `library.switched` (même id).
- * En cas d'échec après le déplacement, l'ancienne base est remise en place puis rouverte.
- * Pas d'import electron : le gestionnaire est injecté.
+ * Snapshot restore:
+ *  1. copy to `tmp/restore-<ts>.db` then `PRAGMA quick_check` on the copy (abort otherwise);
+ *  2. `closeForReplace()`: pause jobs, stop workers, TRUNCATE checkpoint, empty `-wal` required
+ *     (otherwise `wal_not_empty`, the library stays open and nothing has moved);
+ *  3. `recolt.db` + `-wal` + `-shm` moved TOGETHER to `snapshots/recolt-<ts>-pre-restore.db*`;
+ *  4. verified copy renamed to `recolt.db`, any residual `-wal` / `-shm` removed;
+ *  5. reopen (migrations replayed), FTS rebuilt, `verify` (missing media);
+ *  6. the manager restarts workers and queue, then emits `library.switched` (same id).
+ * If it fails after the move, the old database is put back in place and reopened.
+ * No electron import: the manager is injected.
  */
 import Database from 'better-sqlite3'
 import fs from 'node:fs'
@@ -31,7 +31,7 @@ export interface RestoreResult {
   issues: number
 }
 
-/** `PRAGMA quick_check` sur un fichier (lecture seule). */
+/** `PRAGMA quick_check` on a file (read-only). */
 export function quickCheck(file: string): boolean {
   let db: Database.Database | null = null
   try {
@@ -90,13 +90,13 @@ export async function restoreSnapshot(
     fs.rmSync(paths.wal, { force: true })
     fs.rmSync(paths.shm, { force: true })
   } catch (err) {
-    // Remise en place de l'ancienne base avant toute réouverture.
+    // Put the old database back in place before any reopening.
     fs.rmSync(paths.db, { force: true })
     for (const [from, to] of moved.reverse()) {
       try {
         fs.renameSync(to, from)
       } catch {
-        // dernier recours : l'instantané pre-restore reste disponible
+        // last resort: the pre-restore snapshot remains available
       }
     }
     await manager.reopen()
@@ -109,7 +109,7 @@ export async function restoreSnapshot(
   try {
     next = await manager.reopen()
   } catch (err) {
-    // La copie restaurée ne s'ouvre pas : retour à la base d'avant.
+    // The restored copy does not open: back to the previous database.
     fs.rmSync(paths.db, { force: true })
     fs.rmSync(paths.wal, { force: true })
     fs.rmSync(paths.shm, { force: true })

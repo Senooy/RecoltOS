@@ -1,15 +1,15 @@
 /**
- * `check:pkg` : garde-fous du `package.json`.
- * Échoue si : un script porte le nom d'une commande intégrée de pnpm ; une version n'est pas exacte
- * (`^`, `~`, `*`, plages, `latest`) ; `dependencies` sort de la liste blanche ; `packageManager` n'est
- * pas `pnpm@12.6.0+sha512.…` ; `"type": "module"` est posé (main et preload sont en CJS).
- * `checkPackage` est pure (testée sans disque) ; le CLI accepte `--file <package.json>`.
+ * `check:pkg`: guardrails for `package.json`.
+ * Fails if: a script is named after a built-in pnpm command; a version is not exact
+ * (`^`, `~`, `*`, ranges, `latest`); `dependencies` falls outside the allowlist; `packageManager` is
+ * not `pnpm@12.6.0+sha512.…`; `"type": "module"` is set (main and preload are CJS).
+ * `checkPackage` is pure (tested without disk); the CLI accepts `--file <package.json>`.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-/** Commandes intégrées de pnpm : `pnpm <nom>` les exécute avant un script du même nom. */
+/** Built-in pnpm commands: `pnpm <name>` runs them before a script of the same name. */
 export const PNPM_BUILTINS: readonly string[] = [
   'doctor',
   'rebuild',
@@ -45,12 +45,12 @@ export const PNPM_BUILTINS: readonly string[] = [
 ]
 
 /**
- * Exceptions assumées : `pack` (electron-builder `--dir`) est imposé par le contrat
- * lui-même. Sans risque tant que tout est appelé par `pnpm run <script>`.
+ * Accepted exceptions: `pack` (electron-builder `--dir`) is mandated by the contract itself.
+ * Harmless as long as everything is invoked through `pnpm run <script>`.
  */
 export const ALLOWED_BUILTIN_SCRIPTS: readonly string[] = ['pack']
 
-/** Seules dépendances d'exécution externes à l'asar (`dependencies` = natifs uniquement). */
+/** Only runtime dependencies kept outside the asar (`dependencies` = native modules only). */
 export const DEPENDENCIES_ALLOWLIST: readonly string[] = ['better-sqlite3', 'sharp']
 
 export const PACKAGE_MANAGER_PREFIX = 'pnpm@12.6.0+sha512.'
@@ -63,7 +63,7 @@ export interface PackageJsonLike {
   devDependencies?: Record<string, string>
   optionalDependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
-  /** Forçages de version : npm (`overrides`) et pnpm (`pnpm.overrides`). Mêmes règles d'exactitude. */
+  /** Version overrides: npm (`overrides`) and pnpm (`pnpm.overrides`). Same exactness rules. */
   overrides?: Record<string, unknown>
   pnpm?: { overrides?: Record<string, unknown> }
   packageManager?: string
@@ -71,24 +71,24 @@ export interface PackageJsonLike {
 }
 
 function isExactSpec(spec: string): boolean {
-  // `npm:alias@1.2.3`, `workspace:*` et `file:` ne sont pas utilisés ici ; seules les versions exactes passent.
+  // `npm:alias@1.2.3`, `workspace:*` and `file:` are not used here; only exact versions pass.
   return EXACT_VERSION.test(spec)
 }
 
 const unquote = (v: string): string => v.replace(/^(["'])(.*)\1$/, '$2')
 
 /**
- * Contrôle de `pnpm-workspace.yaml` : `overrides`, `catalog` et `catalogs.<nom>` portent
- * des versions que pnpm 12 applique comme `package.json`. Lecteur volontairement restreint (pas de
- * dépendance YAML) : mappings `clé: valeur` indentés, sans listes ni ancres. Il ÉCHOUE FERMÉ : une ligne
- * de ces sections qu'il ne sait pas lire est une erreur, jamais un passage silencieux.
+ * Check of `pnpm-workspace.yaml`: `overrides`, `catalog` and `catalogs.<name>` carry versions
+ * that pnpm 12 applies just like `package.json`. Deliberately limited reader (no YAML dependency):
+ * indented `key: value` mappings, without lists or anchors. It FAILS CLOSED: a line in these
+ * sections that it cannot read is an error, never a silent pass.
  */
 export function checkWorkspace(yamlText: string): string[] {
   const errors: string[] = []
   const SECTIONS = ['overrides', 'catalog', 'catalogs'] as const
   let section: (typeof SECTIONS)[number] | null = null
-  let childIndent = -1 // indentation des entrées directes de la section
-  let catalogName: string | null = null // `catalogs` : catalogue courant
+  let childIndent = -1 // indentation of the section's direct entries
+  let catalogName: string | null = null // `catalogs`: current catalog
   let lineNo = 0
   const fail = (why: string): void => {
     errors.push(`pnpm-workspace.yaml ligne ${lineNo} : ${why} (refus par prudence)`)
@@ -118,7 +118,7 @@ export function checkWorkspace(yamlText: string): string[] {
       }
       continue
     }
-    if (section === null) continue // autres réglages pnpm : hors périmètre
+    if (section === null) continue // other pnpm settings: out of scope
 
     if (childIndent === -1) childIndent = indent
     if (indent < childIndent) {
@@ -126,7 +126,7 @@ export function checkWorkspace(yamlText: string): string[] {
       continue
     }
     if (section === 'catalogs' && indent === childIndent) {
-      // Nom de catalogue : seulement un bloc, jamais une version directe.
+      // Catalog name: a block only, never a direct version.
       if (key === null || value !== '') {
         fail(`entrée de « catalogs » non analysable`)
         catalogName = null
@@ -180,7 +180,7 @@ export function checkPackage(pkg: PackageJsonLike): string[] {
     ['pnpm.overrides', pkg.pnpm?.overrides],
   ] as const) {
     for (const [name, spec] of Object.entries(forced ?? {})) {
-      // Un forçage imbriqué (objet) ou non textuel n'est pas contrôlable ici : refusé.
+      // A nested (object) or non-string override cannot be checked here: refused.
       if (typeof spec !== 'string' || !isExactSpec(spec)) {
         errors.push(
           `${label}.${name} : version « ${typeof spec === 'string' ? spec : JSON.stringify(spec)} » non exacte (ni ^, ni ~, ni plage)`,
@@ -215,7 +215,7 @@ function main(argv: readonly string[]): number {
   const value = i >= 0 ? argv[i + 1] : 'package.json'
   if (value === undefined || value === '' || value.startsWith('--')) {
     console.error(
-      'check:pkg : --file exige un chemin (usage : check-package.mts [--file <package.json>])',
+      'check:pkg : --file requires a path (usage: check-package.mts [--file <package.json>])',
     )
     return 2
   }
@@ -225,31 +225,31 @@ function main(argv: readonly string[]): number {
     pkg = JSON.parse(readFileSync(file, 'utf8')) as PackageJsonLike
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err)
-    console.error(`check:pkg : lecture impossible de ${file} : ${reason}`)
+    console.error(`check:pkg : cannot read ${file} : ${reason}`)
     return 1
   }
   if (typeof pkg !== 'object' || pkg === null || Array.isArray(pkg)) {
-    console.error(`check:pkg : ${file} ne contient pas un objet JSON`)
+    console.error(`check:pkg : ${file} does not contain a JSON object`)
     return 1
   }
   const errors = checkPackage(pkg)
-  // Forçages et catalogues pnpm 12 : `pnpm-workspace.yaml` à côté du package.json (absent = rien à contrôler).
+  // pnpm 12 overrides and catalogs: `pnpm-workspace.yaml` next to package.json (absent = nothing to check).
   const workspaceFile = join(dirname(file), 'pnpm-workspace.yaml')
   if (existsSync(workspaceFile)) {
     try {
       errors.push(...checkWorkspace(readFileSync(workspaceFile, 'utf8')))
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err)
-      console.error(`check:pkg : lecture impossible de ${workspaceFile} : ${reason}`)
+      console.error(`check:pkg : cannot read ${workspaceFile} : ${reason}`)
       return 1
     }
   }
   if (errors.length > 0) {
-    console.error(`check:pkg : ${errors.length} problème(s) dans ${file}`)
+    console.error(`check:pkg : ${errors.length} problem(s) in ${file}`)
     for (const e of errors) console.error(`  - ${e}`)
     return 1
   }
-  console.log('check:pkg : package.json conforme')
+  console.log('check:pkg : package.json is compliant')
   return 0
 }
 

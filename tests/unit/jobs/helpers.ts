@@ -1,4 +1,7 @@
-/** Services de jobs sous Node : vraie base, media-worker en processus (`runMediaOp`), vrai réseau local. */
+/**
+ * Job services under Node: real database, media-worker in-process (`runMediaOp`), real local
+ * network.
+ */
 import { PrefsSchema, type Prefs } from '../../../src/shared/prefs'
 import type { MediaArgs, MediaOp, MediaResult } from '../../../src/shared/worker-protocol'
 import { jobFailureHooks, jobHandlers } from '../../../src/main/jobs/handlers'

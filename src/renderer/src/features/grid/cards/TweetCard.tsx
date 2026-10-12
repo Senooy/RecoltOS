@@ -1,10 +1,10 @@
 /**
- * `TweetCard` : post X / Instagram / Cosmos rendu nativement (suit le thème).
- * Variantes `light` (grille), `overlay` (Redécouvrir, toujours blanc), `cover` (FanStack, étagère :
- * toujours blanche, largeur fixe 300 px réduite par `transform`), `detail` (vue détail d'un post sans
- * média, 560 px, blanche, texte complet sélectionnable, post cité et fil entiers).
- * Corps tronqué à 8 lignes puis « … » (sauf `detail`).
- * Icône de source en haut à droite : logo X / Instagram / Cosmos (jamais une croix de fermeture).
+ * `TweetCard`: X / Instagram / Cosmos post rendered natively (follows the theme).
+ * Variants `light` (grid), `overlay` (Rediscover, always white), `cover` (FanStack, shelf:
+ * always white, fixed 300 px width scaled down by `transform`), `detail` (detail view of a post without
+ * media, 560 px, white, full selectable text, quoted post and whole thread).
+ * Body truncated to 8 lines then "…" (except `detail`).
+ * Source icon at the top right: X / Instagram / Cosmos logo (never a close cross).
  */
 import { MessageSquareText } from 'lucide-react'
 import type { CSSProperties } from 'react'
@@ -19,8 +19,8 @@ import { QuotedTweet } from './QuotedTweet'
 export type TweetVariant = 'light' | 'overlay' | 'cover' | 'detail'
 
 /**
- * Texte d'un post dans la grille : le lien `t.co` final (média ou post cité joints, déjà visibles
- * ailleurs) est remplacé par « … », comme sur X. Le texte complet reste dans le détail.
+ * Text of a post in the grid: the final `t.co` link (media or quoted post attached, already visible
+ * elsewhere) is replaced by "…", as on X. The full text stays in the detail view.
  */
 export function gridText(text: string): string {
   const stripped = text.replace(/\s*https:\/\/t\.co\/\w+\s*$/, '')
@@ -45,7 +45,7 @@ export function TweetCard({
   variant?: TweetVariant
   className?: string
   style?: CSSProperties
-  /** Post complet (variante `detail`) : texte entier et fil. */
+  /** Full post (`detail` variant): full text and thread. */
   full?: PostDetailView | null
 }) {
   const detail = variant === 'detail'

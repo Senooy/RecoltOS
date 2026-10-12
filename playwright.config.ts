@@ -1,7 +1,7 @@
 /**
- * Playwright : Electron seul (`_electron`), pas de `playwright install` pour e2e / visual /
- * perf / packaged. Projets : `build` (auto, dépendance des trois premiers), `e2e`, `visual`, `perf`,
- * `packaged`, `ext-smoke` (opt-in : Chromium de Playwright).
+ * Playwright: Electron only (`_electron`), no `playwright install` for e2e / visual /
+ * perf / packaged. Projects: `build` (auto, dependency of the first three), `e2e`, `visual`, `perf`,
+ * `packaged`, `ext-smoke` (opt-in: Playwright's Chromium).
  */
 import { defineConfig } from '@playwright/test'
 
@@ -30,7 +30,7 @@ export default defineConfig({
     {
       name: 'e2e',
       testDir: 'tests',
-      // `tests/setup/*.spec.ts` : fumée de l'outillage ; les scénarios vivent sous `tests/e2e/`.
+      // `tests/setup/*.spec.ts`: tooling smoke tests; the scenarios live under `tests/e2e/`.
       testMatch: [
         /e2e\/.*\.spec\.ts$/,
         /setup\/launch\.smoke\.spec\.ts$/,
@@ -42,7 +42,7 @@ export default defineConfig({
     {
       name: 'visual',
       testDir: 'tests',
-      // Régression visuelle interne : baselines sous `tests/visual/__snapshots__/` (données factices).
+      // Internal visual regression: baselines under `tests/visual/__snapshots__/` (fake data).
       testMatch: /visual\/.*\.spec\.ts$/,
       dependencies: ['build'],
     },

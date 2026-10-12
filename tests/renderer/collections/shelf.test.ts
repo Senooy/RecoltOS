@@ -1,4 +1,4 @@
-/** Étagère : choix des vidéos lues et champ d'étoiles déterministe. */
+/** Shelf: choice of the played videos and deterministic star field. */
 import { describe, expect, it } from 'vitest'
 import {
   MAX_PLAYING,
@@ -10,15 +10,15 @@ import { makeStars } from '../../../src/renderer/src/features/collections/shelf/
 import { X_LOGO_PATH } from '../../../src/renderer/src/components/icons/brand'
 
 describe('playingIndices', () => {
-  it('au plus MAX_PLAYING vidéo(s), les plus proches du centre', () => {
+  it('at most MAX_PLAYING video(s), closest to the center', () => {
     const isVideo = Array.from({ length: 17 }, () => true)
     const set = playingIndices(isVideo, 0, 1280)
     expect(set.size).toBe(MAX_PLAYING)
-    // Centre 640 : créneaux 3 et 4 (centres 579 et 701), puis 2 et 5.
+    // Center 640: slots 3 and 4 (centers 579 and 701), then 2 and 5.
     const centers = [...set].map((i) => SHELF_PAD_LEFT + SHELF_STEP * (i + 0.5))
     for (const c of centers) expect(Math.abs(c - 640)).toBeLessThan(250)
   })
-  it('ignore les couvertures qui ne sont pas des vidéos et suit le défilement', () => {
+  it('ignores covers that are not videos and follows the scrolling', () => {
     const isVideo = [false, true, false, true, true, false, true, true, true]
     const a = playingIndices(isVideo, 0, 1280)
     expect([...a].every((i) => isVideo[i])).toBe(true)
@@ -28,7 +28,7 @@ describe('playingIndices', () => {
 })
 
 describe('Starfield', () => {
-  it('≈ 220 étoiles pour 1280×820, tirage reproductible, rayons et opacités bornés', () => {
+  it('≈ 220 stars for 1280×820, reproducible draw, radii and opacities bounded', () => {
     const a = makeStars(1280, 820)
     expect(a.length).toBe(220)
     expect(makeStars(1280, 820)).toEqual(a)
@@ -45,7 +45,7 @@ describe('Starfield', () => {
 })
 
 describe('logo X', () => {
-  it('formes pleines (4 sous-chemins fermés), pas deux traits croisés', () => {
+  it('solid shapes (4 closed subpaths), not two crossed strokes', () => {
     expect(X_LOGO_PATH.match(/Z/g)?.length).toBe(4)
   })
 })

@@ -1,6 +1,6 @@
 /**
- * File IA : vraie table `jobs`, vraie `JobQueue`, media-worker en processus, faux CLI.
- * Horloge injectée pour le budget.
+ * AI queue: real `jobs` table, real `JobQueue`, media-worker as a process, fake CLI.
+ * Injected clock for the budget.
  */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -47,7 +47,7 @@ function setup(ai: Record<string, unknown> = {}) {
     },
   })
   h = makeHarness({ clock: () => clock.now })
-  // La file lit les préférences du harnais : on les remplace par celles du test.
+  // The queue reads the harness preferences: we replace them with the test's.
   h.services.prefs = () => prefs
   const providers = createProviders({
     userData: ud,
@@ -127,8 +127,8 @@ async function run() {
   await h.queue.whenIdle()
 }
 
-describe('application et recherche', () => {
-  it('analyse complète : description, titre, tags IA, OCR, FTS, journal, événement', async () => {
+describe('application and search', () => {
+  it('full analysis: description, title, AI tags, OCR, FTS, log, event', async () => {
     const it1 = await addImage()
     expect(svc.enqueue({ itemUuids: [it1.uuid], task: 'analyze' })).toEqual({ queued: 1 })
     expect(h.lib.repos.items.getById(it1.id)!.ai_state).toBe('queued')
@@ -165,7 +165,7 @@ describe('application et recherche', () => {
     expect(h.changes.some((c) => c.uuids.includes(it1.uuid))).toBe(true)
   })
 
-  it('titre « user » jamais écrasé ; « import » seulement en politique « always »', async () => {
+  it('user title never overwritten; "import" only under the "always" policy', async () => {
     const u = await addImage({ title: 'Mon titre', titleSource: 'user' })
     const imp = await addImage({ title: 'Imported', titleSource: 'import' })
     svc.enqueue({ itemUuids: [u.uuid, imp.uuid], task: 'analyze' })
@@ -182,7 +182,7 @@ describe('application et recherche', () => {
     expect(h.lib.repos.items.getById(imp.id)!.title).toBe('Titre synthétique')
   })
 
-  it('tags « user » conservés, tags « ai » remplacés', async () => {
+  it('user tags kept, ai tags replaced', async () => {
     const it1 = await addImage()
     h.lib.repos.tags.addToItems([it1.id], ['perso'], 'user')
     h.lib.repos.tags.addToItems([it1.id], ['ancien-ia'], 'ai')
@@ -200,8 +200,8 @@ describe('application et recherche', () => {
   })
 })
 
-describe('consentement et exclusions', () => {
-  it('sans consentement : enqueue refusé ; un job déjà en base ne déclenche aucun appel', async () => {
+describe('consent and exclusions', () => {
+  it('without consent: enqueue refused; a job already in the database triggers no call', async () => {
     prefs = PrefsSchema.parse({ ...prefs, ai: { ...prefs.ai, consentVersion: undefined } })
     const it1 = await addImage()
     expect(() => svc.enqueue({ itemUuids: [it1.uuid], task: 'analyze' })).toThrow(/conditions/)
@@ -212,18 +212,18 @@ describe('consentement et exclusions', () => {
     expect(h.lib.repos.items.getById(it1.id)!.ai_state).toBe('none')
   })
 
-  it('provider « off » : enqueue refusé', async () => {
+  it('provider "off": enqueue refused', async () => {
     prefs = PrefsSchema.parse({ ...prefs, ai: { ...prefs.ai, provider: 'off' } })
     const it1 = await addImage()
     expect(() => svc.enqueue({ itemUuids: [it1.uuid], task: 'analyze' })).toThrow(/fournisseur/)
   })
 
-  it('élément ou collection exclus : jamais envoyés', async () => {
+  it('item or collection excluded: never sent', async () => {
     const a = await addImage({ aiExcluded: true })
     const b = await addImage()
     const c = h.lib.repos.collections.create({ name: 'Privé', aiExcluded: true })
     h.lib.repos.collections.addItems(c.id, [b.id])
-    // enqueue filtre ; un job injecté est aussi ignoré à l'exécution.
+    // enqueue filters; an injected job is also ignored at execution.
     expect(svc.enqueue({ itemUuids: [a.uuid, b.uuid], task: 'analyze' }).queued).toBe(0)
     h.lib.repos.jobs.enqueue({ type: 'ai.enrich', itemId: b.id, dedupeKey: `ai:${b.id}` })
     await run()
@@ -232,8 +232,8 @@ describe('consentement et exclusions', () => {
   })
 })
 
-describe('erreurs, reprises, secours', () => {
-  it('JSON invalide → 2ᵉ essai renforcé → done (2 appels journalisés)', async () => {
+describe('errors, retries, fallback', () => {
+  it('invalid JSON → reinforced 2nd try → done (2 calls logged)', async () => {
     modes.claude = 'bad_json'
     const it1 = await addImage()
     svc.enqueue({ itemUuids: [it1.uuid], task: 'analyze' })
@@ -246,7 +246,7 @@ describe('erreurs, reprises, secours', () => {
     expect(argvLines()[1]!.args.join(' ')).toContain("n'était pas un JSON valide")
   })
 
-  it('OCR « 429 Too Many Requests » / « authentication failed » : done, aucune pause', async () => {
+  it('OCR "429 Too Many Requests" / "authentication failed": done, no pause', async () => {
     modes.claude = 'ok_429'
     const it1 = await addImage()
     svc.enqueue({ itemUuids: [it1.uuid], task: 'analyze' })
@@ -255,7 +255,7 @@ describe('erreurs, reprises, secours', () => {
     expect(svc.gate.paused()).toEqual({})
   })
 
-  it('outil interdit → TOOL_VIOLATION définitif, non réessayé', async () => {
+  it('forbidden tool → final TOOL_VIOLATION, not retried', async () => {
     modes.claude = 'tool_violation'
     const it1 = await addImage()
     svc.enqueue({ itemUuids: [it1.uuid], task: 'analyze' })
@@ -268,7 +268,7 @@ describe('erreurs, reprises, secours', () => {
     expect(d.ai_description).toBeNull()
   })
 
-  it('limite Claude → pause du fournisseur et bascule IMMÉDIATE sur Codex', async () => {
+  it('Claude limit → provider pause and IMMEDIATE switch to Codex', async () => {
     prefs = PrefsSchema.parse({ ...prefs, ai: { ...prefs.ai, fallback: 'codex' } })
     modes.claude = 'rate_limit'
     const a = await addImage()
@@ -281,7 +281,7 @@ describe('erreurs, reprises, secours', () => {
         ai_state: 'done',
         ai_provider: 'codex',
       })
-    // Un seul appel Claude : les suivants partent directement sur Codex.
+    // A single Claude call: the following ones go straight to Codex.
     expect(calls().map((c) => `${c.provider}:${c.outcome}`)).toEqual([
       'claude:rate_limited',
       'codex:ok',
@@ -290,14 +290,14 @@ describe('erreurs, reprises, secours', () => {
     const snap = svc.snapshot()
     expect(snap.cli.providers.claude.paused?.reason).toBe('RATE_LIMITED')
     expect(snap.cli.providers.claude.paused?.until).toBeGreaterThan(clock.now)
-    // Tentative non comptée pour le job basculé.
+    // Attempt not counted for the switched job.
     const attempts = h.lib.db
       .prepare("SELECT attempts FROM jobs WHERE type = 'ai.enrich'")
       .all() as { attempts: number }[]
     expect(attempts.every((r) => r.attempts === 1)).toBe(true)
   })
 
-  it('sans secours : limite → job en attente jusqu’à la fin de la pause, sans tentative consommée', async () => {
+  it('without fallback: limit → job waits until the end of the pause, no attempt consumed', async () => {
     modes.claude = 'rate_limit_event'
     const a = await addImage()
     svc.enqueue({ itemUuids: [a.uuid], task: 'analyze' })
@@ -310,12 +310,12 @@ describe('erreurs, reprises, secours', () => {
       run_after: number
     }
     expect(job).toMatchObject({ state: 'queued', attempts: 0 })
-    // resetsAt du faux CLI déjà passé à cette horloge → palier de 15 min.
+    // resetsAt of the fake CLI already past at this clock → 15 min step.
     expect(job.run_after).toBe(clock.now + 15 * 60_000)
     expect(svc.gate.paused().claude).toMatchObject({ reason: 'RATE_LIMITED', strikes: 1 })
   })
 
-  it('PROCESS deux fois sur le principal → secours (règle des deux échecs), backoff écrit', async () => {
+  it('PROCESS twice on the main → fallback (two-failure rule), backoff written', async () => {
     prefs = PrefsSchema.parse({ ...prefs, ai: { ...prefs.ai, fallback: 'codex' } })
     modes.claude = 'crash'
     const a = await addImage()
@@ -345,7 +345,7 @@ describe('erreurs, reprises, secours', () => {
     ])
   })
 
-  it('reprise après arrêt brutal : le job interrompu repasse en file sans tentative', async () => {
+  it('resume after abrupt stop: the interrupted job goes back in the queue without an attempt', async () => {
     modes.claude = 'slow'
     const a = await addImage()
     svc.enqueue({ itemUuids: [a.uuid], task: 'analyze' })
@@ -360,8 +360,8 @@ describe('erreurs, reprises, secours', () => {
   })
 })
 
-describe('budget (horloge injectée)', () => {
-  it('limite horaire : 2/h en lot → le 3ᵉ attend la fenêtre', async () => {
+describe('budget (injected clock)', () => {
+  it('hourly limit: 2/h in a batch → the 3rd waits for the window', async () => {
     prefs = PrefsSchema.parse({ ...prefs, ai: { ...prefs.ai, perHour: 2 } })
     const items = [await addImage(), await addImage(), await addImage()]
     const plan = svc.batchCreate('unanalyzed')
@@ -381,7 +381,7 @@ describe('budget (horloge injectée)', () => {
     expect(svc.snapshot().batch).toBeUndefined()
   })
 
-  it('plafond dur : vaut aussi pour MANUAL ; dérogation explicite', async () => {
+  it('hard cap: also applies to MANUAL; explicit exemption', async () => {
     prefs = PrefsSchema.parse({ ...prefs, ai: { ...prefs.ai, hardPerDay: 1 } })
     const a = await addImage()
     const b = await addImage()
@@ -397,7 +397,7 @@ describe('budget (horloge injectée)', () => {
     expect(h.lib.repos.items.getById(b.id)!.ai_state).toBe('done')
   })
 
-  it('canStart : priorités, rétrogradation, timeout compté, annulé exclu', () => {
+  it('canStart: priorities, demotion, timeout counted, cancelled excluded', () => {
     const db = h.lib.db
     const now = clock.now
     const ins = db.prepare(
@@ -431,8 +431,8 @@ describe('budget (horloge injectée)', () => {
   })
 })
 
-describe('lots, estimation, contrôle, journal, aperçu', () => {
-  it('estimation : manquants hors corbeille et exclus, 0 job créé avant enqueue', async () => {
+describe('batches, estimation, control, log, preview', () => {
+  it('estimation: missing items outside trash and excluded, 0 job created before enqueue', async () => {
     await addImage()
     await addImage({ aiDescription: 'déjà décrit', aiLang: 'en' })
     await addImage({ deletedAt: 1 })
@@ -442,12 +442,12 @@ describe('lots, estimation, contrôle, journal, aperçu', () => {
     expect((h.lib.db.prepare('SELECT count(*) AS n FROM jobs').get() as { n: number }).n).toBe(0)
   })
 
-  it('annulation de lot : jobs en file annulés, résultats écrits conservés', async () => {
+  it('batch cancellation: queued jobs cancelled, written results kept', async () => {
     const a = await addImage()
     const b = await addImage()
     const plan = svc.batchCreate('unanalyzed')
     const { batchUuid } = svc.batchStart(plan.planId)
-    // Le premier passe, puis on met la file en pause et on annule.
+    // The first one passes, then we pause the queue and cancel.
     prefs = PrefsSchema.parse({ ...prefs, ai: { ...prefs.ai, perHour: 1 } })
     await run()
     svc.control({ action: 'cancel', batchUuid })
@@ -458,7 +458,7 @@ describe('lots, estimation, contrôle, journal, aperçu', () => {
     expect(h.lib.db.prepare('SELECT state FROM ai_batches').get()).toEqual({ state: 'cancelled' })
   })
 
-  it('pause / reprise de la file IA (pause utilisateur exposée)', async () => {
+  it('pause / resume of the AI queue (user pause exposed)', async () => {
     const a = await addImage()
     h.queue.start()
     svc.control({ action: 'pause' })
@@ -471,7 +471,7 @@ describe('lots, estimation, contrôle, journal, aperçu', () => {
     expect(h.lib.repos.items.getById(a.id)!.ai_state).toBe('done')
   })
 
-  it('journal : liste et effacement ; aperçu = JPEG exacts et prompt complet', async () => {
+  it('log: list and clear; preview = exact JPEGs and full prompt', async () => {
     const a = await addImage({ sourceUrl: 'https://example.com/page?token=SECRET' })
     svc.enqueue({ itemUuids: [a.uuid], task: 'analyze' })
     await run()
@@ -488,7 +488,7 @@ describe('lots, estimation, contrôle, journal, aperçu', () => {
     expect(svc.callsList(10)).toHaveLength(0)
   })
 
-  it('test de connexion niveau 2 : image synthétique, appel journalisé (tâche « test »)', async () => {
+  it('level 2 connection test: synthetic image, call logged (task "test")', async () => {
     const r = await svc.test('claude', true)
     expect(r).toMatchObject({ ok: true, model: 'claude-haiku-5-5' })
     expect(calls()).toMatchObject([{ task: 'test', outcome: 'ok', item_id: null }])
@@ -496,7 +496,7 @@ describe('lots, estimation, contrôle, journal, aperçu', () => {
     expect(calls()).toHaveLength(1)
   })
 
-  it("prompt d'image à la demande", async () => {
+  it('image prompt on demand', async () => {
     const a = await addImage()
     svc.enqueue({ itemUuids: [a.uuid], task: 'imagePrompt' })
     await run()

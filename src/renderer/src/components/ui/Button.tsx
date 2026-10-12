@@ -1,6 +1,6 @@
 /**
- * `Button` : variantes primary (noir) / secondary (outline) / ghost / danger,
- * tailles sm 28 / md 34 / lg 36, formes pill / rounded. Focus clavier = `:focus-visible` global.
+ * `Button`: primary (black) / secondary (outline) / ghost / danger variants,
+ * sizes sm 28 / md 34 / lg 36, shapes pill / rounded. Keyboard focus = global `:focus-visible`.
  */
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from 'radix-ui'
@@ -38,11 +38,11 @@ export const buttonVariants = cva(
 
 export interface ButtonProps
   extends Omit<ComponentProps<'button'>, 'color'>, VariantProps<typeof buttonVariants> {
-  /** Icône avant le libellé (remplacée par le spinner pendant `loading`). */
+  /** Icon before the label (replaced by the spinner during `loading`). */
   icon?: ReactNode
-  /** Affiche un spinner et désactive le bouton. */
+  /** Shows a spinner and disables the button. */
   loading?: boolean
-  /** Rend l'enfant (ex. un lien) avec le style du bouton. */
+  /** Renders the child (e.g. a link) with the button styling. */
   asChild?: boolean
 }
 

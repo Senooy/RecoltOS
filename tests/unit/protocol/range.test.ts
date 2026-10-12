@@ -1,5 +1,5 @@
 /**
- * analyse de l'en-tête Range.
+ * parsing of the Range header.
  */
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
@@ -8,7 +8,7 @@ import { parseRange } from '../../../src/main/protocol/range'
 describe('parseRange', () => {
   const size = 1000
 
-  it('sans en-tête : réponse complète', () => {
+  it('no header: full response', () => {
     expect(parseRange(null, size)).toEqual({ kind: 'none' })
     expect(parseRange(undefined, size)).toEqual({ kind: 'none' })
   })
@@ -48,12 +48,12 @@ describe('parseRange', () => {
     expect(parseRange(header, size)).toEqual({ kind: 'unsatisfiable' })
   })
 
-  it('fichier vide : toute plage est insatisfaisable', () => {
+  it('empty file: every range is unsatisfiable', () => {
     expect(parseRange('bytes=0-', 0)).toEqual({ kind: 'unsatisfiable' })
     expect(parseRange('bytes=-10', 0)).toEqual({ kind: 'unsatisfiable' })
   })
 
-  it('propriété : une plage acceptée est toujours dans le fichier', () => {
+  it('property: an accepted range is always within the file', () => {
     fc.assert(
       fc.property(
         fc.integer({ min: 1, max: 1e9 }),

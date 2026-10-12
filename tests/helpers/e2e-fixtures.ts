@@ -1,15 +1,15 @@
 /**
- * Fixtures Playwright partagées par les scénarios e2e (`tests/e2e/*.spec.ts`) :
+ * Playwright fixtures shared by the e2e scenarios (`tests/e2e/*.spec.ts`):
  *   import { test, expect } from '../helpers/e2e-fixtures'
  *   test('…', async ({ page, app, userData }) => { … })
- * Chaque test lance l'app avec un `userData` neuf et ÉCHOUE à la fin sur tout `console.error` /
- * `pageerror` non toléré (y compris violation CSP, y compris au chargement initial : relecture des
- * messages retenus par Playwright via `flushErrors()`). Surcharge : `test.use({ allowErrors: [/…/] })`.
+ * Each test launches the app with a fresh `userData` and FAILS at the end on any unallowed `console.error` /
+ * `pageerror` (including CSP violations, including during the initial load: rereading the
+ * messages kept by Playwright via `flushErrors()`). Override: `test.use({ allowErrors: [/…/] })`.
  *
- * Bibliothèque de démo : `test.use({ demoLibrary: true })` (ou `{ count, collections… }`)
- * clone le cache de `demo-library.ts` (60 saves, 6 collections, médias, avatars) dans `userData`
- * AVANT le lancement ; `openDbReadonly()` ouvre ensuite la base de l'app en lecture seule (fermée
- * en fin de test) pour vérifier ce qu'elle a écrit.
+ * Demo library: `test.use({ demoLibrary: true })` (or `{ count, collections… }`)
+ * clones the cache of `demo-library.ts` (60 saves, 6 collections, media, avatars) into `userData`
+ * BEFORE launch; `openDbReadonly()` then opens the app's database read-only (closed
+ * at the end of the test) to verify what it wrote.
  */
 import { test as base, expect, type ElectronApplication, type Page } from '@playwright/test'
 import { libraryDbPath, openDbReadonly as openReadonly, type TestDb } from './db'
@@ -20,18 +20,18 @@ import { makeTmpDir, removeTmpDir } from './tmpdir'
 interface Fixtures {
   allowErrors: RegExp[]
   appLaunch: LaunchOptions
-  /** `true` (60 saves, 6 collections) ou options de `makeDemoLibrary` : userData pré-rempli. */
+  /** `true` (60 saves, 6 collections) or options of `makeDemoLibrary`: pre-filled userData. */
   demoLibrary: boolean | DemoOptions
-  /** Ouvre la base de la bibliothèque (`default` par défaut) en lecture seule ; fermée au teardown. */
+  /** Opens the library database (`default` by default) read-only; closed at teardown. */
   openDbReadonly: (libraryId?: string) => TestDb
   app: ElectronApplication
   page: Page
   userData: string
-  /** Erreurs console recueillies jusqu'ici (lecture seule). Préférer `collectErrors()`. */
+  /** Console errors collected so far (read-only). Prefer `collectErrors()`. */
   consoleErrors: string[]
   /**
-   * Relit les erreurs retenues par Playwright (dont celles émises avant la pose des écouteurs, au
-   * chargement) et renvoie la liste complète. À utiliser pour toute assertion « 0 erreur ».
+   * Rereads the errors kept by Playwright (including those emitted before the listeners were set, during
+   * load) and returns the full list. Use it for any "0 errors" assertion.
    */
   collectErrors: () => Promise<string[]>
 }
@@ -40,7 +40,7 @@ export const test = base.extend<Fixtures>({
   allowErrors: [[], { option: true }],
   appLaunch: [{}, { option: true }],
   demoLibrary: [false, { option: true }],
-  // Fixture interne : une seule instance par test, partagée par app / page / userData.
+  // Internal fixture: a single instance per test, shared by app / page / userData.
   app: async ({ allowErrors, appLaunch, demoLibrary }, use) => {
     let seeded: string | undefined
     if (demoLibrary) {
@@ -60,10 +60,10 @@ export const test = base.extend<Fixtures>({
     }
     ;(handle.app as ElectronApplication & { __handle?: typeof handle }).__handle = handle
     await use(handle.app)
-    // Avant la fermeture : les fenêtres doivent encore être là pour relire leurs erreurs retenues.
+    // Before closing: the windows must still be there to reread their kept errors.
     const errors = [...(await handle.flushErrors().catch(() => handle.errors))]
     await handle.close()
-    // Le `userData` fabriqué ici n'est pas supprimé par `close()` (il n'est pas « à lui »).
+    // The `userData` created here is not deleted by `close()` (it is not "its own").
     if (seeded && !appLaunch.userData) removeTmpDir(seeded)
     expect(errors, 'erreurs console / pageerror pendant le test').toEqual([])
   },

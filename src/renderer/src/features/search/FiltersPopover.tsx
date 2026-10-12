@@ -1,7 +1,7 @@
 /**
- * `FiltersPopover` : Radix Popover `align="end"`, 320 px, rayon 12, padding 14.
- * Type, Source, Couleur (12 pastilles + personnalisée), Période, Collection, Tags ; « Réinitialiser ».
- * Les filtres s'appliquent en direct.
+ * `FiltersPopover`: Radix Popover `align="end"`, 320 px, radius 12, padding 14.
+ * Type, Source, Color (12 swatches + custom), Period, Collection, Tags; "Reset".
+ * Filters apply live.
  */
 import { Check } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
@@ -69,7 +69,7 @@ export function FiltersPopover({
         .slice(0, 6)
     : []
   const set = (patch: Partial<SearchFilters>) => onChange({ ...value, ...patch })
-  /** Dernière couleur libre (hors pastilles nommées). */
+  /** Last custom color (excluding named swatches). */
   const custom = [...value.colors].reverse().find((h) => !SWATCHES.some((c) => c.hex === h))
   return (
     <Popover.Root>

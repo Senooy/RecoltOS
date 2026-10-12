@@ -1,14 +1,13 @@
 /**
- * Panneau « Collections » du glisser : dès
- * qu'une carte ou une sélection est glissée depuis une grille (Bibliothèque, vue Collection,
- * résultats de recherche), une carte flottante entre par la droite, sous l'en-tête, et liste
- * toutes les collections (arborescence légèrement indentée) : mini-pile des couvertures, nom,
- * nombre d'éléments. Déposer sur une ligne ajoute les éléments glissés (`addToCollection` : toast
- * « Ajouté à … · Annuler », ⌘Z, doublons ignorés). Le panneau repart à la fin du glisser.
+ * "Collections" panel for dragging: as soon as a card or a selection is dragged from a grid
+ * (Library, Collection view, search results), a floating card slides in from the right, below
+ * the header, and lists all collections (slightly indented tree): mini-stack of covers, name,
+ * item count. Dropping on a row adds the dragged items (`addToCollection`: toast
+ * "Added to … · Undo", ⌘Z, duplicates ignored). The panel resets at the end of the drag.
  *
- * Le geste reste le glisser natif unifié (`lib/dnd.ts`) : `ui.internalDrag` ouvre le panneau, et
- * les `dragover` / `drop` HTML atteignent ses lignes comme ils atteignent la rangée de
- * collections. Le drapeau est effacé par `installInternalDragCleanup` (dépôt, Échap, pointeur).
+ * The gesture stays the unified native drag (`lib/dnd.ts`): `ui.internalDrag` opens the panel,
+ * and HTML `dragover` / `drop` reach its rows just as they reach the collections row. The flag
+ * is cleared by `installInternalDragCleanup` (drop, Esc, pointer).
  */
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState, type DragEvent } from 'react'
@@ -21,17 +20,17 @@ import { useUi, type RouteName } from '../../state/ui'
 import { Cover } from '../library/CollectionsRow'
 import { addToCollection } from './actions'
 
-/** Écrans dont la grille lance le glisser (pas l'étagère ni les Spaces). */
+/** Screens whose grid starts the drag (not the shelf nor Spaces). */
 const ROUTES: ReadonlySet<RouteName> = new Set(['library', 'collection', 'search'])
-/** Entrée / sortie : glissement depuis la droite et fondu. */
+/** Enter / exit: slide in from the right and fade. */
 const ENTER_MS = 200
 const OFFSET_X = 28
-/** Le panneau reste affiché un instant après un dépôt pour montrer le compteur mis à jour. */
+/** The panel stays visible briefly after a drop to show the updated counter. */
 export const LINGER_MS = 650
-/** Défilement automatique : bande sensible en haut et en bas de la liste, vitesse max (px/image). */
+/** Auto-scroll: sensitive band at the top and bottom of the list, max speed (px/frame). */
 const EDGE = 40
 const MAX_SPEED = 14
-/** Sans `dragover` depuis ce délai, le défilement s'arrête (pointeur sorti sans `dragleave`). */
+/** Without `dragover` for this delay, scrolling stops (pointer left without `dragleave`). */
 const SCROLL_IDLE_MS = 120
 
 const MINI_FAN = [
@@ -45,7 +44,7 @@ const MINI_FAN_OPEN = [
   'translateX(11px) rotate(14deg)',
 ]
 
-/** Mini-pile 36×36 des couvertures (même rendu que la rangée de collections). */
+/** 36×36 mini-stack of covers (same rendering as the collections row). */
 function MiniFan({ node, open }: { node: CollectionNode; open: boolean }) {
   const shown = node.covers.slice(0, 3)
   if (shown.length === 0) {
@@ -82,9 +81,9 @@ function MiniFan({ node, open }: { node: CollectionNode; open: boolean }) {
 
 interface Dropped {
   uuid: string
-  /** Compteur au moment du dépôt (avant rechargement de l'arbre). */
+  /** Counter at drop time (before the tree is reloaded). */
   base: number
-  /** Éléments réellement ajoutés (connu au retour de `collections.addItems`). */
+  /** Items actually added (known once `collections.addItems` returns). */
   added: number | null
 }
 
@@ -146,7 +145,7 @@ export function CollectionsDragPanel() {
   const lingerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const dragging = internalDrag !== null
-  // Nouveau glisser : on repart d'un panneau neutre.
+  // New drag: start again with a neutral panel.
   useEffect(() => {
     if (!dragging) return
     if (lingerTimer.current) clearTimeout(lingerTimer.current)
@@ -229,8 +228,8 @@ export function CollectionsDragPanel() {
     const node = flattenTree(useCollections.getState().tree).find((f) => f.node.uuid === uuid)?.node
     if (!node) return
     e.preventDefault()
-    // `internalDrag` est effacé après la propagation (capture de la fenêtre) : le calque de dépôt
-    // n'importe pas les originaux du glisser natif.
+    // `internalDrag` is cleared after propagation (window capture): the drop overlay
+    // does not import the originals of the native drag.
     setDropped({ uuid, base: node.count, added: null })
     setLinger(true)
     if (lingerTimer.current) clearTimeout(lingerTimer.current)

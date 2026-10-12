@@ -1,6 +1,6 @@
 /**
- * Magnétisme : bords et centres de la boîte déplacée attirés par ceux des autres
- * nœuds à moins de `threshold` (6 px écran = 6 / zoom en monde). Rend le décalage et les guides.
+ * Magnetism: edges and centers of the moved box are attracted to those of other
+ * nodes within `threshold` (6 px on screen = 6 / zoom in world units). Returns the offset and the guides.
  */
 import type { Rect } from '../../../../../../shared/spaces-geometry'
 
@@ -8,7 +8,7 @@ export const SNAP_PX = 6
 
 export interface Guide {
   axis: 'x' | 'y'
-  /** Coordonnée monde de la ligne. */
+  /** World coordinate of the line. */
   at: number
   from: number
   to: number

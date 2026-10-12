@@ -1,15 +1,15 @@
 /**
- * Fermeture propre d'une bibliothèque : sortie de l'app, changement de bibliothèque,
- * restauration d'un snapshot, remplacement de fichier.
+ * Clean close of a library: app exit, library switch,
+ * restoring a snapshot, file replacement.
  *
- * 1. pause de la file de jobs (attente ≤ 10 s des jobs en cours) ;
- * 2. arrêt des workers ;
- * 3. `PRAGMA optimize` puis `PRAGMA wal_checkpoint(TRUNCATE)` (on vérifie `busy = 0`) ;
- * 4. `db.close()` ;
- * 5. `forReplace` : le `-wal` doit être absent ou vide, sinon `AppError('wal_not_empty')`, la base
- *    est rouverte (`reopen`) et la file relancée : l'opération appelante est annulée. Si la
- *    réouverture échoue, la file n'est pas relancée et l'erreur `wal_not_empty` est tout de même levée.
- * Pas d'import `electron`.
+ * 1. pause the job queue (wait ≤ 10 s for running jobs);
+ * 2. stop the workers;
+ * 3. `PRAGMA optimize`, then `PRAGMA wal_checkpoint(TRUNCATE)` (we check `busy = 0`);
+ * 4. `db.close()`;
+ * 5. `forReplace`: the `-wal` must be absent or empty, otherwise `AppError('wal_not_empty')`, the database
+ *    is reopened (`reopen`) and the queue restarted: the calling operation is cancelled. If the
+ *    reopening fails, the queue is not restarted and the `wal_not_empty` error is still thrown.
+ * No `electron` import.
  */
 import type Database from 'better-sqlite3'
 import fs from 'node:fs'
@@ -17,26 +17,26 @@ import { AppError } from '../../shared/errors'
 import { mt } from '../i18n'
 
 export const JOBS_DRAIN_TIMEOUT_MS = 10_000
-/** Attente maximale des lecteurs pendant le checkpoint final. */
+/** Maximum wait for readers during the final checkpoint. */
 export const CHECKPOINT_BUSY_TIMEOUT_MS = 2_000
 
 export interface CloseHooks {
-  /** Met la file en pause et attend les jobs `running` (au plus `timeoutMs`). */
+  /** Pauses the queue and waits for `running` jobs (at most `timeoutMs`). */
   pauseJobs?(timeoutMs: number): void | Promise<void>
-  /** Relance la file (après un échec `forReplace`). */
+  /** Restarts the queue (after a `forReplace` failure). */
   resumeJobs?(): void | Promise<void>
-  /** Arrête les utility processes (ils écrivent des fichiers, jamais la base). */
+  /** Stops the utility processes (they write files, never the database). */
   stopWorkers?(): void | Promise<void>
-  /** Redémarre les workers (après un échec `forReplace`). */
+  /** Restarts the workers (after a `forReplace` failure). */
   startWorkers?(): void | Promise<void>
 }
 
 export interface ClosableLibrary {
   db: Database.Database
-  /** Chemin de `recolt.db`. */
+  /** Path of `recolt.db`. */
   dbFile: string
   hooks?: CloseHooks
-  /** Rouvre la base après un échec `forReplace` ; la nouvelle connexion remplace `db`. */
+  /** Reopens the database after a `forReplace` failure; the new connection replaces `db`. */
   reopen?(): Database.Database
   log?: { warn(...args: unknown[]): void }
 }
@@ -49,7 +49,7 @@ export interface CheckpointResult {
 
 export interface CloseOptions {
   forReplace: boolean
-  /** `busy_timeout` appliqué pendant le checkpoint final (tests : quelques ms). */
+  /** `busy_timeout` applied during the final checkpoint (tests: a few ms). */
   checkpointBusyTimeoutMs?: number
   jobsDrainTimeoutMs?: number
 }
@@ -89,10 +89,10 @@ export async function closeLibrary(lib: ClosableLibrary, opts: CloseOptions): Pr
       db.pragma(`busy_timeout = ${opts.checkpointBusyTimeoutMs ?? CHECKPOINT_BUSY_TIMEOUT_MS}`)
       checkpoint = checkpointTruncate(db)
     } catch (err) {
-      lib.log?.warn('[db] checkpoint final impossible', err)
+      lib.log?.warn('[db] final checkpoint impossible', err)
     }
     if (checkpoint && checkpoint.busy !== 0) {
-      lib.log?.warn('[db] checkpoint TRUNCATE bloqué par un lecteur', checkpoint)
+      lib.log?.warn('[db] checkpoint TRUNCATE blocked by a reader', checkpoint)
     }
     db.close()
   }
@@ -103,9 +103,9 @@ export async function closeLibrary(lib: ClosableLibrary, opts: CloseOptions): Pr
       try {
         lib.db = lib.reopen()
       } catch (err) {
-        // Pas de base à servir : workers et file restent arrêtés, l'erreur d'origine est relancée.
+        // No database to serve: workers and queue stay stopped, the original error is rethrown.
         reopened = false
-        lib.log?.warn('[db] réouverture impossible après wal_not_empty', err)
+        lib.log?.warn('[db] could not reopen after wal_not_empty', err)
       }
     }
     if (reopened) {

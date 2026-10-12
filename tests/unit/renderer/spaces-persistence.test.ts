@@ -1,7 +1,7 @@
 /**
- * persistance différée (debounce / attente max, sous-lots de 2 000, `validation` →
- * quarantaine sans boucle, `busy` → nouvel essai, purge seulement des nœuds inchangés, viewport à
- * part, `flushSync`).
+ * deferred persistence (debounce / max wait, sub-batches of 2,000, `validation` →
+ * quarantine without loop, `busy` → retry, purge only unchanged nodes, viewport kept
+ * separate, `flushSync`).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -66,7 +66,7 @@ beforeEach(() => vi.useFakeTimers())
 afterEach(() => vi.useRealTimers())
 
 describe('persistance', () => {
-  it('debounce 500 ms, sous-lots de 2 000, purge après succès', async () => {
+  it('debounce 500 ms, sub-batches of 2,000, purge after success', async () => {
     const h = setup(() => Promise.resolve({ updatedAt: 1 }))
     const all: Record<string, SpaceNode> = {}
     for (let i = 0; i < 4500; i++) all[`n${i}`] = note(`n${i}`, i)
@@ -79,7 +79,7 @@ describe('persistance', () => {
     expect(h.p.isDirty).toBe(false)
   })
 
-  it('attente max 3 s malgré une activité continue', async () => {
+  it('max wait 3 s despite continuous activity', async () => {
     const h = setup(() => Promise.resolve({}))
     h.set({ a: note('a') })
     for (let t = 0; t < 3200; t += 300) {
@@ -89,7 +89,7 @@ describe('persistance', () => {
     expect(h.calls.length).toBeGreaterThan(0)
   })
 
-  it('validation : rejeu nœud par nœud, quarantaine, pas de boucle', async () => {
+  it('validation: node-by-node replay, quarantine, no loop', async () => {
     const h = setup((b) =>
       b.upsert.some((n) => n.uuid === 'bad')
         ? Promise.reject(new Err('validation'))
@@ -106,7 +106,7 @@ describe('persistance', () => {
     expect(h.calls.length).toBe(before)
   })
 
-  it('busy : dirty conservé, nouvel essai à 2 s puis succès', async () => {
+  it('busy: dirty kept, retry at 2 s then success', async () => {
     let fail = true
     const h = setup(() => (fail ? Promise.reject(new Err('busy')) : Promise.resolve({})))
     h.set({ a: note('a') })
@@ -118,7 +118,7 @@ describe('persistance', () => {
     expect(h.p.isDirty).toBe(false)
   })
 
-  it('un nœud modifié pendant l’envoi reste à écrire', async () => {
+  it('a node modified during the send remains to be written', async () => {
     let release!: () => void
     const h = setup(() => new Promise<void>((r) => (release = r)))
     h.set({ a: note('a', 1) })
@@ -130,7 +130,7 @@ describe('persistance', () => {
     expect(h.p.upserts.has('a')).toBe(true)
   })
 
-  it('suppressions, viewport sans nœud, flushSync', async () => {
+  it('deletions, viewport without node, flushSync', async () => {
     const h = setup(() => Promise.resolve({}))
     h.set({})
     h.p.mark(['gone'])

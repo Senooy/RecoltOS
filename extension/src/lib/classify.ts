@@ -1,7 +1,7 @@
 /**
- * Classement des réponses vues par le hook (pur, testé) : gabarit X, indices d'enregistrement natif,
- * captures passives (pages de favoris), jetons Cosmos, en-têtes Instagram. Rien n'est transmis sans
- * passer par ici. Les en-têtes ne partent JAMAIS vers l'app (seulement vers l'arrière-plan).
+ * Classification of responses seen by the hook (pure, tested): X template, native save indicators,
+ * passive captures (bookmark pages), Cosmos tokens, Instagram headers. Nothing is sent without
+ * going through here. Headers NEVER go to the app (only to the background).
  */
 export interface HookEvent {
   req: { url: string; method: string; headers: Record<string, string>; body: string | null }
@@ -35,7 +35,7 @@ function parseJsonParam(v: string | null): Record<string, boolean> | undefined {
   }
 }
 
-/** `operationName` du corps JSON d'une requête GraphQL (Cosmos n'utilise pas toujours `?q=`). */
+/** GraphQL `operationName` from the JSON body of a request (Cosmos does not always use `?q=`). */
 function cosmosOperation(body: string | null): string | null {
   if (!body) return null
   try {
@@ -46,7 +46,7 @@ function cosmosOperation(body: string | null): string | null {
   }
 }
 
-/** Nom d'opération GraphQL Instagram (en-tête ou paramètre de corps). */
+/** Instagram GraphQL operation name (header or body parameter). */
 export function igFriendlyName(e: HookEvent): string | null {
   const h = e.req.headers['x-fb-friendly-name']
   if (h) return h
@@ -63,7 +63,7 @@ export function classify(e: HookEvent): ContentMessage[] {
     return out
   }
   const method = e.req.method.toUpperCase()
-  // ---- X (ancien client `Bookmarks` + `features`, client x-web `bookmarksQuery` persisté)
+  // ---- X (old `Bookmarks` client + `features`, x-web `bookmarksQuery` persisted client)
   const xHost = /(^|\.)(x|twitter)\.com$/.test(url.hostname)
   const gql = xHost ? /^(?:\/i\/api)?\/graphql\/([^/]+)\/(\w+)$/.exec(url.pathname) : null
   if (gql) {
@@ -151,7 +151,7 @@ export function classify(e: HookEvent): ContentMessage[] {
     }
     return out
   }
-  // ---- Cosmos (jeton de la page en secours ; la requête de l'extension est la sienne)
+  // ---- Cosmos (page token as fallback; the extension's own request is its own)
   if (url.hostname === 'api.cosmos.so' && url.pathname === '/graphql') {
     const op = url.searchParams.get('q') ?? cosmosOperation(e.req.body) ?? ''
     const auth = e.req.headers.authorization ?? ''

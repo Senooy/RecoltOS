@@ -19,7 +19,7 @@ import {
 const U = 'ab12cd34-0000-4000-8000-000000000001'
 
 describe('paths', () => {
-  it('chemins relatifs canoniques', () => {
+  it('canonical relative paths', () => {
     expect(rel.original(U, '.JPG')).toBe(`items/ab/${U}.jpg`)
     expect(rel.thumb(U)).toBe(`thumbs/ab/${U}.webp`)
     expect(rel.large(U)).toBe(`large/ab/${U}.webp`)
@@ -36,7 +36,7 @@ describe('paths', () => {
     expect(() => rel.original(U, 'j/pg')).toThrow(/extension/)
   })
 
-  it('libraryPaths et résolution confinée à la racine', () => {
+  it('libraryPaths and resolution confined to the root', () => {
     const p = libraryPaths('/lib/root/')
     expect(p).toMatchObject({
       root: '/lib/root',
@@ -76,8 +76,8 @@ describe('paths', () => {
   })
 })
 
-describe('écriture atomique', () => {
-  it('écrit, remplace, ne laisse pas de .tmp ; quarantaine', () => {
+describe('atomic write', () => {
+  it('writes, replaces, leaves no .tmp; quarantine', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'recolt-atomic-'))
     const f = path.join(dir, 'sub', 'a.json')
     writeJsonAtomic(f, { a: 1 })

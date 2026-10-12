@@ -1,21 +1,21 @@
 /**
- * Hôte des workers : lance un utilityProcess, RPC `WorkerRequest/Response`,
- * redémarrage avec backoff (1 s, 5 s, 30 s) après une sortie inattendue, `stopAll()`
- * (SIGTERM puis kill après 3 s). Aucun worker n'ouvre la base.
+ * Worker host: launches a utilityProcess, RPC `WorkerRequest/Response`,
+ * restart with backoff (1 s, 5 s, 30 s) after an unexpected exit, `stopAll()`
+ * (SIGTERM then kill after 3 s). No worker opens the database.
  *
- * Après un crash, les requêtes en cours sont rejetées (`worker_crashed`) et signalées à
- * `onCrash` avec leur `jobId` : la file de jobs remet ces jobs en `queued`
- * (`UPDATE jobs SET state='queued' … WHERE id IN (…)`, sans consommer de tentative).
- * Les requêtes pas encore envoyées attendent le redémarrage.
+ * After a crash, pending requests are rejected (`worker_crashed`) and reported to
+ * `onCrash` with their `jobId`: the job queue puts these jobs back to `queued`
+ * (`UPDATE jobs SET state='queued' … WHERE id IN (…)`, without consuming an attempt).
+ * Requests not yet sent wait for the restart.
  *
- * Un worker qui meurt avant d'avoir envoyé `hello` (module introuvable, `sharp` natif cassé,
- * asar mal dépaqueté) ne redémarrera pas mieux : après `maxStartFailures` sorties consécutives
- * sans `hello`, l'hôte passe en état `broken`. Toutes les requêtes en attente sont alors
- * rejetées avec `worker_unavailable` (et signalées à `onCrash`, `broken: true`), les appels
- * suivants sont refusés de la même façon, jusqu'à un `restart()` explicite.
+ * A worker that dies before sending `hello` (module not found, broken native `sharp`,
+ * badly unpacked asar) will not restart any better: after `maxStartFailures` consecutive exits
+ * without `hello`, the host switches to the `broken` state. All pending requests are then
+ * rejected with `worker_unavailable` (and reported to `onCrash`, `broken: true`), and subsequent
+ * calls are refused the same way, until an explicit `restart()`.
  *
- * Le lancement est injecté (`fork`) : `utilityFork` (Electron) en production,
- * `child_process.fork` dans les tests.
+ * The launch is injected (`fork`): `utilityFork` (Electron) in production,
+ * `child_process.fork` in tests.
  */
 import { AppError } from '../shared/errors'
 import { getLang, onLangChange, type Lang } from '../shared/i18n/lang'
@@ -30,7 +30,7 @@ import type {
 import { CONTROL_OPS, isHello } from './workers/control'
 import type { MediaTools } from './workers/media/exec'
 
-/** Processus enfant vu par l'hôte (adapté d'un `UtilityProcess` ou d'un `ChildProcess`). */
+/** Child process as seen by the host (adapted from a `UtilityProcess` or a `ChildProcess`). */
 export interface WorkerChild {
   readonly pid?: number | undefined
   postMessage(msg: WorkerRequest): void
@@ -42,7 +42,7 @@ export interface WorkerChild {
 export type ForkFn = (modulePath: string, opts: { serviceName: string }) => WorkerChild
 
 export interface CallOptions {
-  /** Job de la file à remettre en `queued` si le worker meurt pendant l'appel. */
+  /** Queue job to put back to `queued` if the worker dies during the call. */
   jobId?: number
   signal?: AbortSignal
   timeoutMs?: number
@@ -59,14 +59,14 @@ export interface CrashInfo {
   name: string
   code: number | null
   signal: string | null
-  /** Requêtes envoyées au worker et perdues avec lui. */
+  /** Requests sent to the worker and lost with it. */
   interrupted: InterruptedCall[]
-  /** Délai avant redémarrage (backoff) ; 0 si `broken`. */
+  /** Delay before restart (backoff); 0 if `broken`. */
   restartInMs: number
   /**
-   * Le worker ne démarre pas (sorties répétées sans `hello`) : plus de redémarrage automatique,
-   * les requêtes de `interrupted` sont rejetées avec `worker_unavailable`. Le job ne doit pas être
-   * relancé en boucle : le marquer en échec, puis `restart()` quand la cause est corrigée.
+   * The worker does not start (repeated exits without `hello`): no more automatic restart,
+   * the requests in `interrupted` are rejected with `worker_unavailable`. The job must not be
+   * re-run in a loop: mark it as failed, then `restart()` once the cause is fixed.
    */
   broken: boolean
 }
@@ -78,21 +78,21 @@ export interface HostLogger {
 }
 
 export interface WorkerHostOptions {
-  /** `serviceName` de l'utilityProcess (ex. `recolt-media`). */
+  /** `serviceName` of the utilityProcess (e.g. `recolt-media`). */
   name: string
   modulePath: string
   fork: ForkFn
-  /** Délais de redémarrage successifs ; le dernier se répète. */
+  /** Successive restart delays; the last one repeats. */
   backoffMs?: readonly number[]
-  /** Sorties consécutives sans `hello` avant l'état `broken` (défaut 3). */
+  /** Consecutive exits without `hello` before the `broken` state (default 3). */
   maxStartFailures?: number
-  /** Délai max pour recevoir `hello` après le lancement (défaut 15 s). */
+  /** Max delay to receive `hello` after launch (default 15 s). */
   startTimeoutMs?: number
-  /** Un worker resté prêt aussi longtemps remet le backoff à zéro. */
+  /** A worker that stays ready this long resets the backoff to zero. */
   stableAfterMs?: number
-  /** SIGTERM, puis SIGKILL après ce délai. */
+  /** SIGTERM, then SIGKILL after this delay. */
   stopTimeoutMs?: number
-  /** Configuration renvoyée par `__configure` à chaque démarrage. */
+  /** Configuration sent back by `__configure` at each start. */
   config?: unknown
   onCrash?: (info: CrashInfo) => void
   onReady?: (pid: number) => void
@@ -116,7 +116,7 @@ interface Pending {
 
 export const DEFAULT_BACKOFF_MS = [1_000, 5_000, 30_000] as const
 export const DEFAULT_MAX_START_FAILURES = 3
-/** Délai max avant `hello` : au-delà, le processus est tué et compté comme démarrage raté. */
+/** Max delay before `hello`: beyond it, the process is killed and counted as a failed start. */
 export const DEFAULT_START_TIMEOUT_MS = 15_000
 
 const silent: HostLogger = { info: () => {}, warn: () => {}, error: () => {} }
@@ -133,9 +133,9 @@ export class WorkerHost {
   private nextId = 1
   private readonly pending = new Map<number, Pending>()
   private attempt = 0
-  /** Sorties consécutives sans `hello`. */
+  /** Consecutive exits without `hello`. */
   private startFailures = 0
-  /** `hello` reçu du processus courant. */
+  /** `hello` received from the current process. */
   private helloSeen = false
   private restartTimer: ReturnType<typeof setTimeout> | null = null
   private stableTimer: ReturnType<typeof setTimeout> | null = null
@@ -143,7 +143,7 @@ export class WorkerHost {
   private startTimer: ReturnType<typeof setTimeout> | null = null
   private exitWaiters: (() => void)[] = []
   private config: unknown
-  /** Nombre de redémarrages effectués (diagnostic). */
+  /** Number of restarts performed (diagnostics). */
   restarts = 0
 
   constructor(opts: WorkerHostOptions) {
@@ -162,14 +162,14 @@ export class WorkerHost {
     return this.child?.pid
   }
 
-  /** Démarre le worker si besoin (sinon, il démarre au premier appel). */
+  /** Starts the worker if needed (otherwise it starts on the first call). */
   start(): void {
     if (this._state === 'idle') this.spawn()
   }
 
   /**
-   * Relance explicite après l'état `broken` (cause corrigée : build réparé, outils re-détectés).
-   * Sans effet dans les autres états.
+   * Explicit restart after the `broken` state (cause fixed: build repaired, tools re-detected).
+   * No effect in other states.
    */
   restart(): void {
     if (this._state !== 'broken') return
@@ -178,10 +178,10 @@ export class WorkerHost {
     this.spawn()
   }
 
-  /** Change la configuration ; envoyée tout de suite si le worker tourne, et à chaque redémarrage. */
+  /** Changes the configuration; sent right away if the worker is running, and at each restart. */
   setConfig(config: unknown): Promise<void> {
     this.config = config
-    // Pas encore prêt : le message `hello` déclenchera l'envoi de `this.config`.
+    // Not ready yet: the `hello` message will trigger sending `this.config`.
     if (!this.ready) return Promise.resolve()
     return this.request(CONTROL_OPS.configure, config, {}, true).then(() => undefined)
   }
@@ -240,7 +240,7 @@ export class WorkerHost {
     })
   }
 
-  /** Rejette une requête et demande au worker de l'annuler. */
+  /** Rejects a request and asks the worker to cancel it. */
   private abandon(id: number, err: AppError): void {
     const p = this.pending.get(id)
     if (!p) return
@@ -250,7 +250,7 @@ export class WorkerHost {
       try {
         this.child.postMessage({ id: 0, op: CONTROL_OPS.cancel, args: { id } })
       } catch {
-        // worker en train de mourir : rien à annuler
+        // worker dying: nothing to cancel
       }
     }
     p.reject(err)
@@ -262,7 +262,7 @@ export class WorkerHost {
       this.child.postMessage({ id: p.id, op: p.op, args: p.args })
       p.sent = true
     } catch (err) {
-      this.log.warn(`[${this.name}] envoi impossible`, err)
+      this.log.warn(`[${this.name}] send failed`, err)
     }
   }
 
@@ -274,7 +274,7 @@ export class WorkerHost {
     try {
       child = this.opts.fork(this.opts.modulePath, { serviceName: this.name })
     } catch (err) {
-      this.log.error(`[${this.name}] lancement impossible`, err)
+      this.log.error(`[${this.name}] launch failed`, err)
       this.handleExit(null, null, null)
       return
     }
@@ -284,11 +284,11 @@ export class WorkerHost {
     this.startTimer = setTimeout(() => {
       this.startTimer = null
       if (this.child !== child || this.helloSeen) return
-      this.log.error(`[${this.name}] pas de hello après ${limit} ms ; processus arrêté`)
+      this.log.error(`[${this.name}] no hello after ${limit} ms; process stopped`)
       try {
         child.kill('SIGKILL')
       } catch {
-        // déjà mort
+        // already dead
       }
     }, limit)
     child.onMessage((m) => {
@@ -300,12 +300,12 @@ export class WorkerHost {
   private onMessage(m: unknown): void {
     if (isHello(m)) {
       if (this._state === 'stopping' || this._state === 'stopped') {
-        // Arrêt demandé pendant le démarrage : dans Electron, `kill()` avant le spawn est sans
-        // effet. `hello` prouve que le processus existe : on renvoie SIGTERM sans le déclarer prêt.
+        // Stop requested during startup: in Electron, `kill()` before the spawn has no
+        // effect. `hello` proves the process exists: we send SIGTERM without declaring it ready.
         try {
           this.child?.kill('SIGTERM')
         } catch {
-          // déjà mort
+          // already dead
         }
         return
       }
@@ -314,9 +314,9 @@ export class WorkerHost {
       this.helloSeen = true
       this.startFailures = 0
       this._state = 'ready'
-      this.log.info(`[${this.name}] prêt (pid ${m.pid})`)
+      this.log.info(`[${this.name}] ready (pid ${m.pid})`)
       if (this.config !== undefined) {
-        // La configuration passe avant toute requête en attente.
+        // The configuration goes before any pending request.
         this.child?.postMessage({ id: 0, op: CONTROL_OPS.configure, args: this.config })
       }
       for (const p of [...this.pending.values()].sort((a, b) => a.id - b.id)) {
@@ -365,8 +365,8 @@ export class WorkerHost {
       return
     }
 
-    // Un enfant qui n'a jamais dit `hello` n'a rien exécuté : ses requêtes (`sent` ou non) sont
-    // perdues d'avance, et trop de sorties de ce genre signifient que le démarrage est cassé.
+    // A child that never said `hello` ran nothing: its requests (`sent` or not) are
+    // lost in advance, and too many exits of this kind mean that startup is broken.
     if (!this.helloSeen) this.startFailures++
     const broken = this.startFailures >= (this.opts.maxStartFailures ?? DEFAULT_MAX_START_FAILURES)
 
@@ -376,7 +376,7 @@ export class WorkerHost {
       this.pending.delete(p.id)
       p.cleanup()
       if (p.internal) {
-        // `__configure` est renvoyé automatiquement au redémarrage.
+        // `__configure` is sent back automatically on restart.
         p.resolve(null)
         continue
       }
@@ -394,13 +394,13 @@ export class WorkerHost {
     if (broken) {
       this._state = 'broken'
       this.log.error(
-        `[${this.name}] démarrage impossible (${this.startFailures} sorties sans hello, ` +
-          `code ${code ?? '–'}, signal ${signal ?? '–'}) ; ${interrupted.length} requête(s) rejetée(s)`,
+        `[${this.name}] startup failed (${this.startFailures} exits without hello, ` +
+          `code ${code ?? '–'}, signal ${signal ?? '–'}); ${interrupted.length} request(s) rejected`,
       )
       try {
         this.opts.onCrash?.({ name: this.name, code, signal, interrupted, restartInMs: 0, broken })
       } catch (err) {
-        this.log.error(`[${this.name}] onCrash a levé une erreur`, err)
+        this.log.error(`[${this.name}] onCrash threw an error`, err)
       }
       return
     }
@@ -409,8 +409,8 @@ export class WorkerHost {
     this.attempt++
     this._state = 'restarting'
     this.log.warn(
-      `[${this.name}] arrêt inattendu (code ${code ?? '–'}, signal ${signal ?? '–'}) ; ` +
-        `redémarrage dans ${restartInMs} ms, ${interrupted.length} requête(s) interrompue(s)`,
+      `[${this.name}] unexpected exit (code ${code ?? '–'}, signal ${signal ?? '–'}); ` +
+        `restarting in ${restartInMs} ms, ${interrupted.length} request(s) interrupted`,
     )
     try {
       this.opts.onCrash?.({
@@ -422,7 +422,7 @@ export class WorkerHost {
         broken,
       })
     } catch (err) {
-      this.log.error(`[${this.name}] onCrash a levé une erreur`, err)
+      this.log.error(`[${this.name}] onCrash threw an error`, err)
     }
     this.restartTimer = setTimeout(() => {
       this.restartTimer = null
@@ -432,7 +432,7 @@ export class WorkerHost {
     }, restartInMs)
   }
 
-  /** Termine un arrêt demandé (sortie du worker ou filet de sécurité). Idempotent. */
+  /** Completes a requested stop (worker exit or safety net). Idempotent. */
   private finishStop(): void {
     this.child = null
     this.ready = false
@@ -449,7 +449,7 @@ export class WorkerHost {
     for (const w of waiters) w()
   }
 
-  /** Arrêt propre : SIGTERM, puis SIGKILL après `stopTimeoutMs` (3 s). Idempotent. */
+  /** Clean stop: SIGTERM, then SIGKILL after `stopTimeoutMs` (3 s). Idempotent. */
   stop(): Promise<void> {
     if (this.stopPromise) return this.stopPromise
     this.stopPromise = new Promise<void>((resolve) => {
@@ -470,10 +470,10 @@ export class WorkerHost {
         try {
           child.kill('SIGKILL')
         } catch {
-          // déjà mort
+          // already dead
         }
-        // Filet de sécurité : sans événement `exit`, l'arrêt ne doit jamais bloquer la fermeture.
-        // Appel direct (pas `handleExit`) : `this.child` peut déjà avoir changé.
+        // Safety net: without an `exit` event, the stop must never block shutdown.
+        // Direct call (not `handleExit`): `this.child` may already have changed.
         forceTimer = setTimeout(() => this.finishStop(), grace)
       }, grace)
       this.exitWaiters.push(() => {
@@ -484,25 +484,25 @@ export class WorkerHost {
       try {
         child.kill('SIGTERM')
       } catch {
-        // déjà mort
+        // already dead
       }
     }).finally(() => hosts.delete(this))
     return this.stopPromise
   }
 }
 
-/** Arrête tous les workers (fermeture de l'app). */
+/** Stops all workers (app shutdown). */
 export async function stopAll(): Promise<void> {
   await Promise.all([...hosts].map((h) => h.stop()))
 }
 
-/** Client typé du media-worker. */
+/** Typed client of the media-worker. */
 export interface MediaWorker {
   readonly host: WorkerHost
   call<O extends MediaOp>(op: O, args: MediaArgs<O>, opts?: CallOptions): Promise<MediaResult<O>>
-  /** Relance après l'état `broken` (voir `WorkerHost.restart`). */
+  /** Restart after the `broken` state (see `WorkerHost.restart`). */
   restart(): void
-  /** Chemins des outils (après « Re-détecter ») ; renvoyés à chaque redémarrage. */
+  /** Tool paths (after "Re-detect"); sent back at each restart. */
   setTools(tools: MediaTools): Promise<void>
   stop(): Promise<void>
 }
@@ -513,7 +513,7 @@ export function createMediaWorker(
   opts: Omit<WorkerHostOptions, 'name' | 'config'> & { tools: MediaTools },
 ): MediaWorker {
   const { tools, ...rest } = opts
-  // La langue suit l'app : les messages d'erreur du worker (outil introuvable…) sont traduits.
+  // The language follows the app: the worker's error messages (tool not found...) are translated.
   let config: { tools: MediaTools; lang: Lang } = { tools, lang: getLang() }
   const host = new WorkerHost({ ...rest, name: MEDIA_SERVICE_NAME, config })
   const offLang = onLangChange((lang) => {

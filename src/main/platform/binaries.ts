@@ -1,10 +1,10 @@
 /**
- * Résolution des binaires système. Pour chaque outil :
- *   1) `prefs.tools.<bin>` s'il est exécutable ;
- *   2) `/opt/homebrew/bin/<bin>`, puis `/usr/local/bin/<bin>` ;
- *   3) le shell de login (`login-shell-env.ts`).
- * `sips` : toujours `/usr/bin/sips` ; `prefs.tools.sips` est ignoré.
- * Absence de ffmpeg/ffprobe = mode dégradé (jobs vidéo en `tool_missing`), jamais un crash.
+ * Resolution of system binaries. For each tool:
+ *   1) `prefs.tools.<bin>` if it is executable;
+ *   2) `/opt/homebrew/bin/<bin>`, then `/usr/local/bin/<bin>`;
+ *   3) the login shell (`login-shell-env.ts`).
+ * `sips`: always `/usr/bin/sips`; `prefs.tools.sips` is ignored.
+ * Missing ffmpeg/ffprobe = degraded mode (video jobs in `tool_missing`), never a crash.
  */
 import { constants } from 'node:fs'
 import { access, stat } from 'node:fs/promises'
@@ -27,7 +27,7 @@ const LOOKUP: readonly LoginShellTool[] = ['ffmpeg', 'ffprobe', 'claude', 'codex
 
 export type IsExecutable = (p: string) => Promise<boolean>
 
-/** Fichier ordinaire exécutable (`X_OK`), chemin absolu uniquement. */
+/** Ordinary executable file (`X_OK`), absolute path only. */
 export const isExecutable: IsExecutable = async (p) => {
   if (!p || !isAbsolute(p)) return false
   try {
@@ -40,7 +40,7 @@ export const isExecutable: IsExecutable = async (p) => {
 
 export interface ResolveDeps {
   isExecutable?: IsExecutable
-  /** Appelé au plus une fois, seulement si un outil manque encore après les étapes 1 et 2. */
+  /** Called at most once, only if a tool is still missing after steps 1 and 2. */
   loginShell?: () => Promise<LoginShellEnv>
 }
 
@@ -83,7 +83,7 @@ export async function resolveBinaries(
   return out
 }
 
-/** Chemins à mettre en cache dans `prefs.tools` (affichés dans Réglages > IA / Stockage). */
+/** Paths to cache in `prefs.tools` (shown in Settings > AI / Storage). */
 export function toolsPrefsPatch(bins: BinPaths): Partial<Record<BinName, string>> {
   const patch: Partial<Record<BinName, string>> = {}
   for (const k of ['ffmpeg', 'ffprobe', 'claude', 'codex'] as const) {
@@ -93,7 +93,7 @@ export function toolsPrefsPatch(bins: BinPaths): Partial<Record<BinName, string>
   return patch
 }
 
-/** Outils transmis au media-worker (`__configure`). */
+/** Tools passed to the media-worker (`__configure`). */
 export function mediaToolsOf(bins: BinPaths): { ffmpeg?: string; ffprobe?: string; sips: string } {
   const t: { ffmpeg?: string; ffprobe?: string; sips: string } = { sips: bins.sips }
   if (bins.ffmpeg) t.ffmpeg = bins.ffmpeg
@@ -101,7 +101,7 @@ export function mediaToolsOf(bins: BinPaths): { ffmpeg?: string; ffprobe?: strin
   return t
 }
 
-/** Mode dégradé vidéo : vrai si ffmpeg ou ffprobe manque (Réglages > Stockage). */
+/** Video degraded mode: true if ffmpeg or ffprobe is missing (Settings > Storage). */
 export function videoToolsMissing(bins: BinPaths): boolean {
   return !bins.ffmpeg || !bins.ffprobe
 }

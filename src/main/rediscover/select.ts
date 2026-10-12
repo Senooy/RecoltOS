@@ -1,11 +1,11 @@
 /**
- * Redécouvrir : tirage pondéré sans remise (Efraimidis-Spirakis, clé
- * `u^(1/w)`, PRNG `mulberry32` de graine `seed`) sur les éléments éligibles (ni corbeille ni
- * masqués), ordre complet calculé une fois par (graine, portée) puis servi par pages.
+ * Rediscover: weighted draw without replacement (Efraimidis-Spirakis, key
+ * `u^(1/w)`, `mulberry32` PRNG seeded with `seed`) over eligible items (neither trashed nor
+ * hidden), full order computed once per (seed, scope) then served in pages.
  *
- * Poids : non classés ×2,5 ; peu vus `(1 + vues)^-0,8` ; anciens `1 + min(2, ln(1 + âge/60 j))` ;
- * jamais vus ×1,5 sinon `min(2, 1 + jours depuis la dernière vue / 90)` ; cooldown selon la dernière
- * action du journal : keep 0,1 pendant 90 j puis 0,6, skip 0,15 pendant 14 j. Sans dépendance Electron.
+ * Weights: unranked ×2.5; rarely seen `(1 + views)^-0.8`; old `1 + min(2, ln(1 + age/60 d))`;
+ * never seen ×1.5, otherwise `min(2, 1 + days since last view / 90)`; cooldown based on the last
+ * journal action: keep 0.1 for 90 d then 0.6, skip 0.15 for 14 d. No Electron dependency.
  */
 import type Database from 'better-sqlite3'
 
@@ -51,20 +51,20 @@ export function mulberry32(seed: number): () => number {
   }
 }
 
-/** Ordre complet (ids) par clés `u^(1/w)` décroissantes (Efraimidis-Spirakis), déterministe. */
+/** Full order (ids) by decreasing `u^(1/w)` keys (Efraimidis-Spirakis), deterministic. */
 export function drawOrder(cands: readonly Candidate[], seed: number, now: number): number[] {
   const rnd = mulberry32(seed)
   const keyed = cands.map((c) => {
     const w = Math.max(1e-9, weightOf(c, now))
     const u = Math.max(Number.MIN_VALUE, rnd())
-    // log(u^(1/w)) = ln(u)/w : même ordre, sans sous-dépassement.
+    // log(u^(1/w)) = ln(u)/w: same order, without underflow.
     return { id: c.id, k: Math.log(u) / w }
   })
   keyed.sort((a, b) => b.k - a.k || a.id - b.id)
   return keyed.map((x) => x.id)
 }
 
-/** Éligibles de la portée (bibliothèque ou collection) avec leurs statistiques. */
+/** Eligible items of the scope (library or collection), with their statistics. */
 export function loadCandidates(db: Database.Database, collectionId: number | null): Candidate[] {
   const scope =
     collectionId === null
@@ -101,7 +101,7 @@ export function loadCandidates(db: Database.Database, collectionId: number | nul
   }))
 }
 
-/** Les 3 collections les plus récemment utilisées (`MAX(collection_items.added_at)`). */
+/** The 3 most recently used collections (`MAX(collection_items.added_at)`). */
 export function recentCollections(
   db: Database.Database,
   limit = 3,

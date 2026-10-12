@@ -1,13 +1,13 @@
 /**
- * Ouverture de la vue détail depuis une liste (grille, recherche, palette, notification) : la liste
- * d'origine est conservée pour ←/→ et le compteur « 3 / 408 ».
+ * Opening the detail view from a list (grid, search, palette, notification): the original list is
+ * kept for ←/→ and the "3 / 408" counter.
  */
 import type { ItemCard } from '../../../../shared/dto/items'
 import { useUi } from '../../state/ui'
 
 let source: Map<string, ItemCard> = new Map()
 
-/** Cartes de la liste d'origine (affichage immédiat avant `items.get`). */
+/** Cards of the original list (immediate display before `items.get`). */
 export function sourceCard(uuid: string): ItemCard | undefined {
   return source.get(uuid)
 }
@@ -18,7 +18,7 @@ export function openViewer(card: ItemCard, list: readonly ItemCard[]): void {
   useUi.getState().openOverlay({ type: 'viewer', uuid: card.uuid, ids: cards.map((c) => c.uuid) })
 }
 
-/** Ouverture sans liste (notification, « Ouvrir avec », capture) : compteur « 1 / 1 ». */
+/** Opening without a list (notification, "Open with", capture): counter "1 / 1". */
 export function openViewerByUuid(uuid: string): void {
   source = new Map()
   useUi.getState().openOverlay({ type: 'viewer', uuid, ids: [uuid] })

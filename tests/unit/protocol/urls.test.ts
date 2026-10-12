@@ -1,6 +1,6 @@
 /**
- * `assetUrl` et chaîne de repli `resolveMediaUrls` : URL `recolt://` conformes
- * au contrat `MediaUrl`, jamais d'http(s), `?v=derive_version`.
+ * `assetUrl` and fallback chain `resolveMediaUrls`: `recolt://` URLs compliant
+ * with the `MediaUrl` contract, never http(s), `?v=derive_version`.
  */
 import { describe, expect, it } from 'vitest'
 import { MediaUrl } from '../../../src/shared/enums'
@@ -31,14 +31,14 @@ function media(over: Partial<MediaUrlSource> = {}): MediaUrlSource {
 }
 
 describe('assetUrl', () => {
-  it('construit recolt://<lib>/<rel>?v=<n>', () => {
+  it('builds recolt://<lib>/<rel>?v=<n>', () => {
     expect(assetUrl('default', `thumbs/0d/${U}.webp`, 3)).toBe(
       `recolt://default/thumbs/0d/${U}.webp?v=3`,
     )
     expect(assetUrl('lib-2', `avatars/x/abc.jpg`)).toBe('recolt://lib-2/avatars/x/abc.jpg')
   })
 
-  it('encode chaque segment (espaces, accents) et reste conforme à MediaUrl', () => {
+  it('encodes each segment (spaces, accents) and stays compliant with MediaUrl', () => {
     const url = assetUrl('default', 'spaces/assets/ab/été 1.png', 1)
     expect(url).toBe('recolt://default/spaces/assets/ab/%C3%A9t%C3%A9%201.png?v=1')
     expect(MediaUrl.safeParse(url).success).toBe(true)
@@ -56,7 +56,7 @@ describe('assetUrl', () => {
     expect(assetUrlOrNull('default', rel)).toBeNull()
   })
 
-  it('?v non fini (NaN, Infinity) omis : jamais ?v=NaN dans une URL servie', () => {
+  it('non-finite ?v (NaN, Infinity) omitted: never ?v=NaN in a served URL', () => {
     expect(assetUrl('default', `thumbs/0d/${U}.webp`, Number.NaN)).toBe(
       `recolt://default/thumbs/0d/${U}.webp`,
     )
@@ -68,7 +68,7 @@ describe('assetUrl', () => {
     )
   })
 
-  it('refuse un identifiant de bibliothèque non compatible avec un hôte', () => {
+  it('refuses a library identifier not compatible with a host', () => {
     expect(() => assetUrl('Default', 'thumbs/x.webp')).toThrow()
     expect(() => assetUrl('a.b', 'thumbs/x.webp')).toThrow()
   })
@@ -77,7 +77,7 @@ describe('assetUrl', () => {
 describe('resolveMediaUrls', () => {
   const lib = 'default'
 
-  it('image complète : thumb, large, original ; pas de poster ni preview', () => {
+  it('full image: thumb, large, original; no poster nor preview', () => {
     const u = resolveMediaUrls(lib, media())
     expect(u).toEqual({
       thumbUrl: `recolt://default/thumbs/0d/${U}.webp?v=2`,
@@ -88,7 +88,7 @@ describe('resolveMediaUrls', () => {
     })
   })
 
-  it('repli image : thumb ?? legacyThumb ?? display ?? original', () => {
+  it('image fallback: thumb ?? legacyThumb ?? display ?? original', () => {
     const legacy = `thumbs/0d/${U}.legacy.jpg`
     const display = `display/0d/${U}.webp`
     expect(
@@ -102,7 +102,7 @@ describe('resolveMediaUrls', () => {
     )
   })
 
-  it('repli large : large ?? display, sinon null (le renderer prend l’original)', () => {
+  it('large fallback: large ?? display, otherwise null (the renderer takes the original)', () => {
     const display = `display/0d/${U}.webp`
     expect(
       resolveMediaUrls(lib, media({ large_rel: null, display_rel: display })).largeUrl,
@@ -110,7 +110,7 @@ describe('resolveMediaUrls', () => {
     expect(resolveMediaUrls(lib, media({ large_rel: null })).largeUrl).toBeNull()
   })
 
-  it('vidéo : thumb ?? poster ?? null, preview null tant que le dérivé manque', () => {
+  it('video: thumb ?? poster ?? null, preview null while the derived file is missing', () => {
     const v = media({
       media_type: 'video',
       file_rel: `items/0d/${U}.mp4`,
@@ -124,7 +124,7 @@ describe('resolveMediaUrls', () => {
     expect(u.previewUrl).toBeNull()
     expect(u.originalUrl).toBe(`recolt://default/items/0d/${U}.mp4?v=2`)
     expect(resolveMediaUrls(lib, { ...v, poster_rel: null }).thumbUrl).toBeNull()
-    // La miniature importée sert de repli tant que le poster manque.
+    // The imported thumbnail serves as fallback while the poster is missing.
     const legacy = `thumbs/0d/${U}.legacy.jpg`
     expect(
       resolveMediaUrls(lib, { ...v, poster_rel: null, legacy_thumb_rel: legacy }).thumbUrl,
@@ -134,7 +134,7 @@ describe('resolveMediaUrls', () => {
     )
   })
 
-  it('média distant ou perdu : pas d’original exposé (jamais d’http)', () => {
+  it('remote or lost media: no original exposed (never http)', () => {
     const remote = resolveMediaUrls(
       lib,
       media({ status: 'remote', thumb_rel: null, large_rel: null }),
@@ -149,11 +149,11 @@ describe('resolveMediaUrls', () => {
     expect(resolveMediaUrls(lib, media({ status: 'missing' })).originalUrl).toBeNull()
   })
 
-  it('chemin importé abîmé : null plutôt qu’une URL invalide', () => {
+  it('damaged imported path: null rather than an invalid URL', () => {
     expect(resolveMediaUrls(lib, media({ thumb_rel: '../x.webp' })).thumbUrl).toContain('items/')
   })
 
-  it('sans média : tout à null', () => {
+  it('no media: everything null', () => {
     expect(resolveMediaUrls(lib, null)).toEqual({
       thumbUrl: null,
       largeUrl: null,
@@ -163,7 +163,7 @@ describe('resolveMediaUrls', () => {
     })
   })
 
-  it('toute URL produite passe MediaUrl et ne contient pas http', () => {
+  it('every produced URL passes MediaUrl and does not contain http', () => {
     const all = [
       resolveMediaUrls(lib, media()),
       resolveMediaUrls(lib, media({ media_type: 'video', poster_rel: `posters/0d/${U}.jpg` })),
@@ -176,7 +176,7 @@ describe('resolveMediaUrls', () => {
 })
 
 describe('avatarUrl', () => {
-  it('?v = authors.updated_at ; null → monogramme', () => {
+  it('?v = authors.updated_at; null → monogram', () => {
     expect(avatarUrl('default', 'avatars/x/0123456789abcdef.jpg', 1700)).toBe(
       'recolt://default/avatars/x/0123456789abcdef.jpg?v=1700',
     )

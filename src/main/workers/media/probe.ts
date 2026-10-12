@@ -1,5 +1,5 @@
 /**
- * Métadonnées d'image (sharp, ou sips pour HEIC/PSD) et de vidéo (ffprobe).
+ * Image metadata (sharp, or sips for HEIC/PSD) and video metadata (ffprobe).
  */
 import sharp, { type Metadata } from 'sharp'
 import { AppError } from '../../../shared/errors'
@@ -35,9 +35,9 @@ export async function probeImage(
   const abs = assertAbs(a.abs, 'abs')
   const foreign = await sniffForeign(abs)
   if (foreign) {
-    // HEIC/HEIF/PSD : on mesure la sortie décodée par sips (et son orientation), pas les
-    // dimensions stockées (`sips -g pixelWidth` ignore l'orientation HEIF : photo iPhone en
-    // portrait vue en paysage, en contradiction avec les dérivés redressés).
+    // HEIC/HEIF/PSD: we measure the output decoded by sips (and its orientation), not the
+    // stored dimensions (`sips -g pixelWidth` ignores the HEIF orientation: an iPhone photo in
+    // portrait seen as landscape, contradicting the straightened derivatives).
     const p = await withReadable(abs, tools, signal, (r) => probeSharp(r.input))
     return { ...p, mime: FOREIGN_MIME[foreign], isAnimated: false }
   }
@@ -54,8 +54,8 @@ async function probeSharp(input: string): Promise<MediaResult<'probeImage'>> {
   const format = meta.format === 'heif' && meta.compression === 'av1' ? 'avif' : meta.format
   const mime = MIME_BY_FORMAT[format]
   if (!mime) throw new AppError('unsupported', `format d'image non pris en charge : ${format}`)
-  // Pour une image animée, sharp rend la hauteur d'une page (première image).
-  // Orientation EXIF 5 à 8 : rotation de 90° → dimensions permutées.
+  // For an animated image, sharp returns the height of one page (first frame).
+  // EXIF orientation 5 to 8: 90° rotation → dimensions swapped.
   const { width, height } = orientedSize({
     width: meta.width,
     height: meta.pageHeight ?? meta.height,
@@ -87,7 +87,7 @@ interface FfprobeOut {
   format?: { duration?: string }
 }
 
-/** Rotation d'affichage en degrés (side data « Display Matrix », ou ancien tag `rotate`). */
+/** Display rotation in degrees ("Display Matrix" side data, or legacy `rotate` tag). */
 export function streamRotation(s: FfprobeStream): number {
   for (const sd of s.side_data_list ?? []) {
     if (sd.rotation !== undefined) {
@@ -100,7 +100,7 @@ export function streamRotation(s: FfprobeStream): number {
   return Number.isFinite(r) ? r : 0
 }
 
-/** Interprète la sortie JSON de ffprobe (exportée pour les tests). */
+/** Parses the JSON output of ffprobe (exported for tests). */
 export function parseFfprobe(json: string): MediaResult<'probeVideo'> {
   let data: FfprobeOut
   try {

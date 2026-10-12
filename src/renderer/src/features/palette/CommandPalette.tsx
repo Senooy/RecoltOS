@@ -1,9 +1,9 @@
 /**
- * Palette ⌘K : cmdk dans un Radix Dialog, voile sans flou, panneau 520 px à
- * `top:146`. Vide : « Récemment consultés » (7 vignettes 63×63, ←/→ dans la rangée, ↵ ouvre) +
- * « Commandes ». Avec texte : « Éléments » (recherche), « Collections », « Tags », « Commandes ».
- * `>` : commandes seules ; `#` : tags seuls. Ouverte par `menu.command` `palette` (accélérateur ⌘K
- * du menu natif, AUCUN écouteur ⌘K côté renderer) et par le bouton « Rechercher » de l'en-tête.
+ * ⌘K palette: cmdk inside a Radix Dialog, scrim without blur, 520 px panel at
+ * `top:146`. Empty: "Recently viewed" (7 thumbnails 63×63, ←/→ in the row, ↵ opens) +
+ * "Commands". With text: "Items" (search), "Collections", "Tags", "Commands".
+ * `>`: commands only; `#`: tags only. Opened by `menu.command` `palette` (⌘K accelerator
+ * of the native menu, NO ⌘K listener on the renderer side) and by the "Search" button in the header.
  */
 import { Command } from 'cmdk'
 import { Folder, Hash, Search } from 'lucide-react'
@@ -54,7 +54,7 @@ function Keys({ keys }: { keys: readonly string[] }) {
   return <span className="palette-kbd ml-auto">{keys.join('')}</span>
 }
 
-/** Ouvre un élément dans la vue détail (liste d'origine = résultats affichés). */
+/** Opens an item in the detail view (original list = displayed results). */
 function openItem(card: ItemCard, list: readonly ItemCard[]) {
   openViewer(card, list)
 }
@@ -84,7 +84,7 @@ export default function CommandPalette() {
         : 'empty'
   const text = mode === 'commands' || mode === 'tags' ? search.slice(1).trim() : search.trim()
 
-  // Éléments et tags (debounce court) en mode texte / tags.
+  // Items and tags (short debounce) in text / tags mode.
   useEffect(() => {
     if (mode !== 'text' && mode !== 'tags') {
       setItems([])
@@ -133,7 +133,7 @@ export default function CommandPalette() {
         : commands[0]
           ? `cmd:${commands[0].id}`
           : ''
-  // Sélection initiale (et après changement de mode) sur la première entrée.
+  // Initial selection (and after a mode change) on the first entry.
   useEffect(() => {
     setValue(mode === 'empty' && commands[0] ? `cmd:${commands[0].id}` : firstValue)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,7 +145,7 @@ export default function CommandPalette() {
     else runMenuCommand(c.run)
   }
 
-  /** ←/→ dans la rangée « Récemment consultés » ; ↓ en sort vers les commandes. */
+  /** ←/→ in the "Recently viewed" row; ↓ leaves it toward the commands. */
   const onKeyDown = (e: KeyboardEvent) => {
     if (!value.startsWith('recent:')) {
       if (

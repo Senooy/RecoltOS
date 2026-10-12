@@ -1,10 +1,10 @@
 /**
- * Articulation avec l'import GatherOS : l'importeur a déjà pré-rempli
- * `sync_items` et `sync_dismissed` et normalisé les médias. Ici, à la fin de l'import :
- * - backfill programmé pour chaque plateforme (`backfill_done = 0`, curseur et ancre remis à zéro) ;
- * - les drapeaux `syncX/Instagram/CosmosEnabled` de GatherOS sont NOTÉS (`settings`) pour que
- *   Réglages › Synchronisation propose de réactiver chaque source avec la feuille de confirmation :
- *   jamais d'activation silencieuse (requêtes Instagram).
+ * Link with the GatherOS import: the importer has already pre-filled
+ * `sync_items` and `sync_dismissed` and normalized the media. Here, at the end of the import:
+ * - backfill scheduled for each platform (`backfill_done = 0`, cursor and anchor reset to zero);
+ * - GatherOS's `syncX/Instagram/CosmosEnabled` flags are NOTED (`settings`) so that
+ *   Settings › Synchronization offers to re-enable each source with the confirmation sheet:
+ *   never a silent activation (Instagram requests).
  */
 import type { BridgePlatform } from '../../shared/bridge/constants'
 import type { LibraryContext } from '../library/library-context'

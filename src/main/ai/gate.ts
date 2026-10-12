@@ -1,10 +1,10 @@
 /**
- * Pause et routage PAR FOURNISSEUR (« ProviderGate ») : une limite Claude ne bloque pas
- * Codex. Pauses persistées dans `settings['ai.providerPauses']` (lues aussi par la porte
- * d'ingestion). Règles de `route` :
- * 1. le principal s'il n'est pas en pause et n'a pas échoué deux fois (PROCESS/TIMEOUT) ;
- * 2. sinon le secours s'il est configuré, connecté et non en pause ;
- * 3. sinon attente jusqu'à `min(until)` (ou attente manuelle sans échéance).
+ * Pause and routing PER PROVIDER ("ProviderGate"): a Claude limit does not block
+ * Codex. Pauses persisted in `settings['ai.providerPauses']` (also read by the ingest
+ * gate). Rules of `route`:
+ * 1. the primary if it is not paused and has not failed twice (PROCESS/TIMEOUT);
+ * 2. otherwise the fallback if it is configured, connected and not paused;
+ * 3. otherwise wait until `min(until)` (or manual wait with no deadline).
  */
 import type { AiCliId, ProviderStatus } from '../../shared/ai-types'
 import type { AiPrefs } from '../../shared/prefs'
@@ -14,7 +14,7 @@ export type GatePauseReason = 'RATE_LIMITED' | 'NOT_AUTHENTICATED' | 'NOT_INSTAL
 export interface ProviderPause {
   reason: GatePauseReason
   until?: number
-  /** Pauses de limite consécutives (paliers 15 / 30 / 60 min). */
+  /** Consecutive limit pauses (tiers 15 / 30 / 60 min). */
   strikes?: number
 }
 
@@ -64,7 +64,7 @@ export class ProviderGate {
     this.write(all)
   }
 
-  /** Pauses actives (les échues sont retirées). */
+  /** Active pauses (expired ones are removed). */
   paused(): Partial<Record<AiCliId, ProviderPause>> {
     const all = this.read()
     const now = this.now()
@@ -72,7 +72,7 @@ export class ProviderGate {
     for (const k of Object.keys(all) as AiCliId[]) {
       const v = all[k]!
       if (v.until !== undefined && v.until <= now) {
-        // On garde le compteur de paliers pour la prochaine limite, sans la pause.
+        // Keep the tier counter for the next limit, without the pause.
         delete all[k]
         changed = true
       }
@@ -102,7 +102,7 @@ export class ProviderGate {
       .map((x) => x?.until)
       .filter((u): u is number => typeof u === 'number')
     if (!paused[primary] && fails(primary) >= 2) {
-      // Deux échecs sur le principal sans secours possible : on retente quand même le principal.
+      // Two failures on the primary with no possible fallback: the primary is retried anyway.
       return { provider: primary, fallback: false }
     }
     return untils.length > 0

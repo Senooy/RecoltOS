@@ -1,5 +1,5 @@
 /**
- * ingestion, file de jobs, dérivés, téléchargements distants .
+ * ingestion, job queue, derivatives, remote downloads.
  */
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
@@ -55,14 +55,14 @@ async function writeImages(n: number, prefix: string): Promise<string[]> {
 }
 
 describe('ingestion', () => {
-  it('20 fichiers → 20 items ; cartes émises avant les dérivés ; doublon ajouté à la collection', async () => {
+  it('20 files → 20 items; cards emitted before the derivatives; duplicate added to the collection', async () => {
     h = makeHarness()
     const paths = await writeImages(20, 'batch')
     const report = await ingestPaths(paths, {}, h.services)
     expect(report.added).toHaveLength(20)
     expect(report.failed).toEqual([])
     expect(h.t.repos.items.countLive()).toBe(20)
-    // Avant toute exécution de la file : items en base, médias `processing`, événement `created`.
+    // Before any queue execution: items in the DB, media `processing`, `created` event.
     expect(h.changes.filter((c) => c.reason === 'created')).toHaveLength(20)
     const processing = h.t.db
       .prepare("SELECT count(*) n FROM item_media WHERE status = 'processing'")
@@ -85,7 +85,7 @@ describe('ingestion', () => {
       .get() as { n: number }
     expect(withPalette.n).toBe(20)
 
-    // Doublon : même contenu → `duplicate`, ajouté à la collection demandée.
+    // Duplicate: same content → `duplicate`, added to the requested collection.
     const col = h.t.repos.collections.create({ name: 'Dev' })
     const dup = await ingest(
       { type: 'file', path: paths[3]! },
@@ -97,7 +97,7 @@ describe('ingestion', () => {
     expect(h.t.repos.collections.itemIds(col.id)).toHaveLength(1)
   })
 
-  it('doublon d’un élément en corbeille → restauré', async () => {
+  it('duplicate of an item in the trash → restored', async () => {
     h = makeHarness()
     const [p] = await writeImages(1, 'trash')
     const r1 = await ingest({ type: 'file', path: p! }, {}, h.services)
@@ -108,7 +108,7 @@ describe('ingestion', () => {
     expect(h.t.repos.items.getById(id)!.deleted_at).toBeNull()
   })
 
-  it('format non pris en charge refusé, avec message français, sans fichier temporaire', async () => {
+  it('unsupported format refused, with a French message, no temporary file', async () => {
     h = makeHarness()
     const p = join(tmp.dir, 'notes.txt')
     writeFileSync(p, 'bonjour')
@@ -119,7 +119,7 @@ describe('ingestion', () => {
     expect(readdirSync(h.lib.paths.dir('tmp'))).toEqual([])
   })
 
-  it('porte IA : provider off → aucun ai.enrich', async () => {
+  it('AI gate: provider off → no ai.enrich', async () => {
     h = makeHarness()
     const paths = await writeImages(2, 'ai')
     await ingestPaths(paths, {}, h.services)
@@ -132,11 +132,11 @@ describe('ingestion', () => {
   })
 })
 
-describe('vidéo', () => {
-  it('ingestion vidéo : probe, poster ffmpeg, vignette, palette, puis aperçu de survol', async () => {
+describe('video', () => {
+  it('video ingestion: probe, ffmpeg poster, thumbnail, palette, then hover preview', async () => {
     h = makeHarness()
     const p = join(tmp.dir, 'clip.mp4')
-    if (!makeVideo(p, { seconds: 2 })) return // ffmpeg absent : mode dégradé couvert ailleurs
+    if (!makeVideo(p, { seconds: 2 })) return // ffmpeg missing: degraded mode covered elsewhere
     const r = await ingest({ type: 'file', path: p }, {}, h.services)
     const item = h.t.repos.items.getByUuid(r.itemUuid)!
     expect(item.kind).toBe('video')
@@ -152,8 +152,8 @@ describe('vidéo', () => {
   })
 })
 
-describe('file de jobs', () => {
-  it('reprise après kill : running → queued, .part orphelins purgés', async () => {
+describe('job queue', () => {
+  it('resume after kill: running → queued, orphaned .part purged', async () => {
     h = makeHarness()
     const id = h.t.repos.jobs.enqueue({ type: 'purge.files', payload: { files: [], mode: 'rm' } })
     h.t.repos.jobs.claimNext('purge.files')
@@ -166,7 +166,7 @@ describe('file de jobs', () => {
     expect(existsSync(part)).toBe(false)
   })
 
-  it('un ai.enrich en pause ne retarde pas media.derive', async () => {
+  it('a paused ai.enrich does not delay media.derive', async () => {
     h = makeHarness()
     const [p] = await writeImages(1, 'pause')
     await ingest({ type: 'file', path: p! }, {}, h.services)
@@ -182,7 +182,7 @@ describe('file de jobs', () => {
     expect(h.queue.status().byType['ai.enrich']!.pausedUntil).not.toBeNull()
   })
 
-  it('provider_rate_limited remet en file sans consommer de tentative et met le type en pause', async () => {
+  it('provider_rate_limited requeues without consuming an attempt and pauses the type', async () => {
     const retryAt = Date.now() + 3_600_000
     h = makeHarness({
       handlers: {
@@ -199,7 +199,7 @@ describe('file de jobs', () => {
     expect(h.t.repos.settings.get('jobs.paused')).toMatchObject({ 'ai.enrich': { until: retryAt } })
   })
 
-  it('échec réessayable : backoff 2^n × 30 s ; 4xx non réessayé', async () => {
+  it('retryable failure: backoff 2^n × 30 s; 4xx not retried', async () => {
     let calls = 0
     h = makeHarness({
       handlers: {
@@ -222,14 +222,14 @@ describe('file de jobs', () => {
     expect(h.t.repos.jobs.getRow(b)!.state).toBe('failed')
   })
 
-  it('crash après le commit du DELETE : purge.files supprime les fichiers au redémarrage', async () => {
+  it('crash after the DELETE commit: purge.files deletes the files on restart', async () => {
     h = makeHarness()
     const [p] = await writeImages(1, 'purge')
     const r = await ingest({ type: 'file', path: p! }, {}, h.services)
     const item = h.t.repos.items.getByUuid(r.itemUuid)!
     const file = h.lib.paths.abs(h.t.repos.media.listByItem(item.id)[0]!.file_rel!)
     expect(existsSync(file)).toBe(true)
-    // « Crash » : la transaction est validée, aucun job n'a tourné.
+    // "Crash": the transaction is committed, no job has run.
     const res = h.t.repos.items.purge([item.id])
     expect(res.jobId).not.toBeNull()
     expect(existsSync(file)).toBe(true)
@@ -241,8 +241,8 @@ describe('file de jobs', () => {
   })
 })
 
-describe('téléchargements distants', () => {
-  it('remote.fetch écrit remote/<sha1>.<ext> ; 403 → échec, aucune entrée', async () => {
+describe('remote downloads', () => {
+  it('remote.fetch writes remote/<sha1>.<ext>; 403 → failure, no entry', async () => {
     h = makeHarness()
     const ok = server.url('/media/quoted.jpg')
     const ko = server.url('/expired/quoted.jpg')
@@ -266,7 +266,7 @@ describe('téléchargements distants', () => {
     expect(h.t.repos.jobs.getRow(failId)!.state).toBe('failed')
   })
 
-  it('media.download : 200 → ok + dérivés ; 403 → missing sans nouvelle tentative', async () => {
+  it('media.download: 200 → ok + derivatives; 403 → missing without retry', async () => {
     h = makeHarness()
     const item = h.t.repos.items.insertWithMedia({ kind: 'image', source: 'x' }, [
       {
@@ -304,7 +304,7 @@ describe('téléchargements distants', () => {
     ])
   })
 
-  it('avatar.fetch : _normal → _400x400 ; 403 → failed (monogramme)', async () => {
+  it('avatar.fetch: _normal → _400x400; 403 → failed (monogram)', async () => {
     expect(upscaleAvatarUrl('https://pbs.twimg.com/profile_images/1/abc_normal.jpg')).toBe(
       'https://pbs.twimg.com/profile_images/1/abc_400x400.jpg',
     )

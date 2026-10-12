@@ -1,7 +1,7 @@
 /**
- * Registre des services : chaque domaine expose `init<Domaine>(ctx)` dans
- * `src/main/<domaine>/init.ts` ; seul ce fichier les appelle, dans cet ordre. Aucun domaine
- * n'édite `main/index.ts`. Pas de domaine `embed`.
+ * Service registry: each domain exposes `init<Domain>(ctx)` in
+ * `src/main/<domain>/init.ts`; only this file calls them, in this order. No domain
+ * edits `main/index.ts`. No `embed` domain.
  */
 import { initAi } from '../ai/init'
 import { initBridge } from '../bridge/init'
@@ -42,7 +42,7 @@ export const SERVICES: readonly { domain: ServiceDomain; init: InitFn }[] = [
   { domain: 'data', init: initData },
   { domain: 'spaces', init: initSpaces },
   { domain: 'ai', init: initAi },
-  // Le pont avant la sync : le coordinateur s'abonne aux messages du `BridgeServer`.
+  // The bridge comes before sync: the coordinator subscribes to the `BridgeServer` messages.
   { domain: 'bridge', init: initBridge },
   { domain: 'sync', init: initSync },
   { domain: 'capture', init: initCapture },
@@ -56,8 +56,8 @@ export interface ServicesHandle {
 }
 
 /**
- * Appelle chaque `init` dans l'ordre. Un domaine en échec est journalisé et n'empêche pas
- * les suivants (l'app reste lançable). `dispose()` libère dans l'ordre inverse.
+ * Calls each `init` in order. A failing domain is logged and does not prevent
+ * the following ones (the app stays launchable). `dispose()` releases in reverse order.
  */
 export async function initServices(
   ctx: ServiceContext,
@@ -73,7 +73,7 @@ export async function initServices(
       started.push(domain)
     } catch (error) {
       failed.push({ domain, error })
-      ctx.log.error(`[services] échec de init ${domain}`, error)
+      ctx.log.error(`[services] init failed for ${domain}`, error)
     }
   }
   return {
@@ -84,7 +84,7 @@ export async function initServices(
         try {
           await dispose()
         } catch (error) {
-          ctx.log.error(`[services] échec de dispose ${domain}`, error)
+          ctx.log.error(`[services] dispose failed for ${domain}`, error)
         }
       }
     },

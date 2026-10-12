@@ -1,6 +1,6 @@
 /**
- * Commandes de la palette ⌘K : 15 entrées (icône, libellé, raccourci), branchées sur
- * `runMenuCommand` (même chemin que le menu natif) ; raccourcis lus dans `src/shared/shortcuts.ts`.
+ * ⌘K palette commands: 15 entries (icon, label, shortcut), wired to
+ * `runMenuCommand` (same path as the native menu); shortcuts read from `src/shared/shortcuts.ts`.
  */
 import {
   Archive,
@@ -32,12 +32,12 @@ export interface PaletteCommand {
   id: string
   label: string
   Icon: LucideIcon
-  /** Touches affichées (ordre : ⌘ puis ⇧ puis la lettre). */
+  /** Keys displayed (order: ⌘ then ⇧ then the letter). */
   keys: string[]
   run: MenuCommand | 'syncNow'
 }
 
-/** `⇧⌘N` (table des raccourcis) → `['⌘', '⇧', 'N']` (affichage de la palette). */
+/** `⇧⌘N` (shortcut table) → `['⌘', '⇧', 'N']` (palette display). */
 export function keysOf(id: ShortcutId): string[] {
   const label = displayShortcutLabel(getShortcut(id).label)
   const mods = ['⌘', '⇧', '⌥', '⌃'].filter((m) => label.includes(m))
@@ -53,7 +53,7 @@ const cmd = (
   shortcut: ShortcutId | null,
 ): PaletteCommand => ({ id, label, Icon, run, keys: shortcut ? keysOf(shortcut) : [] })
 
-/** Commandes de la palette, libellés dans la langue active (recalculées à chaque appel). */
+/** Palette commands, labels in the active language (recomputed on each call). */
 export function paletteCommands(): readonly PaletteCommand[] {
   const c = tr.palette.cmd
   return [
@@ -75,12 +75,12 @@ export function paletteCommands(): readonly PaletteCommand[] {
   ]
 }
 
-/** Repli insensible à la casse et aux accents. */
+/** Fallback insensitive to case and accents. */
 export function fold(s: string): string {
   return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 }
 
-/** Commandes dont un mot commence par la saisie (ou qui la contiennent). */
+/** Commands where a word starts with the input (or that contain it). */
 export function matchCommands(q: string): PaletteCommand[] {
   const needle = fold(q.trim())
   const all = paletteCommands()

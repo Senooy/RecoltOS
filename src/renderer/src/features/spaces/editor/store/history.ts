@@ -1,7 +1,7 @@
 /**
- * Historique maison : diff par nœud touché (`before` / `after`, `null` = absent),
- * pile de 200 entrées, coalescence par clé (flèches : même sélection, < 600 ms). Non persisté,
- * viewport hors historique.
+ * Home-made history: diff per touched node (`before` / `after`, `null` = absent), stack of
+ * 200 entries, coalescing by key (arrows: same selection, < 600 ms). Not persisted, viewport
+ * outside the history.
  */
 import type { SpaceNode } from '../../../../../../shared/spaces-schema'
 
@@ -61,7 +61,7 @@ export class History {
   }
 }
 
-/** Applique un côté d'une entrée à l'état des nœuds (copie). Rend les uuid touchés. */
+/** Applies one side of an entry to the node state (copy). Returns the touched uuids. */
 export function applySide(
   nodes: Record<string, SpaceNode>,
   side: Record<string, SpaceNode | null>,
@@ -76,7 +76,7 @@ export function applySide(
   return { nodes: next, ids }
 }
 
-/** Diff entre deux états : uuid modifiés, ajoutés ou supprimés (comparaison par référence). */
+/** Diff between two states: uuids modified, added or removed (reference comparison). */
 export function diffIds(
   before: Record<string, SpaceNode>,
   after: Record<string, SpaceNode>,

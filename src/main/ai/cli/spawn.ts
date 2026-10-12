@@ -1,7 +1,7 @@
 /**
- * `runCli` : process en groupe (`detached`), stdin FERMÉ (`ignore` : codex ajouterait
- * stdin au prompt), délai, annulation et garde-fou ligne à ligne (`onLine` → 'kill'), plafond de
- * sortie (8 Mo). Arrêt : SIGTERM au groupe, puis SIGKILL après 3 s.
+ * `runCli`: process in a group (`detached`), stdin CLOSED (`ignore`: codex would append
+ * stdin to the prompt), timeout, cancellation and line-by-line guard (`onLine` → 'kill'), output
+ * cap (8 MB). Stop: SIGTERM to the group, then SIGKILL after 3 s.
  */
 import { spawn, type ChildProcess } from 'node:child_process'
 
@@ -25,7 +25,7 @@ export interface RunCliResult {
   timedOut: boolean
   killedByGuard: boolean
   aborted: boolean
-  /** Erreur de lancement (`ENOENT`, `EACCES`…). */
+  /** Launch error (`ENOENT`, `EACCES`…). */
   spawnError?: NodeJS.ErrnoException
 }
 
@@ -39,7 +39,7 @@ function killGroup(child: ChildProcess, sig: NodeJS.Signals): void {
     try {
       child.kill(sig)
     } catch {
-      // déjà terminé
+      // already terminated
     }
   }
 }
@@ -75,7 +75,7 @@ export function runCli(o: RunCliOptions): Promise<RunCliResult> {
       clearTimeout(timer)
       if (killTimer) clearTimeout(killTimer)
       o.signal?.removeEventListener('abort', onAbort)
-      // Dernière ligne sans saut de ligne.
+      // Last line without a trailing newline.
       for (const s of ['stdout', 'stderr'] as const) {
         if (bufs[s] && !killedByGuard) o.onLine?.(bufs[s], s)
       }

@@ -1,6 +1,6 @@
 /**
- * Handlers `items.*` : listes keyset, compteurs en cache, détail, édition,
- * corbeille, purge (lots de 500, job `purge.files` dans la transaction), masquage, vues débouncées.
+ * `items.*` handlers: keyset lists, cached counters, detail, editing,
+ * trash, purge (batches of 500, `purge.files` job inside the transaction), hiding, debounced views.
  */
 import { AppError } from '../../../shared/errors'
 import { tabCounts } from '../../db/queries/counts'
@@ -35,7 +35,7 @@ function purge(lib: LibraryContext, itemIds: number[]): number {
   return n
 }
 
-/** `items.markViewed` débouncé à 1 s par élément. */
+/** `items.markViewed` debounced to 1 s per item. */
 const viewTimers = new Map<string, NodeJS.Timeout>()
 export const MARK_VIEWED_DEBOUNCE_MS = 1_000
 

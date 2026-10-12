@@ -1,7 +1,7 @@
 /**
- * Domaine `ai` : service IA (fournisseurs CLI, porte par fournisseur, budget, journal),
- * branché sur la file unique `jobs` (handlers `ai.enrich` / `ai.prompt`) et sur le cycle de vie des
- * bibliothèques. Aucune détection au démarrage tant que le fournisseur est `off`.
+ * `ai` domain: AI service (CLI providers, per-provider gate, budget, journal), wired to the
+ * single `jobs` queue (handlers `ai.enrich` / `ai.prompt`) and to the library lifecycle.
+ * No detection at startup while the provider is `off`.
  */
 import type { Disposer, ServiceContext } from '../bootstrap/context'
 import { getJobQueue, requireJobServices } from '../jobs/runtime'
@@ -33,11 +33,11 @@ export function initAi(ctx: ServiceContext): Disposer {
   })
   const lib = getActiveLibrary()
   if (lib)
-    void service.onLibraryOpen(lib).catch((err: unknown) => ctx.log.warn('[ai] ouverture', err))
+    void service.onLibraryOpen(lib).catch((err: unknown) => ctx.log.warn('[ai] opening', err))
 
-  // Fournisseur actif : détection en arrière-plan (version, connexion, rejeu du niveau 1).
+  // Active provider: background detection (version, connection, replay of level 1).
   if (prefs.get().ai.provider !== 'off') {
-    void service.detect().catch((err: unknown) => ctx.log.warn('[ai] détection', err))
+    void service.detect().catch((err: unknown) => ctx.log.warn('[ai] detection', err))
   }
   const off = prefs.onChange((next, prev) => {
     const a = next.ai

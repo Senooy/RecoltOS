@@ -1,9 +1,9 @@
 /**
- * Textes de l'extension (popup, menus contextuels, toasts, erreurs de synchro) en français
- * (tutoiement) et en anglais. Langue : celle transmise par l'app connectée (`hello.ack.lang`,
- * mémorisée dans `storage.local`), sinon `navigator.language` (français si `fr*`, sinon anglais).
- * Les textes du manifest (nom, description, titre du bouton) passent par `_locales/` : ils
- * suivent la langue du navigateur.
+ * Extension texts (popup, context menus, toasts, sync errors) in French
+ * (informal "tu") and in English. Language: the one sent by the connected app (`hello.ack.lang`,
+ * stored in `storage.local`), otherwise `navigator.language` (French if `fr*`, otherwise English).
+ * The manifest texts (name, description, button title) go through `_locales/`: they
+ * follow the browser language.
  */
 import { isLang, langFromLocale, type Lang } from '../../../src/shared/i18n/lang'
 import type { Widen } from '../../../src/shared/i18n/messages'
@@ -251,33 +251,33 @@ const STORAGE_KEY = 'uiLang'
 
 let current: Lang = langFromLocale(typeof navigator !== 'undefined' ? navigator.language : '')
 
-/** Langue active de l'extension. */
+/** Active language of the extension. */
 export function extLang(): Lang {
   return current
 }
 
-/** Change la langue (tests, popup) sans la mémoriser. */
+/** Changes the language (tests, popup) without storing it. */
 export function setExtLang(lang: Lang): void {
   current = lang
 }
 
-/** Catalogue de la langue active. */
+/** Catalog of the active language. */
 export function xt(): ExtMessages {
   return CATALOGS[current]
 }
 
-/** Langue transmise par l'app connectée : adoptée et mémorisée pour le popup et les pages. */
+/** Language sent by the connected app: adopted and stored for the popup and the pages. */
 export async function rememberAppLang(lang: unknown): Promise<void> {
   if (!isLang(lang)) return
   current = lang
   try {
     await api().storage.local.set({ [STORAGE_KEY]: lang })
   } catch {
-    // stockage indisponible : la langue reste valable pour ce contexte
+    // storage unavailable: the language stays valid for this context
   }
 }
 
-/** Relit la langue mémorisée (langue de l'app) et suit ses changements. */
+/** Reads the stored language (app language) and follows its changes. */
 export async function loadExtLang(): Promise<Lang> {
   try {
     const r = await api().storage.local.get(STORAGE_KEY)
@@ -287,7 +287,7 @@ export async function loadExtLang(): Promise<Lang> {
       if (area === 'local' && isLang(v)) current = v
     })
   } catch {
-    // hors navigateur (tests) : langue du navigateur
+    // outside the browser (tests): browser language
   }
   return current
 }

@@ -1,7 +1,7 @@
 /**
- * Sécurité des WebContents : pas de nouvelle fenêtre, pas de navigation,
- * pas de <webview>, permissions refusées sauf plein écran vidéo et écriture presse-papiers.
- * Les liens externes passent par `system.openExternal` (http(s) seulement).
+ * WebContents security: no new window, no navigation,
+ * no <webview>, permissions denied except video fullscreen and clipboard write.
+ * External links go through `system.openExternal` (http(s) only).
  */
 import { app, session } from 'electron'
 
@@ -15,7 +15,7 @@ export function installSecurity(): void {
   })
 }
 
-/** À appeler après `ready` (la session par défaut n'existe pas avant). */
+/** Call after `ready` (the default session does not exist before it). */
 export function installDefaultSessionPolicy(): void {
   const ses = session.defaultSession
   ses.setPermissionRequestHandler((_wc, permission, callback) =>

@@ -1,14 +1,13 @@
 /**
- * Glyphes de marque dessinés pour RecoltOS : SVG minimalistes,
- * `currentColor`, utilisés uniquement pour identifier la source d'un élément (usage nominatif).
- * Aucune dépendance (pas de `simple-icons`).
+ * Brand glyphs drawn for RecoltOS: minimalist SVGs, `currentColor`, used only to identify
+ * the source of an item (nominative use). No dependency (no `simple-icons`).
  */
 import type { SVGProps } from 'react'
 
 export interface GlyphProps extends Omit<SVGProps<SVGSVGElement>, 'width' | 'height'> {
-  /** Côté en px. */
+  /** Side length in px. */
   size?: number
-  /** Nom accessible ; absent = glyphe décoratif (masqué aux lecteurs d'écran). */
+  /** Accessible name; absent = decorative glyph (hidden from screen readers). */
   label?: string
 }
 
@@ -17,9 +16,9 @@ function a11y(label: string | undefined) {
 }
 
 /**
- * Logo X (ex-Twitter), géométrie maison : la diagonale descendante est une bande évidée (contour
- * d'un parallélogramme), la montante une barre fine interrompue par la bande. Remplissage plein
- * (`evenodd`) : surtout pas deux traits croisés, qu'on confondrait avec une croix de fermeture.
+ * X logo (formerly Twitter), in-house geometry: the descending diagonal is a hollowed band
+ * (outline of a parallelogram), the rising one a thin bar interrupted by the band. Solid fill
+ * (`evenodd`): definitely not two crossed strokes, which would be mistaken for a close cross.
  */
 export const X_LOGO_PATH =
   'M2.5 3H8.2L21.5 21H15.8Z' +
@@ -44,7 +43,7 @@ export function XGlyph({ size = 18, label, ...rest }: GlyphProps) {
   )
 }
 
-/** Instagram : carré arrondi, objectif, voyant. */
+/** Instagram: rounded square, lens, dot. */
 export function InstagramGlyph({ size = 18, label, ...rest }: GlyphProps) {
   return (
     <svg
@@ -65,7 +64,7 @@ export function InstagramGlyph({ size = 18, label, ...rest }: GlyphProps) {
   )
 }
 
-/** Cosmos : un disque et son orbite décentrée. */
+/** Cosmos: a disc and its off-center orbit. */
 export function CosmosGlyph({ size = 18, label, ...rest }: GlyphProps) {
   return (
     <svg

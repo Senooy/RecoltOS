@@ -1,10 +1,10 @@
 /**
- * `MasonryGrid` : disposition déterministe (`layoutMasonry`), cartes en absolu +
- * `translate`, fenêtrage (recherche binaire, overscan 800 px), posts texte mesurés AVANT le premier
- * rendu (aucun décalage de mise en page), `.reflowing` 300 ms au changement de colonnes, navigation
- * clavier géométrique, `role="list"`, menu contextuel unique, glisser natif. Vue détail :
- * `grid.scrollTo` amène la carte courante en vue avant le FLIP de fermeture, `grid.cascade` fait
- * réapparaître les cartes visibles en fondu échelonné.
+ * `MasonryGrid`: deterministic layout (`layoutMasonry`), cards absolutely positioned +
+ * `translate`, windowing (binary search, 800 px overscan), text posts measured BEFORE the first
+ * render (no layout shift), `.reflowing` 300 ms when the column count changes, geometric
+ * keyboard navigation, `role="list"`, a single context menu, native drag. Detail view:
+ * `grid.scrollTo` brings the current card into view before the closing FLIP, `grid.cascade` makes
+ * the visible cards reappear with a staggered fade.
  */
 import {
   useCallback,
@@ -43,7 +43,7 @@ import './grid.css'
 export const GRID_GAP = 8
 export const GRID_PAD_X = 18
 export const OVERSCAN = 800
-/** Cascade de réapparition : décalage par carte (ordre de lecture) et durée du fondu. */
+/** Reappearance cascade: offset per card (reading order) and fade duration. */
 export const CASCADE_STEP_MS = 40
 export const CASCADE_MS = 240
 
@@ -60,11 +60,11 @@ function useWidth(ref: RefObject<HTMLElement | null>): number {
   return w
 }
 
-/** Hauteurs mesurées des posts texte, par largeur de colonne (`${uuid}:${colW}`), bornées. */
+/** Measured heights of text posts, per column width (`${uuid}:${colW}`), bounded. */
 const tweetHeightCache = new Map<string, number>()
 const TWEET_HEIGHT_CACHE_MAX = 20_000
 
-/** Marque de démarrage `grid-painted` déjà émise (une fois par renderer). */
+/** `grid-painted` startup mark already emitted (once per renderer). */
 let gridPaintedMarked = false
 
 function useTweetHeights(items: readonly ItemCard[], colW: number) {
@@ -123,8 +123,8 @@ function useTweetHeights(items: readonly ItemCard[], colW: number) {
       </div>
     ) : null
   if (fontsReady && missing.length === 0) everReady.current = true
-  // Premier rendu : on attend les mesures (aucun décalage) ; ensuite, un nouveau post s'affiche
-  // avec une hauteur provisoire puis se recale dès sa mesure.
+  // First render: wait for the measurements (no shift); afterwards, a new post is shown
+  // with a provisional height, then realigns as soon as it is measured.
   const ready = fontsReady && (missing.length === 0 || everReady.current)
   return { ready, version, layer, height: (u: string) => tweetHeightCache.get(key(u)) }
 }
@@ -166,7 +166,7 @@ export function MasonryGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, width, columns, tweets.ready, tweets.version])
 
-  // Changement de colonnes : réagencement animé (jamais au défilement).
+  // Column change: animated re-layout (never on scroll).
   const [reflowing, setReflowing] = useState(false)
   const prevCols = useRef(columns)
   useEffect(() => {
@@ -177,7 +177,7 @@ export function MasonryGrid({
     return () => clearTimeout(t)
   }, [columns])
 
-  // Fenêtrage : fenêtre visible du conteneur défilant, ramenée au repère de la grille.
+  // Windowing: visible window of the scrolling container, mapped to the grid's frame.
   const [view, setView] = useState({ top: 0, bottom: 1200 })
   useEffect(() => {
     const sc = scrollRef.current
@@ -210,8 +210,8 @@ export function MasonryGrid({
 
   const visible = useMemo(() => visibleIndices(layout, view.top, view.bottom), [layout, view])
 
-  // Démarrage : `grid-painted` une seule fois, à la première image peinte qui
-  // contient des cartes (deux rAF : après le rendu de l'image).
+  // Startup: `grid-painted` once only, at the first painted frame that
+  // contains cards (two rAF: after the frame has rendered).
   useEffect(() => {
     if (gridPaintedMarked || visible.length === 0) return
     gridPaintedMarked = true
@@ -221,7 +221,7 @@ export function MasonryGrid({
   }, [visible.length])
   const byId = useMemo(() => new Map(items.map((c, i) => [c.uuid, i])), [items])
 
-  // Fermeture du Viewer : la carte courante est amenée en vue (si besoin) avant le FLIP inverse.
+  // Viewer closing: the current card is brought into view (if needed) before the reverse FLIP.
   const layoutRef = useRef(layout)
   layoutRef.current = layout
   useEffect(
@@ -241,7 +241,7 @@ export function MasonryGrid({
     [scrollRef, byId],
   )
 
-  // Cascade : rang de chaque carte visible dans l'ordre de lecture (haut puis gauche).
+  // Cascade: rank of each visible card in reading order (top then left).
   const [cascade, setCascade] = useState<{ except: string | null; key: number } | null>(null)
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null
@@ -276,7 +276,7 @@ export function MasonryGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cascade])
 
-  // Sélection : ⌘-clic bascule, Maj-clic étend la plage depuis la dernière ancre.
+  // Selection: ⌘-click toggles, Shift-click extends the range from the last anchor.
   const anchor = useRef<string | null>(null)
   const onToggleSelect = useCallback(
     (e: MouseEvent, card: ItemCard) => {
@@ -336,7 +336,7 @@ export function MasonryGrid({
     [byId, layout, onActivate, scrollRef],
   )
 
-  // Menu contextuel unique : la carte visée est lue sur l'élément cliqué.
+  // Single context menu: the targeted card is read from the clicked element.
   const [menuCards, setMenuCards] = useState<ItemCard[]>([])
   const onContextMenu = (e: MouseEvent<HTMLDivElement>) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>('[data-uuid]')

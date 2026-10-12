@@ -21,8 +21,8 @@ const cand = (id: number, extra: Partial<Candidate> = {}): Candidate => ({
   ...extra,
 })
 
-describe('poids et tirage', () => {
-  it('non classés ×2,5, peu vus, cooldowns keep 90 j / skip 14 j', () => {
+describe('weights and draw', () => {
+  it('unfiled ×2.5, rarely seen, cooldowns keep 90 d / skip 14 d', () => {
     const now = T0
     expect(weightOf(cand(1, { nCollections: 0 }), now) / weightOf(cand(2), now)).toBeCloseTo(2.5)
     expect(weightOf(cand(1, { viewCount: 3 }), now)).toBeLessThan(weightOf(cand(2), now))
@@ -32,7 +32,7 @@ describe('poids et tirage', () => {
     expect(cooldown({ lastAction: 'skip', lastAt: now - 20 * DAY }, now)).toBe(1)
   })
 
-  it('déterministe par graine, ordre complet sans doublon', () => {
+  it('deterministic by seed, complete order without duplicates', () => {
     const c = Array.from({ length: 50 }, (_, i) => cand(i + 1, { nCollections: i % 2 }))
     const a = drawOrder(c, 7, T0)
     expect(drawOrder(c, 7, T0)).toEqual(a)
@@ -41,7 +41,7 @@ describe('poids et tirage', () => {
     expect(mulberry32(1)()).toBeGreaterThanOrEqual(0)
   })
 
-  it('10 000 tirages : les non classés sortent > 2× plus souvent en tête', () => {
+  it('10,000 draws: unfiled items come out more than 2× as often at the top', () => {
     const c = Array.from({ length: 40 }, (_, i) => cand(i + 1, { nCollections: i < 20 ? 0 : 2 }))
     let uncl = 0
     let cl = 0
@@ -62,7 +62,7 @@ describe('service', () => {
     t = null
   })
 
-  it('deck paginé, actions journalisées, annulation ≤ 10 s, 3 collections récentes', () => {
+  it('paginated deck, logged actions, undo ≤ 10 s, 3 recent collections', () => {
     t = openTestLib()
     const { repos, db } = t
     const ids = Array.from(
@@ -112,7 +112,7 @@ describe('service', () => {
       { action: 'collection' },
       { action: 'skip' },
     ])
-    // Le deck suivant écarte la corbeille.
+    // The next deck drops the trash.
     expect(rd.deck(deps, { seed: 4, limit: 50, offset: 0 }).total).toBe(5)
   })
 })

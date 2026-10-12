@@ -1,6 +1,6 @@
 /**
- * `platform/` : résolution des binaires, shell de login,
- * détection de processus (`pgrep -x`), Corbeille macOS.
+ * `platform/`: binary resolution, login shell,
+ * process detection (`pgrep -x`), macOS Trash.
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -32,7 +32,7 @@ afterAll(() => tmp.cleanup())
 describe('resolveBinaries', () => {
   const execSet = (paths: string[]) => (p: string) => Promise.resolve(paths.includes(p))
 
-  it('ordre : prefs.tools → /opt/homebrew/bin → /usr/local/bin → shell de login', async () => {
+  it('order: prefs.tools → /opt/homebrew/bin → /usr/local/bin → login shell', async () => {
     let shellCalls = 0
     const bins = await resolveBinaries(
       { tools: { ffmpeg: '/custom/ffmpeg', ffprobe: '/custom/absent' } },
@@ -71,7 +71,7 @@ describe('resolveBinaries', () => {
     })
   })
 
-  it('tout trouvé sans shell de login ; ffmpeg absent = mode dégradé', async () => {
+  it('everything found without login shell; ffmpeg missing = degraded mode', async () => {
     let shellCalls = 0
     const all = await resolveBinaries(DEFAULT_PREFS, {
       isExecutable: execSet(
@@ -93,7 +93,7 @@ describe('resolveBinaries', () => {
     expect(videoToolsMissing(none)).toBe(true)
   })
 
-  it('vrai système : sips toujours /usr/bin/sips ; chemin de prefs non exécutable ignoré', async () => {
+  it('real system: sips always /usr/bin/sips; non-executable prefs path ignored', async () => {
     const notExec = join(tmp.dir, 'ffmpeg')
     writeFileSync(notExec, '#!/bin/sh\n', { mode: 0o644 })
     const bins = await resolveBinaries(
@@ -107,7 +107,7 @@ describe('resolveBinaries', () => {
 })
 
 describe('login-shell-env', () => {
-  it('lignes balisées, bruit de .zshrc ignoré, outils absents ou alias écartés', () => {
+  it('tagged lines, .zshrc noise ignored, missing tools or aliases discarded', () => {
     const out = [
       'Bienvenue ! oh-my-zsh',
       '\u001b]0;titre\u0007__RECOLT__PATH=/opt/homebrew/bin:/usr/bin:/bin',
@@ -123,13 +123,13 @@ describe('login-shell-env', () => {
     })
   })
 
-  it('script : PATH puis une ligne par outil', () => {
+  it('script: PATH then one line per tool', () => {
     const s = loginShellScript()
     expect(s).toContain('"$PATH"')
     for (const t of ['claude', 'codex', 'ffmpeg', 'ffprobe']) expect(s).toContain(`command -v ${t}`)
   })
 
-  it('délai dépassé ou échec → résultat vide, jamais d’exception', async () => {
+  it('timeout or failure → empty result, never an exception', async () => {
     const args: unknown[] = []
     const r = await readLoginShellEnv({
       timeoutMs: 5_000,
@@ -147,7 +147,7 @@ describe('login-shell-env', () => {
     ).toEqual({ path: null, tools: {} })
   })
 
-  it('le délai est une vraie borne : un petit-enfant qui garde stdout ouvert ne bloque pas', async () => {
+  it('the timeout is a real bound: a grandchild holding stdout open does not block', async () => {
     const dir = join(tmp.dir, 'shells')
     mkdirSync(dir, { recursive: true })
     const pidFile = join(dir, 'pid')
@@ -158,7 +158,7 @@ describe('login-shell-env', () => {
     const r = await readLoginShellEnv({ shell: fake, timeoutMs: 500 })
     expect(Date.now() - t0).toBeLessThan(1_500)
     expect(r).toEqual({ path: null, tools: {} })
-    // Pas d'orphelin : le groupe entier a été tué.
+    // No orphan: the whole group was killed.
     const pid = Number(readFileSync(pidFile, 'utf8').trim())
     let alive = true
     for (let i = 0; i < 30 && alive; i++) {
@@ -172,7 +172,7 @@ describe('login-shell-env', () => {
     expect(alive).toBe(false)
   }, 10_000)
 
-  it('shell terminé mais stdout retenu par un démon : résultat rendu juste après la sortie', async () => {
+  it('shell finished but stdout held by a daemon: result returned right after exit', async () => {
     const dir = join(tmp.dir, 'shells')
     mkdirSync(dir, { recursive: true })
     const fake = join(dir, 'daemon-shell.sh')
@@ -188,7 +188,7 @@ describe('login-shell-env', () => {
     expect(r.tools.ffmpeg).toBe('/opt/x/bin/ffmpeg')
   }, 10_000)
 
-  it('vrai /bin/zsh -lic (5 s max) : PATH lu', async () => {
+  it('real /bin/zsh -lic (5 s max): PATH read', async () => {
     const t0 = Date.now()
     const r = await readLoginShellEnv({ shell: '/bin/zsh' })
     expect(Date.now() - t0).toBeLessThan(6_500)
@@ -198,7 +198,7 @@ describe('login-shell-env', () => {
 })
 
 describe('process-check', () => {
-  it('pgrep -x : 0 → vrai, 1 → faux, autre → erreur', async () => {
+  it('pgrep -x: 0 → true, 1 → false, other → error', async () => {
     const calls: unknown[] = []
     const exec = (code: number) => (cmd: string, args: readonly string[]) => {
       calls.push([cmd, args])
@@ -211,21 +211,21 @@ describe('process-check', () => {
     expect(await isGatherOSRunning(exec(1))).toBe(false)
   })
 
-  it('noms refusés (option, motif, vide)', async () => {
+  it('names rejected (option, pattern, empty)', async () => {
     for (const bad of ['', '-f', 'a|b', '.*', 'x'.repeat(80), 'a\nb']) {
       expect(isSafeProcessName(bad)).toBe(false)
     }
     await expect(isProcessRunning('-f')).rejects.toThrow()
   })
 
-  it('vrai pgrep : node (ce processus) tourne, un nom improbable non', async () => {
+  it('real pgrep: node (this process) is running, an improbable name is not', async () => {
     expect(await isProcessRunning('node')).toBe(true)
     expect(await isProcessRunning('recolt-inexistant-42')).toBe(false)
   })
 })
 
 describe('trash', () => {
-  it('présents → corbeille ; absents → missing ; échec → failed ; relatifs refusés', async () => {
+  it('present → trash; absent → missing; failure → failed; relative paths rejected', async () => {
     const dir = join(tmp.dir, 'trash')
     mkdirSync(dir)
     const a = join(dir, 'a.jpg')
@@ -248,9 +248,9 @@ describe('trash', () => {
   })
 })
 
-describe('trash : erreurs de lstat', () => {
-  it('EACCES (dossier parent sans droit de parcours) → failed, pas missing', async () => {
-    if (process.getuid?.() === 0) return // root traverse les dossiers : pas de EACCES à produire
+describe('trash: lstat errors', () => {
+  it('EACCES (parent folder without traverse permission) → failed, not missing', async () => {
+    if (process.getuid?.() === 0) return // root traverses folders: no EACCES to produce
     const dir = join(tmp.dir, 'locked')
     mkdirSync(dir, { recursive: true })
     const target = join(dir, 'secret.jpg')

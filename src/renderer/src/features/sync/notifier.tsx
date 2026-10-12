@@ -1,7 +1,7 @@
 /**
- * Pilules de la sync : « 3 nouveaux favoris X » quand une synchro ajoute des
- * éléments, « N publications plus anciennes récupérées · Revoir » après un backfill (revue en lot).
- * Branché une fois à la racine (`App.tsx`) ; rien au premier état reçu (pas de rejeu au lancement).
+ * Sync pills: "3 new X favorites" when a sync adds items,
+ * "N older posts retrieved · Review" after a backfill (batch review).
+ * Wired once at the root (`App.tsx`); nothing on the first state received (no replay at launch).
  */
 import { createRoot, type Root } from 'react-dom/client'
 import type { SyncStatus } from '../../../../shared/dto/sync'

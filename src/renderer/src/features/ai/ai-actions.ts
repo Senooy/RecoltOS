@@ -1,6 +1,6 @@
 /**
- * Actions IA réutilisées par le panneau Détails et le menu contextuel. Sans moteur ou sans
- * consentement, on ouvre la feuille « Changer » au lieu d'appeler.
+ * AI actions shared by the Details panel and the context menu. Without an engine or without
+ * consent, the "Change" sheet opens instead of calling.
  */
 import type { AiField } from '../../../../shared/ai-types'
 import { toast } from '../../components/ui'

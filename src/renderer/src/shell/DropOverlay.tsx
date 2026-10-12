@@ -1,8 +1,8 @@
 /**
- * Calque de dépôt : SEUL gestionnaire `drop` de la fenêtre. Fichiers et dossiers
- * venus de l'extérieur → `ingest.files` (chemins via `recolt.pathForFile`, dossiers parcourus par
- * main), lien d'un navigateur → `ingest.url` ; rapport « N ajoutés · M doublons · 0 échec ».
- * Ignoré pendant un glisser interne (`ui.internalDrag`) et dans l'éditeur d'espace.
+ * Drop layer: the ONLY `drop` handler of the window. Files and folders
+ * coming from outside → `ingest.files` (paths via `recolt.pathForFile`, folders walked by
+ * main), browser link → `ingest.url`; report « N added · M duplicates · 0 failed ».
+ * Ignored during an internal drag (`ui.internalDrag`) and in the space editor.
  */
 import { Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'

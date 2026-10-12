@@ -1,23 +1,23 @@
 /*
- * Étagère 3D des collections : tranches verticales en perspective, côté droit
- * le plus proche ; la face s'assombrit vers ce côté, juste avant un liseré clair de 6 px.
+ * 3D shelf of collections: vertical slices in perspective, right side
+ * the closest; the face darkens towards this side, just before a 6 px light edge.
  *
- * Géométrie (perspective 1400 / -62° donnait des tranches deux fois trop étroites) : arête proche de
- * la couverture i à x = 274 + 122·i pt, haut à 172 pt ; arête éloignée de « Gaming » à ≈ 99 pt et
- * 227 pt de haut ; d'où perspective 800 px centrée, face 410×700, rotateY(-35deg).
+ * Geometry (perspective 1400 / -62° gave slices twice too narrow): near edge of
+ * cover i at x = 274 + 122·i pt, top at 172 pt; far edge of « Gaming » at ≈ 99 pt and
+ * 227 pt high; hence perspective 800 px centred, face 410×700, rotateY(-35deg).
  *
- * Entrée : le fond passe de `--bg` au noir pendant que les tranches TOMBENT
- * du haut de la fenêtre, une à une de gauche à droite (`--i` × 45 ms, plafonné), avec un léger
- * rebond (≈ 10 px) à l'arrivée ; libellés et contour « Nouvelle collection » suivent leur tranche.
- * L'animation porte sur les feuilles (face, libellé) : une opacité < 1 sur un parent `preserve-3d`
- * l'aplatirait, et la propriété `translate` (appliquée avant `transform`, en repère écran) laisse
- * intacte la chaîne rotateY / survol.
+ * Entry: the background goes from `--bg` to black while the slices FALL
+ * from the top of the window, one by one from left to right (`--i` × 45 ms, capped), with a slight
+ * bounce (≈ 10 px) on arrival; labels and the « Nouvelle collection » outline follow their slice.
+ * The animation applies to the leaves (face, label): an opacity < 1 on a `preserve-3d` parent
+ * would flatten it, and the `translate` property (applied before `transform`, in screen space) leaves
+ * the rotateY / hover chain intact.
  *
- * Survol / focus : la tranche sort vers le spectateur DANS SON PROPRE AXE, comme un livre qu'on tire :
- * translation appliquée après la rotateY (repère local de la face), sans changer d'angle. Calée sur
- * les mesures de l'original à 1280×820 : haut ≈ +26 px vers le haut, arête proche ≈ +73 px vers la
- * droite (elle déborde sur la voisine) ; le voile sombre s'efface, le libellé passe en blanc gras.
- * Les voisines ne bougent pas.
+ * Hover / focus: the slice comes out towards the viewer ALONG ITS OWN AXIS, like a book being pulled out:
+ * translation applied after the rotateY (local frame of the face), without changing the angle. Calibrated on
+ * the original's measurements at 1280×820: top ≈ +26 px upwards, near edge ≈ +73 px towards the
+ * right (it overflows onto the neighbour); the dark veil fades, the label turns white bold.
+ * Neighbours do not move.
  */
 @keyframes shelf-drop {
   0% {
@@ -85,7 +85,7 @@
   background: #111;
   transform-origin: 100% 50%;
   transform: rotateY(-35deg);
-  /* Le clic se fait sur le créneau plat de 122 px (= segment visible) : pas de test 3D. */
+  /* The click happens on the flat 122 px slot (= visible segment): no 3D test. */
   pointer-events: none;
   transition: transform 220ms var(--ease-out);
 }
@@ -124,7 +124,7 @@
 .shelf-cover:hover .cover-face,
 .shelf-cover:focus-visible .cover-face,
 .shelf-cover[data-active='1'] .cover-face {
-  /* Même angle qu'au repos : seule une translation locale (le long de la face) la fait ressortir. */
+  /* Same angle as at rest: only a local translation (along the face) makes it come out. */
   transform: rotateY(-35deg) translate3d(88px, 0, 34px);
 }
 .shelf-cover:hover .cover-face::before,
@@ -174,7 +174,7 @@
   font-size: 11px;
   line-height: 14px;
 }
-/* Mouvement réduit : survol instantané, entrée en simple fondu commun (sans descente ni décalage). */
+/* Reduced motion: instant hover, simple shared fade-in (without descent or offset). */
 @media (prefers-reduced-motion: reduce) {
   .cover-face,
   .cover-face::before {

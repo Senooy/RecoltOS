@@ -1,14 +1,14 @@
 /**
- * Conversions de couleur CIELAB D65. Sans dépendance.
+ * CIELAB D65 colour conversions. No dependencies.
  */
 
 export type Rgb = readonly [number, number, number]
 export type Lab = readonly [number, number, number]
 export type Lch = readonly [number, number, number]
 
-/** Seuil de chroma sous lequel une couleur est « neutre » (bucket 12). */
+/** Chroma threshold below which a colour is "neutral" (bucket 12). */
 export const NEUTRAL_CHROMA = 12
-/** Bucket « inconnu » (aucune palette), trié en fin. */
+/** "Unknown" bucket (no palette), sorted last. */
 export const UNKNOWN_BUCKET = 13
 export const NEUTRAL_BUCKET = 12
 
@@ -73,7 +73,7 @@ export function labToRgb([l, a, bb]: Lab): Rgb {
 export const hexToLab = (hex: string): Lab => rgbToLab(hexToRgb(hex))
 export const labToHex = (lab: Lab): string => rgbToHex(labToRgb(lab))
 
-/** LCh : C = chroma, H = teinte en degrés [0, 360). */
+/** LCh: C = chroma, H = hue in degrees [0, 360). */
 export function labToLch([l, a, b]: Lab): Lch {
   const c = Math.hypot(a, b)
   let h = (Math.atan2(b, a) * 180) / Math.PI
@@ -81,17 +81,17 @@ export function labToLch([l, a, b]: Lab): Lch {
   return [l, c, h]
 }
 
-/** ΔE76 (distance euclidienne Lab) : fusion k-means. Le filtre utilise ΔE2000. */
+/** ΔE76 (Euclidean distance in Lab): k-means merging. The filter uses ΔE2000. */
 export function deltaE76(p: Lab, q: Lab): number {
   return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])
 }
 
-/** Décalage des secteurs de teinte : les rouges (≈ 350–20°) ne sont plus coupés en deux. */
+/** Hue sector offset: reds (≈ 350–20°) are no longer split in two. */
 export const HUE_OFFSET = 15
 
 /**
- * Bucket de tri couleur : 0..11 teinte par secteurs de 30° décalés de 15° (0 = rouges de 345° à
- * 15°, 1 = rouge-orangé…), 12 neutre (C < 12), 13 inconnu. Migration `0002` recalcule l'existant.
+ * Colour sort bucket: 0..11 hue by 30° sectors offset by 15° (0 = reds from 345° to 15°,
+ * 1 = red-orange…), 12 neutral (C < 12), 13 unknown. Migration `0002` recomputes existing values.
  */
 export function hueBucket(lch: Lch | null | undefined): number {
   if (!lch) return UNKNOWN_BUCKET
@@ -103,10 +103,10 @@ export function hueBucket(lch: Lch | null | undefined): number {
 
 export interface NamedColor {
   id: string
-  /** Libellé FR (pastilles du filtre). */
+  /** French label (filter chips). */
   label: string
   hex: string
-  /** Centre Lab D65 constant (dérivé de `hex`). */
+  /** Constant Lab D65 centre (derived from `hex`). */
   lab: Lab
 }
 
@@ -117,7 +117,7 @@ const named = (id: string, label: string, hex: string): NamedColor => ({
   lab: hexToLab(hex),
 })
 
-/** 12 couleurs nommées du filtre, du rouge au rose puis neutres. */
+/** 12 named filter colours, from red to pink, then neutrals. */
 export const NAMED_COLORS: readonly NamedColor[] = [
   named('rouge', 'Rouge', '#e0312b'),
   named('orange', 'Orange', '#f2862a'),
@@ -133,5 +133,5 @@ export const NAMED_COLORS: readonly NamedColor[] = [
   named('blanc', 'Blanc', '#f4f4f4'),
 ]
 
-/** Tolérance par défaut du filtre couleur (ΔE2000). */
+/** Default tolerance of the colour filter (ΔE2000). */
 export const DEFAULT_COLOR_TOLERANCE = 18

@@ -1,13 +1,13 @@
 /// <reference types="vite/client" />
 /**
- * Migrations SQLite. Les fichiers `migrations/NNNN_nom.sql` sont embarqués au build par
- * `import.meta.glob(…, { query: '?raw' })` et appliqués dans l'ordre. `PRAGMA user_version` = numéro de
- * la dernière migration appliquée (posé ici, jamais dans le fichier SQL).
+ * SQLite migrations. The `migrations/NNNN_nom.sql` files are embedded at build time by
+ * `import.meta.glob(…, { query: '?raw' })` and applied in order. `PRAGMA user_version` = number of
+ * the last applied migration (set here, never in the SQL file).
  *
- * Avant toute migration d'une base NON vide : `VACUUM INTO 'snapshots/recolt-<ts>-pre-v<N>.db'`
- * (hors transaction). Chaque migration s'exécute dans sa propre transaction : un échec annule la
- * migration en cours et laisse `user_version` inchangé.
- * Pas d'import `electron` (testable sous Node).
+ * Before any migration of a NON-empty database: `VACUUM INTO 'snapshots/recolt-<ts>-pre-v<N>.db'`
+ * (outside any transaction). Each migration runs in its own transaction: a failure rolls back the
+ * current migration and leaves `user_version` unchanged.
+ * No `electron` import (testable under Node).
  */
 import type Database from 'better-sqlite3'
 import fs from 'node:fs'
@@ -23,7 +23,7 @@ export interface Migration {
 
 const FILE_RE = /^(\d{4})_([a-z0-9_-]+)\.sql$/
 
-/** Analyse les fichiers `{ chemin: contenu }` en migrations triées et contiguës (1, 2, 3…). */
+/** Parses `{ path: content }` files into sorted, contiguous migrations (1, 2, 3…). */
 export function parseMigrations(files: Record<string, string>): Migration[] {
   const out: Migration[] = []
   for (const [file, sql] of Object.entries(files)) {
@@ -43,7 +43,7 @@ export function parseMigrations(files: Record<string, string>): Migration[] {
 
 let bundled: Migration[] | null = null
 
-/** Migrations embarquées (`src/main/db/migrations/*.sql`). */
+/** Embedded migrations (`src/main/db/migrations/*.sql`). */
 export function bundledMigrations(): Migration[] {
   bundled ??= parseMigrations(
     import.meta.glob<string>('./migrations/*.sql', {
@@ -55,7 +55,7 @@ export function bundledMigrations(): Migration[] {
   return bundled
 }
 
-/** `YYYYMMDD-HHmmss` en heure locale (noms de snapshots). */
+/** `YYYYMMDD-HHmmss` in local time (snapshot names). */
 export function snapshotStamp(at: number): string {
   const d = new Date(at)
   const p = (n: number) => String(n).padStart(2, '0')
@@ -65,7 +65,7 @@ export function snapshotStamp(at: number): string {
   )
 }
 
-/** Chemin libre `snapshots/recolt-<stamp>-<raison>.db` (suffixe `-2`, `-3`… si collision). */
+/** Free path `snapshots/recolt-<stamp>-<reason>.db` (suffix `-2`, `-3`… on collision). */
 export function snapshotPath(dir: string, reason: string, at: number): string {
   const base = `recolt-${snapshotStamp(at)}-${reason}`
   let candidate = path.join(dir, `${base}.db`)
@@ -73,14 +73,14 @@ export function snapshotPath(dir: string, reason: string, at: number): string {
   return candidate
 }
 
-/** Copie cohérente de la base (`VACUUM INTO`, ne bloque pas les lecteurs en WAL). */
+/** Consistent copy of the database (`VACUUM INTO`, does not block WAL readers). */
 export function vacuumInto(db: Database.Database, target: string): void {
   fs.mkdirSync(path.dirname(target), { recursive: true })
   db.prepare('VACUUM INTO ?').run(target)
 }
 
 export interface MigrateOptions {
-  /** Dossier des snapshots `-pre-vN` ; sans lui, aucune copie n'est faite. */
+  /** Folder for the `-pre-vN` snapshots; without it, no copy is made. */
   snapshotsDir?: string
   migrations?: Migration[]
   now?: () => number
@@ -132,8 +132,8 @@ export function migrate(db: Database.Database, opts: MigrateOptions = {}): Migra
 }
 
 /**
- * En-tête optionnel d'une migration : `-- recolt:foreign_keys=off` (ligne seule). Il permet la
- * procédure (créer, copier, supprimer, renommer) sans cascade sur les tables filles.
+ * Optional migration header: `-- recolt:foreign_keys=off` (on its own line). It allows the
+ * procedure (create, copy, drop, rename) without cascading to child tables.
  */
 const FK_OFF_HEADER = /^--\s*recolt:foreign_keys\s*=\s*off\s*$/im
 
@@ -142,10 +142,10 @@ export function needsForeignKeysOff(sql: string): boolean {
 }
 
 /**
- * `PRAGMA foreign_keys` est sans effet dans une transaction : la migration est donc appliquée
- * hors transaction avec les clés désactivées, puis `foreign_key_check` valide l'ensemble dans une
- * transaction (échec = retour arrière, `user_version` inchangé). Les clés sont rétablies dans
- * tous les cas, à leur valeur d'origine.
+ * `PRAGMA foreign_keys` has no effect inside a transaction: the migration is therefore applied
+ * outside a transaction with keys disabled, then `foreign_key_check` validates everything in a
+ * transaction (failure = rollback, `user_version` unchanged). Keys are restored in
+ * all cases, to their original value.
  */
 function applyWithForeignKeysOff(db: Database.Database, mig: Migration): void {
   const previous = db.pragma('foreign_keys', { simple: true }) as number

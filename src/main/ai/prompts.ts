@@ -1,15 +1,16 @@
 /**
- * Prompts exacts, figés par snapshots (`tests/unit/ai/prompts.test.ts`).
- * Claude reçoit les chemins absolus des JPEG (outil Read) ; Codex reçoit les images par `-i` et
- * la formule « jointe(s) ». Légendes ≤ 600 caractères (≤ 1200 pour un post texte), post cité ≤ 600.
+ * Exact prompts, frozen by snapshots (`tests/unit/ai/prompts.test.ts`).
+ * Claude receives the absolute paths of the JPEGs (Read tool); Codex receives the images via `-i`
+ * and the "jointe(s)" (attached) wording. Captions ≤ 600 characters (≤ 1200 for a text post),
+ * quoted post ≤ 600.
  */
 import type { AiCliId, AiField, AiInput } from '../../shared/ai-types'
 import { AI_FIELDS } from '../../shared/ai-types'
 import { getLang, type Lang } from '../../shared/i18n/lang'
 
 /**
- * Langue de SORTIE demandée au modèle (titre, description, tags) : celle de l'interface. Les
- * consignes restent en français ; seule la langue demandée change (« en anglais »).
+ * OUTPUT language requested from the model (title, description, tags): that of the interface.
+ * The instructions stay in French; only the requested language changes (« en anglais »).
  */
 const OUTPUT_LANG: Record<Lang, string> = { fr: 'français', en: 'anglais' }
 
@@ -22,7 +23,7 @@ Règles :
 4. Langue de sortie : français, sauf pour le champ « ocr » (langue d'origine du texte).
 5. Reste factuel : n'identifie pas de personnes réelles d'après leur visage et n'invente aucune information non visible.`
 
-/** Prompt système pour la langue de sortie `lang` (identique à `SYSTEM_FR` en français). */
+/** System prompt for the output language `lang` (identical to `SYSTEM_FR` in French). */
 export function systemPrompt(lang: Lang = getLang()): string {
   return lang === 'fr'
     ? SYSTEM_FR
@@ -35,7 +36,7 @@ export const PAGE_TITLE_MAX = 120
 export const RETRY_SUFFIX =
   "Ta réponse précédente n'était pas un JSON valide. Réponds uniquement par l'objet JSON."
 
-/** Tronque à `n` caractères (graphèmes simples) avec « … », espaces normalisés. */
+/** Truncates to `n` characters (simple graphemes) with « … », whitespace normalized. */
 export function clip(s: string, n: number): string {
   const t = s.replace(/\s+/g, ' ').trim()
   const chars = [...t]
@@ -62,7 +63,7 @@ function nums(ns: number[]): string {
   return `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}`
 }
 
-/** Bloc INTRO. */
+/** INTRO block. */
 export function introBlock(input: AiInput, provider: AiCliId): string {
   const paths = input.media.map((m) => m.path)
   const n = paths.length
@@ -108,7 +109,7 @@ export function introBlock(input: AiInput, provider: AiCliId): string {
   }
 }
 
-/** Bloc CONTEXTE (lignes vides omises). */
+/** CONTEXT block (empty lines omitted). */
 export function contextBlock(input: AiInput): string {
   const c = input.context
   const lines: string[] = []
@@ -157,9 +158,9 @@ const CONSIGNES: Record<AiField, (vocabulary: string[], lang: Lang) => string> =
 
 export interface PromptOptions {
   fields?: readonly AiField[]
-  /** 2ᵉ essai après une sortie invalide. */
+  /** 2nd attempt after invalid output. */
   retry?: boolean
-  /** Langue de sortie (défaut : langue de l'interface). */
+  /** Output language (default: interface language). */
   lang?: Lang
 }
 
@@ -180,7 +181,7 @@ export function buildAnalyzePrompt(
   return blocks.filter((b) => b !== '').join('\n\n')
 }
 
-/** Prompt « prompt d'image », à la demande uniquement, sur la première image. */
+/** "Image prompt" prompt, on demand only, on the first image. */
 export function buildImagePromptPrompt(
   input: AiInput,
   provider: AiCliId,
@@ -202,7 +203,7 @@ export function buildImagePromptPrompt(
   return lines.join('\n')
 }
 
-/** Nombre de caractères de texte envoyés (prompt système + prompt). */
+/** Number of text characters sent (system prompt + prompt). */
 export function sentTextChars(system: string, prompt: string): number {
   return [...system].length + [...prompt].length
 }

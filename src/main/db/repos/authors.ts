@@ -1,7 +1,7 @@
 /**
- * Repo `authors` : cache d'avatars partagé. Une sync ou l'extension qui rapporte une
- * nouvelle `avatar_url` met à jour UNE ligne ; toutes les cartes de l'auteur en profitent.
- * `handle` sans `@`, unique par plateforme (insensible à la casse).
+ * `authors` repo: shared avatar cache. A sync or the extension reporting a new `avatar_url`
+ * updates ONE row; all of the author's cards benefit.
+ * `handle` without `@`, unique per platform (case-insensitive).
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../../shared/errors'
@@ -30,7 +30,7 @@ export interface AuthorInput {
   sampleExternalId?: string | null
 }
 
-/** Retire les `@` initiaux et les espaces. */
+/** Removes leading `@` and spaces. */
 export function normalizeHandle(handle: string): string {
   return handle.trim().replace(/^@+/, '').trim()
 }
@@ -39,8 +39,8 @@ export function createAuthorsRepo(db: Database.Database, opts: RepoOptions = {})
   const { q, now } = repoBase(db, opts)
   return {
     /**
-     * Crée ou complète un auteur. Une nouvelle `avatar_url` différente remet le statut à `none`
-     * (nouveau téléchargement) sauf si l'avatar actuel est valide (`ok`, rafraîchi plus tard).
+     * Creates or completes an author. A new, different `avatar_url` resets the status to `none`
+     * (new download) unless the current avatar is valid (`ok`, refreshed later).
      */
     upsert(a: AuthorInput, at: number = now()): number {
       const handle = normalizeHandle(a.handle)
@@ -69,7 +69,7 @@ export function createAuthorsRepo(db: Database.Database, opts: RepoOptions = {})
       return row.id
     },
 
-    /** Résultat d'un `avatar.fetch` : `updated_at` sert de `?v=` (cache du protocole). */
+    /** Result of an `avatar.fetch`: `updated_at` serves as `?v=` (protocol cache). */
     setAvatar(id: number, status: AvatarStatus, rel: string | null, at: number = now()): boolean {
       return (
         q(
@@ -88,7 +88,7 @@ export function createAuthorsRepo(db: Database.Database, opts: RepoOptions = {})
         normalizeHandle(handle),
       ) as AuthorRow | undefined
     },
-    /** Auteurs à (re)télécharger : URL connue et statut `none` ou `expired`. */
+    /** Authors to (re)download: known URL and status `none` or `expired`. */
     needingAvatar(limit = 100): AuthorRow[] {
       return q(
         `SELECT * FROM authors WHERE avatar_url IS NOT NULL

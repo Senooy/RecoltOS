@@ -26,7 +26,7 @@ function spied(): Spied {
 const video = (): HTMLVideoElement => spied().v
 
 describe('video-guard', () => {
-  it('releaseVideo : pause, retire src, load()', () => {
+  it('releaseVideo: pause, remove src, load()', () => {
     const { v, pause, load } = spied()
     releaseVideo(v)
     expect(pause).toHaveBeenCalled()
@@ -34,14 +34,14 @@ describe('video-guard', () => {
     expect(load).toHaveBeenCalled()
   })
 
-  it('pauseVideo ne libère pas le flux', () => {
+  it('pauseVideo does not release the stream', () => {
     const { v, pause } = spied()
     pauseVideo(v)
     expect(pause).toHaveBeenCalled()
     expect(v.hasAttribute('src')).toBe(true)
   })
 
-  it('releaseDetached : libère seulement si l’élément est sorti du document', async () => {
+  it('releaseDetached: releases only if the element has left the document', async () => {
     const attached = video()
     document.body.append(attached)
     const detached = video()
@@ -53,7 +53,7 @@ describe('video-guard', () => {
     attached.remove()
   })
 
-  it('mustStayQuiet : son interdit hors du Viewer ou pendant sa fermeture', () => {
+  it('mustStayQuiet: sound forbidden outside the Viewer or while it closes', () => {
     const root = document.createElement('div')
     root.dataset.testid = 'detail'
     const inside = video()

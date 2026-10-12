@@ -1,7 +1,7 @@
 /**
- * « Ouvrir avec RecoltOS » / dépôt sur l'icône du Dock : les chemins reçus par
- * `open-file` (mis en file AVANT `ready` par `bootstrap/pre-ready.ts`) sont regroupés 250 ms, la
- * fenêtre est recréée si elle a été fermée, puis importés ; un seul élément → vue détail.
+ * "Open with RecoltOS" / drop on the Dock icon: paths received by
+ * `open-file` (queued BEFORE `ready` by `bootstrap/pre-ready.ts`) are grouped for 250 ms, the
+ * window is recreated if it was closed, then imported; a single item → detail view.
  */
 import type { IngestReport } from '../../shared/dto/items'
 
@@ -43,7 +43,7 @@ export function createOpenFileBatcher(deps: OpenFileDeps, delayMs = OPEN_FILE_BA
         chain = chain.then(flush)
       }, delayMs)
     },
-    /** Attente de la fin du lot courant (tests). */
+    /** Waits for the end of the current batch (tests). */
     idle: () => chain,
   }
 }

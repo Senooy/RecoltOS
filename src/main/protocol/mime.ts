@@ -1,7 +1,7 @@
 /**
- * Type MIME servi par `recolt://`, d'après l'extension (les fichiers de la bibliothèque sont nommés
- * par main : `<uuid>.<ext>`, extension déjà typée à l'ingestion). Inconnu : `application/octet-stream`
- * (avec `nosniff`, le navigateur ne devine rien).
+ * MIME type served by `recolt://`, based on the extension (library files are named
+ * by main: `<uuid>.<ext>`, extension already typed at ingestion). Unknown: `application/octet-stream`
+ * (with `nosniff`, the browser guesses nothing).
  */
 import path from 'node:path'
 

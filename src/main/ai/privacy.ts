@@ -1,7 +1,7 @@
 /**
- * Confidentialité : description de ce qui part réellement (fichiers, nombre de caractères,
- * empreinte du prompt) et aperçu avant envoi (JPEG exacts en data URL, prompt complet).
- * Les chemins locaux ne sont jamais exposés : seul le nom `imgN.jpg` du dossier de job l'est.
+ * Privacy: describes what is actually sent (files, number of characters, prompt fingerprint)
+ * and previews it before sending (exact JPEGs as data URLs, full prompt).
+ * Local paths are never exposed: only the `imgN.jpg` name in the job folder is.
  */
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'

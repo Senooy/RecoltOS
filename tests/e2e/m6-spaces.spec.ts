@@ -1,9 +1,9 @@
 /**
- * M6 : état vide → créer un space ; note (outil N), annuler / rétablir,
- * glisser une vignette du tiroir, rechargement → persistance ; 3 fichiers déposés → 3 nœuds image ;
- * éditer une note puis fermer la fenêtre AUSSITÔT → texte en base et après réouverture ; 3 000
- * nœuds déplacés puis rechargés, 1 nœud invalide isolé avec toast ; coller une note contenant une
- * URL → une note ; « Ajouter à un space › » met à jour la vignette de liste ; export PNG.
+ * M6: empty state → create a space; note (N tool), undo / redo,
+ * dragging a thumbnail from the drawer, reload → persistence; 3 files dropped → 3 image nodes;
+ * edit a note then close the window IMMEDIATELY → text in the DB and after reopening; 3,000
+ * nodes moved then reloaded, 1 invalid node isolated with a toast; paste a note containing a
+ * URL → a note; « Ajouter à un space › » updates the list thumbnail; PNG export.
  */
 import fs from 'node:fs'
 import os from 'node:os'
@@ -36,7 +36,7 @@ async function createSpaceViaCta(page: Page): Promise<string> {
   await expect(page.locator(t('space-empty-cta'))).toBeVisible()
   await page.locator(t('space-empty-cta')).click()
   await expect(page.locator(t('space-viewport'))).toBeVisible()
-  // Le titre est en édition : on le nomme.
+  // The title is in edit mode: name it.
   const input = page.locator(t('collection-title-input'))
   await expect(input).toBeVisible()
   await input.fill('Moodboard')
@@ -66,14 +66,11 @@ async function dbNodes(app: ElectronApplication, page: Page, uuid: string) {
 test.describe('spaces', () => {
   test.use({ demoLibrary: { count: 12, collections: 2 } })
 
-  test('créer, note, annuler/rétablir, tiroir, recharger, fichiers déposés', async ({
-    app,
-    page,
-  }) => {
+  test('create, note, undo/redo, drawer, reload, dropped files', async ({ app, page }) => {
     const uuid = await createSpaceViaCta(page)
     const c = await viewportCenter(page)
 
-    // Note : outil N puis clic ; frappe ; clic sur le vide pour valider.
+    // Note: N tool then click; type; click on empty space to confirm.
     await page.keyboard.press('n')
     await page.mouse.click(c.x - 200, c.y - 100)
     const editor = page.locator(t('note-editor'))
@@ -83,7 +80,7 @@ test.describe('spaces', () => {
     await expect(page.locator('.space-node[data-type="note"]')).toContainText('Idée de couverture')
     await expect.poll(async () => (await dbNodes(app, page, uuid)).length).toBe(1)
 
-    // Annuler la saisie puis la création ; rétablir.
+    // Undo the typing, then the creation; redo.
     await page.keyboard.press('Meta+z')
     await expect(page.locator('.space-node[data-type="note"]')).not.toContainText('Idée')
     await page.keyboard.press('Meta+z')
@@ -92,7 +89,7 @@ test.describe('spaces', () => {
     await page.keyboard.press('Meta+Shift+z')
     await expect(page.locator('.space-node[data-type="note"]')).toContainText('Idée de couverture')
 
-    // Tiroir : glisser une vignette sur la toile (DnD simulé avec le type interne).
+    // Drawer: drag a thumbnail onto the canvas (DnD simulated with the internal type).
     await page.locator(t('tool-library')).click()
     const card = page.locator(t('drawer-card')).first()
     await expect(card).toBeVisible()
@@ -122,7 +119,7 @@ test.describe('spaces', () => {
       '1',
     )
 
-    // 3 fichiers déposés depuis « un autre navigateur » (sans chemin) → 3 nœuds image.
+    // 3 files dropped from "another browser" (no path) → 3 image nodes.
     const pngs = await Promise.all(
       ['#d23c28', '#1e5aa0', '#28a050'].map(async (color) =>
         (await makeImage({ width: 120, height: 80, color, format: 'png' })).toString('base64'),
@@ -153,7 +150,7 @@ test.describe('spaces', () => {
     await expect(page.locator('.space-node[data-type="image"]')).toHaveCount(3)
     await expect.poll(async () => (await dbNodes(app, page, uuid)).length).toBe(5)
 
-    // Recharger la fenêtre : tout est là.
+    // Reload the window: everything is still there.
     await page.reload()
     await page.locator(t('seg-spaces')).click()
     await expect(page.locator(t('space-card'))).toHaveCount(1)
@@ -163,16 +160,13 @@ test.describe('spaces', () => {
     await expect(page.locator('.space-node[data-type="note"]')).toContainText('Idée de couverture')
   })
 
-  test('éditer une note puis fermer la fenêtre aussitôt : texte conservé', async ({
-    app,
-    page,
-  }) => {
+  test('edit a note then close the window right away: text kept', async ({ app, page }) => {
     const uuid = await createSpaceViaCta(page)
     const c = await viewportCenter(page)
     await page.keyboard.press('n')
     await page.mouse.click(c.x, c.y)
     await page.locator(t('note-editor')).pressSequentially('Ne pas perdre ce texte')
-    // Fermeture immédiate (⌘W / bouton rouge), sans quitter l'édition.
+    // Immediate close (⌘W / red button), without leaving edit mode.
     await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]!.close())
     await expect.poll(() => app.windows().length).toBe(0)
     const win = app.waitForEvent('window')
@@ -194,7 +188,7 @@ test.describe('spaces', () => {
     )
   })
 
-  test('3 000 nœuds déplacés puis rechargés ; 1 nœud invalide isolé', async ({ page }) => {
+  test('3,000 nodes moved then reloaded; 1 invalid node isolated', async ({ page }) => {
     test.setTimeout(120_000)
     const created = await invoke<{ uuid: string }>(page, 'spaces.create', { name: 'Gros' })
     const uuid = created.data.uuid
@@ -238,7 +232,7 @@ test.describe('spaces', () => {
       .toBe(3000)
     await page.keyboard.press('Shift+ArrowRight')
     await page.keyboard.press('ArrowDown')
-    // Un nœud invalide (largeur < 24) injecté hors des chemins de l'app : refusé par le main.
+    // An invalid node (width < 24) injected outside the app's paths: rejected by main.
     await page.evaluate(() => {
       const s = (window as unknown as { __recoltSpaces: SpacesHook }).__recoltSpaces
       const st = s.useSpace.getState()
@@ -266,7 +260,7 @@ test.describe('spaces', () => {
     }
   })
 
-  test('coller une note contenant une URL recolle une note ; ajouter à un space depuis la grille', async ({
+  test('pasting a note containing a URL pastes a note; add to a space from the grid', async ({
     app,
     page,
   }) => {
@@ -286,7 +280,7 @@ test.describe('spaces', () => {
     await expect(page.locator('.space-node[data-type="text"]')).toHaveCount(0)
     await app.evaluate(({ clipboard }, s) => clipboard.writeText(s), saved)
 
-    // « Ajouter à un space › » depuis la grille : la vignette de liste reflète l'ajout.
+    // « Ajouter à un space › » from the grid: the list thumbnail reflects the addition.
     await page.locator(t('seg-library')).click()
     const card = page.locator(`${t('grid')} ${t('card')}`).first()
     await card.click({ button: 'right' })
@@ -299,7 +293,7 @@ test.describe('spaces', () => {
     ).toHaveCount(1)
   })
 
-  test('export PNG valide (signature, dimensions)', async ({ app, page }) => {
+  test('valid PNG export (signature, dimensions)', async ({ app, page }) => {
     test.setTimeout(90_000)
     const created = await invoke<{ uuid: string }>(page, 'spaces.create', { name: 'Export' })
     const uuid = created.data.uuid
@@ -339,7 +333,7 @@ test.describe('spaces', () => {
     expect(r.ok, r.error?.message).toBe(true)
     const buf = fs.readFileSync(out)
     expect(buf.subarray(0, 4).toString('hex')).toBe('89504e47')
-    // 1 600 × 1 100 unités monde + 2 × 48 de marge, à l'échelle 1.
+    // 1,600 × 1,100 world units + 2 × 48 margin, at scale 1.
     expect(buf.readUInt32BE(16)).toBe(1600 + 96)
     expect(buf.readUInt32BE(20)).toBe(1100 + 96)
     fs.rmSync(path.dirname(out), { recursive: true, force: true })

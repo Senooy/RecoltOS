@@ -17,7 +17,7 @@ describe('detectCli', () => {
     rmSync(home, { recursive: true, force: true })
   })
 
-  it('trouve un CLI installé dans un dossier ajouté au PATH par .zshrc (shell de login muet)', async () => {
+  it('finds a CLI installed in a folder added to PATH by .zshrc (silent login shell)', async () => {
     const dir = join(home, '.hermes/node/bin')
     mkdirSync(dir, { recursive: true })
     const bin = join(dir, 'claude')
@@ -34,7 +34,7 @@ describe('detectCli', () => {
     expect(found[0]?.version).toBe('2.1.300')
   })
 
-  it('liste les dossiers courants sous le HOME donné', () => {
+  it('lists the usual folders under the given HOME', () => {
     expect(fallbackDirs('/Users/x')).toContain('/Users/x/.hermes/node/bin')
     expect(fallbackDirs('/Users/x')).toContain('/Users/x/.local/bin')
   })

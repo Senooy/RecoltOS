@@ -1,4 +1,4 @@
-/** Contrat `tags.*`. Noms réservés `x`, `instagram`, `cosmos`, `bookmark` → `tag_reserved`. */
+/** `tags.*` contract. Reserved names `x`, `instagram`, `cosmos`, `bookmark` → `tag_reserved`. */
 import { z } from 'zod'
 import { SourceChip, TagInfo } from '../dto/collections'
 import { Uuid } from '../enums'
@@ -21,7 +21,7 @@ export const tagsContract = {
     input: z.object({ itemUuids: z.array(Uuid).min(1), tagUuids: z.array(Uuid).min(1) }),
     output: Count,
   },
-  /** « Nouveau tag » (Réglages › Tags) : tag sans élément ; nom existant → le tag existant. */
+  /** "New tag" (Settings › Tags): tag without items; existing name → the existing tag. */
   'tags.create': { input: z.object({ name: TagName }), output: TagInfo },
   'tags.rename': { input: z.object({ uuid: Uuid, name: TagName }), output: TagInfo },
   'tags.delete': { input: z.object({ uuid: Uuid }), output: Void },

@@ -1,7 +1,6 @@
 /**
- * Bibliothèque active : `{ id, root, paths, db, repos }`, et points d'accroche du
- * cycle de vie pour les autres domaines (workers, protocole, file de jobs).
- * Une seule bibliothèque est ouverte à la fois. Pas d'import `electron`.
+ * Active library: `{ id, root, paths, db, repos }`, and lifecycle hook points for the other
+ * domains (workers, protocol, job queue). Only one library is open at a time. No `electron` import.
  */
 import type Database from 'better-sqlite3'
 import { AppError } from '../../shared/errors'
@@ -20,20 +19,20 @@ export interface LibraryContext {
 }
 
 /**
- * Accroches de cycle de vie, enregistrées par les domaines dans leur `init.ts` :
- * - `afterOpen` : la bibliothèque vient d'être ouverte (démarrage, bascule, restauration) ;
- * - `pauseJobs` / `stopWorkers` : appelés par `closeLibrary` AVANT le checkpoint ;
- * - `startWorkers` / `resumeJobs` : relance après un `closeLibrary({forReplace})` annulé, ET après
- *   chaque bascule, repli ou `reopen()` réussi (le gestionnaire les appelle APRÈS `afterOpen`, dans
- *   l'ordre inverse d'enregistrement). Au démarrage (`open()`), seul `afterOpen` est appelé : il
- *   démarre les workers et la file. Les trois doivent donc être idempotents.
+ * Lifecycle hooks, registered by the domains in their `init.ts`:
+ * - `afterOpen`: the library has just been opened (startup, switch, restore);
+ * - `pauseJobs` / `stopWorkers`: called by `closeLibrary` BEFORE the checkpoint;
+ * - `startWorkers` / `resumeJobs`: restart after a cancelled `closeLibrary({forReplace})`, AND after
+ *   each successful switch, fallback or `reopen()` (the manager calls them AFTER `afterOpen`, in
+ *   reverse registration order). At startup (`open()`), only `afterOpen` is called: it
+ *   starts the workers and the queue. All three must therefore be idempotent.
  *
- * ATTENTION : ne mémorisez JAMAIS `ctx.db` ni `ctx.repos` (ni un statement préparé) au-delà de
- * l'appel ; relisez `requireLibrary()` à chaque usage. Après un `closeForReplace` annulé
- * (`wal_not_empty`), le gestionnaire remplace `ctx.db` et `ctx.repos` par une nouvelle connexion
- * (l'objet `ctx` reste le même) puis rappelle `afterOpen(ctx)` AVANT `startWorkers`/`resumeJobs` :
- * un `afterOpen` doit donc pouvoir être rappelé pour la même bibliothèque et remplacer ce qu'il avait
- * gardé. Une connexion mémorisée avant ce rappel est fermée.
+ * WARNING: NEVER keep `ctx.db` or `ctx.repos` (nor a prepared statement) beyond the
+ * call; re-read `requireLibrary()` at each use. After a cancelled `closeForReplace`
+ * (`wal_not_empty`), the manager replaces `ctx.db` and `ctx.repos` with a new connection
+ * (the `ctx` object stays the same) then calls `afterOpen(ctx)` again BEFORE `startWorkers`/`resumeJobs`:
+ * an `afterOpen` must therefore be callable again for the same library and replace what it had
+ * kept. A connection kept before this call is closed.
  */
 export interface LibraryLifecycle extends CloseHooks {
   afterOpen?(ctx: LibraryContext): void | Promise<void>
@@ -46,7 +45,7 @@ export function getActiveLibrary(): LibraryContext | null {
   return active
 }
 
-/** Bibliothèque active ou `AppError('library_unavailable')`. */
+/** Active library or `AppError('library_unavailable')`. */
 export function requireLibrary(): LibraryContext {
   if (!active) throw new AppError('library_unavailable', mt().errors.noLibrary)
   return active
@@ -56,7 +55,7 @@ export function setActiveLibrary(ctx: LibraryContext | null): void {
   active = ctx
 }
 
-/** Enregistre (ou remplace) les accroches d'un domaine ; renvoie la fonction de retrait. */
+/** Registers (or replaces) a domain's hooks; returns the unregister function. */
 export function registerLibraryLifecycle(domain: string, lc: LibraryLifecycle): () => void {
   lifecycles.set(domain, lc)
   return () => {
@@ -64,7 +63,7 @@ export function registerLibraryLifecycle(domain: string, lc: LibraryLifecycle): 
   }
 }
 
-/** Accroches agrégées, dans l'ordre d'enregistrement (relance : ordre inverse). */
+/** Aggregated hooks, in registration order (restart: reverse order). */
 export function aggregatedCloseHooks(): Required<CloseHooks> {
   const all = () => [...lifecycles.values()]
   return {
@@ -87,7 +86,7 @@ export async function runAfterOpen(ctx: LibraryContext): Promise<void> {
   for (const lc of lifecycles.values()) await lc.afterOpen?.(ctx)
 }
 
-/** Tests uniquement. */
+/** Tests only. */
 export function resetLibraryContextForTests(): void {
   active = null
   lifecycles.clear()

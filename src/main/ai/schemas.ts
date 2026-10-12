@@ -1,8 +1,7 @@
 /**
- * Schémas de sortie : JSON Schema STRICT envoyé aux CLI (`--json-schema`,
- * `--output-schema`) sans bornes (le mode strict d'OpenAI les refuse) ; bornes appliquées par zod
- * en TRONQUANT plutôt qu'en rejetant. Décodage tolérant du texte (clôtures, première accolade
- * équilibrée).
+ * Output schemas: STRICT JSON Schema sent to the CLIs (`--json-schema`,
+ * `--output-schema`) without bounds (OpenAI's strict mode rejects them); bounds applied by zod
+ * by TRUNCATING rather than rejecting. Tolerant text decoding (fences, first balanced brace).
  */
 import { z } from 'zod'
 import { AI_FIELDS, type AiField } from '../../shared/ai-types'
@@ -16,7 +15,7 @@ const FIELD_SCHEMA: Record<AiField, JsonSchema> = {
   ocr: { type: 'string' },
 }
 
-/** Schéma d'analyse (tous les champs, ou un sous-ensemble pour les boutons « Régénérer … »). */
+/** Analysis schema (all fields, or a subset for the "Regenerate …" buttons). */
 export function analysisSchema(fields: readonly AiField[] = AI_FIELDS): JsonSchema {
   const keep = AI_FIELDS.filter((f) => fields.includes(f))
   return {
@@ -51,7 +50,7 @@ export const AnalysisZ = z
   })
   .refine((v) => v.title !== '' || v.description !== '', 'réponse vide')
 
-/** Champ unique ou sous-ensemble : les champs absents valent `''` / `[]`. */
+/** Single field or subset: absent fields default to `''` / `[]`. */
 export function analysisZ(fields: readonly AiField[] = AI_FIELDS) {
   if (fields.length === AI_FIELDS.length) return AnalysisZ
   return z
@@ -83,21 +82,21 @@ export const ImagePromptZ = z
   .refine((v) => v.prompt !== '', 'réponse vide')
 
 /**
- * Décodage tolérant : retire les clôtures ```json, prend la première accolade équilibrée (en
- * respectant les chaînes). Renvoie `undefined` si rien n'est décodable.
+ * Tolerant decoding: strips ```json fences, takes the first balanced brace (respecting strings).
+ * Returns `undefined` if nothing can be decoded.
  */
 export function decodeTolerant(text: string): unknown {
   const t = text.trim()
   try {
     return JSON.parse(t)
   } catch {
-    // suite
+    // continue
   }
   const unfenced = t.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '')
   try {
     return JSON.parse(unfenced)
   } catch {
-    // suite
+    // continue
   }
   const start = unfenced.indexOf('{')
   if (start < 0) return undefined

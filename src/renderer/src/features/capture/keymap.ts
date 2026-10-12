@@ -1,7 +1,7 @@
 /**
- * Raccourci de capture depuis un `KeyboardEvent` : accélérateur **positionnel**
- * (construit depuis `e.code`, jamais `e.key`), libellé de la touche imprimée via `getLayoutMap()`.
- * Exemple AZERTY : la touche imprimée « A » est `KeyQ` → accélérateur `…+Q`, key cap « A ».
+ * Capture shortcut from a `KeyboardEvent`: **positional** accelerator
+ * (built from `e.code`, never `e.key`), label of the printed key via `getLayoutMap()`.
+ * AZERTY example: the printed key "A" is `KeyQ` → accelerator `…+Q`, key cap "A".
  */
 
 export interface KeyEventLike {
@@ -76,7 +76,7 @@ export function eventToAccelerator(
   return { accel: [...mods, key].join('+'), label }
 }
 
-/** Key caps affichés (⌘ ⇧ S). */
+/** Displayed key caps (⌘ ⇧ S). */
 export function accelToCaps(accel: string, label: string): string[] {
   const parts = accel.split('+')
   const mods = parts.slice(0, -1)
@@ -90,7 +90,7 @@ export function accelToCaps(accel: string, label: string): string[] {
   return caps
 }
 
-/** Code physique d'une touche d'accélérateur (« Q » → `KeyQ`), pour recalculer le libellé. */
+/** Physical code of an accelerator key ("Q" → `KeyQ`), to recompute the label. */
 export function accelKeyToCode(key: string): string | null {
   if (/^[A-Z]$/.test(key)) return `Key${key}`
   if (/^[0-9]$/.test(key)) return `Digit${key}`

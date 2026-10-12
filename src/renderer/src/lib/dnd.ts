@@ -1,15 +1,15 @@
 /**
- * Glisser natif unifié : `dragstart` → `preventDefault`
- * → canvas 128 px → PNG dataURL → `recolt.startDrag(uuids, dataUrl)`. Le drapeau
- * `ui.internalDrag` distingue un glisser interne d'un dépôt venu du Finder.
+ * Unified native drag: `dragstart` → `preventDefault`
+ * → 128 px canvas → PNG dataURL → `recolt.startDrag(uuids, dataUrl)`. The flag
+ * `ui.internalDrag` distinguishes an internal drag from a drop coming from the Finder.
  */
 import { useUi } from '../state/ui'
 
 export const DRAG_ICON_SIZE = 128
 
 /**
- * Icône PNG (dataURL) dessinée depuis la vignette affichée. L'image doit être servie avec
- * `Access-Control-Allow-Origin: *` et `crossOrigin="anonymous"` pour ne pas « teinter » le canvas.
+ * Icon PNG (dataURL) drawn from the displayed thumbnail. The image must be served with
+ * `Access-Control-Allow-Origin: *` and `crossOrigin="anonymous"` to avoid "tainting" the canvas.
  */
 export function dragIconFromImage(img: HTMLImageElement | null | undefined): string | undefined {
   if (!img || !img.complete || img.naturalWidth === 0) return undefined
@@ -25,11 +25,11 @@ export function dragIconFromImage(img: HTMLImageElement | null | undefined): str
     ctx.drawImage(img, (DRAG_ICON_SIZE - w) / 2, (DRAG_ICON_SIZE - h) / 2, w, h)
     return canvas.toDataURL('image/png')
   } catch {
-    return undefined // canvas teinté : main utilise drag-fallback.png
+    return undefined // tainted canvas: main uses drag-fallback.png
   }
 }
 
-/** À brancher sur `onDragStart` d'une carte (ou de la sélection). */
+/** To be wired to `onDragStart` of a card (or of the selection). */
 export function startCardDrag(
   e: { preventDefault(): void },
   uuids: string[],
@@ -41,7 +41,7 @@ export function startCardDrag(
   window.recolt?.startDrag(uuids, dragIconFromImage(img))
 }
 
-/** Nettoie `internalDrag` : drop (capture), premier `pointermove` sans bouton, focus, Échap. */
+/** Cleans up `internalDrag`: drop (capture), first `pointermove` without button, focus, Escape. */
 export function installInternalDragCleanup(target: Window = window): () => void {
   const clear = () => {
     if (useUi.getState().internalDrag) useUi.getState().clearInternalDrag()
@@ -53,7 +53,7 @@ export function installInternalDragCleanup(target: Window = window): () => void 
     if (e.key === 'Escape') clear()
   }
   const onDrop = () => {
-    // Laisse la cible interne lire `internalDrag` pendant son propre `drop`.
+    // Lets the internal target read `internalDrag` during its own `drop`.
     setTimeout(clear, 0)
   }
   target.addEventListener('drop', onDrop, true)
@@ -68,7 +68,7 @@ export function installInternalDragCleanup(target: Window = window): () => void 
   }
 }
 
-/** Gestionnaires d'une cible de dépôt interne (collection, toile, pilule). */
+/** Handlers of an internal drop target (collection, canvas, pill). */
 export function internalDropTarget(
   onDropIds: (uuids: string[]) => void,
   setActive?: (active: boolean) => void,
@@ -89,8 +89,8 @@ export function internalDropTarget(
       if (!ids) return
       e.preventDefault()
       onDropIds(ids)
-      // Effacé APRÈS la propagation : le calque de dépôt (écouteur `drop` de la fenêtre) lit encore
-      // `internalDrag` et n'importe pas les fichiers du glisser natif (`installInternalDragCleanup`).
+      // Cleared AFTER propagation: the drop layer (window `drop` listener) still reads
+      // `internalDrag` and does not import the files of the native drag (`installInternalDragCleanup`).
       setTimeout(() => useUi.getState().clearInternalDrag(), 0)
     },
   }

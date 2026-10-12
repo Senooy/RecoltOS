@@ -1,7 +1,7 @@
 /**
- * Carte du post source du panneau Détails : nom, handle, texte complet
- * sélectionnable, post cité imbriqué (vignettes de 64 px), fil séparé par des filets, pied
- * « x.com · 24 sept. 2026 » (date = `created_at`) et « Ouvrir ».
+ * Source post card of the Details panel: name, handle, full selectable text,
+ * nested quoted post (64 px thumbnails), thread separated by rules, footer
+ * "x.com · 24 Sep 2026" (date = `created_at`) and "Open".
  */
 import { ExternalLink } from 'lucide-react'
 import type { ItemDetail } from '../../../../shared/dto/items'
@@ -21,7 +21,7 @@ export function sourceHostOf(detail: Pick<ItemDetail, 'source' | 'sourceUrl'>): 
     try {
       return new URL(detail.sourceUrl).hostname.replace(/^www\./, '')
     } catch {
-      // lien invalide : repli sur la source
+      // invalid link: fall back to the source
     }
   }
   return HOSTS[detail.source] ?? null

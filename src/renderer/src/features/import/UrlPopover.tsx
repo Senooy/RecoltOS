@@ -1,6 +1,6 @@
 /**
- * `UrlPopover` : champ URL ancré au FAB, validation `new URL()` http(s), états
- * chargement / erreur « Impossible de récupérer cette page ».
+ * `UrlPopover`: URL field anchored to the FAB, `new URL()` http(s) validation, loading and
+ * error states ("could not fetch this page").
  */
 import { useState } from 'react'
 import { Button, Popover } from '../../components/ui'

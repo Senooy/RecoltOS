@@ -1,7 +1,7 @@
 /**
- * Format HTML marqué du presse-papiers interne des Spaces, pur et testable :
- * `<meta charset="utf-8"><span data-recolt-nodes="<base64(JSON)>" data-recolt-v="1"></span>` suivi
- * du texte échappé.
+ * Marked HTML format of the Spaces internal clipboard, pure and testable:
+ * `<meta charset="utf-8"><span data-recolt-nodes="<base64(JSON)>" data-recolt-v="1"></span>` followed
+ * by the escaped text.
  */
 
 const escapeHtml = (s: string) =>
@@ -14,7 +14,7 @@ export function encodeNodesHtml(nodesJson: string, text: string): string {
   return `<meta charset="utf-8"><span data-recolt-nodes="${b64}" data-recolt-v="1"></span>${escapeHtml(text)}`
 }
 
-/** JSON des nœuds si le HTML porte le marqueur (version 1), sinon `null`. */
+/** JSON of the nodes if the HTML carries the marker (version 1), otherwise `null`. */
 export function decodeNodesHtml(html: string): string | null {
   const m = /data-recolt-nodes="([A-Za-z0-9+/=]+)"/.exec(html)
   if (!m || !/data-recolt-v="1"/.test(html)) return null

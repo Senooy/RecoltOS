@@ -1,10 +1,10 @@
-/** Raccourci propre à un domaine UI (portée renderer). */
+/** Shortcut specific to a UI domain (renderer scope). */
 import type { KeyMatch, Modifiers } from '../../../../shared/shortcuts'
 
 export interface RendererShortcut {
   id: string
   label: string
   match: KeyMatch & Modifiers
-  /** Désactivé quand un champ éditable a le focus (défaut : vrai). */
+  /** Disabled when an editable field has focus (default: true). */
   ignoreInFields?: boolean
 }

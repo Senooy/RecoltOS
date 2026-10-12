@@ -1,11 +1,11 @@
 /**
- * Ingestion d'une page de sync : UNE transaction par page. Chaque publication
- * est classée (connue avec élément / connue sans élément / écartée / nouvelle), placée dans l'ordre
- * (`order.ts`), puis les nouvelles sont insérées : `items` (`post_meta` v1, `origin='sync'`,
- * `origin_id = source_key`), `item_media` en `remote` (téléchargés ensuite par l'app,
- * `media.download`), `authors`, `sync_items`, images citées (`remote.fetch`), avatars (`avatar.fetch`).
- * Règle d'arrêt de l'incrémental : page non vide entièrement connue ou écartée, ou 10 connues
- * consécutives. `backfill` et `deep` ne s'arrêtent jamais sur un élément connu.
+ * Sync page ingestion: ONE transaction per page. Each post is classified (known with item /
+ * known without item / dismissed / new), placed in order (`order.ts`), then the new ones are
+ * inserted: `items` (`post_meta` v1, `origin='sync'`, `origin_id = source_key`), `item_media` as
+ * `remote` (downloaded afterwards by the app, `media.download`), `authors`, `sync_items`, quoted
+ * images (`remote.fetch`), avatars (`avatar.fetch`).
+ * Incremental stop rule: a non-empty page entirely known or dismissed, or 10 consecutive known
+ * items. `backfill` and `deep` never stop on a known item.
  */
 import { JOB_PRIORITY } from '../../shared/jobs'
 import { AI_MAX_ATTEMPTS } from '../ai/errors'
@@ -26,7 +26,7 @@ export interface PageIngestInput {
   platform: SyncSourceValue
   mode: RunMode
   posts: readonly NormalizedPost[]
-  /** Ancre d'ordre courante (modifiée ; persistée par l'appelant pour le backfill). */
+  /** Current order anchor (modified; persisted by the caller for the backfill). */
   order: OrderCursor
   runStartedAt: number
   accountId?: string | null
@@ -35,7 +35,7 @@ export interface PageIngestInput {
 export interface PageIngestResult {
   createdUuids: string[]
   stats: { parsed: number; new: number; known: number; dismissed: number }
-  /** L'incrémental doit s'arrêter (tout connu, ou série de connus). */
+  /** The incremental sync must stop (everything known, or a run of known items). */
   stopIncremental: boolean
   recovered: number
 }
@@ -46,7 +46,7 @@ export interface IngestServices {
   now: () => number
 }
 
-/** Classe une clé : élément vivant/corbeille, connu sans élément, écarté, nouveau. */
+/** Classifies a key: live/trashed item, known without item, dismissed, new. */
 export function lookupKnown(
   lib: LibraryContext,
   platform: SyncSourceValue,
@@ -63,7 +63,7 @@ export function lookupKnown(
     return { state: 'saved', createdAt: row.created_at }
   }
   if (lib.repos.sync.isDismissed(platform, externalId)) return { state: 'dismissed' }
-  // Élément importé sans ligne `sync_items` (filet) : rattaché par `source + external_id`.
+  // Item imported without a `sync_items` row (safety net): linked by `source + external_id`.
   const item = lib.db
     .prepare(
       'SELECT id, created_at FROM items WHERE source = ? AND external_id = ? ORDER BY created_at LIMIT 1',
@@ -95,7 +95,7 @@ function mediaRows(post: NormalizedPost): NewMedia[] {
     }))
 }
 
-/** Priorité de téléchargement : Instagram d'abord (URL signées qui expirent). */
+/** Download priority: Instagram first (signed URLs that expire). */
 export function downloadPriority(platform: SyncSourceValue): number {
   return platform === 'instagram' ? JOB_PRIORITY.SYNC + 10 : JOB_PRIORITY.SYNC
 }
@@ -221,7 +221,7 @@ export function ingestPage(s: IngestServices, input: PageIngestInput): PageInges
         )
       }
     }
-    // Les connues sont vues à nouveau (dernière vue, tri distant).
+    // Known items are seen again (last seen, remote sort).
     for (const p of input.posts) {
       if (known.get(p.sourceKey)?.state === 'saved') {
         lib.repos.sync.upsertItem(
@@ -230,7 +230,7 @@ export function ingestPage(s: IngestServices, input: PageIngestInput): PageInges
         )
       }
     }
-    // Avatars à télécharger (URL fraîche).
+    // Avatars to download (fresh URL).
     for (const a of lib.repos.authors.needingAvatar(50)) {
       if (a.platform !== input.platform) continue
       lib.repos.jobs.enqueue(

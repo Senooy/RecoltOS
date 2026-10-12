@@ -1,7 +1,7 @@
 /**
- * glisser vers l'extérieur : `startDrag` appelé de façon synchrone avec les
- * ORIGINAUX, icône `createFromDataURL` sinon `drag-fallback.png` sinon icône système ; expéditeur
- * et charge validés. Le glisser réel vers le Finder reste une vérification manuelle.
+ * Dragging outward: `startDrag` called synchronously with the
+ * ORIGINALS, icon `createFromDataURL` otherwise `drag-fallback.png` otherwise system icon; sender
+ * and payload validated. The real drag to Finder remains a manual check.
  */
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -42,7 +42,7 @@ function fakeImages(over: Partial<Record<keyof NativeImageApi, Img | Error>> = {
 }
 
 describe('parseDragPayload', () => {
-  it('accepte uuids + dataURL PNG, dédoublonne', () => {
+  it('accepts uuids + PNG dataURL, deduplicates', () => {
     expect(parseDragPayload({ uuids: [A, B, A], iconDataUrl: PNG })).toEqual({
       uuids: [A, B],
       iconDataUrl: PNG,
@@ -66,21 +66,21 @@ describe('parseDragPayload', () => {
     ['URL', 'file:///etc/passwd'],
     ['trop grande', PNG_DATA_URL_PREFIX + 'A'.repeat(DRAG_ICON_MAX_CHARS)],
     ['pas une chaîne', 42],
-  ])('icône invalide (%s) : charge conservée, icône ramenée à null', (_l, icon) => {
+  ])('invalid icon (%s): payload kept, icon reset to null', (_l, icon) => {
     expect(parseDragPayload({ uuids: [A], iconDataUrl: icon })).toEqual({
       uuids: [A],
       iconDataUrl: null,
     })
   })
 
-  it('écarte les uuids invalides sans abandonner la charge', () => {
+  it('drops invalid uuids without discarding the payload', () => {
     expect(parseDragPayload({ uuids: [A, 'pas-un-uuid', B, 7] })).toEqual({
       uuids: [A, B],
       iconDataUrl: null,
     })
   })
 
-  it('tronque une sélection géante', () => {
+  it('truncates a huge selection', () => {
     const many = Array.from(
       { length: DRAG_MAX_ITEMS + 10 },
       (_, i) => `${String(i).padStart(8, '0')}-1111-4111-8111-111111111111`,
@@ -90,13 +90,13 @@ describe('parseDragPayload', () => {
 })
 
 describe('makeDragIcon', () => {
-  it('dataURL du renderer en priorité', () => {
+  it('renderer dataURL takes priority', () => {
     const imgs = fakeImages()
     expect((makeDragIcon(imgs as never, '/f.png', PNG) as unknown as Img).tag).toBe('data')
     expect(imgs.createFromPath).not.toHaveBeenCalled()
   })
 
-  it('dataURL vide ou illisible → drag-fallback.png', () => {
+  it('empty or unreadable dataURL → drag-fallback.png', () => {
     expect(
       (
         makeDragIcon(
@@ -120,7 +120,7 @@ describe('makeDragIcon', () => {
     expect(imgs.createFromPath).toHaveBeenCalledWith('/f.png')
   })
 
-  it('repli manquant → icône système', () => {
+  it('missing fallback → system icon', () => {
     const imgs = fakeImages({ createFromPath: img('f', true) })
     expect((makeDragIcon(imgs as never, '/absent.png', null) as unknown as Img).tag).toBe('system')
     expect(imgs.createFromNamedImage).toHaveBeenCalledWith(SYSTEM_DRAG_ICON)
@@ -152,7 +152,7 @@ describe('registerDrag', () => {
     return { ipcMain, files, icon, log, dispose, startDrag, send }
   }
 
-  it('canal `drag` : startDrag synchrone avec les originaux et l’icône', () => {
+  it('`drag` channel: synchronous startDrag with the originals and the icon', () => {
     const s = setup()
     expect(s.ipcMain.on).toHaveBeenCalledWith('drag', expect.any(Function))
     s.send({ uuids: [A, B], iconDataUrl: PNG })
@@ -167,7 +167,7 @@ describe('registerDrag', () => {
     expect(s.ipcMain.removeListener).toHaveBeenCalledWith('drag', expect.any(Function))
   })
 
-  it('expéditeur non autorisé, charge invalide ou rien à glisser : pas de startDrag', () => {
+  it('unauthorized sender, invalid payload or nothing to drag: no startDrag', () => {
     const s = setup()
     s.send({ uuids: [A] }, 'https://evil.example/')
     s.send({ uuids: ['x'] })
@@ -178,7 +178,7 @@ describe('registerDrag', () => {
     expect(none.startDrag).not.toHaveBeenCalled()
   })
 
-  it('icône invalide ou uuid mêlé : startDrag appelé avec l’icône de repli', () => {
+  it('invalid icon or mixed uuid: startDrag called with the fallback icon', () => {
     const fallback = { tag: 'fallback' }
     let listener: ((e: unknown, p: unknown) => void) | null = null
     const files = vi.fn(() => ['/lib/items/11/a.webp'])
@@ -211,7 +211,7 @@ describe('registerDrag', () => {
     expect(startDrag).toHaveBeenCalledTimes(1)
   })
 
-  it('une exception de startDrag est journalisée, jamais propagée', () => {
+  it('a startDrag exception is logged, never propagated', () => {
     const s = setup()
     s.startDrag.mockImplementation(() => {
       throw new Error('boum')
@@ -222,7 +222,7 @@ describe('registerDrag', () => {
 })
 
 describe('resources/drag-fallback.png', () => {
-  it('existe au chemin résolu depuis la racine de l’app, PNG 128 px décodable', async () => {
+  it('exists at the path resolved from the app root, 128 px PNG decodable', async () => {
     const file = dragFallbackPath(REPO_ROOT)
     expect(file).toBe(join(REPO_ROOT, 'resources', 'drag-fallback.png'))
     expect(existsSync(file)).toBe(true)

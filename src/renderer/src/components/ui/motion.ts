@@ -1,14 +1,14 @@
 /**
- * Mouvement et `prefers-reduced-motion`.
+ * Motion and `prefers-reduced-motion`.
  *
- * Mouvement réduit (système OU préférence « Toujours », posée par `state/prefs.ts` sur
- * `<html data-reduce-motion="1">`) : durées ≤ 80 ms, ni rotation ni translation ni mise à
- * l'échelle (fondus uniquement). `ui.css` reflète la même règle pour les animations CSS ; ce
- * module sert aux animations pilotées en JS (motion, WAAPI) et fixe le contrat testé.
+ * Reduced motion (system OR the "Always" preference, set by `state/prefs.ts` on
+ * `<html data-reduce-motion="1">`): durations ≤ 80 ms, no rotation, translation or scaling
+ * (fades only). `ui.css` mirrors the same rule for CSS animations; this module serves the
+ * JS-driven animations (motion, WAAPI) and fixes the tested contract.
  */
 import { useSyncExternalStore } from 'react'
 
-/** Durées du design system, en ms (miroir des `--dur-*` de `globals.css`). */
+/** Design system durations, in ms (mirror of the `--dur-*` of `globals.css`). */
 export const DURATION = {
   instant: 80,
   fast: 120,
@@ -19,15 +19,15 @@ export const DURATION = {
   menuOut: 100,
 } as const
 
-/** Plafond des durées en mouvement réduit. */
+/** Duration cap in reduced motion. */
 export const REDUCED_MAX_MS = 80
 
-/** Délai d'apparition des tooltips. */
+/** Tooltip appearance delay. */
 export const TOOLTIP_DELAY_MS = 600
 
 const QUERY = '(prefers-reduced-motion: reduce)'
 
-/** Vrai si l'utilisateur a demandé moins de mouvement (système ou réglage « Toujours »). */
+/** True if the user asked for less motion (system or the "Always" setting). */
 export function isReducedMotion(): boolean {
   if (typeof document !== 'undefined' && document.documentElement.dataset.reduceMotion === '1') {
     return true
@@ -42,18 +42,18 @@ export function isReducedMotion(): boolean {
   return false
 }
 
-/** Durée effective en ms : plafonnée à 80 ms en mouvement réduit. */
+/** Effective duration in ms: capped at 80 ms in reduced motion. */
 export function motionDuration(ms: number, reduced: boolean = isReducedMotion()): number {
   const v = Math.max(0, ms)
   return reduced ? Math.min(v, REDUCED_MAX_MS) : v
 }
 
-/** Même durée en secondes (API `motion` / WAAPI en secondes). */
+/** Same duration in seconds (the `motion` / WAAPI API uses seconds). */
 export function motionSeconds(ms: number, reduced: boolean = isReducedMotion()): number {
   return motionDuration(ms, reduced) / 1000
 }
 
-/** Propriétés d'animation qui déplacent, tournent ou redimensionnent. */
+/** Animation properties that move, rotate or resize. */
 const TRANSFORM_KEYS = [
   'x',
   'y',
@@ -73,8 +73,8 @@ const TRANSFORM_KEYS = [
 ] as const
 
 /**
- * Retire de l'état d'animation toute translation, rotation et mise à l'échelle en mouvement
- * réduit : il ne reste que l'opacité (et les autres propriétés non géométriques).
+ * Removes from the animation state any translation, rotation and scaling in reduced motion:
+ * only opacity (and the other non-geometric properties) remain.
  */
 export function reduceMotionState<T extends Record<string, unknown>>(
   state: T,
@@ -102,7 +102,7 @@ function subscribe(onChange: () => void): () => void {
       mql.addEventListener('change', onChange)
       disposers.push(() => mql.removeEventListener('change', onChange))
     } catch {
-      /* matchMedia indisponible : seul l'attribut est suivi */
+      /* matchMedia unavailable: only the attribute is tracked */
     }
   }
   return () => {
@@ -110,7 +110,7 @@ function subscribe(onChange: () => void): () => void {
   }
 }
 
-/** Hook : vrai en mouvement réduit, mis à jour en direct. */
+/** Hook: true in reduced motion, updated live. */
 export function useReducedMotion(): boolean {
   return useSyncExternalStore(subscribe, isReducedMotion, () => false)
 }

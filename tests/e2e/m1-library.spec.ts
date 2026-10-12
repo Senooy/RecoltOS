@@ -1,6 +1,6 @@
 /**
- * M1 : coque, menu natif, grille, rangée de collections, Réglages et import GatherOS
- * depuis l'UI (bibliothèque GatherOS factice sous `RECOLTOS_HOME`).
+ * M1: shell, native menu, grid, collections row, Settings and GatherOS import
+ * from the UI (fake GatherOS library under `RECOLTOS_HOME`).
  */
 import { join } from 'node:path'
 import type { ElectronApplication, Page } from '@playwright/test'
@@ -25,10 +25,10 @@ async function waitGrid(page: Page) {
   await expect(page.locator('[data-testid="grid"] [data-testid="card"]').first()).toBeVisible()
 }
 
-test.describe('coque et grille (bibliothèque de démo)', () => {
+test.describe('shell and grid (demo library)', () => {
   test.use({ demoLibrary: { count: 60, collections: 6 } })
 
-  test('menu FR, segmented, sélecteur de bibliothèque sans déplacer la fenêtre', async ({
+  test('FR menu, segmented control, library picker without moving the window', async ({
     app,
     page,
   }) => {
@@ -60,9 +60,7 @@ test.describe('coque et grille (bibliothèque de démo)', () => {
     await expect(page.locator('.fab-surface')).toBeVisible()
   })
 
-  test('posts mesurés avant le rendu (aucun décalage), fenêtrage, aucun texte anglais', async ({
-    page,
-  }) => {
+  test('posts measured before render (no shift), windowing, no English text', async ({ page }) => {
     await waitGrid(page)
     const cls = await page.evaluate(
       () =>
@@ -96,7 +94,7 @@ test.describe('coque et grille (bibliothèque de démo)', () => {
     }
   })
 
-  test('création en ligne d’une collection, persistée', async ({ page, openDbReadonly }) => {
+  test('inline creation of a collection, persisted', async ({ page, openDbReadonly }) => {
     await waitGrid(page)
     await page.locator('[data-testid="new-collection-card"]').click()
     await page.locator('[data-testid="new-collection-input"]').fill('Essai M1')
@@ -110,7 +108,7 @@ test.describe('coque et grille (bibliothèque de démo)', () => {
     })
   })
 
-  test('menu contextuel : 7 entrées, « Supprimer » en dernier', async ({ page }) => {
+  test('context menu: 7 entries, "Delete" last', async ({ page }) => {
     await waitGrid(page)
     await page
       .locator('[data-testid="card"][data-card-kind="image"]')
@@ -119,7 +117,7 @@ test.describe('coque et grille (bibliothèque de démo)', () => {
     const menu = page.locator('[data-testid="ctx-menu"]')
     await expect(menu).toBeVisible()
     const items = menu.locator('[role="menuitem"]')
-    // 7 entrées de base + « Ajouter à un space › ».
+    // 7 base entries + « Ajouter à un space › ».
     expect(await items.count()).toBe(8)
     await expect(items.last()).toHaveText('Supprimer')
   })
@@ -127,14 +125,14 @@ test.describe('coque et grille (bibliothèque de démo)', () => {
 
 const home = makeTmpDir('home-gatheros')
 
-test.describe('import GatherOS depuis Réglages › Bibliothèques', () => {
+test.describe('GatherOS import from Settings › Libraries', () => {
   test.use({ appLaunch: { home } })
 
   test.beforeAll(async () => {
     await makeLegacyLibrary(join(home, 'Library', 'Application Support', 'GatherOS'))
   })
 
-  test('détection, import, résumé, cartes affichées', async ({ page }) => {
+  test('detection, import, summary, cards displayed', async ({ page }) => {
     await expect(page.locator('[data-testid="empty-import-gatheros"]')).toBeVisible()
     await page.locator('[data-testid="empty-import-gatheros"]').click()
     await expect(page.locator('[data-testid="settings"]')).toBeVisible()
@@ -157,7 +155,7 @@ test.describe('import GatherOS depuis Réglages › Bibliothèques', () => {
     const summary = page.locator('[data-testid="import-summary"]')
     await expect(summary).toBeVisible({ timeout: 30_000 })
     await expect(summary).toContainText('10 éléments importés')
-    // M4 : « Enrichir » ouvre la boîte d'enrichissement (moteur à choisir : aucun appel).
+    // M4: « Enrichir » opens the enrichment box (engine to choose: no call).
     await page.locator('[data-testid="import-enrich"]').click()
     await expect(page.locator('[data-testid="ai-enrich"]')).toBeVisible()
     await expect(page.locator('[data-testid="ai-enrich-start"]')).toHaveText('Changer')

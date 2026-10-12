@@ -1,7 +1,7 @@
 /**
- * Arbre des collections : `count` = membres directs non supprimés (masqués
- * compris) ; couvertures ≤ 3 = `cover_item_id`, puis
- * `ORDER BY collection_items.added_at DESC, items.id DESC`, membres en corbeille exclus.
+ * Collection tree: `count` = direct members not deleted (hidden ones
+ * included); covers ≤ 3 = `cover_item_id`, then
+ * `ORDER BY collection_items.added_at DESC, items.id DESC`, members in the trash excluded.
  */
 import type Database from 'better-sqlite3'
 import type { CollectionRow } from '../repos/collections'
@@ -20,7 +20,7 @@ export function collectionRows(db: Database.Database): CollectionWithCount[] {
     .all() as CollectionWithCount[]
 }
 
-/** Uuids des couvertures d'une collection (≤ 3), couverture choisie en premier. */
+/** Uuids of a collection's covers (≤ 3), the chosen cover first. */
 export function coverUuids(
   db: Database.Database,
   c: Pick<CollectionRow, 'id' | 'cover_item_id'>,

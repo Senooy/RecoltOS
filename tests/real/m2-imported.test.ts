@@ -1,8 +1,8 @@
 /**
- * Collections, recherche, export et instantanés sur une COPIE d'un `userData` RecoltOS réel :
+ * Collections, search, export and snapshots on a COPY of a real RecoltOS `userData`:
  * `RECOLT_TEST_IMPORTED_USERDATA=<repo>/.tmp/m2-real pnpm exec vitest run --project real`.
- * Le `userData` est cloné (APFS) dans un dossier temporaire : la source n'est jamais modifiée.
- * Tous les attendus sont recalculés depuis la base.
+ * The `userData` is cloned (APFS) into a temporary folder: the source is never modified.
+ * All expectations are recomputed from the database.
  */
 import { execFileSync, spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -20,7 +20,7 @@ import { zipLibrary } from '../../src/main/workers/media/files'
 
 const SRC = process.env.RECOLT_TEST_IMPORTED_USERDATA ?? ''
 
-describe.skipIf(!SRC)('M2 sur la bibliothèque importée', () => {
+describe.skipIf(!SRC)('M2 on the imported library', () => {
   let base: string
   let m: LibraryManager
   beforeAll(async () => {
@@ -42,7 +42,7 @@ describe.skipIf(!SRC)('M2 sur la bibliothèque importée', () => {
     if (base) fs.rmSync(base, { recursive: true, force: true })
   })
 
-  it('collections : comptes et couvertures cohérents avec la base', () => {
+  it('collections: counts and covers consistent with the database', () => {
     const lib = m.active()!
     const tree = collectionTree(lib, lib.db)
     for (const n of tree) {
@@ -51,7 +51,7 @@ describe.skipIf(!SRC)('M2 sur la bibliothèque importée', () => {
     }
   })
 
-  it('recherche : « instagram » met les éléments Instagram en tête ; #cosmos ; @handle', () => {
+  it('search: "instagram" puts Instagram items first; #cosmos; @handle', () => {
     const lib = m.active()!
     const live = (src: string) =>
       (
@@ -72,7 +72,7 @@ describe.skipIf(!SRC)('M2 sur la bibliothèque importée', () => {
     expect(performance.now() - t0).toBeLessThan(30)
   })
 
-  it('export zip de la plus grande collection valide', async () => {
+  it('zip export of the largest collection is valid', async () => {
     const lib = m.active()!
     const dev = lib.db
       .prepare(
@@ -93,7 +93,7 @@ describe.skipIf(!SRC)('M2 sur la bibliothèque importée', () => {
     execFileSync('unzip', ['-tq', out])
   })
 
-  it('instantané puis restauration avec WAL non vide', async () => {
+  it('snapshot then restore with a non-empty WAL', async () => {
     const lib = m.active()!
     const n0 = lib.repos.items.countLive()
     const snap = createSnapshot(lib, 'manual', Date.now())

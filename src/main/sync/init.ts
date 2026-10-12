@@ -1,8 +1,8 @@
 /**
- * Domaine `sync` : `SyncCoordinator` branché sur le pont (`bridge/init.ts`, enregistré
- * AVANT dans `services.ts`), téléchargeur (politiques par CDN), rendu des cartes de
- * posts, pré-remplissage après import GatherOS, minuterie (60 s) et `evt:sync.status`.
- * Désactivé sous `RECOLTOS_E2E=1` sauf `RECOLTOS_BRIDGE=1`.
+ * `sync` domain: `SyncCoordinator` plugged into the bridge (`bridge/init.ts`, registered
+ * BEFORE in `services.ts`), downloader (policies per CDN), rendering of post cards,
+ * posts, pre-filling after GatherOS import, timer (60 s) and `evt:sync.status`.
+ * Disabled under `RECOLTOS_E2E=1` unless `RECOLTOS_BRIDGE=1`.
  */
 import os from 'node:os'
 import type { BridgePlatform } from '../../shared/bridge/constants'

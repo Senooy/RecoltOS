@@ -1,6 +1,6 @@
 /**
- * Catalogues FR / EN : mêmes clés et mêmes arités (renderer, main, extension), typographie
- * anglaise (pas d'espace insécable ni de guillemets français), détection de la langue du système.
+ * FR / EN catalogs: same keys and arities (renderer, main, extension), English
+ * typography (no non-breaking space nor French quotes), system language detection.
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import { extEn, extFr } from '../../../extension/src/lib/i18n'
@@ -19,7 +19,7 @@ import { formatIssues } from '../../../src/shared/errors'
 import { Accelerator } from '../../../src/shared/accelerator'
 import { displayShortcutLabel } from '../../../src/shared/shortcuts'
 
-/** Chemins des feuilles : `a.b.c` (string) ou `a.b.c()/2` (fonction et arité). */
+/** Leaf paths: `a.b.c` (string) or `a.b.c()/2` (function and arity). */
 function shape(v: unknown, prefix = ''): string[] {
   if (typeof v === 'function') return [`${prefix}()/${v.length}`]
   if (v && typeof v === 'object' && !Array.isArray(v)) {
@@ -31,7 +31,7 @@ function shape(v: unknown, prefix = ''): string[] {
   return [prefix]
 }
 
-/** Tous les textes d'un catalogue (fonctions appelées avec des arguments plausibles). */
+/** All texts of a catalog (functions called with plausible arguments). */
 function strings(v: unknown, out: string[] = []): string[] {
   if (typeof v === 'string') out.push(v)
   else if (typeof v === 'function') {
@@ -43,14 +43,14 @@ function strings(v: unknown, out: string[] = []): string[] {
 
 const FRENCH_TYPO = /[\u202f\u00a0]|[«»]| [:;?!](\s|$)/
 const ACCENTS = /[àâçéèêëîïôûùœ]/i
-/** Seules exceptions anglaises : le nom de la langue française dans le sélecteur. */
+/** Only English exceptions: the name of the French language in the selector. */
 const ALLOWED_ACCENTED = new Set(['Français'])
 
-describe('catalogues renderer', () => {
-  it('anglais : exactement les clés et arités du français', () => {
+describe('renderer catalogs', () => {
+  it('English: exactly the keys and arities of French', () => {
     expect(shape(en)).toEqual(shape(fr))
   })
-  it('anglais : typographie anglaise, aucun texte français', () => {
+  it('English: English typography, no French text', () => {
     const all = strings(en)
     expect(all.length).toBeGreaterThan(500)
     for (const s of all) {
@@ -58,7 +58,7 @@ describe('catalogues renderer', () => {
       if (!ALLOWED_ACCENTED.has(s)) expect(s, s).not.toMatch(ACCENTS)
     }
   })
-  it('libellés clés en anglais (termes macOS)', () => {
+  it('key labels in English (macOS terms)', () => {
     expect(en.nav.library).toBe('Library')
     expect(en.nav.settings).toBe('Settings')
     expect(en.tabs.trash).toBe('Trash')
@@ -72,15 +72,15 @@ describe('catalogues renderer', () => {
   })
 })
 
-describe('catalogues main et extension', () => {
-  it('main : mêmes clés, anglais sans typographie française', () => {
+describe('main and extension catalogs', () => {
+  it('main: same keys, English without French typography', () => {
     expect(shape(mainEn)).toEqual(shape(mainFr))
     for (const s of strings(mainEn)) {
       expect(s, s).not.toMatch(FRENCH_TYPO)
       expect(s, s).not.toMatch(ACCENTS)
     }
   })
-  it('extension : mêmes clés, anglais sans typographie française', () => {
+  it('extension: same keys, English without French typography', () => {
     expect(shape(extEn)).toEqual(shape(extFr))
     for (const s of strings(extEn)) {
       expect(s, s).not.toMatch(FRENCH_TYPO)
@@ -89,29 +89,29 @@ describe('catalogues main et extension', () => {
   })
 })
 
-describe('langue du système', () => {
+describe('system language', () => {
   afterEach(() => setLang('fr'))
 
-  it('français pour fr, fr-FR, fr-CA, fr_BE ; anglais pour tout le reste', () => {
+  it('French for fr, fr-FR, fr-CA, fr_BE; English for everything else', () => {
     for (const l of ['fr', 'fr-FR', 'fr-CA', 'fr_BE', 'FR-ch']) expect(langFromLocale(l)).toBe('fr')
     for (const l of ['en', 'en-US', 'de-DE', 'es', 'frr', '', undefined, null]) {
       expect(langFromLocale(l)).toBe('en')
     }
   })
-  it('la première langue préférée décide', () => {
+  it('the first preferred language decides', () => {
     expect(langFromLocales(['fr-FR', 'en-US'])).toBe('fr')
     expect(langFromLocales(['en-GB', 'fr-FR'])).toBe('en')
     expect(langFromLocales(['', 'fr-CA'])).toBe('fr')
     expect(langFromLocales([])).toBe('en')
   })
-  it('le réglage explicite prime sur le système', () => {
+  it('the explicit setting takes precedence over the system', () => {
     expect(resolveLang('system', 'fr')).toBe('fr')
     expect(resolveLang('system', 'en')).toBe('en')
     expect(resolveLang('fr', 'en')).toBe('fr')
     expect(resolveLang('en', 'fr')).toBe('en')
     expect(resolveLang(undefined, 'en')).toBe('en')
   })
-  it('validation et libellés partagés suivent la langue active', () => {
+  it('shared validation and labels follow the active language', () => {
     expect(getLang()).toBe('fr')
     expect(formatIssues([])).toBe('Entrée invalide')
     expect(displayShortcutLabel('Échap')).toBe('Échap')
@@ -126,10 +126,10 @@ describe('langue du système', () => {
   })
 })
 
-describe('langue active du renderer', () => {
+describe('renderer active language', () => {
   afterEach(() => setLang('fr'))
 
-  it('`tr` suit setUiLang ; la bibliothèque par défaut non renommée suit la langue', async () => {
+  it('`tr` follows setUiLang; the default unrenamed library follows the language', async () => {
     const i18n = await import('../../../src/renderer/src/i18n')
     const { setUiLang, libraryDisplayName } = i18n
     expect(i18n.tr.nav.library).toBe('Bibliothèque')

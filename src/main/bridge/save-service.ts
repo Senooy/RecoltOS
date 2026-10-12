@@ -1,7 +1,7 @@
 /**
- * Enregistrements venus de l'extension : `save.create` → ingestion, envoi découpé
- * (`media.chunk` puis `save.create{upload}`), collections pour les menus et la popup.
- * Les publications (`kind: 'post'`) sont confiées au saveur de posts de la sync (`setPostSaver`).
+ * Records coming from the extension: `save.create` → ingestion, chunked upload
+ * (`media.chunk` then `save.create{upload}`), collections for the menus and the popup.
+ * Posts (`kind: 'post'`) are handed to the sync post saver (`setPostSaver`).
  */
 import { createWriteStream, type WriteStream } from 'node:fs'
 import { mkdir, rm } from 'node:fs/promises'
@@ -53,7 +53,7 @@ export class SaveService {
     this.postSaver = fn
   }
 
-  /** Destinataire des morceaux d'un téléchargement proxifié (`media.fetch`). */
+  /** Recipient of the chunks of a proxied download (`media.fetch`). */
   registerChunkSink(jobId: string, fn: (m: MediaChunkMessage) => void): () => void {
     this.sinks.set(jobId, fn)
     return () => this.sinks.delete(jobId)
@@ -107,12 +107,12 @@ export class SaveService {
       }
     } catch (err) {
       const e = err as { code?: string; message?: string }
-      this.deps.log.warn(`[bridge] enregistrement refusé : ${e.code ?? 'erreur'}`)
+      this.deps.log.warn(`[bridge] record refused: ${e.code ?? 'error'}`)
       return { status: 'error', error: e.message ?? 'Enregistrement impossible.' }
     }
   }
 
-  /** Morceau d'un envoi découpé (`upload.id`) ou d'un téléchargement proxifié. */
+  /** Chunk of a split upload (`upload.id`) or of a proxied download. */
   async chunk(m: MediaChunkMessage): Promise<void> {
     const sink = this.sinks.get(m.jobId)
     if (sink) {
@@ -162,7 +162,7 @@ export class SaveService {
     }
   }
 
-  /** Purge des envois abandonnés (> 10 min). */
+  /** Purges abandoned uploads (> 10 min). */
   async sweep(): Promise<void> {
     const now = (this.deps.now ?? Date.now)()
     for (const [id, up] of this.uploads) {

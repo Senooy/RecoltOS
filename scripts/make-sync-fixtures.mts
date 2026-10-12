@@ -1,9 +1,9 @@
 /**
- * Fixtures de synchronisation SYNTHÉTIQUES : formes publiques connues des
- * réponses X (GraphQL `Bookmarks`, client web factice), Instagram (`feed/saved/posts`, `media/<pk>/info`) et Cosmos
- * (`GetAllElements`, `me`). Aucun contenu réel, aucun cookie ni jeton : identifiants, textes et chemins
- * de médias sont fabriqués ici. Déterministe : `pnpm exec tsx scripts/make-sync-fixtures.mts` réécrit
- * `tests/fixtures/sync/**` à l'identique.
+ * SYNTHETIC sync fixtures: known public shapes of
+ * X responses (GraphQL `Bookmarks`, fake web client), Instagram (`feed/saved/posts`, `media/<pk>/info`) and Cosmos
+ * (`GetAllElements`, `me`). No real content, no cookie or token: identifiers, texts and media paths
+ * are fabricated here. Deterministic: `pnpm exec tsx scripts/make-sync-fixtures.mts` rewrites
+ * `tests/fixtures/sync/**` identically.
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -205,7 +205,7 @@ function xPage(entries: unknown[], bottom: string | null = 'Q1VSU09SLWZpbg') {
   }
 }
 
-/** sortIndex : snowflake croissant (plus récent = plus grand). */
+/** sortIndex: increasing snowflake (newer = larger). */
 const sortIndex = (n: number) => String(1_890_000_000_000_000_000n - BigInt(n) * 1_000_000n)
 const tweetId = (n: number) => String(1_870_000_000_000_000_000n + BigInt(n))
 
@@ -371,13 +371,13 @@ export function xFixtures(): Record<string, unknown> {
   }
 }
 
-/** Jeton public factice des fixtures (même forme que le vrai, valeur inventée). */
+/** Fake public token for the fixtures (same shape as the real one, invented value). */
 const FAKE_PUBLIC_TOKEN =
   'AAAAAAAAAAAAAAAAAAAAAFaKeXwEbPuBlIcToKeN%3DfIxTuReSaNoNyMiSeEs0000000000000000000000000000000000000000'
 
 /**
- * Ancien client web factice : page d'accueil qui référence `main.<hash>.js` et bundle minimal qui
- * déclare deux opérations GraphQL (identifiants, fonctionnalités et jeton inventés).
+ * Fake old web client: home page referencing `main.<hash>.js` and a minimal bundle that
+ * declares two GraphQL operations (invented identifiers, features and token).
  */
 export function xBundleFixtures(): Record<string, string> {
   return {
@@ -389,10 +389,10 @@ export function xBundleFixtures(): Record<string, string> {
 }
 
 /**
- * Client web « x-web » factice (modules ES) : seule la STRUCTURE utile à la découverte est
- * reproduite — script d'entrée dans le HTML, graphe de chunks (imports statiques, `import()`, liste
- * de dépendances), opérations persistées `params:{id,name,operationKind,providedVariables}` et jeton
- * public. Noms de chunks, identifiants et variables sont inventés.
+ * Fake "x-web" client (ES modules): only the STRUCTURE useful for discovery is
+ * reproduced — entry script in the HTML, chunk graph (static imports, `import()`, list
+ * of dependencies), persisted operations `params:{id,name,operationKind,providedVariables}` and token
+ * public. Chunk names, identifiers and variables are invented.
  */
 export function xWebFixtures(): Record<string, string> {
   const pv = (n: string) => `__relay_internal__pv__${n}`
@@ -417,7 +417,7 @@ const igUsers = [
   { pk: '5100000002', username: 'nuit.couleur', full: 'Nuit Couleur' },
 ]
 
-/** Code court Instagram synthétique (alphabet base64 url). */
+/** Synthetic Instagram short code (base64 url alphabet). */
 const igCode = (n: number) => `DSyNtH${String(n).padStart(5, '0')}`
 const igPk = (n: number) => String(3_700_000_000_000_000_000n + BigInt(n))
 
@@ -648,5 +648,5 @@ export function writeSyncFixtures(root = ROOT): string[] {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const files = writeSyncFixtures()
-  console.log(`make-sync-fixtures : ${files.length} fichiers dans tests/fixtures/sync`)
+  console.log(`make-sync-fixtures : ${files.length} files in tests/fixtures/sync`)
 }

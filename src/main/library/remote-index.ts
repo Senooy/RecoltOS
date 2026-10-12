@@ -1,7 +1,7 @@
 /**
- * Index des médias distants déjà téléchargés (`remote/<sha1(url)>.<ext>`) : les DTO n'en
- * exposent l'URL `recolt://` que si le fichier existe, et ne laissent jamais sortir l'URL http(s).
- * Lecture paresseuse du dossier (un `readdir` par bibliothèque), complétée par `remote.fetch`.
+ * Index of remote media already downloaded (`remote/<sha1(url)>.<ext>`): the DTOs only expose
+ * the `recolt://` URL if the file exists, and never let the http(s) URL out.
+ * Lazy reading of the folder (one `readdir` per library), completed by `remote.fetch`.
  */
 import { createHash } from 'node:crypto'
 import { readdirSync } from 'node:fs'
@@ -21,7 +21,7 @@ function load(root: string): Map<string, string> {
       if (m?.[1]) map.set(m[1], `remote/${name}`)
     }
   } catch {
-    // dossier absent : rien de téléchargé
+    // folder missing: nothing downloaded
   }
   byRoot.set(root, map)
   return map
@@ -31,7 +31,7 @@ export function remoteKey(url: string): string {
   return sha1(url)
 }
 
-/** Chemin relatif du fichier téléchargé pour `url`, ou `null`. */
+/** Relative path of the downloaded file for `url`, or `null`. */
 export function remoteRelFor(root: string, url: string): string | null {
   return load(root).get(sha1(url)) ?? null
 }
@@ -40,7 +40,7 @@ export function recordRemote(root: string, url: string, relPath: string): void {
   load(root).set(sha1(url), relPath)
 }
 
-/** Tests, bascule de bibliothèque. */
+/** Tests, library switch. */
 export function resetRemoteIndex(root?: string): void {
   if (root) byRoot.delete(root)
   else byRoot.clear()

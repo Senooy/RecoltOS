@@ -1,4 +1,4 @@
-/** Contrat `sync.*`. */
+/** `sync.*` contract. */
 import { z } from 'zod'
 import { ItemCard } from '../dto/items'
 import { SyncRunInfo, SyncStatus } from '../dto/sync'
@@ -18,7 +18,7 @@ export const syncContract = {
     input: z.object({ source: SyncSource, limit: z.number().int().min(1).max(200).default(20) }),
     output: z.array(SyncRunInfo),
   },
-  /** Éléments rattrapés par le backfill, pas encore revus (pilule « Revoir »). */
+  /** Items caught up by the backfill, not yet reviewed ("Review" pill). */
   'sync.recovered': {
     input: z.object({ source: SyncSource.optional() }).default({}),
     output: z.object({ items: z.array(ItemCard) }),
@@ -27,7 +27,7 @@ export const syncContract = {
     input: z.object({ source: SyncSource.optional() }).default({}),
     output: Void,
   },
-  /** Oublie les réglages de sync repris de GatherOS (proposition traitée). */
+  /** Forgets the sync settings carried over from GatherOS (proposal handled). */
   'sync.clearImportedFlag': { input: z.object({ source: SyncSource }), output: Void },
 } as const satisfies ContractShape
 

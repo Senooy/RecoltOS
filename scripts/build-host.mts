@@ -1,10 +1,11 @@
 /**
- * Hôte natif : `src/host/index.ts` → `out/host/host.js`, bundle
- * esbuild AUTONOME (CJS, builtins Node seulement, tout le reste inliné), puis exécutable Node SEA
- * séparé `out/native-host/recolt-host` (blob `--experimental-sea-config` injecté par postject dans une
- * copie du binaire `node` qui exécute ce script, puis signé : `RECOLTOS_SIGN_IDENTITY` ou ad hoc).
- * L'exécutable n'est reconstruit que si `host.js` ou la version de Node changent (`.build-hash`).
- * Sans `src/host/index.ts`, sort proprement.
+ * Native host: `src/host/index.ts` → `out/host/host.js`, a STANDALONE esbuild bundle
+ * (CJS, Node builtins only, everything else inlined), then a separate Node SEA executable
+ * `out/native-host/recolt-host` (blob `--experimental-sea-config` injected by postject into a
+ * copy of the `node` binary that runs this script, then signed: `RECOLTOS_SIGN_IDENTITY` or
+ * ad hoc).
+ * The executable is only rebuilt if `host.js` or the Node version changes (`.build-hash`).
+ * Without `src/host/index.ts`, exits cleanly.
  */
 import { build } from 'esbuild'
 import { execFileSync } from 'node:child_process'
@@ -28,9 +29,9 @@ export interface BuildHostOptions {
   root?: string
   outfile?: string
   logLevel?: 'info' | 'silent'
-  /** Construit aussi l'exécutable SEA (`out/native-host/recolt-host`). */
+  /** Also builds the SEA executable (`out/native-host/recolt-host`). */
   sea?: boolean
-  /** Binaire `node` copié (défaut : celui qui exécute ce script). */
+  /** `node` binary to copy (default: the one running this script). */
   nodeBinary?: string
 }
 
@@ -43,8 +44,8 @@ function signIdentity(): string {
 }
 
 /**
- * Exécutable Node SEA à partir de `hostJs` (Node 22 : `--experimental-sea-config` + postject).
- * Rend le chemin de l'exécutable ; ne refait rien si l'empreinte n'a pas changé.
+ * Node SEA executable built from `hostJs` (Node 22: `--experimental-sea-config` + postject).
+ * Returns the executable path; does nothing if the fingerprint has not changed.
  */
 export function buildSea(hostJs: string, outDir: string, nodeBinary = process.execPath): string {
   const exe = join(outDir, SEA_NAME)
@@ -102,7 +103,7 @@ export function buildSea(hostJs: string, outDir: string, nodeBinary = process.ex
   return exe
 }
 
-/** `require('x')` hors builtins dans le bundle : l'hôte planterait au chargement (`check-dist`). */
+/** `require('x')` of non-builtins in the bundle: the host would crash on load (`check-dist`). */
 export function externalRequires(code: string): string[] {
   const builtins = new Set([...builtinModules, ...builtinModules.map((m) => `node:${m}`)])
   const found = new Set<string>()
@@ -124,7 +125,7 @@ export async function buildHost(options: BuildHostOptions = {}): Promise<string 
     bundle: true,
     platform: 'node',
     format: 'cjs',
-    target: 'node22', // valide aussi sous le Node 24 d'Electron
+    target: 'node22', // also valid under Electron's Node 24
     alias: { '@shared': resolve(root, 'src/shared') },
     legalComments: 'none',
     logLevel: options.logLevel ?? 'info',
@@ -141,7 +142,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   buildHost({ sea: !process.argv.includes('--no-sea') })
     .then((out) => {
       console.log(
-        out ? `build:host : ${out}` : 'build:host : src/host/index.ts absent, rien à construire',
+        out ? `build:host : ${out}` : 'build:host : src/host/index.ts absent, nothing to build',
       )
     })
     .catch((err: unknown) => {

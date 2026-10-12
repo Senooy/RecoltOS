@@ -1,17 +1,17 @@
 /**
- * Cœur du protocole `recolt://<libraryId>/<root>/<rel>?v=<n>`.
- * Sans import `electron` : `protocol.handle` (session par défaut et sessions hors écran) l'appelle
- * depuis `init.ts`, les tests l'appellent directement avec des `Request` Node.
+ * Core of the `recolt://<libraryId>/<root>/<rel>?v=<n>` protocol.
+ * No `electron` import: `protocol.handle` (default session and off-screen sessions) calls it
+ * from `init.ts`; the tests call it directly with Node `Request`s.
  *
- * Garde-fous, dans l'ordre (aucun accès disque avant les contrôles syntaxiques) :
- *  1. méthode GET / HEAD (OPTIONS : pré-vol CORS), sinon 405 ;
- *  2. chemin décodé : octet NUL, antislash, segment vide, `.` ou `..` (y compris encodés) → 403 ;
- *  3. premier segment ∈ `MEDIA_ROOTS` (ni `snapshots`, ni `import`, ni `tmp`, ni la base) → 403 ;
- *  4. hôte = bibliothèque active, sinon 404 ;
- *  5. `realpath` du fichier sous `realpath(racine)/<MEDIA_ROOT>/` (liens symboliques sortants) → 403 ;
- *  6. fichier ordinaire, sinon 404.
- * Range à la main (seek vidéo fiable, y compris sur un mp4 de 391 Mo), `immutable` si `?v`,
- * `Access-Control-Allow-Origin: *` (canvas non « tainted » : glisser natif, pipette), HEAD.
+ * Guardrails, in order (no disk access before the syntax checks):
+ *  1. method GET / HEAD (OPTIONS: CORS preflight), otherwise 405;
+ *  2. decoded path: NUL byte, backslash, empty segment, `.` or `..` (including encoded ones) → 403;
+ *  3. first segment ∈ `MEDIA_ROOTS` (not `snapshots`, not `import`, not `tmp`, not the database) → 403;
+ *  4. host = active library, otherwise 404;
+ *  5. file `realpath` under `realpath(root)/<MEDIA_ROOT>/` (outgoing symbolic links) → 403;
+ *  6. regular file, otherwise 404.
+ * Range handled by hand (reliable video seeking, including on a 391 MB mp4), `immutable` if `?v`,
+ * `Access-Control-Allow-Origin: *` (canvas not "tainted": native drag, color picker), HEAD.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -24,22 +24,22 @@ export const RECOLT_PROTOCOL = 'recolt'
 
 const MEDIA_ROOT_SET: ReadonlySet<string> = new Set(MEDIA_ROOTS)
 
-/** Bibliothèque servie : seule la bibliothèque active l'est (une seule ouverte à la fois). */
+/** Served library: only the active library is served (only one open at a time). */
 export interface ServedLibrary {
   id: string
-  /** Racine absolue de la bibliothèque. */
+  /** Absolute root of the library. */
   root: string
 }
 
 export interface RecoltHandlerDeps {
-  /** Bibliothèque correspondant à l'hôte de l'URL, ou `null` (inconnue / non ouverte). */
+  /** Library matching the URL host, or `null` (unknown / not open). */
   libraryFor(id: string): ServedLibrary | null
-  /** Journal des refus (403) : diagnostic, jamais le contenu des fichiers. */
+  /** Log of refusals (403): diagnostics, never file contents. */
   onDenied?(reason: string, url: string): void
 }
 
 export type RecoltHandler = ((req: Request) => Promise<Response>) & {
-  /** Oublie les `realpath` de racines mémorisés (bascule de bibliothèque). */
+  /** Forgets the memoized root `realpath`s (library switch). */
   clearCache(): void
 }
 
@@ -48,7 +48,7 @@ const BASE_HEADERS: Readonly<Record<string, string>> = {
   'Access-Control-Expose-Headers': 'Content-Range, Content-Length, Accept-Ranges',
   'Cross-Origin-Resource-Policy': 'cross-origin',
   'X-Content-Type-Options': 'nosniff',
-  // Un SVG ou un fichier ouvert directement ne peut rien exécuter.
+  // An SVG or a file opened directly cannot execute anything.
   'Content-Security-Policy':
     "default-src 'none'; img-src data:; style-src 'unsafe-inline'; sandbox",
 }
@@ -57,7 +57,7 @@ function empty(status: number, extra: Record<string, string> = {}): Response {
   return new Response(null, { status, headers: { ...BASE_HEADERS, ...extra } })
 }
 
-/** Chemin relatif décodé et validé, ou la raison du refus. */
+/** Decoded and validated relative path, or the reason for refusal. */
 export function parseRecoltPath(pathname: string): { rel: string } | { denied: string } {
   let rel: string
   try {
@@ -88,7 +88,7 @@ export function createRecoltHandler(deps: RecoltHandlerDeps): RecoltHandler {
     let p = realRoots.get(root)
     if (!p) {
       p = fs.promises.realpath(root)
-      // Une racine illisible n'est pas mémorisée : la prochaine requête réessaie.
+      // An unreadable root is not memoized: the next request retries.
       p.catch(() => realRoots.delete(root))
       realRoots.set(root, p)
     }
@@ -184,10 +184,11 @@ export function createRecoltHandler(deps: RecoltHandlerDeps): RecoltHandler {
       if (req.method === 'HEAD' || length === 0) {
         return new Response(null, { status, headers })
       }
-      // Requête déjà annulée : personne ne lira le corps, le handle est fermé par le `finally`.
+      // Request already aborted: nobody will read the body; the handle is closed by the `finally`.
       if (req.signal?.aborted) return empty(499)
-      // `autoClose` ferme le handle à la fin, à l'erreur ou au `destroy()` du flux. Un corps qui n'est
-      // jamais lu ni annulé ne déclenche rien : l'annulation de la requête (`signal`) détruit le flux.
+      // `autoClose` closes the handle at the end, on error, or on the stream's `destroy()`. A body
+      // that is never read nor aborted triggers nothing: aborting the request (`signal`) destroys
+      // the stream.
       const stream = handle.createReadStream({ start, end, autoClose: true })
       const signal = req.signal
       if (signal) {

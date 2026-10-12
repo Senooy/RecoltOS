@@ -1,6 +1,6 @@
 /**
- * `pnpm run bench:color` : filtre « rouge » sur 10 000 palettes synthétiques de 8 couleurs
- * (pire cas : couleurs uniformes) ; échoue si la médiane dépasse 2 ms.
+ * `pnpm run bench:color`: "red" filter on 10,000 synthetic palettes of 8 colors
+ * (worst case: uniform colors); fails if the median exceeds 2 ms.
  */
 import Database from 'better-sqlite3'
 import { queryFromHex, searchColors } from '../src/main/color/color-search'
@@ -38,6 +38,6 @@ for (let i = 0; i < 51; i++) {
 times.sort((a, b) => a - b)
 const median = times[25]!
 console.log(
-  `bench:color : ${idx.n} palettes, ${matches} correspondances « rouge », médiane ${median.toFixed(2)} ms (min ${times[0]!.toFixed(2)})`,
+  `bench:color: ${idx.n} palettes, ${matches} "red" matches, median ${median.toFixed(2)} ms (min ${times[0]!.toFixed(2)})`,
 )
 process.exitCode = median < 2 ? 0 : 1

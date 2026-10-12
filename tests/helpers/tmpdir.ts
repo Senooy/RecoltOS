@@ -1,9 +1,9 @@
 /**
- * Dossiers temporaires de test sous `<dépôt>/.tmp/tests/` (gitignoré, un `userData` par worktree).
- * Nettoyage : `removeAllTmpDirs()` est appelé par `tests/setup/node.ts` (`afterAll` de chaque fichier
- * vitest — `process.on('exit')` ne s'exécute pas dans les workers `forks` de vitest) ; le hook
- * `exit` reste pour Playwright et les scripts. `purgeStaleTmpDirs()` (globalSetup) supprime ce
- * que des exécutions tuées ont laissé. `removeTmpDir` pour un nettoyage anticipé.
+ * Test temporary folders under `<repo>/.tmp/tests/` (gitignored, one `userData` per worktree).
+ * Cleanup: `removeAllTmpDirs()` is called by `tests/setup/node.ts` (`afterAll` of each file
+ * vitest — `process.on('exit')` does not run in vitest `forks` workers); the hook
+ * `exit` remains for Playwright and the scripts. `purgeStaleTmpDirs()` (globalSetup) removes
+ * what killed runs left behind. `removeTmpDir` for early cleanup.
  */
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -18,7 +18,7 @@ function installExitHook(): void {
   process.on('exit', removeAllTmpDirs)
 }
 
-/** Crée un dossier vide et unique ; `label` ne sert qu'au débogage (`.tmp/tests/<label>-XXXXXX`). */
+/** Creates an empty, unique folder; `label` is only used for debugging (`.tmp/tests/<label>-XXXXXX`). */
 export function makeTmpDir(label = 'test'): string {
   const base = join(TMP_ROOT, 'tests')
   mkdirSync(base, { recursive: true })
@@ -28,16 +28,16 @@ export function makeTmpDir(label = 'test'): string {
   return dir
 }
 
-/** Supprime tous les dossiers créés par ce processus (hook `afterAll` des tests vitest). */
+/** Removes all folders created by this process (`afterAll` hook of vitest tests). */
 export function removeAllTmpDirs(): void {
   for (const dir of created) rmSync(dir, { recursive: true, force: true })
   created.clear()
 }
 
 /**
- * Supprime de `.tmp/tests/` les dossiers plus vieux que `maxAgeMs` (10 min par défaut) : restes
- * d'exécutions interrompues. Le seuil évite d'effacer les dossiers d'un autre processus en cours
- * (Playwright lancé en parallèle dans le même worktree).
+ * Removes from `.tmp/tests/` the folders older than `maxAgeMs` (10 min by default): leftovers
+ * of interrupted runs. The threshold avoids deleting the folders of another running process
+ * (Playwright run in parallel in the same worktree).
  */
 export function purgeStaleTmpDirs(maxAgeMs = 10 * 60_000): number {
   const base = join(TMP_ROOT, 'tests')
@@ -50,7 +50,7 @@ export function purgeStaleTmpDirs(maxAgeMs = 10 * 60_000): number {
       rmSync(dir, { recursive: true, force: true })
       removed += 1
     } catch {
-      /* dossier disparu entre-temps ou illisible : on ignore */
+      /* folder disappeared in the meantime or unreadable: ignored */
     }
   }
   return removed
@@ -61,7 +61,7 @@ export function removeTmpDir(dir: string): void {
   created.delete(dir)
 }
 
-/** Exécute `fn` dans un dossier temporaire, supprimé ensuite (même en cas d'échec). */
+/** Runs `fn` in a temporary folder, removed afterwards (even on failure). */
 export async function withTmpDir<T>(
   fn: (dir: string) => Promise<T> | T,
   label = 'test',

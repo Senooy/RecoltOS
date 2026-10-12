@@ -1,14 +1,14 @@
-/** Types de `sanitize-fixture.mjs` (utilisés par les tests TypeScript). */
+/** Types of `sanitize-fixture.mjs` (used by the TypeScript tests). */
 export interface SanitizeOptions {
-  /** Clés d'objet structurelles supplémentaires à conserver telles quelles. */
+  /** Additional structural object keys to keep as they are. */
   keepKeys?: string[]
 }
 
 export interface Sanitizer {
   (data: unknown): unknown
-  /** Chaînes (clés et valeurs) conservées volontairement telles quelles. */
+  /** Strings (keys and values) deliberately kept as they are. */
   survivors: Set<string>
-  /** Clés inconnues renommées en `champ_N` (à ne pas journaliser sans `--report-keys`). */
+  /** Unknown keys renamed to `champ_N` (do not log without `--report-keys`). */
   renamedKeys: Set<string>
 }
 

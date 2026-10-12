@@ -1,7 +1,7 @@
 /**
- * Service d'import GatherOS côté main (IPC `import.gatheros.*`) : détection (sur une copie de la
- * base), lancement en tâche de fond, annulation, reprise d'un run interrompu, rapport. Branché par
- * `jobs/init.ts` (media-worker partagé, file de jobs, événements).
+ * GatherOS import service on the main side (IPC `import.gatheros.*`): detection (on a copy of the
+ * database), background launch, cancellation, resumption of an interrupted run, report. Wired by
+ * `jobs/init.ts` (shared media-worker, job queue, events).
  */
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -35,7 +35,7 @@ export interface ImportServiceDeps {
   changed(uuids: string[]): void
   collectionsChanged(uuids: string[]): void
   applyPrefs(patch: PrefsPatch): void
-  /** Crée la bibliothèque « Importée de GatherOS » et bascule dessus. */
+  /** Creates the "Imported from GatherOS" library and switches to it. */
   createLibrary(name: string): Promise<void>
   tmpDir(): string
 }
@@ -86,7 +86,7 @@ export async function detectGatheros() {
       counts: preview,
     }
   } catch (err) {
-    d.log.warn('[import] détection impossible', err)
+    d.log.warn('[import] detection failed', err)
     return {
       found: true,
       path: lib.dir,
@@ -101,7 +101,7 @@ export async function detectGatheros() {
   }
 }
 
-/** Réglages GatherOS en liste blanche → patch de prefs (jamais de fournisseur IA). */
+/** GatherOS settings on the allowlist → prefs patch (never an AI provider). */
 export function prefsPatchFromGatheros(g: Record<string, unknown>): PrefsPatch {
   const patch: Record<string, unknown> = {}
   if (g.theme === 'light' || g.theme === 'dark' || g.theme === 'system') patch.theme = g.theme
@@ -118,7 +118,7 @@ export function prefsPatchFromGatheros(g: Record<string, unknown>): PrefsPatch {
 type ImportDoneHook = (lib: LibraryContext, gatherosPrefs: Record<string, unknown>) => void
 const importDoneHooks = new Set<ImportDoneHook>()
 
-/** Fin d'import réussie (backfill programmé, réglages de sync notés). */
+/** Successful import end (backfill scheduled, sync settings noted). */
 export function onGatherosImportDone(fn: ImportDoneHook): () => void {
   importDoneHooks.add(fn)
   return () => importDoneHooks.delete(fn)
@@ -141,7 +141,7 @@ export async function startGatherosImport(input: {
   if (input.target === 'new') await d.createLibrary(mt().library.importedFromGatheros)
   const lib = requireLibrary()
   const abort = new AbortController()
-  // Un run interrompu (crash) est repris : chaque phase est idempotente.
+  // An interrupted run (crash) is resumed: each phase is idempotent.
   const runId =
     input.resumeRunId ??
     pendingImport(lib)?.runId ??
@@ -166,13 +166,13 @@ export async function startGatherosImport(input: {
         try {
           h(lib, readGatherosPrefs(r))
         } catch (err) {
-          d.log.warn('[import] crochet de fin', err)
+          d.log.warn('[import] end hook', err)
         }
       }
     })
     .catch((err: unknown) => {
       const e = err as { code?: string; message?: string }
-      d.log.warn(`[import] arrêt : ${e.code ?? 'erreur'}`, err)
+      d.log.warn(`[import] stopped: ${e.code ?? 'error'}`, err)
       d.emitProgress({
         runId,
         phase: 'done',
@@ -204,7 +204,7 @@ export function pending(): { runId: number; phase: string | null } | null {
   return p ? { runId: p.runId, phase: p.phase } : null
 }
 
-/** Tests : attend la fin du run en cours. */
+/** Tests: waits for the end of the current run. */
 export async function waitForImport(): Promise<void> {
   await running?.done
 }

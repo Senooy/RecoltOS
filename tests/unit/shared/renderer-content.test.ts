@@ -13,8 +13,8 @@ function strings(v: unknown, out: string[] = []): string[] {
   return out
 }
 
-describe('fixture maquette (api/mock.ts)', () => {
-  it('60 ItemCard valides, médias en recolt:// seulement', () => {
+describe('mockup fixture (api/mock.ts)', () => {
+  it('60 valid ItemCards, media under recolt:// only', () => {
     const items = z.array(ItemCard).parse(fixture)
     expect(items).toHaveLength(60)
     expect(items.filter((i) => i.kind === 'tweet').length).toBeGreaterThan(0)
@@ -22,9 +22,9 @@ describe('fixture maquette (api/mock.ts)', () => {
   })
 })
 
-describe('textes FR', () => {
+describe('French texts', () => {
   const all = strings(fr)
-  it('tutoiement, aucune bannière de plan, pas de recherche visuelle', () => {
+  it('informal "tu" address, no plan banner, no visual search', () => {
     expect(all.length).toBeGreaterThan(200)
     for (const s of all) {
       expect(s, s).not.toMatch(/\b(vous|votre|vos)\b/i)
@@ -32,7 +32,7 @@ describe('textes FR', () => {
       expect(s, s).not.toMatch(/recherche visuelle/i)
     }
   })
-  it('libellés observés', () => {
+  it('observed labels', () => {
     expect(fr.nav.library).toBe('Bibliothèque')
     expect(fr.tabs.unsorted).toBe('Non classés')
     expect(fr.count.items(1)).toBe('1 élément')

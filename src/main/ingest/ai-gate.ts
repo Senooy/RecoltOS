@@ -1,6 +1,6 @@
 /**
- * Porte IA à l'ingestion : `ai_state = 'queued'` seulement si les
- * cinq conditions sont réunies ; sinon `none` (l'enrichissement se propose ensuite en lot).
+ * AI gate at ingestion: `ai_state = 'queued'` only if the
+ * five conditions are met; otherwise `none` (enrichment is then offered in batch).
  */
 import { AI_CONSENT_VERSION } from '../../shared/ai-types'
 import type { Prefs } from '../../shared/prefs'
@@ -10,9 +10,9 @@ import { PAUSED_SETTING, type PauseEntry } from '../jobs/queue'
 export interface AiGateInput {
   prefs: Prefs
   settings: SettingsRepo
-  /** Action directe de l'utilisateur (glisser, capture, extension). */
+  /** Direct user action (drag, capture, extension). */
   userAction: boolean
-  /** Taille du lot d'une synchro (sinon 1). */
+  /** Batch size of a sync (otherwise 1). */
   batchSize?: number
   now: number
 }
@@ -33,18 +33,18 @@ function providerPaused(settings: SettingsRepo, provider: string, now: number): 
   return false
 }
 
-/** Pause par fournisseur posée par la porte IA (`ai/gate.ts`, `settings['ai.providerPauses']`). */
+/** Per-provider pause set by the AI gate (`ai/gate.ts`, `settings['ai.providerPauses']`). */
 function gatePaused(settings: SettingsRepo, provider: string, now: number): boolean {
   const raw = settings.get('ai.providerPauses') as Record<string, { until?: number }> | undefined
   const p = raw && typeof raw === 'object' ? raw[provider] : undefined
   return Boolean(p && (p.until === undefined || p.until > now))
 }
 
-/** Décide et, si `queued`, consomme une unité du compteur du jour. */
+/** Decides and, if `queued`, consumes one unit of the day's counter. */
 export function aiGate(i: AiGateInput): 'queued' | 'none' {
   const ai = i.prefs.ai
   if (ai.provider === 'off') return 'none'
-  // Jamais d'appel sans consentement, même si `autoNameOnSave` a été importé à vrai.
+  // Never a call without consent, even if `autoNameOnSave` was imported as true.
   if (!ai.consentVersion || ai.consentVersion < AI_CONSENT_VERSION) return 'none'
   if (!ai.autoNameOnSave && !ai.autoAnalyzeOnSave && !ai.autoTag) return 'none'
   if (!i.userAction && (i.batchSize ?? 1) > ai.bulkThreshold) return 'none'

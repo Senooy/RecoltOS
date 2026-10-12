@@ -8,7 +8,7 @@ import { REPO_ROOT } from './paths'
 import { makeTmpDir } from './tmpdir'
 
 describe('seed-bench', () => {
-  it('éléments synthétiques à l’échelle, fichiers clonés', async () => {
+  it('synthetic items at scale, cloned files', async () => {
     const out = makeTmpDir('bench')
     const res = await seedBench(out, { count: 300 })
     expect(res.items).toBe(300)
@@ -16,7 +16,7 @@ describe('seed-bench', () => {
     const db = openTestDb({ file: join(out, 'libraries/default/recolt.db') })
     const n = (sql: string) => (db.prepare(sql).get() as { n: number }).n
     expect(n('SELECT count(*) n FROM items')).toBe(300)
-    expect(n("SELECT count(*) n FROM items WHERE kind='tweet'")).toBe(40) // 54/408 de 300, arrondi
+    expect(n("SELECT count(*) n FROM items WHERE kind='tweet'")).toBe(40) // 54/408 of 300, rounded
     expect(n('SELECT count(*) n FROM items_fts')).toBe(300)
     const row = db.prepare('SELECT thumb_rel FROM item_media LIMIT 1').get() as {
       thumb_rel: string
@@ -25,7 +25,7 @@ describe('seed-bench', () => {
     db.close()
   })
 
-  it('--no-files : base seule', async () => {
+  it('--no-files: database only', async () => {
     const out = makeTmpDir('bench-db')
     const res = await seedBench(out, { count: 100, files: false })
     expect(res.files).toBe(0)
@@ -33,8 +33,8 @@ describe('seed-bench', () => {
   })
 })
 
-describe('seed-bench CLI : --count validé', () => {
-  it.each(['abc', '-1', '2.5', ''])('--count « %s » : sortie 2, rien écrit', (value) => {
+describe('seed-bench CLI: --count validated', () => {
+  it.each(['abc', '-1', '2.5', ''])('--count "%s": exit 2, nothing written', (value) => {
     const out = makeTmpDir('bench-badnum')
     const r = spawnSync(
       join(REPO_ROOT, 'node_modules/.bin/tsx'),

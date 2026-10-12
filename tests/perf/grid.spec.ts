@@ -1,11 +1,11 @@
 /**
- * Banc de la grille et des requêtes — projet Playwright `perf`.
- *   G1 : défilement de la grille pendant 5 s (sonde rAF, `longtask`), tas renderer après un
- *        défilement complet + 20 ouvertures de la vue détail, croissance sur 5 cycles.
- *   G2 : requêtes à travers l'IPC (page de liste, compteurs, FTS), 30 répétitions, p50 / p95.
- * Bibliothèque : `RECOLTOS_PERF_USERDATA` (clone APFS de la bibliothèque réelle, ou sortie de
- * `scripts/seed-bench.mts` pour 10 000 éléments), sinon démo de 408 éléments. Densité :
- * `RECOLTOS_PERF_DSF=2` pour le Retina. Rapport : `.tmp/m7-perf-grid.json` (fusionné).
+ * Grid and query benchmark — Playwright `perf` project.
+ *   G1: grid scrolling for 5 s (rAF probe, `longtask`), renderer heap after a full scroll +
+ *        20 opens of the detail view, growth over 5 cycles.
+ *   G2: queries through the IPC (list page, counters, FTS), 30 repetitions, p50 / p95.
+ * Library: `RECOLTOS_PERF_USERDATA` (APFS clone of the real library, or output of
+ * `scripts/seed-bench.mts` for 10 000 items), otherwise the 408-item demo. Density:
+ * `RECOLTOS_PERF_DSF=2` for Retina. Report: `.tmp/m7-perf-grid.json` (merged).
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -63,15 +63,13 @@ async function heapMb(page: Page): Promise<number> {
   return Math.round((used / 2 ** 20) * 10) / 10
 }
 
-test('G1 : défilement 5 s, longtasks, tas après défilement complet + 20 détails', async ({
-  page,
-}) => {
+test('G1: 5 s scrolling, longtasks, heap after full scroll + 20 details', async ({ page }) => {
   test.setTimeout(240_000)
   await expect(page.locator(`${t('grid')} ${t('card')}`).first()).toBeVisible({
     timeout: 30_000,
   })
   await page.waitForTimeout(1500)
-  // Sonde : défilement continu (≈ 2 400 px/s, aller puis retour) pendant 5 s.
+  // Probe: continuous scrolling (≈ 2 400 px/s, back and forth) for 5 s.
   const probe = await page.evaluate(
     (ms) =>
       new Promise<{ frames: number[]; longtasks: number[]; scrolled: number }>((resolve) => {
@@ -116,7 +114,7 @@ test('G1 : défilement 5 s, longtasks, tas après défilement complet + 20 déta
     longestTaskMs: Math.round(Math.max(0, ...probe.longtasks)),
     scrolledPx: probe.scrolled,
   }
-  // Défilement complet (haut → bas → haut), par écrans.
+  // Full scroll (top → bottom → top), screen by screen.
   await page.evaluate(async () => {
     const sc = document.querySelector<HTMLElement>('[data-testid="library-scroll"]')!
     const step = sc.clientHeight
@@ -128,7 +126,7 @@ test('G1 : défilement 5 s, longtasks, tas après défilement complet + 20 déta
     await new Promise((r) => setTimeout(r, 300))
   })
   const heapAfterScroll = await heapMb(page)
-  // 20 ouvertures de la vue détail, puis 5 cycles de 4 ouvertures (croissance).
+  // 20 opens of the detail view, then 5 cycles of 4 opens (growth).
   const openClose = async (n: number) => {
     for (let i = 0; i < n; i++) {
       const card = page.locator(`${t('grid')} ${t('card')}`).nth(i % 12)
@@ -156,7 +154,7 @@ test('G1 : défilement 5 s, longtasks, tas après défilement complet + 20 déta
   expect(growthPct).toBeLessThan(15)
 })
 
-test('G2 : page de liste, compteurs, FTS à travers l’IPC', async ({ page }) => {
+test('G2: list page, counters, FTS through the IPC', async ({ page }) => {
   test.setTimeout(120_000)
   await expect(page.locator(t('app-shell'))).toBeVisible()
   const time = async (channel: string, input: unknown, n = 30) => {

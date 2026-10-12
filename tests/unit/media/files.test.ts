@@ -1,5 +1,5 @@
 /**
- * opérations fichier : hash en flux, clonage FICLONE + rename, zip (yazl), toPng.
+ * file operations: streaming hash, FICLONE cloning + rename, zip (yazl), toPng.
  */
 import { execFileSync } from 'node:child_process'
 import {
@@ -24,7 +24,7 @@ const tmp = makeTmp()
 afterAll(() => tmp.cleanup())
 
 describe('hashFile', () => {
-  it('sha256 et taille identiques à crypto', async () => {
+  it('sha256 and size identical to crypto', async () => {
     const p = join(tmp.dir, 'data.bin')
     const buf = Buffer.alloc(3 * 1024 * 1024 + 17)
     for (let i = 0; i < buf.length; i++) buf[i] = (i * 31) & 0xff
@@ -32,14 +32,14 @@ describe('hashFile', () => {
     expect(await hashFile({ abs: p })).toEqual({ sha256: sha256(p), bytes: buf.length })
   })
 
-  it('fichier absent → not_found', async () => {
+  it('missing file → not_found', async () => {
     await expect(hashFile({ abs: join(tmp.dir, 'absent') })).rejects.toMatchObject({
       code: 'not_found',
     })
   })
 
-  it('accès refusé → io, message français, message Node seulement dans details', async () => {
-    if (process.getuid?.() === 0) return // root lit tout : pas de EACCES à produire
+  it('access denied → io, French message, Node message only in details', async () => {
+    if (process.getuid?.() === 0) return // root reads everything: no EACCES to produce
     const p = join(tmp.dir, 'no-read.bin')
     writeFileSync(p, 'x')
     chmodSync(p, 0o000)
@@ -54,7 +54,7 @@ describe('hashFile', () => {
 })
 
 describe('cloneFile', () => {
-  it('copie octet pour octet, crée les dossiers, sans temporaire résiduel', async () => {
+  it('byte-for-byte copy, creates folders, no leftover temp file', async () => {
     const src = join(tmp.dir, 'src.txt')
     writeFileSync(src, 'bonjour '.repeat(1000))
     const dst = join(tmp.dir, 'items', 'ab', 'clone.txt')
@@ -63,7 +63,7 @@ describe('cloneFile', () => {
     expect(readdirSync(join(tmp.dir, 'items', 'ab'))).toEqual(['clone.txt'])
   })
 
-  it('source absente → not_found ; même chemin → validation', async () => {
+  it('missing source → not_found; same path → validation', async () => {
     await expect(
       cloneFile({ src: join(tmp.dir, 'absent'), dst: join(tmp.dir, 'x', 'y') }),
     ).rejects.toMatchObject({ code: 'not_found' })
@@ -71,7 +71,7 @@ describe('cloneFile', () => {
     await expect(cloneFile({ src, dst: src })).rejects.toMatchObject({ code: 'validation' })
   })
 
-  it('même fichier sous une autre écriture (/./, //, lien) → validation, original intact', async () => {
+  it('same file under another spelling (/./, //, link) → validation, original intact', async () => {
     const dir = join(tmp.dir, 'same-clone')
     mkdirSync(dir, { recursive: true })
     const src = join(dir, 'orig.txt')
@@ -86,7 +86,7 @@ describe('cloneFile', () => {
 })
 
 describe('zipLibrary', () => {
-  it('archive lisible par unzip, progression, médias stockés sans recompression', async () => {
+  it('archive readable by unzip, progress, media stored without recompression', async () => {
     const root = join(tmp.dir, 'lib')
     mkdirSync(join(root, 'items', 'ab'), { recursive: true })
     writeFileSync(join(root, 'library.db'), 'x'.repeat(5000))
@@ -113,7 +113,7 @@ describe('zipLibrary', () => {
     expect(readdirSync(join(tmp.dir, 'export'))).toEqual(['lib.zip'])
   })
 
-  it('noms dangereux refusés, rien n’est écrit', async () => {
+  it('dangerous names rejected, nothing is written', async () => {
     for (const bad of ['../x', '/abs', 'a/../b', 'a//b', 'a\\b', '', './a']) {
       expect(() => safeZipName(bad)).toThrow()
     }
@@ -143,7 +143,7 @@ describe('zipLibrary', () => {
     expect(readdirSync(join(tmp.dir, 'bad'))).toEqual([])
   })
 
-  it('chemin relatif qui sort de la bibliothèque refusé ; lien symbolique refusé', async () => {
+  it('relative path leaving the library rejected; symbolic link rejected', async () => {
     const root = join(tmp.dir, 'confine')
     mkdirSync(join(root, 'items'), { recursive: true })
     writeFileSync(join(root, 'items', 'ok.bin'), 'ok')
@@ -166,7 +166,7 @@ describe('zipLibrary', () => {
       }),
     ).rejects.toMatchObject({ code: 'validation' })
     expect(readdirSync(join(tmp.dir, 'confine-out'))).toEqual([])
-    // Un chemin relatif sous la racine reste accepté.
+    // A relative path under the root is still accepted.
     const ok = await zipLibrary({
       root,
       out,
@@ -175,14 +175,14 @@ describe('zipLibrary', () => {
     expect(ok.bytes).toBeGreaterThan(0)
   })
 
-  it('dossier intermédiaire symbolique qui sort de la racine → validation, rien n’est écrit', async () => {
+  it('symbolic intermediate folder leaving the root → validation, nothing is written', async () => {
     const root = join(tmp.dir, 'dirlink-root')
     mkdirSync(join(root, 'items'), { recursive: true })
     const outside = join(tmp.dir, 'dirlink-outside')
     mkdirSync(outside, { recursive: true })
     writeFileSync(join(outside, 'hosts'), 'hors racine')
     symlinkSync(outside, join(root, 'etclink'))
-    // Un dossier symbolique qui reste dans la racine reste accepté.
+    // A symbolic folder that stays within the root is still accepted.
     symlinkSync(join(root, 'items'), join(root, 'alias'))
     writeFileSync(join(root, 'items', 'ok.bin'), 'ok')
     const out = join(tmp.dir, 'dirlink-out', 'd.zip')
@@ -202,7 +202,7 @@ describe('zipLibrary', () => {
     expect(ok.bytes).toBeGreaterThan(0)
   })
 
-  it('entrée nulle → validation (pas internal) ; noms qui ne diffèrent que par la casse → validation', async () => {
+  it('null entry → validation (not internal); names differing only by case → validation', async () => {
     const root = join(tmp.dir, 'entries-root')
     mkdirSync(root, { recursive: true })
     writeFileSync(join(root, 'f.txt'), 'f')
@@ -223,7 +223,7 @@ describe('zipLibrary', () => {
     expect(existsSync(out)).toBe(false)
   })
 
-  it('sortie dans la bibliothèque, ou sortie = source (lien dur compris) → validation, source intacte', async () => {
+  it('output inside the library, or output = source (hard link included) → validation, source intact', async () => {
     const root = join(tmp.dir, 'out-root')
     mkdirSync(join(root, 'items'), { recursive: true })
     const a = join(root, 'items', 'a.txt')
@@ -246,7 +246,7 @@ describe('zipLibrary', () => {
     expect(readFileSync(ext, 'utf8')).toBe('x')
   })
 
-  describe('source modifiée ou supprimée pendant l’export', () => {
+  describe('source modified or deleted during export', () => {
     function setup(tag: string) {
       const root = join(tmp.dir, `live-${tag}`)
       mkdirSync(root, { recursive: true })
@@ -265,7 +265,7 @@ describe('zipLibrary', () => {
       }
     }
 
-    it('fichier tronqué après la 1re entrée → conflict, aucun .part', async () => {
+    it('file truncated after the 1st entry → conflict, no .part', async () => {
       const { root, outDir, args } = setup('trunc')
       await expect(
         zipLibrary(args, (p) => {
@@ -275,7 +275,7 @@ describe('zipLibrary', () => {
       expect(readdirSync(outDir)).toEqual([])
     })
 
-    it('fichier supprimé après la 1re entrée → not_found, aucun .part', async () => {
+    it('file deleted after the 1st entry → not_found, no .part', async () => {
       const { root, outDir, args } = setup('rm')
       const run = zipLibrary(args, (p) => {
         if (p.done === 1) rmSync(join(root, 'b.bin'))
@@ -285,7 +285,7 @@ describe('zipLibrary', () => {
       expect(readdirSync(outDir)).toEqual([])
     })
 
-    it('fichier illisible (EACCES à l’ouverture) → io, aucun .part', async () => {
+    it('unreadable file (EACCES on open) → io, no .part', async () => {
       const { root, outDir, args } = setup('eacces')
       chmodSync(join(root, 'b.bin'), 0o000)
       try {

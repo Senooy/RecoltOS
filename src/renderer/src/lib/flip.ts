@@ -1,6 +1,6 @@
 /**
- * FLIP manuel : carte → vue détail sur 340 ms `--ease-sheet`.
- * Aucun FLIP en mouvement réduit.
+ * Manual FLIP: card → detail view over 340 ms `--ease-sheet`.
+ * No FLIP with reduced motion.
  */
 
 export const SHEET_DURATION_MS = 340
@@ -17,7 +17,7 @@ export interface FlipOptions {
   easing?: string
 }
 
-/** Anime `el` depuis le rectangle `from` (mesuré avant le changement de mise en page). */
+/** Animates `el` from the `from` rectangle (measured before the layout change). */
 export function flipFrom(el: HTMLElement, from: DOMRect, opts: FlipOptions = {}): Animation | null {
   if (prefersReducedMotion() || typeof el.animate !== 'function') return null
   const to = el.getBoundingClientRect()

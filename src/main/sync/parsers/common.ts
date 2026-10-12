@@ -1,6 +1,6 @@
 /**
- * Outils communs aux parseurs de sync : accès défensifs à du JSON inconnu, URL https,
- * construction et validation de `post_meta` v1, comptage des entrées écartées. Aucun effet de bord.
+ * Common tools for the sync parsers: defensive access to unknown JSON, https URLs,
+ * building and validation of `post_meta` v1, counting of discarded entries. No side effects.
  */
 import {
   PostMetaSchema,
@@ -18,7 +18,7 @@ import type {
   SyncPlatform,
 } from './types'
 
-/** Plafonds défensifs (une page réelle en est très loin). */
+/** Defensive caps (a real page is far below them). */
 export const MAX_ENTRIES = 2000
 export const MAX_MEDIA_PER_POST = 50
 export const MAX_ISSUES = 100
@@ -33,7 +33,7 @@ export function isObj(v: unknown): v is Json {
   return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
-/** Objet ou `{}` : permet d'enchaîner les lectures sans test à chaque niveau. */
+/** Object or `{}`: allows chaining reads without a test at each level. */
 export function obj(v: unknown): Json {
   return isObj(v) ? v : {}
 }
@@ -46,7 +46,7 @@ export function str(v: unknown): string | null {
   return typeof v === 'string' ? v : null
 }
 
-/** Chaîne non vide après `trim`, sinon `null`. */
+/** Non-empty string after `trim`, otherwise `null`. */
 export function nonEmpty(v: unknown): string | null {
   if (typeof v !== 'string') return null
   const t = v.trim()
@@ -57,13 +57,13 @@ export function num(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) ? v : null
 }
 
-/** Entier positif (dimensions, durées), sinon `null`. */
+/** Positive integer (dimensions, durations), otherwise `null`. */
 export function posInt(v: unknown): number | null {
   const n = num(v)
   return n !== null && n > 0 ? Math.round(n) : null
 }
 
-/** Identifiant : chaîne ou nombre entier, caractères sûrs, longueur bornée. */
+/** Identifier: string or integer, safe characters, bounded length. */
 export function idStr(v: unknown, pattern: RegExp = /^[A-Za-z0-9_-]+$/): string | null {
   const s = typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? String(v) : str(v)
   if (s === null || s.length === 0 || s.length > MAX_ID) return null
@@ -76,8 +76,8 @@ export function cursorStr(v: unknown): string | null {
 }
 
 /**
- * URL distante exploitable : absolue, `https:` (ou `http:` si `allowHttp`), sans identifiants
- * embarqués, longueur bornée. Renvoie la forme sérialisée par `URL`, sinon `null`.
+ * Usable remote URL: absolute, `https:` (or `http:` if `allowHttp`), without
+ * embedded credentials, bounded length. Returns the form serialized by `URL`, otherwise `null`.
  */
 export function webUrl(v: unknown, allowHttp = false): string | null {
   if (typeof v !== 'string' || v.length === 0 || v.length > MAX_URL) return null
@@ -92,7 +92,7 @@ export function webUrl(v: unknown, allowHttp = false): string | null {
   return u.href
 }
 
-/** `https://…` avec le paramètre `name` retiré de la requête (le reste est conservé). */
+/** `https://…` with the `name` parameter removed from the query (the rest is kept). */
 export function withoutParam(url: string, name: string): string {
   const u = new URL(url)
   u.searchParams.delete(name)
@@ -105,7 +105,7 @@ export function withParam(url: string, name: string, value: string): string {
   return u.href
 }
 
-/** Handle sans `@` ni espaces ; `null` s'il est vide. */
+/** Handle without `@` or spaces; `null` if empty. */
 export function cleanHandle(v: unknown): string | null {
   const s = nonEmpty(v)
   if (s === null) return null
@@ -113,7 +113,7 @@ export function cleanHandle(v: unknown): string | null {
   return h === '' || h.length > 100 || /\s/.test(h) ? null : h
 }
 
-/** Texte : caractères de contrôle retirés (sauf saut de ligne et tabulation), borné, `trim`. */
+/** Text: control characters removed (except newline and tab), bounded, `trim`. */
 export function cleanText(v: unknown): string | null {
   if (typeof v !== 'string') return null
   // eslint-disable-next-line no-control-regex
@@ -122,7 +122,7 @@ export function cleanText(v: unknown): string | null {
   return t.length > MAX_TEXT ? t.slice(0, MAX_TEXT) : t
 }
 
-/** Date ISO / RFC → ms epoch, sinon `null`. */
+/** ISO / RFC date → ms epoch, otherwise `null`. */
 export function dateMs(v: unknown): number | null {
   if (typeof v !== 'string' || v.length > 100) return null
   const t = Date.parse(v)
@@ -133,7 +133,7 @@ export function emptyStats(): ParseStats {
   return { entries: 0, parsed: 0, unavailable: 0, ignored: 0, malformed: 0, mediaDropped: 0 }
 }
 
-/** Collecteur de stats et d'anomalies pour une page. */
+/** Collector of stats and anomalies for a page. */
 export class PageLog {
   readonly stats: ParseStats = emptyStats()
   readonly issues: ParseIssue[] = []
@@ -147,7 +147,7 @@ export class PageLog {
   }
 }
 
-/** Échec d'une entrée isolée : lancée dans un parseur d'entrée, attrapée par la boucle de page. */
+/** Failure of an isolated entry: thrown inside an entry parser, caught by the page loop. */
 export class EntryError extends Error {}
 
 export function fail(reason: string): never {
@@ -168,7 +168,7 @@ export function errorResult(
   }
 }
 
-/** Raison lisible d'une exception inattendue (jamais propagée). */
+/** Readable reason for an unexpected exception (never propagated). */
 export function errMessage(err: unknown): string {
   if (err instanceof Error) return err.message.slice(0, 200)
   return 'erreur inconnue'
@@ -189,7 +189,7 @@ export function emptyMedia(type: 'image' | 'video'): NormalizedMedia {
   }
 }
 
-/** `NormalizedMedia` → `PostMedia` v1 (la vidéo HLS seule garde son URL `.m3u8`). */
+/** `NormalizedMedia` → `PostMedia` v1 (an HLS video alone keeps its `.m3u8` URL). */
 export function toPostMedia(m: NormalizedMedia): PostMedia {
   return {
     type: m.type,
@@ -215,7 +215,7 @@ export interface PostMetaParts {
   thread?: PostMeta['thread']
 }
 
-/** Construit et valide `post_meta` v1 ; une forme invalide isole l'entrée. */
+/** Builds and validates `post_meta` v1; an invalid shape isolates the entry. */
 export function buildPostMeta(p: PostMetaParts): PostMeta {
   const r = PostMetaSchema.safeParse({
     v: 1,
@@ -232,7 +232,7 @@ export function buildPostMeta(p: PostMetaParts): PostMeta {
   return r.data
 }
 
-/** Auteurs dédupliqués par handle (insensible à la casse), ceux sans handle ignorés. */
+/** Authors deduplicated by handle (case-insensitive), those without a handle ignored. */
 export function uniqueAuthors(list: (NormalizedAuthor | null | undefined)[]): NormalizedAuthor[] {
   const seen = new Set<string>()
   const out: NormalizedAuthor[] = []
@@ -246,12 +246,12 @@ export function uniqueAuthors(list: (NormalizedAuthor | null | undefined)[]): No
   return out
 }
 
-/** Applique `requestCursor` : un curseur identique à celui demandé termine la pagination. */
+/** Applies `requestCursor`: a cursor identical to the requested one ends pagination. */
 export function finalCursor(next: string | null, requestCursor: string | null | undefined) {
   return next !== null && requestCursor != null && next === requestCursor ? null : next
 }
 
-/** JSON brut ou chaîne JSON → valeur ; une chaîne illisible donne `undefined`. */
+/** Raw JSON or JSON string → value; an unreadable string gives `undefined`. */
 export function coerceJson(input: unknown): unknown {
   if (typeof input !== 'string') return input
   try {

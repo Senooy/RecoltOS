@@ -1,14 +1,14 @@
 /**
  * `pnpm run shots [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--lang fr|en] [--out dir]`
- * lance l'app comme les tests e2e (build automatique, `userData` neuf) en
- * `--force-device-scale-factor=2` et écrit `.visual/current/<scène>-<thème>.png` (2560×1640) plus
- * `manifest.json` (résultat de chaque scène : ok / indisponible + raison).
+ * launches the app like the e2e tests (automatic build, fresh `userData`) with
+ * `--force-device-scale-factor=2` and writes `.visual/current/<scene>-<theme>.png` (2560×1640) plus
+ * `manifest.json` (result of each scene: ok / unavailable + reason).
  *
- * `--library demo` (défaut) : bibliothèque de démo de `make-fixtures.mts` ; `--library real` : copie
- * d'un dossier `userData` RecoltOS, depuis `RECOLTOS_REAL_USERDATA` (une COPIE, jamais le dossier
- * vivant sous `~/Library/Application Support`) ;
- * `--library none` : app vide. `--lang en` : interface en anglais (réglage `ui.language`) ; par défaut
- * le français, comme les baselines visuelles.
+ * `--library demo` (default): demo library from `make-fixtures.mts`; `--library real`: copy of a
+ * RecoltOS `userData` folder, from `RECOLTOS_REAL_USERDATA` (a COPY, never the live folder under
+ * `~/Library/Application Support`);
+ * `--library none`: empty app. `--lang en`: English interface (`ui.language` setting); by default
+ * French, like the visual baselines.
  */
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -33,14 +33,14 @@ export const LIBRARY_MODES = ['demo', 'real', 'none'] as const
 export const THEME_MODES = ['light', 'dark', 'both'] as const
 export const LANG_MODES = ['fr', 'en'] as const
 
-/** Message d'usage (français) si `--library` n'est pas `demo`, `real` ou `none` ; sinon `null`. */
+/** Usage message (in French) if `--library` is not `demo`, `real` or `none`; otherwise `null`. */
 export function libraryUsageError(value: string): string | null {
   return (LIBRARY_MODES as readonly string[]).includes(value)
     ? null
     : `--library « ${value} » inconnu (valeurs : ${LIBRARY_MODES.join(', ')})`
 }
 
-/** Message d'usage (français) si `--theme` n'est pas `light`, `dark` ou `both` ; sinon `null`. */
+/** Usage message (in French) if `--theme` is not `light`, `dark` or `both`; otherwise `null`. */
 export function themeUsageError(value: string): string | null {
   return (THEME_MODES as readonly string[]).includes(value)
     ? null
@@ -48,9 +48,9 @@ export function themeUsageError(value: string): string | null {
 }
 
 /**
- * Refus d'une source `RECOLTOS_REAL_USERDATA` qui désigne un dossier de données vivant (sous
- * `Library/Application Support`) : on travaille sur une copie. Chemin résolu ET réel (liens
- * symboliques). `null` = source acceptée.
+ * Refusal of a `RECOLTOS_REAL_USERDATA` source that points to a live data folder (under
+ * `Library/Application Support`): we work on a copy. Resolved AND real path (symbolic links).
+ * `null` = source accepted.
  */
 export function realSourceRefusal(src: string): string | null {
   const resolved = resolve(src)
@@ -58,7 +58,7 @@ export function realSourceRefusal(src: string): string | null {
   try {
     real = realpathSync(resolved)
   } catch {
-    // Source absente : la copie échouera plus tard avec un message explicite.
+    // Source missing: the copy will fail later with an explicit message.
   }
   for (const candidate of [resolved, real]) {
     if (/\/library\/application support(\/|$)/i.test(candidate))
@@ -85,7 +85,7 @@ async function prepareUserData(
 }
 
 const USAGE =
-  'usage : shots.mts [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--lang fr|en] [--out dir] [--list]'
+  'usage: shots.mts [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--lang fr|en] [--out dir] [--list]'
 
 function parseShotOptions(argv: readonly string[]) {
   return parseArgs({
@@ -106,7 +106,7 @@ async function main(argv: readonly string[]): Promise<number> {
   try {
     ;({ values } = parseShotOptions(argv))
   } catch (e) {
-    console.error(`shots : ${(e as Error).message}`)
+    console.error(`shots: ${(e as Error).message}`)
     console.error(USAGE)
     return 2
   }
@@ -128,7 +128,7 @@ async function main(argv: readonly string[]): Promise<number> {
     : `--lang « ${values.lang} » inconnu (valeurs : ${LANG_MODES.join(', ')})`
   const usageError = libraryError ?? themeError ?? realError ?? langError
   if (usageError) {
-    console.error(`shots : ${usageError}`)
+    console.error(`shots: ${usageError}`)
     console.error(USAGE)
     return 2
   }
@@ -137,7 +137,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const out = resolve(values.out ?? join(ROOT, '.visual/current'))
   mkdirSync(out, { recursive: true })
 
-  if (ensureBuild(ROOT)) console.log('shots : out/ reconstruit')
+  if (ensureBuild(ROOT)) console.log('shots: out/ rebuilt')
   const results: ShotResult[] = []
   for (const theme of themes) {
     for (const scene of scenes) {
@@ -161,7 +161,7 @@ async function main(argv: readonly string[]): Promise<number> {
             status: 'indisponible',
             reason: played.reason,
           })
-          console.log(`· ${scene.id}-${theme} : indisponible (${played.reason})`)
+          console.log(`· ${scene.id}-${theme}: unavailable (${played.reason})`)
         } else {
           await freezePage(handle.page)
           await handle.page.screenshot({ path: file, animations: 'disabled', caret: 'hide' })
@@ -171,30 +171,30 @@ async function main(argv: readonly string[]): Promise<number> {
       } catch (err) {
         const reason = err instanceof Error ? err.message : String(err)
         results.push({ scene: scene.id, theme, file: null, status: 'erreur', reason })
-        console.error(`✘ ${scene.id}-${theme} : ${reason}`)
+        console.error(`✘ ${scene.id}-${theme}: ${reason}`)
       } finally {
         await handle.close()
         removeTmpDir(userData)
       }
     }
   }
-  // Fusion avec le manifeste précédent : `shots --scene a` ne doit pas faire disparaître les autres.
+  // Merge with the previous manifest: `shots --scene a` must not remove the others.
   const manifestFile = join(out, 'manifest.json')
   const previous: ShotResult[] = existsSync(manifestFile)
     ? (JSON.parse(readFileSync(manifestFile, 'utf8')) as ShotResult[])
     : []
   writeFileSync(manifestFile, JSON.stringify(mergeManifest(previous, results), null, 2) + '\n')
   const ok = results.filter((r) => r.status === 'ok').length
-  console.log(`\nshots : ${ok}/${results.length} scène(s) capturée(s) dans ${out}`)
+  console.log(`\nshots: ${ok}/${results.length} scene(s) captured in ${out}`)
   return results.some((r) => r.status === 'erreur') ? 1 : 0
 }
 
-// Garde d'entrée : importer ce module (tests) ne lance pas la capture.
+// Entry guard: importing this module (tests) does not start the capture.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
     process.exitCode = await main(process.argv.slice(2))
   } catch (err) {
-    console.error(`shots : ${err instanceof Error ? err.message : String(err)}`)
+    console.error(`shots: ${err instanceof Error ? err.message : String(err)}`)
     process.exitCode = 1
   }
 }

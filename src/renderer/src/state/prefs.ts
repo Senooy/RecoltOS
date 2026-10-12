@@ -1,6 +1,6 @@
 /**
- * Préférences côté renderer : copie de `prefs.json` (main fait foi), mises à jour optimistes,
- * application du thème (`<html data-theme>`), du mouvement réduit et de la langue (`ui.language`).
+ * Renderer-side preferences: copy of `prefs.json` (main is authoritative), optimistic updates,
+ * applying the theme (`<html data-theme>`), reduced motion and language (`ui.language`).
  */
 import { create } from 'zustand'
 import type { UserPrefsPatch } from '../../../shared/ipc/prefs'
@@ -24,9 +24,9 @@ export function effectiveTheme(theme: Prefs['theme']): 'light' | 'dark' {
 }
 
 /**
- * Bascule de thème INSTANTANÉE : pendant l'image où `data-theme` change, `data-theme-switching`
- * coupe toutes les transitions (sinon les surfaces animées en 120 ms passent par un état mêlé des
- * deux thèmes, perçu comme un flash). Retiré deux images plus tard.
+ * INSTANT theme switch: during the frame where `data-theme` changes, `data-theme-switching`
+ * disables all transitions (otherwise surfaces animated over 120 ms pass through a mixed state
+ * of both themes, perceived as a flash). Removed two frames later.
  */
 export function setDocumentTheme(
   theme: 'light' | 'dark',
@@ -43,8 +43,8 @@ export function setDocumentTheme(
 }
 
 /**
- * Langue du système vue par le renderer : passée par main au lancement (`flags.systemLang`).
- * Sans drapeaux (tests), la langue courante : `ui.language: 'system'` ne la change alors pas.
+ * System language as seen by the renderer: passed by main at launch (`flags.systemLang`).
+ * Without flags (tests), the current language: `ui.language: 'system'` then does not change it.
  */
 export function systemLang(): Lang {
   return (
@@ -52,7 +52,7 @@ export function systemLang(): Lang {
   )
 }
 
-/** Langue effective des prefs, appliquée tout de suite (la coque se remonte dans la langue). */
+/** Effective language from the prefs, applied immediately (the shell re-renders in that language). */
 export function applyPrefsLanguage(prefs: Prefs): void {
   setUiLang(resolveLang(prefs.ui.language, systemLang()))
 }
@@ -76,8 +76,8 @@ export const usePrefs = create<PrefsState>()((set, get) => ({
       set({ prefs, loaded: true })
       applyPrefsToDocument(prefs)
     } catch (err) {
-      // Avant, `prefs.get` n'est pas implémenté : on garde les défauts.
-      if (!isNotImplemented(err)) console.error('[prefs] lecture impossible', err)
+      // Older builds lack `prefs.get`: keep the defaults.
+      if (!isNotImplemented(err)) console.error('[prefs] cannot read', err)
       set({ loaded: true })
     }
   },
@@ -104,8 +104,8 @@ export interface SystemThemeQuery {
 }
 
 /**
- * Avec `theme: 'system'`, réapplique le thème quand l'apparence du système change
- * (bascule automatique de macOS) ; sans effet pour `light` / `dark`.
+ * With `theme: 'system'`, reapplies the theme when the system appearance changes
+ * (automatic macOS switch); no effect for `light` / `dark`.
  */
 export function followSystemTheme(
   getPrefs: () => Prefs = () => usePrefs.getState().prefs,
@@ -123,7 +123,7 @@ export function followSystemTheme(
   return () => mql.removeEventListener('change', onChange)
 }
 
-/** Suit `evt:prefs.changed` (autre fenêtre, main) et l'apparence du système. */
+/** Follows `evt:prefs.changed` (another window, main) and the system appearance. */
 export function followPrefsChanges(): () => void {
   const stopSystem = followSystemTheme()
   const stopEvent = subscribe('prefs.changed', (prefs) => {

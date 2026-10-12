@@ -1,6 +1,6 @@
 /**
- * Handlers `tags.*` : liste avec comptes et chips de source virtuelles,
- * ajout / retrait, renommage (`conflict`), suppression, fusion. Noms réservés → `tag_reserved`.
+ * Handlers `tags.*`: list with counts and virtual source chips, add / remove,
+ * rename (`conflict`), delete, merge. Reserved names → `tag_reserved`.
  */
 import { AppError } from '../../../shared/errors'
 import { sourceChips } from '../../db/queries/counts'

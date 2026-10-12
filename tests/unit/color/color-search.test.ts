@@ -23,7 +23,7 @@ import {
 } from '../../../src/main/color/palette-index'
 import { openTestDb } from '../../helpers/db'
 
-/** Sharma, Wu et Dalal (2005), table 1 : paires de contrôle et ΔE00 attendu. */
+/** Sharma, Wu and Dalal (2005), table 1: control pairs and expected ΔE00. */
 const SHARMA: [Lab, Lab, number][] = [
   [[50, 2.6772, -79.7751], [50, 0, -82.7485], 2.0425],
   [[50, 3.1571, -77.2803], [50, 0, -82.7485], 2.8615],
@@ -44,14 +44,14 @@ const SHARMA: [Lab, Lab, number][] = [
   [[2.0776, 0.0795, -1.135], [0.9033, -0.0636, -0.5514], 0.9082],
 ]
 
-describe('ΔE2000 (wrapper culori)', () => {
+describe('ΔE2000 (culori wrapper)', () => {
   it.each(SHARMA)('paire de Sharma %#', (a, b, expected) => {
     expect(deltaE2000(a, b)).toBeCloseTo(expected, 3)
   })
 })
 
-describe('ΔE2000 numérique de la boucle chaude', () => {
-  it('égal au wrapper culori à 1e-4 (Sharma + 20 000 paires aléatoires)', () => {
+describe('numeric ΔE2000 of the hot loop', () => {
+  it('equal to the culori wrapper at 1e-4 (Sharma + 20,000 random pairs)', () => {
     for (const [a, b] of SHARMA)
       expect(Math.abs(de2000Num(...a, ...b) - deltaE2000(a, b))).toBeLessThan(1e-4)
     let s = 1
@@ -67,14 +67,14 @@ describe('ΔE2000 numérique de la boucle chaude', () => {
   })
 })
 
-describe('Lab D65 maison', () => {
-  it('#1850f0 ≈ [41.5641, 44.0679, -84.0211] (valeur de référence)', () => {
+describe('in-house Lab D65', () => {
+  it('#1850f0 ≈ [41.5641, 44.0679, -84.0211] (reference value)', () => {
     const [l, a, b] = hexToLab('#1850f0')
     expect(l).toBeCloseTo(41.5641, 3)
     expect(a).toBeCloseTo(44.0679, 3)
     expect(b).toBeCloseTo(-84.0211, 3)
   })
-  it('conforme à culori `lab65` à 0,05 près', () => {
+  it('matches culori `lab65` within 0.05', () => {
     const toLab = converter('lab65')
     for (let i = 0; i < 400; i++) {
       const rgb = [(i * 37) % 256, (i * 91) % 256, (i * 151) % 256] as const
@@ -88,9 +88,9 @@ describe('Lab D65 maison', () => {
   })
 })
 
-describe('buckets de teinte décalés de 15°', () => {
+describe('hue buckets shifted by 15°', () => {
   const lch = (h: number) => [60, 40, h] as const
-  it('les rouges ne sont plus coupés en deux', () => {
+  it('reds are no longer split in two', () => {
     expect(hueBucket(lch(350))).toBe(0)
     expect(hueBucket(lch(5))).toBe(0)
     expect(hueBucket(lch(14.9))).toBe(0)
@@ -98,7 +98,7 @@ describe('buckets de teinte décalés de 15°', () => {
     expect(hueBucket(lch(344.9))).toBe(11)
     expect(hueBucket([60, 5, 120])).toBe(NEUTRAL_BUCKET)
   })
-  it('les 12 couleurs nommées : 8 teintes ordonnées puis neutres', () => {
+  it('the 12 named colors: 8 ordered hues then neutrals', () => {
     const buckets = NAMED_COLORS.map((c) => hueBucket(labToLch(c.lab)))
     expect(buckets[0]).toBeLessThanOrEqual(1)
     for (const b of buckets.slice(0, 9)) expect(b).toBeLessThan(NEUTRAL_BUCKET)
@@ -128,8 +128,8 @@ function insert(
   )
 }
 
-describe('PaletteIndex + filtre', () => {
-  it('« rouge » renvoie les éléments dominés par le rouge, poids et intersection', () => {
+describe('PaletteIndex + filter', () => {
+  it('"rouge" returns the items dominated by red, weights and intersection', () => {
     const db = openTestDb()
     insert(db, 1, ['#d0201c', '#ffffff'])
     insert(db, 2, ['#1a3fd0', '#f2f2f2'])
@@ -148,7 +148,7 @@ describe('PaletteIndex + filtre', () => {
     db.close()
   })
 
-  it('index paresseux invalidé', () => {
+  it('lazy index invalidated', () => {
     const db = openTestDb()
     insert(db, 1, ['#d0201c'])
     const a = getPaletteIndex(db)
@@ -159,7 +159,7 @@ describe('PaletteIndex + filtre', () => {
     db.close()
   })
 
-  it('10 000 palettes : garde-fou de performance', () => {
+  it('10,000 palettes: performance guard', () => {
     const db = openTestDb()
     let seed = 7
     const rnd = () => {
@@ -184,8 +184,8 @@ describe('PaletteIndex + filtre', () => {
       times.push(performance.now() - t0)
     }
     times.sort((a, b) => a - b)
-    // Garde-fou sous la charge de la suite parallèle ; le critère strict (médiane < 2 ms) est
-    // mesuré seul par `pnpm run bench:color` (≈ 1,1 ms).
+    // Guard under the load of the parallel suite; the strict criterion (median < 2 ms) is
+    // measured alone by `pnpm run bench:color` (≈ 1.1 ms).
     expect(times[0]!).toBeLessThan(5)
     db.close()
   })

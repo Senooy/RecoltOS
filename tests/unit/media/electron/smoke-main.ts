@@ -1,11 +1,11 @@
 /**
- * smoke Electron du media-worker, lancé par `electron-smoke.test.ts` (pas un test vitest :
- * le nom ne contient pas `.test.`). Process main réel : `utilityProcess.fork` via
- * `makeUtilityFork` (le vrai adaptateur de production), `media.worker` bundlé par esbuild.
+ * Electron smoke test of the media worker, launched by `electron-smoke.test.ts` (not a vitest test:
+ * the name does not contain `.test.`). Real main process: `utilityProcess.fork` via
+ * `makeUtilityFork` (the real production adapter), `media.worker` bundled by esbuild.
  *
- * Scénario : RPC `hashFile` ; SIGKILL pendant `makePreview` → `worker_crashed`, redémarrage,
- * nouvel appel OK ; lecture de l'aperçu par Chromium (`<video>`, readyState et dimensions).
- * Entrée : `RECOLT_SMOKE_CONFIG` (chemin d'un JSON). Sortie : JSON écrit dans `resultPath`.
+ * Scenario: RPC `hashFile`; SIGKILL during `makePreview` → `worker_crashed`, restart,
+ * new call OK; preview read by Chromium (`<video>`, readyState and dimensions).
+ * Input: `RECOLT_SMOKE_CONFIG` (path of a JSON). Output: JSON written to `resultPath`.
  */
 import { app, BrowserWindow } from 'electron'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -107,11 +107,11 @@ async function run(): Promise<void> {
     log,
   })
   try {
-    // RPC de bout en bout avec le worker réel.
+    // End-to-end RPC with the real worker.
     const h = (await mw.call('hashFile', { abs: cfg.src })) as { sha256: string }
     result.hashFileSha256 = h.sha256
 
-    // SIGKILL du process utilityProcess pendant makePreview (le worker est déjà prêt).
+    // SIGKILL of the utilityProcess during makePreview (the worker is already ready).
     const pid = mw.host.pid
     if (pid === undefined) throw new Error('worker sans pid')
     const pending = mw.call(
@@ -136,7 +136,7 @@ async function run(): Promise<void> {
       })
     }
 
-    // Redémarrage automatique, puis un appel réussi (le job relancé par la file).
+    // Automatic restart, then a successful call (the job re-queued by the queue).
     await waitFor(() => mw.host.state === 'ready', 'redémarrage du worker', 15_000)
     result.restarts = mw.host.restarts
     result.restartedState = mw.host.state
@@ -147,7 +147,7 @@ async function run(): Promise<void> {
     )) as { width: number; height: number; bytes: number }
     result.afterCrashPreview = { width: again.width, height: again.height, bytes: again.bytes }
 
-    // Lecture par Chromium (la page vit à côté de l'aperçu, file:// autorisé par loadFile).
+    // Read by Chromium (the page lives next to the preview, file:// allowed by loadFile).
     result.chromium = await readInChromium(cfg.preview)
     result.ok = true
   } catch (err) {

@@ -1,6 +1,6 @@
 /**
- * critères 1 (vidéo) et 4 : ffprobe (rotation, durée, codec, `playable`), poster,
- * aperçu mp4 ≤ 8 s muet 540p `+faststart`, ffmpeg absent → `tool_missing` sans crash.
+ * criteria 1 (video) and 4: ffprobe (rotation, duration, codec, `playable`), poster,
+ * mp4 preview ≤ 8 s silent 540p `+faststart`, ffmpeg missing → `tool_missing` without crash.
  */
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
@@ -28,7 +28,7 @@ beforeAll(async () => {
 }, 120_000)
 afterAll(() => tmp.cleanup())
 
-/** Position des boîtes MP4 de premier niveau (pour vérifier `+faststart`). */
+/** Position of the top-level MP4 boxes (to check `+faststart`). */
 function topBoxes(file: string): string[] {
   const buf = readFileSync(file)
   const boxes: string[] = []
@@ -45,7 +45,7 @@ function topBoxes(file: string): string[] {
 }
 
 describe('parseFfprobe', () => {
-  it('rotation par matrice d’affichage ou par tag, pochette ignorée', () => {
+  it('rotation via display matrix or tag, cover art ignored', () => {
     const base = {
       format: { duration: '3.5' },
       streams: [
@@ -98,7 +98,7 @@ describe('parseFfprobe', () => {
 })
 
 describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
-  it('mp4 tourné de 90° : dimensions permutées, durée, codec, playable', async () => {
+  it('mp4 rotated by 90°: dimensions swapped, duration, codec, playable', async () => {
     const p = await probeVideo({ abs: fx.rot90Mp4! }, TOOLS)
     expect(p).toMatchObject({
       width: 240,
@@ -111,7 +111,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     expect(p.durationMs).toBeLessThanOrEqual(2200)
   })
 
-  it('makePoster : jpg ≤ 1280 de large, orienté ; repli à 0 au-delà de la fin', async () => {
+  it('makePoster: jpg ≤ 1280 wide, oriented; falls back to 0 past the end', async () => {
     const r = await makePoster(
       { src: fx.longMp4!, dst: out('posters/ab/long.jpg'), atMs: 1000 },
       TOOLS,
@@ -125,7 +125,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     expect((await sharp(out('posters/rot.jpg')).metadata()).format).toBe('jpeg')
   })
 
-  it('makePreview : mp4 h264 yuv420p ≤ 8 s, muet, 540p, moov avant mdat', async () => {
+  it('makePreview: h264 yuv420p mp4 ≤ 8 s, silent, 540p, moov before mdat', async () => {
     const dst = out('previews/ab/long.mp4')
     const r = await makePreview({ src: fx.longMp4!, dst, maxSeconds: 8, height: 540 }, TOOLS)
     expect(r.height).toBe(540)
@@ -149,11 +149,11 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     const boxes = topBoxes(dst)
     expect(boxes.indexOf('moov')).toBeGreaterThanOrEqual(0)
     expect(boxes.indexOf('moov')).toBeLessThan(boxes.indexOf('mdat'))
-    // Aucun fichier temporaire laissé à côté.
+    // No temporary file left behind.
     expect(readdirSync(out('previews/ab'))).toEqual(['long.mp4'])
   })
 
-  it('makePreview : vidéo tournée → portrait, sans agrandissement ; repli libx264', async () => {
+  it('makePreview: rotated video → portrait, no upscaling; libx264 fallback', async () => {
     const r = await makePreview(
       { src: fx.rot90Mp4!, dst: out('previews/rot.mp4'), maxSeconds: 8, height: 540 },
       TOOLS,
@@ -208,7 +208,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     60_000,
   )
 
-  it.runIf(HAS_FF)('vidéo absente → not_found (probeVideo, makePoster, makePreview)', async () => {
+  it.runIf(HAS_FF)('missing video → not_found (probeVideo, makePoster, makePreview)', async () => {
     const src = join(tmp.dir, 'absente.mp4')
     for (const call of [
       () => probeVideo({ abs: src }, TOOLS),
@@ -230,7 +230,7 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
       )
       const junk = join(tmp.dir, 'junk.mp4')
       writeFileSync(junk, Buffer.alloc(4096, 7))
-      // Vidéo tronquée : ffprobe peut la laisser passer, ffmpeg échoue ensuite.
+      // Truncated video: ffprobe may let it through, ffmpeg fails afterwards.
       const cut = join(tmp.dir, 'cut.mp4')
       writeFileSync(cut, readFileSync(fx.longMp4!).subarray(0, 3000))
       for (const src of [audio, junk, cut]) {
@@ -254,11 +254,11 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
             (e: unknown) => e,
           )) as AppError | null
           expect([name, label, err?.code]).toEqual([name, label, 'decode_failed'])
-          // Message en français : jamais le stderr anglais de ffmpeg ; le brut va dans details.
+          // French message: never ffmpeg's English stderr; the raw output goes in details.
           expect(err?.message).not.toMatch(/Invalid data|does not contain|Failed to set|option/)
         }
       }
-      // Aucun fichier résiduel (ni temporaire ni destination).
+      // No leftover file (neither temporary nor destination).
       expect(existsSync(out('bad')) ? readdirSync(out('bad')) : []).toEqual([])
     },
     60_000,
@@ -293,8 +293,8 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
     },
   )
 
-  it('encodeur indisponible → échec réel, puis repli sur le suivant, sans fichier résiduel', async () => {
-    // Seul, l'encodeur inconnu fait vraiment échouer ffmpeg.
+  it('unavailable encoder → real failure, then fallback to the next one, no leftover file', async () => {
+    // Alone, the unknown encoder really makes ffmpeg fail.
     await expect(
       makePreview(
         { src: fx.rot90Mp4!, dst: out('fallback/never.mp4'), maxSeconds: 8, height: 540 },
@@ -316,11 +316,11 @@ describe.skipIf(!HAS_FF)('ffprobe / ffmpeg réels', () => {
   })
 })
 
-describe('outils absents → tool_missing, pas de crash', () => {
-  // Le fichier existe (octets quelconques) : seul l'outil manque, pas la source.
+describe('missing tools → tool_missing, no crash', () => {
+  // The file exists (arbitrary bytes): only the tool is missing, not the source.
   const src = join(tmp.dir, 'quelconque.mp4')
   writeFileSync(src, 'pas une vraie vidéo')
-  it('ffmpeg non résolu', async () => {
+  it('ffmpeg not resolved', async () => {
     await expect(
       makePreview(
         { src, dst: out('p/x.mp4'), maxSeconds: 8, height: 540 },
@@ -333,7 +333,7 @@ describe('outils absents → tool_missing, pas de crash', () => {
     await expect(probeVideo({ abs: src }, {})).rejects.toMatchObject({ code: 'tool_missing' })
   })
 
-  it('chemin ffmpeg invalide (binaire supprimé) → tool_missing', async () => {
+  it('invalid ffmpeg path (binary removed) → tool_missing', async () => {
     const bogus = { ffmpeg: '/nonexistent/ffmpeg', ffprobe: '/nonexistent/ffprobe' }
     await expect(
       makePreview({ src, dst: out('p/y.mp4'), maxSeconds: 8, height: 540 }, bogus),
@@ -342,11 +342,11 @@ describe('outils absents → tool_missing, pas de crash', () => {
       /brew install ffmpeg/,
     )
     await expect(probeVideo({ abs: src }, bogus)).rejects.toMatchObject({ code: 'tool_missing' })
-    // Échec avant toute écriture : aucun fichier (temporaire ou final) n'est laissé.
+    // Failure before any write: no file (temporary or final) is left.
     expect(existsSync(out('p')) ? readdirSync(out('p')) : []).toEqual([])
   })
 
-  it('arguments d’aperçu : muet, 8 s, +faststart, sans métadonnées', () => {
+  it('preview arguments: silent, 8 s, +faststart, no metadata', () => {
     const a = previewArgs('/in.mov', '/out.mp4', 'h264_videotoolbox')
     expect(a).toEqual(
       expect.arrayContaining(['-an', '-t', '8', '-movflags', '+faststart', 'h264_videotoolbox']),

@@ -1,6 +1,6 @@
 /**
- * Onglets de la Bibliothèque : icône + libellé SANS nombre ; l'onglet
- * actif porte son icône et un soulignement de 2 px animé (`layoutId`).
+ * Library tabs: icon + label WITHOUT count; the active tab carries its icon and an
+ * animated 2 px underline (`layoutId`).
  */
 import { EyeOff, Folder, Images, Inbox, Trash } from 'lucide-react'
 import { LayoutGroup, motion } from 'motion/react'
@@ -8,7 +8,7 @@ import type { LibraryTab } from '../../../../shared/enums'
 import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 
-/** Libellés lus au rendu : ils suivent la langue active. */
+/** Labels read at render time: they follow the active language. */
 const tabs = () =>
   [
     { key: 'all', label: tr.tabs.all, Icon: Images },

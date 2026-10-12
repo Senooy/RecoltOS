@@ -1,6 +1,6 @@
 /**
- * Écriture atomique : `<fichier>.tmp`, `fsync`, `rename`, puis `fsync` du dossier.
- * Un crash laisse soit l'ancien fichier, soit le nouveau, jamais un fichier tronqué.
+ * Atomic write: `<fichier>.tmp`, `fsync`, `rename`, then `fsync` of the folder.
+ * A crash leaves either the old file or the new one, never a truncated file.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -25,7 +25,7 @@ export function writeFileAtomic(file: string, data: string): void {
       fs.closeSync(dfd)
     }
   } catch {
-    // fsync d'un dossier non supporté : le rename reste atomique.
+    // fsync on an unsupported folder: the rename stays atomic.
   }
 }
 
@@ -33,7 +33,7 @@ export function writeJsonAtomic(file: string, value: unknown): void {
   writeFileAtomic(file, `${JSON.stringify(value, null, 2)}\n`)
 }
 
-/** Met de côté un fichier illisible (`<fichier>.bad-<ts>`) avant de le remplacer. */
+/** Sets aside an unreadable file (`<fichier>.bad-<ts>`) before replacing it. */
 export function quarantine(file: string, at: number = Date.now()): string | null {
   try {
     const target = `${file}.bad-${at}`

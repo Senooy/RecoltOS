@@ -1,7 +1,7 @@
 /**
- * Fonctions injectées dans la page par `scripting.executeScript` (sérialisées : AUCUNE capture de
- * variable extérieure, aucun import). Lecture des métadonnées, lecture d'un blob par morceaux,
- * toast en shadow DOM.
+ * Functions injected into the page by `scripting.executeScript` (serialized: NO capture of
+ * outer variable, no imports). Reads metadata and reads a blob in chunks,
+ * toast in shadow DOM.
  */
 
 export interface PageMeta {
@@ -34,7 +34,7 @@ export function readPageMeta(): PageMeta {
   return out
 }
 
-/** Taille et type d'une ressource `blob:` / `data:` lue DANS la page (garde le blob en cache). */
+/** Size and type of a `blob:` / `data:` resource read IN the page (keeps the blob cached). */
 export async function probeBlob(
   url: string,
 ): Promise<{ size: number; mime: string } | { error: string }> {
@@ -49,7 +49,7 @@ export async function probeBlob(
   }
 }
 
-/** Morceau `[offset, offset + length)` du blob en base64 ; `release` libère le cache. */
+/** Chunk `[offset, offset + length)` of the base64 blob; `release` frees the cache. */
 export async function readBlobChunk(
   url: string,
   offset: number,
@@ -70,7 +70,7 @@ export async function readBlobChunk(
   return data
 }
 
-/** Pilule de confirmation : 3 s, bouton noir optionnel. */
+/** Confirmation pill: 3 s, optional black button. */
 export function showToast(
   text: string,
   kind: 'ok' | 'info' | 'error',

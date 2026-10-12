@@ -1,7 +1,7 @@
 /**
- * Feuille « Changer » : choix du moteur (Claude, ChatGPT / Codex, Aucun), état
- * détecté (chemin, copies, version, connexion), « Vérifier » (niveau 1, gratuit), « Tester un vrai
- * appel » (niveau 2, 1 requête) et consentement. AUCUN appel avant « J'ai compris ».
+ * "Change" sheet: engine choice (Claude, ChatGPT / Codex, None), detected state
+ * (path, copies, version, connection), "Check" (level 1, free), "Test a real call"
+ * (level 2, 1 request) and consent. NO call before "I understand".
  */
 import { useEffect, useState } from 'react'
 import {

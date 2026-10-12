@@ -1,10 +1,10 @@
 /**
- * Accès à `window.recolt` (preload). Hors Electron (navigateur) ou avec `?mock` en dev,
- * on utilise l'API maquette (`mock.ts`, 60 ItemCard). En production sans preload : API déconnectée.
+ * Access to `window.recolt` (preload). Outside Electron (browser) or with `?mock` in dev,
+ * the mock API (`mock.ts`, 60 ItemCards) is used. In production without preload: disconnected API.
  *
- * La maquette est chargée par `import()` dynamique sous la garde `import.meta.env.DEV` : en
- * build de production la branche est supprimée et ni `mock.ts` ni la fixture ne sont embarqués.
- * `initApi()` doit être awaité avant le premier rendu (`main.tsx`) ; `getApi()` reste synchrone.
+ * The mock is loaded by dynamic `import()` under the `import.meta.env.DEV` guard: in a production
+ * build the branch is removed and neither `mock.ts` nor the fixture is bundled.
+ * `initApi()` must be awaited before the first render (`main.tsx`); `getApi()` stays synchronous.
  */
 import type { RecoltApi } from '../../../preload/api'
 
@@ -31,7 +31,7 @@ function wantsMock(): boolean {
 
 let api: RecoltApi | null = null
 
-/** Choisit l'API (maquette en dev si demandée, sinon preload) et charge la maquette si besoin. */
+/** Picks the API (mock in dev if requested, otherwise preload) and loads the mock if needed. */
 export async function initApi(): Promise<RecoltApi> {
   if (api) return api
   if (import.meta.env.DEV && wantsMock()) {
@@ -43,13 +43,16 @@ export async function initApi(): Promise<RecoltApi> {
   return api
 }
 
-/** Synchrone : après `initApi()`. Avant, renvoie l'API réelle ou déconnectée (jamais la maquette). */
+/**
+ * Synchronous: after `initApi()`. Before it, returns the real or disconnected API,
+ * never the mock.
+ */
 export function getApi(): RecoltApi {
   if (api) return api
   return (typeof window !== 'undefined' ? window.recolt : undefined) ?? disconnectedApi()
 }
 
-/** Tests : injecter une API. */
+/** Tests: inject an API. */
 export function setApiForTests(next: RecoltApi | null): void {
   api = next
 }

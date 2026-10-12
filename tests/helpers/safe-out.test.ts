@@ -1,6 +1,6 @@
 /**
- * Garde des dossiers de sortie destructifs (`safe-out.ts`) et son branchement dans `make-fixtures` et
- * `seed-bench` : un `--out` mal choisi ne doit jamais effacer de données.
+ * Guard for destructive output folders (`safe-out.ts`) and its hook-up in `make-fixtures` and
+ * `seed-bench`: a badly chosen `--out` must never erase data.
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
@@ -13,7 +13,7 @@ import { REPO_ROOT } from './paths'
 import { assertSafeOutDir, FIXTURE_MARKER, markFixtureDir } from './safe-out'
 import { makeTmpDir } from './tmpdir'
 
-/** Dossier avec un fichier précieux : sert de « victime » à ne jamais supprimer. */
+/** Folder with a precious file: serves as a "victim" never to delete. */
 function victim(label = 'victim'): { dir: string; file: string } {
   const dir = makeTmpDir(label)
   const file = join(dir, 'sub/doc.txt')
@@ -30,57 +30,57 @@ const tsx = (script: string, args: string[]) =>
   )
 
 describe('assertSafeOutDir', () => {
-  it('accepte un dossier inexistant ou vide sous .tmp', () => {
+  it('accepts a non-existent or empty folder under .tmp', () => {
     const empty = makeTmpDir('safe-empty')
     expect(assertSafeOutDir(empty)).toBe(empty)
     expect(() => assertSafeOutDir(join(empty, 'nouveau/profond'))).not.toThrow()
   })
 
-  it('refuse un dossier non vide sans marqueur, avec ou sans force', () => {
+  it('refuses a non-empty folder without marker, with or without force', () => {
     const { dir, file } = victim()
     expect(() => assertSafeOutDir(dir)).toThrow(/non vide/)
     expect(() => assertSafeOutDir(dir, { force: true })).toThrow(/non vide/)
     expect(readFileSync(file, 'utf8')).toBe('précieux')
   })
 
-  it('accepte un dossier non vide qui porte le marqueur', () => {
+  it('accepts a non-empty folder bearing the marker', () => {
     const { dir } = victim('safe-marked')
     markFixtureDir(dir, 'test')
     expect(existsSync(join(dir, FIXTURE_MARKER))).toBe(true)
     expect(() => assertSafeOutDir(dir)).not.toThrow()
   })
 
-  it('refuse un fichier à la place du dossier', () => {
+  it('refuses a file in place of the folder', () => {
     const { file } = victim('safe-file')
     expect(() => assertSafeOutDir(file)).toThrow(/pas un dossier/)
   })
 
   it.each([
-    ['la racine', () => '/'],
+    ['the root', () => '/'],
     ['$HOME', () => homedir()],
-    ['le parent du dépôt', () => join(REPO_ROOT, '..')],
-    ['la racine du dépôt', () => REPO_ROOT],
-    ['« . » (dossier courant du dépôt)', () => '.'],
+    ['the repo parent', () => join(REPO_ROOT, '..')],
+    ['the repo root', () => REPO_ROOT],
+    ['"." (current repo folder)', () => '.'],
     ['Application Support', () => join(homedir(), 'Library/Application Support/RecoltOS')],
     ['GatherOS', () => join(homedir(), 'Library/Application Support/GatherOS')],
-    ['un chemin GatherOS ailleurs', () => join(REPO_ROOT, '.tmp/GatherOS/copie')],
-  ])('refuse %s, même avec force', (_nom, path) => {
+    ['a GatherOS path elsewhere', () => join(REPO_ROOT, '.tmp/GatherOS/copie')],
+  ])('refuses %s, even with force', (_nom, path) => {
     expect(() => assertSafeOutDir(path())).toThrow(/refusé/)
     expect(() => assertSafeOutDir(path(), { force: true })).toThrow(/refusé/)
   })
 
-  it('refuse un chemin vide', () => {
+  it('refuses an empty path', () => {
     expect(() => assertSafeOutDir('')).toThrow(/vide/)
   })
 
-  it('hors zone temporaire : refusé sans force, accepté avec', () => {
+  it('outside the temporary zone: refused without force, accepted with it', () => {
     const home = makeTmpDir('safe-home')
     const outside = join(REPO_ROOT, 'out-of-zone-test')
     expect(() => assertSafeOutDir(outside, { home })).toThrow(/--force/)
     expect(assertSafeOutDir(outside, { home, force: true })).toBe(outside)
   })
 
-  it('résout les liens symboliques avant de juger', () => {
+  it('resolves symbolic links before judging', () => {
     const base = makeTmpDir('safe-link')
     const link = join(base, 'vers-home')
     symlinkSync(homedir(), link)
@@ -92,8 +92,8 @@ describe('assertSafeOutDir', () => {
   })
 })
 
-describe('branchement dans les scripts destructifs', () => {
-  it('makeDemoLibrary refuse un dossier non vide sans marqueur et ne supprime rien', async () => {
+describe('hook-up in destructive scripts', () => {
+  it('makeDemoLibrary refuses a non-empty folder without marker and deletes nothing', async () => {
     const { dir, file } = victim()
     await expect(makeDemoLibrary(dir, { count: 10, collections: 2 })).rejects.toThrow(/non vide/)
     await expect(makeDemoLibrary(dir, { count: 10, collections: 2 }, false)).rejects.toThrow(
@@ -102,13 +102,13 @@ describe('branchement dans les scripts destructifs', () => {
     expect(readFileSync(file, 'utf8')).toBe('précieux')
   })
 
-  it('seedBench refuse un dossier non vide sans marqueur et ne supprime rien', async () => {
+  it('seedBench refuses a non-empty folder without marker and deletes nothing', async () => {
     const { dir, file } = victim()
     await expect(seedBench(dir, { count: 10, files: false })).rejects.toThrow(/non vide/)
     expect(readFileSync(file, 'utf8')).toBe('précieux')
   })
 
-  it('un dossier fabriqué se régénère sans force (marqueur)', async () => {
+  it('a generated folder is regenerated without force (marker)', async () => {
     const out = makeTmpDir('safe-regen')
     await seedBench(out, { count: 10, files: false })
     expect(existsSync(join(out, FIXTURE_MARKER))).toBe(true)
@@ -121,7 +121,7 @@ describe('branchement dans les scripts destructifs', () => {
     })
   })
 
-  it('CLI make-fixtures : --out sur un dossier non vide échoue (code 2) sans rien effacer', () => {
+  it('CLI make-fixtures: --out on a non-empty folder fails (code 2) without erasing anything', () => {
     const { dir, file } = victim()
     const r = tsx('scripts/make-fixtures.mts', ['--out', dir, '--count', '10'])
     expect(r.status, r.stdout).toBe(2)
@@ -129,7 +129,7 @@ describe('branchement dans les scripts destructifs', () => {
     expect(readFileSync(file, 'utf8')).toBe('précieux')
   })
 
-  it('CLI seed-bench : --out sur un dossier non vide échoue (code 2) sans rien effacer', () => {
+  it('CLI seed-bench: --out on a non-empty folder fails (code 2) without erasing anything', () => {
     const { dir, file } = victim()
     const r = tsx('scripts/seed-bench.mts', ['--out', dir, '--count', '10', '--no-files'])
     expect(r.status, r.stdout).toBe(2)
@@ -138,9 +138,9 @@ describe('branchement dans les scripts destructifs', () => {
   })
 
   it.each(['scripts/make-fixtures.mts', 'scripts/seed-bench.mts'])(
-    'CLI %s : refuse un chemin protégé même avec --force',
+    'CLI %s: refuses a protected path even with --force',
     (script) => {
-      // Chemin inexistant : si la garde régressait, rien de précieux ne serait en jeu.
+      // Non-existent path: if the guard regressed, nothing precious would be at stake.
       const out = join(REPO_ROOT, '.tmp/GatherOS/copie-test')
       const r = tsx(script, ['--out', out, '--force', '--count', '10'])
       expect(r.status).toBe(2)

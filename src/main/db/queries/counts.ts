@@ -1,7 +1,6 @@
 /**
- * Compteurs des onglets : une seule requête `sum(...)`, mise en cache par connexion et
- * invalidée à chaque `items.changed` / changement d'appartenance (servent ailleurs que
- * dans les onglets).
+ * Tab counters: a single `sum(...)` query, cached per connection and invalidated on each
+ * `items.changed` / membership change (also used outside the tabs).
  */
 import type Database from 'better-sqlite3'
 import type { TabCounts } from '../../../shared/dto/items'
@@ -31,7 +30,7 @@ export function invalidateCounts(db?: Database.Database): void {
   if (db) cache.delete(db)
 }
 
-/** Chips de source virtuelles `#x #instagram #cosmos` : éléments vivants par source. */
+/** Virtual source chips `#x #instagram #cosmos`: live items per source. */
 export function sourceChips(
   db: Database.Database,
 ): { source: 'x' | 'instagram' | 'cosmos'; count: number }[] {

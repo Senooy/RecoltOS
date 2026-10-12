@@ -1,7 +1,7 @@
 /**
- * Typage des fichiers par leur contenu : `file-type` sur les 4 100 premiers
- * octets. HEIC, HEIF et PSD passent par sips ; TIFF et formats que Chromium n'affiche pas reçoivent
- * un `display/` webp 2048.
+ * File typing by content: `file-type` on the first 4,100
+ * bytes. HEIC, HEIF and PSD go through sips; TIFF and formats that Chromium does not display get
+ * a 2048 webp `display/` derivative.
  */
 import { open } from 'node:fs/promises'
 import { fileTypeFromBuffer } from 'file-type'
@@ -12,9 +12,9 @@ export interface DetectedType {
   mime: string
   ext: string
   mediaType: 'image' | 'video'
-  /** sharp ne lit pas ce format : décodage par sips d'abord. */
+  /** sharp cannot read this format: decode with sips first. */
   foreign: boolean
-  /** Chromium ne l'affiche pas : `display/` webp nécessaire. */
+  /** Chromium does not display it: a `display/` webp is required. */
   needsDisplay: boolean
 }
 
@@ -55,7 +55,7 @@ export async function readHead(abs: string, n = HEAD_BYTES): Promise<Buffer> {
   }
 }
 
-/** Type d'un contenu, ou `null` s'il n'est pas pris en charge. */
+/** Type of a content, or `null` if it is not supported. */
 export async function detectType(head: Uint8Array): Promise<DetectedType | null> {
   const ft = await fileTypeFromBuffer(head)
   if (!ft) return null

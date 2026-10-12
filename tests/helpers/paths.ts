@@ -1,7 +1,7 @@
 /**
- * Chemins du dépôt, valables dans un worktree (`.worktrees/<nom>`) comme dans le checkout principal.
- * Pas d'`import.meta` ici : Playwright charge les fichiers de test en CJS. La racine est la première
- * `package.json` nommée « recoltos » en remontant depuis `RECOLTOS_ROOT` ou le dossier courant.
+ * Repository paths, valid in a worktree (`.worktrees/<name>`) as well as in the main checkout.
+ * No `import.meta` here: Playwright loads test files as CJS. The root is the first
+ * `package.json` named "recoltos" walking up from `RECOLTOS_ROOT` or the current folder.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -15,7 +15,7 @@ function findRoot(start: string): string {
         if ((JSON.parse(readFileSync(pkg, 'utf8')) as { name?: string }).name === 'recoltos')
           return dir
       } catch {
-        /* package.json illisible : on continue de remonter */
+        /* package.json unreadable: keep walking up */
       }
     }
     const parent = dirname(dir)
@@ -25,6 +25,6 @@ function findRoot(start: string): string {
 }
 
 export const REPO_ROOT = findRoot(process.env.RECOLTOS_ROOT ?? process.cwd())
-/** Toutes les données de test vivent ici (gitignoré), jamais dans `os.tmpdir()`. */
+/** All test data lives here (gitignored), never in `os.tmpdir()`. */
 export const TMP_ROOT = resolve(REPO_ROOT, '.tmp')
 export const MIGRATIONS_DIR = resolve(REPO_ROOT, 'src/main/db/migrations')

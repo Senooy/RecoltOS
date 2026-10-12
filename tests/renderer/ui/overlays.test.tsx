@@ -27,7 +27,7 @@ describe('Menu.Dropdown', () => {
       </Menu.Dropdown.Root>,
     )
 
-  it('role=menu, no-drag explicite, animation Radix (.ui-pop)', () => {
+  it('role=menu, explicit no-drag, Radix animation (.ui-pop)', () => {
     renderMenu()
     const menu = screen.getByRole('menu')
     expect(menu.className).toContain('app-no-drag')
@@ -36,7 +36,7 @@ describe('Menu.Dropdown', () => {
     expect(menu.className).toContain('min-w-[200px]')
   })
 
-  it('items : default, danger, checkbox, sous-menu', () => {
+  it('items: default, danger, checkbox, submenu', () => {
     const onDelete = vi.fn()
     renderMenu(onDelete)
     const del = screen.getByRole('menuitem', { name: 'Supprimer' })
@@ -54,7 +54,7 @@ describe('Menu.Dropdown', () => {
 })
 
 describe('Menu.Context', () => {
-  it('s’ouvre au clic droit avec les mêmes styles', async () => {
+  it('opens on right-click with the same styles', async () => {
     render(
       <Menu.Context.Root>
         <Menu.Context.Trigger>
@@ -74,7 +74,7 @@ describe('Menu.Context', () => {
 })
 
 describe('Dialog', () => {
-  it('titre annoncé, description reliée, bouton Fermer FR, voile no-drag', () => {
+  it('title announced, description linked, "Fermer" close button, no-drag scrim', () => {
     render(
       <Dialog.Root open>
         <Dialog.Content title="Supprimer « Dev » ?" description="Les éléments restent.">
@@ -92,7 +92,7 @@ describe('Dialog', () => {
     expect(overlay?.className).toContain('ui-scrim-modal')
   })
 
-  it('hideTitle : titre toujours dans l’arbre d’accessibilité ; voile palette sans flou', () => {
+  it('hideTitle: title still in the accessibility tree; palette scrim without blur', () => {
     render(
       <Dialog.Root open>
         <Dialog.Content title="Réglages" hideTitle showClose={false} scrim="palette" />
@@ -103,7 +103,7 @@ describe('Dialog', () => {
     expect(document.querySelector('.ui-scrim')?.className).toContain('ui-scrim-palette')
   })
 
-  it('Fermer ferme', () => {
+  it('close button closes', () => {
     const onOpenChange = vi.fn()
     render(
       <Dialog.Root open onOpenChange={onOpenChange}>
@@ -114,7 +114,7 @@ describe('Dialog', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
-  it('portale dans le conteneur fourni (thème local, viewer)', () => {
+  it('portals into the provided container (local theme, viewer)', () => {
     const host = document.createElement('div')
     host.setAttribute('data-theme', 'dark')
     document.body.appendChild(host)
@@ -130,7 +130,7 @@ describe('Dialog', () => {
 })
 
 describe('Popover', () => {
-  it('contenu stylé, no-drag, rayon 12', () => {
+  it('styled content, no-drag, radius 12', () => {
     render(
       <Popover.Root open>
         <Popover.Trigger>Filtres</Popover.Trigger>

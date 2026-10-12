@@ -1,7 +1,7 @@
 /**
- * Retours de capture dans la fenêtre : pilule « Capture ajoutée » avec « Voir » et
- * « Annuler » (8 s, met l'élément à la corbeille ; le fichier de dépôt reste), « Déjà dans la
- * bibliothèque » sans annulation ; guide de permission sur `capture.permissionRequired`.
+ * Capture feedback in the window: a "Capture added" pill with "View" and
+ * "Undo" (8 s, moves the item to the trash; the dropped file stays), "Already in the
+ * library" without undo; permission guide on `capture.permissionRequired`.
  */
 import { useEffect } from 'react'
 import { toast } from '../../components/ui'

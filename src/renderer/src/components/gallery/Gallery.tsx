@@ -1,8 +1,8 @@
 /**
- * Galerie du kit UI : chaque composant en thème clair ET sombre, pour la relecture
- * visuelle. Servie en dev par `?gallery=1` (voir `gallery-entry.tsx`).
+ * UI kit gallery: each component in light AND dark theme, for visual
+ * review. Served in dev via `?gallery=1` (see `gallery-entry.tsx`).
  *
- * Aucune classe de palette Tailwind : uniquement des tokens (vérifié par
+ * No Tailwind palette class: tokens only (checked by
  * `tests/renderer/ui/gallery.test.tsx`).
  */
 import {
@@ -67,7 +67,7 @@ function Row({ children, className }: { children: ReactNode; className?: string 
   return <div className={`flex flex-wrap items-center gap-3 ${className ?? ''}`}>{children}</div>
 }
 
-/** Panneau sombre immersif (viewer) : pour les composants conçus pour ce fond. */
+/** Immersive dark panel (viewer): for components designed for this background. */
 function Immersive({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl bg-[var(--viewer-base)] p-4 text-[var(--viewer-fg)]">
@@ -415,7 +415,7 @@ function Showcase() {
   )
 }
 
-/** Petite aide visuelle : trois icônes de l'en-tête pour juger le trait 1,75. */
+/** Small visual aid: three header icons to judge the 1.75 stroke. */
 function GlyphsSample() {
   return (
     <span className="flex items-center gap-3 text-fg-subtle">
