@@ -1,24 +1,24 @@
-# Signature de RecoltOS et certificat « RecoltOS Local »
+# Signing RecoltOS and the "RecoltOS Local" certificate
 
-## Releases publiques : Developer ID et notarisation
+## Public releases: Developer ID and notarization
 
-Les releases publiques utilisent un certificat **Developer ID Application**, le hardened runtime et
-les droits JIT d’Electron et de l’hôte Node SEA. Les fuses `runAsNode` et
-`enableNodeCliInspectArguments` restent fermés dans le build livré.
+Public releases use a **Developer ID Application** certificate, the hardened runtime and the JIT
+entitlements for Electron and the Node SEA host. The `runAsNode` and `enableNodeCliInspectArguments`
+fuses stay closed in the shipped build.
 
-Les identifiants de notarisation sont stockés dans le trousseau sous le profil `RecoltOS-notary` :
+The notarization credentials are stored in the keychain under the `RecoltOS-notary` profile:
 
 ```sh
 xcrun notarytool store-credentials "RecoltOS-notary" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID"
 xcrun notarytool history --keychain-profile "RecoltOS-notary"
 ```
 
-Saisir le mot de passe d’app uniquement à l’invite sécurisée de `notarytool`. Ne jamais le passer en
-argument, le conserver dans le dépôt ou le journaliser. Le Team ID est fourni par environnement,
-sans valeur enregistrée dans le dépôt.
+Enter the app-specific password only at the secure prompt of `notarytool`. Never pass it as an
+argument, keep it in the repository or log it. The Team ID is supplied through the environment, with no
+value stored in the repository.
 
-Pour produire une release, définir `RECOLTOS_SIGN_IDENTITY` avec le nom complet du certificat
-Developer ID Application et `APPLE_TEAM_ID`, puis lancer :
+To produce a release, set `RECOLTOS_SIGN_IDENTITY` to the full name of the Developer ID Application
+certificate and set `APPLE_TEAM_ID`, then run:
 
 ```sh
 RECOLTOS_NOTARIZE=1 pnpm run dist:dmg
@@ -26,78 +26,78 @@ pnpm run check:dist
 pnpm run test:packaged
 ```
 
-Le build vérifie le Team ID de la signature, soumet l’app à Apple, agrafe et valide son ticket, puis
-crée le DMG signé, le soumet à Apple et agrafe et valide son ticket. Un rejet interrompt le build.
-Sans `RECOLTOS_NOTARIZE=1`, aucun envoi à Apple n’a lieu. Les builds locaux gardent leur signature
-ad hoc par défaut, ou le certificat « RecoltOS Local » lorsque cette identité est définie.
+The build checks the signature's Team ID, submits the app to Apple, staples and validates its ticket,
+then creates the signed DMG, submits it to Apple and staples and validates its ticket. A rejection stops
+the build. Without `RECOLTOS_NOTARIZE=1`, nothing is sent to Apple. Local builds keep their ad hoc
+signature by default, or the "RecoltOS Local" certificate when that identity is set.
 
-## Pourquoi signer avec une identité stable
+## Why sign with a stable identity
 
-macOS rattache les autorisations de confidentialité (Enregistrement d'écran, accès au Bureau, aux Documents…) à l'**exigence désignée** (_designated requirement_) du code de l'app, pas à son chemin. Avec une signature **ad hoc** (`-`), cette exigence est le `cdhash` : un hachage du contenu du bundle. Il reste identique tant que le bundle est identique octet pour octet, et change dès que le code, l'`Info.plist` ou les fuses changent. Après chaque nouveau build, macOS peut donc te redemander les permissions.
+macOS ties privacy permissions (Screen Recording, access to the Desktop, Documents…) to the app code's **designated requirement**, not to its path. With an **ad hoc** signature (`-`), that requirement is the `cdhash`: a hash of the bundle's contents. It stays the same as long as the bundle is identical byte for byte, and changes as soon as the code, the `Info.plist` or the fuses change. After each new build, macOS may therefore ask for the permissions again.
 
-Avec un **certificat local stable**, l'exigence devient « identifiant `com.recoltos.app` + ce certificat » : elle ne dépend plus du contenu, et les permissions survivent aux reconstructions.
+With a **stable local certificate**, the requirement becomes "identifier `com.recoltos.app` + this certificate": it no longer depends on the contents, and permissions survive rebuilds.
 
-Aucune source officielle ne garantit qu'un certificat **auto-signé** produise un `granted` stable pour Enregistrement d'écran. Si la permission n'est pas conservée (ou si `CGPreflightScreenCaptureAccess` reste à `false` hors identité à Team ID), le repli est une identité **Apple Development** (voir plus bas). Les notifications d'Electron 42+ exigent en outre une app signée.
+No official source guarantees that a **self-signed** certificate produces a stable `granted` state for Screen Recording. If the permission is not kept (or if `CGPreflightScreenCaptureAccess` stays `false` outside an identity with a Team ID), the fallback is an **Apple Development** identity (see below). Electron 42+ notifications also require a signed app.
 
-| Signature                     | `codesign -dr -`                                            | Permissions conservées entre deux builds |
-| ----------------------------- | ----------------------------------------------------------- | ---------------------------------------- |
-| Ad hoc (`-`, par défaut)      | `designated => cdhash H"…"`                                 | Non, dès que le contenu change           |
-| Certificat « RecoltOS Local » | `identifier "com.recoltos.app" and certificate leaf = H"…"` | Oui en pratique (non garanti par Apple)  |
+| Signature                    | `codesign -dr -`                                            | Permissions kept between two builds       |
+| ---------------------------- | ----------------------------------------------------------- | ----------------------------------------- |
+| Ad hoc (`-`, default)        | `designated => cdhash H"…"`                                 | No, as soon as the contents change        |
+| "RecoltOS Local" certificate | `identifier "com.recoltos.app" and certificate leaf = H"…"` | Yes in practice (not guaranteed by Apple) |
 
-Le build ad hoc reste pleinement fonctionnel : il suffit pour développer et pour lancer l'app. Le certificat n'est utile que pour garder les permissions entre les builds.
+The ad hoc build is fully functional: it is enough for developing and running the app. The certificate is only useful for keeping permissions between builds.
 
-## Créer le certificat (action à faire par toi, une seule fois)
+## Create the certificate (a step you do yourself, once)
 
-> **Nom attendu : « RecoltOS Local »** (exactement). C'est le nom passé dans `RECOLTOS_SIGN_IDENTITY` et cherché par `check:env`.
+> **Expected name: "RecoltOS Local"** (exactly). This is the name passed in `RECOLTOS_SIGN_IDENTITY` and looked up by `check:env`.
 
-C'est un réglage de sécurité de ton Mac : aucun script ne le fait à ta place.
+This is a security setting on your Mac: no script does it for you.
 
-1. Ouvre **Trousseau d'accès** (Applications > Utilitaires).
-2. Menu **Trousseau d'accès > Assistant de certification > Créer un certificat…**
-3. Renseigne :
-   - **Nom** : `RecoltOS Local` (exactement, avec la casse).
-   - **Type d'identité** : _Auto-signé racine_.
-   - **Type de certificat** : _Signature de code_.
-   - Coche **Me laisser remplacer les réglages par défaut** pour pouvoir choisir une validité longue (par exemple 3650 jours), puis **Continuer** jusqu'au bout. Garde le trousseau **Session** (`login`).
-4. Dans la liste, double-clique le certificat `RecoltOS Local`, déplie **Se fier**, et règle **Signature de code** sur **Toujours approuver**. Saisis ton mot de passe de session pour valider.
-5. Vérifie qu'il est reconnu comme identité valide :
+1. Open **Keychain Access** (Applications > Utilities).
+2. Choose **Keychain Access > Certificate Assistant > Create a Certificate…**
+3. Fill in:
+   - **Name**: `RecoltOS Local` (exactly, with this capitalization).
+   - **Identity Type**: _Self Signed Root_.
+   - **Certificate Type**: _Code Signing_.
+   - Check **Let me override defaults** so you can choose a long validity period (for example 3650 days), then click **Continue** to the end. Keep the **login** keychain.
+4. In the list, double-click the `RecoltOS Local` certificate, expand **Trust**, and set **Code Signing** to **Always Trust**. Enter your user password to confirm.
+5. Check that it is recognized as a valid identity:
 
    ```sh
    security find-identity -v -p codesigning
    ```
 
-   Tu dois voir une ligne `"RecoltOS Local"`. Sans l'étape 4, il n'apparaît pas. Dans ce cas la config (`electron-builder.config.cjs`) **échoue volontairement** avec « aucune identité de signature valide de ce nom dans le trousseau » : electron-builder seul, lui, logue « skipped macOS application code signing … Identity name is specified, but no valid identity », sort avec le code 0 et produit un build en signature ad hoc (cdhash instable), sans rien signaler d'autre.
+   You should see a `"RecoltOS Local"` line. Without step 4, it does not appear. In that case the config (`electron-builder.config.cjs`) **fails on purpose** with an error saying that no valid signing identity of that name exists in the keychain. electron-builder alone logs "skipped macOS application code signing … Identity name is specified, but no valid identity", exits with code 0 and produces an ad hoc signed build (unstable cdhash), without reporting anything else.
 
-À la première signature, macOS peut demander l'accès de `codesign` à la clé privée : choisis **Toujours autoriser**.
+The first time you sign, macOS may ask whether `codesign` can access the private key: choose **Always Allow**.
 
-## Utiliser l'identité
+## Use the identity
 
 ```sh
 RECOLTOS_SIGN_IDENTITY="RecoltOS Local" pnpm run dist
-pnpm run app:install          # copie dans /Applications et ouvre l'app
+pnpm run app:install          # copies to /Applications and opens the app
 ```
 
-- Variable absente ou vide : signature ad hoc `-` (`mac.identity` dans `electron-builder.config.cjs`).
-- `identity: null` est volontairement évité : sur arm64 il ne laisse que la signature du linker, refusée au lancement.
-- Si `RECOLTOS_SIGN_IDENTITY` est définie mais que l'identité est absente du trousseau, le build s'arrête avec une erreur claire (pas de repli silencieux sur l'ad hoc).
-- `pnpm run app:install` (script `scripts/install-local.sh`) arrête l'app installée, remplace `/Applications/RecoltOS.app` via `ditto`, retire l'attribut de quarantaine, vérifie la signature (`codesign --verify --deep --strict`), vérifie que l'exigence désignée contient `certificate leaf` quand `RECOLTOS_SIGN_IDENTITY` est définie (sinon le build est en réalité ad hoc et le script échoue), puis ouvre l'app. Il ne touche **jamais** à `~/Library/Application Support/RecoltOS`.
-- Variables du script : `RECOLTOS_INSTALL_DIR` (dossier cible, défaut `/Applications`) et `RECOLTOS_NO_OPEN=1` (n'ouvre pas l'app).
+- Variable unset or empty: ad hoc signature `-` (`mac.identity` in `electron-builder.config.cjs`).
+- `identity: null` is deliberately avoided: on arm64 it leaves only the linker signature, which is refused at launch.
+- If `RECOLTOS_SIGN_IDENTITY` is set but the identity is not in the keychain, the build stops with a clear error (no silent fallback to ad hoc).
+- `pnpm run app:install` (script `scripts/install-local.sh`) stops the installed app, replaces `/Applications/RecoltOS.app` with `ditto`, removes the quarantine attribute, verifies the signature (`codesign --verify --deep --strict`), checks that the designated requirement contains `certificate leaf` when `RECOLTOS_SIGN_IDENTITY` is set (otherwise the build is actually ad hoc and the script fails), then opens the app. It **never** touches `~/Library/Application Support/RecoltOS`.
+- Script variables: `RECOLTOS_INSTALL_DIR` (target folder, default `/Applications`) and `RECOLTOS_NO_OPEN=1` (does not open the app).
 
-## Vérifier que la signature est stable
+## Check that the signature is stable
 
 ```sh
-codesign -dr - dist/mac-arm64/RecoltOS.app      # note la ligne « designated => … »
+codesign -dr - dist/mac-arm64/RecoltOS.app      # note the "designated => …" line
 RECOLTOS_SIGN_IDENTITY="RecoltOS Local" pnpm run dist
-codesign -dr - dist/mac-arm64/RecoltOS.app      # doit être identique, même après un changement de code
+codesign -dr - dist/mac-arm64/RecoltOS.app      # must be identical, even after a code change
 codesign --verify --deep --strict --verbose=2 dist/mac-arm64/RecoltOS.app
 ```
 
-Avec le bon certificat, la ligne ressemble à
-`designated => identifier "com.recoltos.app" and certificate leaf = H"<empreinte du certificat>"`.
+With the right certificate, the line looks like
+`designated => identifier "com.recoltos.app" and certificate leaf = H"<certificate fingerprint>"`.
 
-## Si les permissions se comportent mal
+## If permissions misbehave
 
-Après le **premier** passage d'une signature ad hoc à `RecoltOS Local` (ou inversement), l'exigence désignée change une dernière fois : macOS peut redemander les permissions, ou garder une ancienne entrée devenue inopérante. Remets-les à zéro, puis relance l'app et réaccorde-les :
+After the **first** switch from an ad hoc signature to `RecoltOS Local` (or the other way around), the designated requirement changes one last time: macOS may ask for the permissions again, or keep an old entry that no longer works. Reset them, then relaunch the app and grant them again:
 
 ```sh
 tccutil reset ScreenCapture com.recoltos.app
@@ -106,23 +106,23 @@ tccutil reset SystemPolicyDocumentsFolder com.recoltos.app
 tccutil reset SystemPolicyDownloadsFolder com.recoltos.app
 ```
 
-## Hors ligne
+## Offline
 
-Avec une identité non ad hoc, `codesign` demande un horodatage au serveur d'Apple : sans réseau la signature peut échouer. Deux issues :
+With a non-ad hoc identity, `codesign` requests a timestamp from Apple's server: without a network, signing may fail. Two ways out:
 
-- tester l'option `mac.timestamp` d'electron-builder ;
-- ou signer à la main : `codesign --force --deep --sign "RecoltOS Local" --timestamp=none dist/mac-arm64/RecoltOS.app`.
+- try electron-builder's `mac.timestamp` option;
+- or sign by hand: `codesign --force --deep --sign "RecoltOS Local" --timestamp=none dist/mac-arm64/RecoltOS.app`.
 
-## Alternative : identité Apple Development
+## Alternative: Apple Development identity
 
-Si tu as un compte Apple Developer, une identité « Apple Development: … » se passe de la même façon (`RECOLTOS_SIGN_IDENTITY="Apple Development: Prénom Nom (XXXXXXXXXX)"`). Elle est stable aussi, mais expire (un an) et lie le build à ton compte. Le certificat local reste l'option par défaut.
+If you have an Apple Developer account, an "Apple Development: …" identity is passed the same way (`RECOLTOS_SIGN_IDENTITY="Apple Development: First Last (XXXXXXXXXX)"`). It is stable too, but it expires (after one year) and ties the build to your account. The local certificate remains the default option.
 
 ## Distribution
 
-RecoltOS n'est ni notarisé ni mis à jour automatiquement : chacun le construit et le signe localement. Une copie qui a voyagé (AirDrop, téléchargement) porte l'attribut de quarantaine :
+RecoltOS is neither notarized nor updated automatically: each person builds and signs it locally. A copy that has traveled (AirDrop, download) carries the quarantine attribute:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/RecoltOS.app
 ```
 
-Depuis macOS 15, « clic droit > Ouvrir » ne suffit plus pour une app non notarisée : passe par Réglages Système > Confidentialité et sécurité > « Ouvrir quand même ».
+Since macOS 15, right-click > Open is no longer enough for a non-notarized app: go through System Settings > Privacy & Security > "Open Anyway".

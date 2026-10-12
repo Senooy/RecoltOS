@@ -85,7 +85,7 @@ try {
   }
   // Critère bloquant : chargement dans Firefox release. La requête d'arrière-plan vers le faux serveur
   // local est informative : dans ce lanceur (LaunchServices), Firefox refuse les requêtes vers la
-  // boucle locale (« NetworkError ») ; la vérification réelle est dans docs/checklist-manuelle.md
+  // boucle locale (« NetworkError ») ; la vérification réelle est dans docs/manual-checklist.md
   const network =
     !!bm &&
     bm.csrf === 'csrf-selftest' &&

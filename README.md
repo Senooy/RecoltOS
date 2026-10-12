@@ -106,8 +106,8 @@ Appearance › Language.
   - Chrome, Brave, Edge: open `chrome://extensions`, enable Developer mode, click "Load unpacked" and
     pick `extension/chromium/`.
 - **Sync**: stay signed in to X, Instagram or Cosmos in that browser, then turn sources on in Settings
-  › Synchronisation.
-- **AI**: install and sign in to `claude` or `codex`, then go to Settings › IA › Changer.
+  › Sync.
+- **AI**: install and sign in to `claude` or `codex`, then go to Settings › AI › Change.
 
 ## A note on sync
 
@@ -153,7 +153,7 @@ More documentation:
 - [docs/extension.md](docs/extension.md): extension, sync, permissions
 - [docs/signature.md](docs/signature.md): local code signing and macOS permissions
 - [docs/perf.md](docs/perf.md): performance budgets and measurements
-- [docs/checklist-manuelle.md](docs/checklist-manuelle.md): manual test checklist (French)
+- [docs/manual-checklist.md](docs/manual-checklist.md): manual test checklist
 
 ## Known limitations
 
