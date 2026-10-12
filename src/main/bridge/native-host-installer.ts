@@ -13,8 +13,8 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import {
-  EXTENSION_ORIGIN,
-  GECKO_ID,
+  CHROMIUM_EXTENSION_ORIGINS,
+  FIREFOX_EXTENSION_IDS,
   NATIVE_HOST_NAME,
   NATIVE_HOST_NAME_DEV,
 } from '../../shared/bridge/constants'
@@ -39,8 +39,8 @@ export function manifestFor(
     type: 'stdio',
   }
   return b.kind === 'firefox'
-    ? { ...base, allowed_extensions: [GECKO_ID] }
-    : { ...base, allowed_origins: [EXTENSION_ORIGIN] }
+    ? { ...base, allowed_extensions: [...FIREFOX_EXTENSION_IDS] }
+    : { ...base, allowed_origins: [...CHROMIUM_EXTENSION_ORIGINS] }
 }
 
 function writeAtomic(file: string, content: string): void {

@@ -98,13 +98,11 @@ Appearance › Language.
 
 - **Screenshots**: press ⌘⇧S once, allow RecoltOS under System Settings › Privacy & Security › Screen
   Recording, then restart the app.
-- **Browser extension**: the app copies the extension to
-  `~/Library/Application Support/RecoltOS/extension/`.
-  - Firefox: open `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on…" and pick
-    `extension/firefox/manifest.json`. A temporary add-on is removed when Firefox restarts; see
-    [docs/extension.md](docs/extension.md) for a signed, permanent install.
-  - Chrome, Brave, Edge: open `chrome://extensions`, enable Developer mode, click "Load unpacked" and
-    pick `extension/chromium/`.
+- **Browser extension**: install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/recoltos/)
+  or [Chrome Web Store](https://chromewebstore.google.com/detail/nelpliekohgpkodffcmgcaoipncjoeei),
+  then check the connection in Settings › Sync. Store approval is required before the listings become installable.
+  Open the app once before installing the extension so that its native messaging connector is registered.
+  See [docs/extension.md](docs/extension.md) for temporary and unpacked development installation.
 - **Sync**: stay signed in to X, Instagram or Cosmos in that browser, then turn sources on in Settings
   › Sync.
 - **AI**: install and sign in to `claude` or `codex`, then go to Settings › AI › Change.

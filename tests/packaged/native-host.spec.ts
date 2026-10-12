@@ -8,7 +8,13 @@ import { expect, test } from '@playwright/test'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { EXTENSION_ORIGIN, EXTENSION_VERSION, GECKO_ID } from '../../src/shared/bridge/constants'
+import {
+  EXTENSION_ORIGIN,
+  CHROMIUM_EXTENSION_ORIGINS,
+  EXTENSION_VERSION,
+  GECKO_ID,
+  LEGACY_GECKO_ID,
+} from '../../src/shared/bridge/constants'
 import { encodeFrame, FrameDecoder } from '../../src/host/framing'
 import { REPO_ROOT } from '../helpers/paths'
 import { makeTmpDir } from '../helpers/tmpdir'
@@ -60,12 +66,12 @@ test('hôte natif packagé : ping → pong, hello → hello.ack ; manifests de t
   expect(ff).toMatchObject({
     name: 'com.recoltos.host',
     path: HOST,
-    allowed_extensions: [GECKO_ID],
+    allowed_extensions: [GECKO_ID, LEGACY_GECKO_ID],
   })
   const cr = JSON.parse(
     readFileSync(AS(home, 'Google/Chrome/NativeMessagingHosts/com.recoltos.host.json'), 'utf8'),
   ) as Record<string, unknown>
-  expect(cr).toMatchObject({ path: HOST, allowed_origins: [EXTENSION_ORIGIN] })
+  expect(cr).toMatchObject({ path: HOST, allowed_origins: [...CHROMIUM_EXTENSION_ORIGINS] })
 
   // L'hôte tel qu'un navigateur le lance : environnement minimal, origine en argument.
   const host = spawn(HOST, [EXTENSION_ORIGIN], {

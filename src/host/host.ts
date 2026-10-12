@@ -14,8 +14,8 @@ import os from 'node:os'
 import path from 'node:path'
 import {
   BRIDGE_PROTOCOL_VERSION,
-  EXTENSION_ORIGIN,
-  GECKO_ID,
+  CHROMIUM_EXTENSION_ORIGINS,
+  FIREFOX_EXTENSION_IDS,
   HOST_PING_MS,
   MAX_FROM_EXT_BYTES,
   MAX_TO_EXT_BYTES,
@@ -55,7 +55,7 @@ export function callerOrigin(argv: readonly string[], allowed: readonly string[]
   return null
 }
 
-export const DEFAULT_ALLOWED = [EXTENSION_ORIGIN, GECKO_ID]
+export const DEFAULT_ALLOWED = [...CHROMIUM_EXTENSION_ORIGINS, ...FIREFOX_EXTENSION_IDS]
 
 /**
  * Dossier de données de l'app qui a installé l'hôte : `RECOLTOS_USER_DATA`, sinon

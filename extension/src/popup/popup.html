@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="color-scheme" content="light dark" />
@@ -12,31 +12,31 @@
         <img class="logo" src="icons/32.png" alt="" width="20" height="20" />
         <span class="brand">RecoltOS</span>
         <span id="status" class="pill" data-state="connecting"
-          ><i></i><span data-i18n="connecting">Connexion…</span></span
+          ><i></i><span data-i18n="connecting">Connecting…</span></span
         >
       </header>
       <p id="statusHint" class="hint" hidden></p>
       <section id="save">
         <div class="preview">
           <img id="shot" alt="" hidden /><span id="noshot" data-i18n="noPreview"
-            >Aperçu indisponible</span
+            >Preview unavailable</span
           >
         </div>
         <input
           id="title"
           class="field"
           type="text"
-          placeholder="Titre"
-          aria-label="Titre"
+          placeholder="Title"
+          aria-label="Title"
           data-i18n-placeholder="title"
           data-i18n-label="title"
         />
         <div class="row">
           <button id="savePage" class="btn primary" type="button" data-i18n="savePage">
-            Enregistrer la page
+            Save page
           </button>
           <button id="saveImage" class="btn ghost" type="button" hidden data-i18n="saveImage">
-            Image principale seulement
+            Main image only
           </button>
         </div>
         <label class="label" for="search" data-i18n="collection">Collection</label>
@@ -44,7 +44,7 @@
           id="search"
           class="field"
           type="search"
-          placeholder="Rechercher une collection"
+          placeholder="Search collections"
           data-i18n-placeholder="searchCollection"
         />
         <ul
@@ -55,14 +55,14 @@
           data-i18n-label="collections"
         ></ul>
         <button id="newCollection" class="link" type="button" data-i18n="newCollection">
-          + Nouvelle collection
+          + New collection
         </button>
         <label class="label" for="note" data-i18n="note">Note</label>
         <textarea
           id="note"
           class="field note"
           rows="2"
-          placeholder="Ajouter une note"
+          placeholder="Add a note"
           data-i18n-placeholder="notePlaceholder"
         ></textarea>
         <p id="result" class="result" hidden></p>
@@ -70,15 +70,13 @@
       <footer class="foot">
         <div id="sync" class="sync"></div>
         <div class="row">
-          <button id="syncNow" class="link" type="button" data-i18n="syncNow">
-            Synchroniser maintenant
-          </button>
+          <button id="syncNow" class="link" type="button" data-i18n="syncNow">Sync now</button>
           <button id="grant" class="link" type="button" hidden data-i18n="grant">
-            Autoriser l’accès aux sites
+            Allow site access
           </button>
         </div>
         <p class="tiny" data-i18n="syncFooter">
-          La synchro tourne en arrière-plan tant que ce navigateur est ouvert.
+          Sync runs in the background while this browser is open.
         </p>
       </footer>
     </main>

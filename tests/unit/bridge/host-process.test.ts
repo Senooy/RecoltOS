@@ -9,7 +9,12 @@ import os from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildHost } from '../../../scripts/build-host.mjs'
-import { EXTENSION_ORIGIN, GECKO_ID } from '../../../src/shared/bridge/constants'
+import {
+  CHROME_STORE_EXTENSION_ORIGIN,
+  EXTENSION_ORIGIN,
+  GECKO_ID,
+  LEGACY_GECKO_ID,
+} from '../../../src/shared/bridge/constants'
 import { encodeFrame, FrameDecoder } from '../../../src/host/framing'
 import { Inbox } from '../../../src/main/bridge/inbox'
 import { socketPath } from '../../../src/main/bridge/paths'
@@ -116,6 +121,20 @@ describe('hôte natif (processus)', () => {
     const pid = id()
     ff.send({ v: 1, id: pid, type: 'ping' })
     expect((await ff.waitFor((m) => m.type === 'pong')).re).toBe(pid)
+  })
+
+  it('keeps the previous Firefox ID connected after the public ID migration', async () => {
+    const ff = run(['/manifest.json', LEGACY_GECKO_ID], {})
+    const ping = id()
+    ff.send({ v: 1, id: ping, type: 'ping' })
+    expect((await ff.waitFor((m) => m.type === 'pong')).re).toBe(ping)
+  })
+
+  it('accepts the public Chrome Web Store installation', async () => {
+    const chrome = run([CHROME_STORE_EXTENSION_ORIGIN], {})
+    const ping = id()
+    chrome.send({ v: 1, id: ping, type: 'ping' })
+    expect((await chrome.waitFor((m) => m.type === 'pong')).re).toBe(ping)
   })
 
   it('app fermée : save.create spoolé (0600) puis ingéré au démarrage', async () => {

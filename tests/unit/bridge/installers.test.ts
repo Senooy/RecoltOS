@@ -6,8 +6,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
-  EXTENSION_ORIGIN,
+  CHROMIUM_EXTENSION_ORIGINS,
   GECKO_ID,
+  LEGACY_GECKO_ID,
   NATIVE_HOST_NAME,
   NATIVE_HOST_NAME_DEV,
 } from '../../../src/shared/bridge/constants'
@@ -50,7 +51,7 @@ describe('manifests natifs', () => {
     expect(chrome).toMatchObject({
       name: NATIVE_HOST_NAME_DEV,
       type: 'stdio',
-      allowed_origins: [EXTENSION_ORIGIN],
+      allowed_origins: [...CHROMIUM_EXTENSION_ORIGINS],
       path: HOST_EXE,
     })
     const ff = JSON.parse(
@@ -59,7 +60,7 @@ describe('manifests natifs', () => {
         'utf8',
       ),
     ) as Record<string, unknown>
-    expect(ff.allowed_extensions).toEqual([GECKO_ID])
+    expect(ff.allowed_extensions).toEqual([GECKO_ID, LEGACY_GECKO_ID])
     expect(ff.allowed_origins).toBeUndefined()
     expect(existsSync(join(appSupport(home), 'BraveSoftware'))).toBe(false)
   })

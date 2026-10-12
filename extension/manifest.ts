@@ -2,7 +2,7 @@
  * Manifest MV3 de l'extension, généré PAR CIBLE depuis une seule source :
  * - `chromium` (Chrome, Brave, Edge, Vivaldi…) : `background.service_worker`, `key` (identifiant fixe),
  *   `minimum_chrome_version` 127 (`action.openPopup`) ;
- * - `firefox` : `background.scripts`, `browser_specific_settings.gecko.id = recoltos@local`, sans `key`.
+ * - `firefox` : `background.scripts`, stable public Gecko ID, without `key`.
  * Pas de `webRequest`, pas de `<all_urls>` : `activeTab` après un clic, hôtes des trois plateformes.
  */
 import {
@@ -41,18 +41,10 @@ export const CONTENT_MATCHES = [
  */
 export const MANIFEST_LOCALES: Record<'en' | 'fr', Record<string, { message: string }>> = {
   en: {
-    extDescription: {
-      message:
-        'Save images, videos, pages and posts to RecoltOS, and sync your X, Instagram and Cosmos saves.',
-    },
     actionTitle: { message: 'Save to RecoltOS' },
     savePageCommand: { message: 'Save the page to RecoltOS' },
   },
   fr: {
-    extDescription: {
-      message:
-        'Enregistre images, vidéos, pages et publications dans RecoltOS, et synchronise tes favoris X, Instagram et Cosmos.',
-    },
     actionTitle: { message: 'Enregistrer dans RecoltOS' },
     savePageCommand: { message: 'Enregistrer la page dans RecoltOS' },
   },
@@ -77,11 +69,11 @@ export function buildManifest(
   }
   const m: Record<string, unknown> = {
     manifest_version: 3,
-    name: 'RecoltOS',
+    name: 'RecoltOS – Save to your visual library',
     short_name: 'RecoltOS',
     version: EXTENSION_VERSION,
     default_locale: 'en',
-    description: '__MSG_extDescription__',
+    description: 'Save images, videos, pages and posts to your local RecoltOS library on macOS.',
     icons,
     action: {
       default_popup: 'popup.html',
@@ -130,7 +122,15 @@ export function buildManifest(
       gecko: {
         id: GECKO_ID,
         strict_min_version: '142.0',
-        data_collection_permissions: { required: ['none'] },
+        // Mozilla includes transfers to a local native app in its disclosure model.
+        data_collection_permissions: {
+          required: [
+            'websiteContent',
+            'browsingActivity',
+            'personallyIdentifyingInfo',
+            'personalCommunications',
+          ],
+        },
       },
     }
   }

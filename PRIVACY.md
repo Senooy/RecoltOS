@@ -56,6 +56,11 @@ not an extension analytics or collection service.
 
 ## Independence and contact
 
+The extension's use of user data complies with the Chrome Web Store User Data Policy, including
+its Limited Use requirements. Data is used only for the extension's stated save and synchronization
+features. It is not used for advertising, sold, or used to determine creditworthiness or lending
+eligibility. The developer does not access your local library or browser credentials.
+
 RecoltOS is an independent open-source project under the MIT license. It is not affiliated with
 X Corp., Meta/Instagram or Cosmos.
 

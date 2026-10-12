@@ -130,7 +130,7 @@ test('sync en arrière-plan sans onglet : cookies de session, CSRF et Origin ré
   expect(bm.cookie).toContain('auth_token=session-test')
   expect(bm.origin).toBe(srv.base)
   // Identifiant persisté découvert dans les extraits x-web (accueil → entrée → routes → chunk).
-  expect(bm.path).toContain('/S0GjncHMwHQK1YOfxslymQ/bookmarksQuery')
+  expect(bm.path).toContain('/DemoQueryId00000001/bookmarksQuery')
   // Découverte du client web sans cookie.
   const entry = srv.log.find((l) => l.path.includes('/entry-client-'))!
   expect(entry.cookie).toBe('')

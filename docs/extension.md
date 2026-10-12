@@ -4,7 +4,7 @@ One codebase (`extension/`), two builds:
 
 | Target                       | Folder                     | Details                                                                        |
 | ---------------------------- | -------------------------- | ------------------------------------------------------------------------------ |
-| Firefox (primary)            | `dist-extension/firefox/`  | MV3, `background.scripts`, ID `recoltos@local`, Firefox 142 minimum            |
+| Firefox (primary)            | `dist-extension/firefox/`  | MV3, `background.scripts`, ID `recoltos@senooy.github.io`, Firefox 142 minimum |
 | Chrome, Brave, Edge, Vivaldi | `dist-extension/chromium/` | MV3, service worker, `key` field → fixed ID `kkcpbglfgmkcjndibkbpjdiakanmbdhi` |
 
 The extension talks to the app through **native messaging**: the browser launches the host
@@ -27,25 +27,33 @@ On launch, the packaged app copies the extensions to a fixed path:
 In development, nothing is written unless `RECOLTOS_INSTALL_DEV_HOST=1` is set (name
 `com.recoltos.host.dev`).
 
-## Firefox: signed version (permanent install)
+## Install from the stores
 
-Firefox release refuses unsigned extensions for permanent installs. "Unlisted" signing goes through
-addons.mozilla.org without publishing the extension.
+Install and open the [RecoltOS macOS app](https://github.com/Senooy/RecoltOS/releases/latest) first.
+The app registers the local native messaging connector. Then install the extension from:
 
-1. On <https://addons.mozilla.org/developers/addon/api/key/>, sign in and generate "API credentials"
-   (JWT issuer and JWT secret).
-2. In your terminal (keep the keys to yourself and don't write them to any file in the repository):
-   ```sh
-   export WEB_EXT_API_KEY='user:…'      # JWT issuer
-   export WEB_EXT_API_SECRET='…'        # JWT secret
-   pnpm run build:ext && pnpm run sign:firefox
-   ```
-   The signed file ends up in `dist-extension/signed/*.xpi`. Each new signature requires a new
-   version: increase `EXTENSION_VERSION` in `src/shared/bridge/constants.ts`.
-3. `pnpm run pack` embeds it. In the app, go to Settings › Sync › Install the Extension… › Firefox ›
-   "Reveal Signed File".
-4. Drag the `.xpi` into a Firefox window (or about:addons › ⚙️ › "Install Add-on From File…") and
-   confirm.
+- [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/recoltos/)
+- [Chrome Web Store](https://chromewebstore.google.com/detail/nelpliekohgpkodffcmgcaoipncjoeei)
+
+A listing becomes installable after its store approves it. The Firefox ID is `recoltos@senooy.github.io`; the Chrome Web Store ID is
+`nelpliekohgpkodffcmgcaoipncjoeei`. The connector also accepts the old Firefox development ID
+`recoltos@local` and Chromium development ID `kkcpbglfgmkcjndibkbpjdiakanmbdhi`.
+
+In Settings › Sync, check that the browser is connected. Right-click an image and choose
+“Save to RecoltOS” to test saving without a website account. Optional synchronization is unofficial
+and disabled by default. See [PRIVACY.md](../PRIVACY.md) for local data handling.
+
+## Firefox signing for development
+
+The existing `pnpm run sign:firefox` command creates an **unlisted** signed build for development;
+it does not publish a store listing. Generate AMO API credentials yourself in the Developer Hub's
+Manage API Keys page and provide `WEB_EXT_API_KEY` and `WEB_EXT_API_SECRET` only as environment
+variables. Never put them in a file, command log or commit. Build first, then sign. Each submission
+requires a new `EXTENSION_VERSION`. The signed output is in `dist-extension/signed/`.
+
+For public releases, submit the Firefox build in the **listed** channel together with the source
+archive and its `SOURCE_BUILD.md` reproduction instructions. [Store listing copy](store-listing.md)
+contains the permission explanations and reviewer instructions.
 
 ## Firefox: temporary loading (testing)
 
@@ -61,7 +69,7 @@ off. Check about:addons › RecoltOS › Permissions: x.com, instagram.com and c
 must be allowed. Otherwise, the extension button shows "Allow Access to Sites" and Settings › Sync
 reports it for each source.
 
-## Chrome, Brave, Edge, Vivaldi
+## Chromium unpacked loading (development only)
 
 1. Open `chrome://extensions` (Brave: `brave://extensions`, Edge: `edge://extensions`).
 2. Turn on **Developer mode**.
@@ -69,13 +77,13 @@ reports it for each source.
 
 ## How sync works
 
-- It runs in the extension's **background script**, **without opening a tab**, as soon as a session is
-  open (cookies present) on X, Instagram or Cosmos in that browser.
+- After you enable a source in the app, sync runs in the extension's **background script**,
+  **without opening a tab**, while you are signed in to that source in the browser.
 - The app does the scheduling (X every 15 min, Instagram and Cosmos every 30 min) and decides page by
   page (in incremental mode, it stops at the first item it already knows). The extension replays the
   site's requests with your cookies (CSRF token read through the `cookies` API: `ct0` for X,
   `csrftoken` for Instagram). The `Origin` and `Referer` headers are rewritten to the site's by
-  `declarativeNetRequest` rules. Cookies never leave the browser.
+  `declarativeNetRequest` rules. Cookies are used only for requests to their own service and are never sent to the app.
 - **Sync only runs while the browser is open.** With the browser closed, the status reads "Browser
   closed: sync will resume when it opens".
 - Media is downloaded **by the app** (without cookies).
@@ -94,7 +102,7 @@ reports it for each source.
 ## Tests
 
 ```sh
-pnpm exec vitest run tests/unit/extension tests/unit/bridge tests/unit/sync   # unit tests
+pnpm exec vitest run --project unit tests/unit/extension tests/unit/bridge # unit tests
 pnpm run test:ext            # test Chromium, throwaway profile, fake server, test app
 pnpm run test:ext:firefox    # real Firefox 157, throwaway profile: loads the extension
 pnpm run test:packaged       # packaged app: native host, test manifests, uninstall

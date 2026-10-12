@@ -11,7 +11,7 @@ export const BRIDGE_PROTOCOL_VERSION = 1 as const
  * plus ancienne connectée de se recharger. 1.0.1 : sync X x-web et Cosmos.
  * 1.0.2 : nouvelles icônes (logo « graine qui germe »).
  */
-export const EXTENSION_VERSION = '1.0.2'
+export const EXTENSION_VERSION = '1.0.3'
 /** Nom de l'hôte native messaging (build livré) et de dev (`RECOLTOS_INSTALL_DEV_HOST=1`). */
 export const NATIVE_HOST_NAME = 'com.recoltos.host'
 export const NATIVE_HOST_NAME_DEV = 'com.recoltos.host.dev'
@@ -26,7 +26,14 @@ export const EXTENSION_ID = 'kkcpbglfgmkcjndibkbpjdiakanmbdhi'
 /** Origine appelante passée par Chrome à l'hôte (`allowed_origins`). */
 export const EXTENSION_ORIGIN = `chrome-extension://${EXTENSION_ID}/`
 /** Identifiant Firefox (`browser_specific_settings.gecko.id`, `allowed_extensions`). */
-export const GECKO_ID = 'recoltos@local'
+export const GECKO_ID = 'recoltos@senooy.github.io'
+/** Keep existing development installations connected after adopting the public Firefox ID. */
+export const LEGACY_GECKO_ID = 'recoltos@local'
+export const FIREFOX_EXTENSION_IDS = [GECKO_ID, LEGACY_GECKO_ID] as const
+export const CHROME_STORE_EXTENSION_ID = 'nelpliekohgpkodffcmgcaoipncjoeei'
+export const CHROME_STORE_EXTENSION_ORIGIN = `chrome-extension://${CHROME_STORE_EXTENSION_ID}/`
+/** Allow the public store installation and existing development installations. */
+export const CHROMIUM_EXTENSION_ORIGINS = [EXTENSION_ORIGIN, CHROME_STORE_EXTENSION_ORIGIN] as const
 /** Socket : `os.tmpdir()/recolt-<sha1(userData)[0:10]>.sock`, 0600, < 104 octets (`sun_path`). */
 export const SOCKET_PREFIX = 'recolt-'
 export const SOCKET_PATH_MAX_BYTES = 103

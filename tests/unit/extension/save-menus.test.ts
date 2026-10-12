@@ -293,14 +293,16 @@ describe('manifests et build', () => {
         description: string
       }
       expect(m.version).toBe(EXTENSION_VERSION)
-      // Textes du manifest localisés : `_locales/en` (défaut) et `_locales/fr`.
+      // Store metadata stays in English; action labels may follow the browser language.
       expect(m.default_locale).toBe('en')
-      expect(m.description).toBe('__MSG_extDescription__')
+      expect(m.description).toBe(
+        'Save images, videos, pages and posts to your local RecoltOS library on macOS.',
+      )
       for (const lang of ['en', 'fr']) {
         const msgs = JSON.parse(
           readFileSync(join(dir, '_locales', lang, 'messages.json'), 'utf8'),
         ) as Record<string, { message: string }>
-        expect(msgs.extDescription?.message).toBeTruthy()
+        expect(msgs.extDescription).toBeUndefined()
         expect(msgs.actionTitle?.message).toBeTruthy()
       }
     }
