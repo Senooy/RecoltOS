@@ -1,5 +1,5 @@
 /**
- * Pastilles de la palette : 8 pastilles Ø 20, écart 6 ; clic = recherche
+ * Pastilles de la palette, centrées sous l'aperçu : 8 pastilles Ø 22, écart 8 ; clic = recherche
  * par couleur (`ui.openSearch({color})`) ; ⌥-clic = copier l'hex (toast « #3f3fbf
  * copié ») ; infobulle avec l'hex en mono.
  */
@@ -10,14 +10,14 @@ import { useUi } from '../../state/ui'
 
 export function PaletteSwatches({ palette }: { palette: readonly string[] }) {
   return (
-    <div data-testid="palette-swatches" className="flex flex-wrap gap-1.5">
+    <div data-testid="palette-swatches" className="flex flex-wrap justify-center gap-2">
       {palette.slice(0, 8).map((hex, i) => (
         <Tooltip key={`${hex}-${i}`} content={<span className="font-mono">{hex}</span>} side="top">
           <button
             type="button"
             data-hex={hex}
             aria-label={fr.searchUi.colorChip(hex)}
-            className="h-5 w-5 rounded-full border border-[rgba(255,255,255,.12)] transition-transform duration-[var(--dur-fast)] hover:scale-110"
+            className="viewer-swatch"
             style={{ background: hex }}
             onClick={(e) => {
               if (e.altKey) {

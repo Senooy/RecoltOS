@@ -1,4 +1,29 @@
-/* Vue détail. Surfaces immersives : indépendantes du thème. */
+/*
+ * Vue détail. Surfaces immersives : indépendantes du thème. Le fond est l'ambiance tirée du média
+ * (`AmbienceLayer`) ; panneau, champs et contrôles sont du verre teinté par `--viewer-tint*` (posées en
+ * ligne par `Viewer` depuis l'ambiance, avec un fondu de 450 ms).
+ */
+
+@property --viewer-tint {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(20, 19, 21, 0.72);
+}
+@property --viewer-tint-strong {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(52, 50, 52, 0.5);
+}
+@property --viewer-tint-solid {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #1c1c1e;
+}
+@property --viewer-tint-glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(120, 120, 128, 0.55);
+}
 
 .viewer-root {
   position: fixed;
@@ -8,23 +33,51 @@
   color: var(--viewer-fg);
   -webkit-user-select: none;
   user-select: none;
+  /* Filets et textes secondaires lisibles (AA) sur n'importe quelle teinte. */
+  --viewer-line: rgba(255, 255, 255, 0.09);
+  --viewer-line-strong: rgba(255, 255, 255, 0.15);
+  --viewer-fg-muted: #ababae;
+  --viewer-fg-subtle: #a6a6a9;
+  transition:
+    --viewer-tint 450ms ease-in-out,
+    --viewer-tint-strong 450ms ease-in-out,
+    --viewer-tint-solid 450ms ease-in-out,
+    --viewer-tint-glow 450ms ease-in-out;
+}
+.viewer-root.viewer-still {
+  transition: none;
 }
 
 .viewer-backdrop {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(to top, var(--viewer-glow) 0, transparent 40px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 0, transparent 56px),
-    linear-gradient(to left, rgba(255, 255, 255, 0.03) 0, transparent 56px),
-    radial-gradient(
-      120% 75% at 50% 0%,
-      var(--viewer-top) 0%,
-      var(--viewer-mid) 45%,
-      var(--viewer-base) 100%
-    );
+  isolation: isolate;
+  background: var(--viewer-base);
   -webkit-backdrop-filter: blur(24px);
   backdrop-filter: blur(24px);
+}
+
+/* ---- Ambiance (deux fonds 96 × 60 étirés, fondu enchaîné) ---- */
+.viewer-ambience {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  /* Les z-index des deux fonds restent confinés au calque d'ambiance. */
+  isolation: isolate;
+}
+.viewer-ambience-layer {
+  position: absolute;
+  inset: 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+.viewer-ambience-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background-size: 96px 96px;
+  pointer-events: none;
 }
 
 .viewer-stage {
@@ -92,7 +145,7 @@
   }
 }
 
-/* ---- Barre du haut (45 pt, filet --viewer-divider) ---- */
+/* ---- Barre du haut (45 pt, posée sur l'ambiance, filet clair translucide) ---- */
 .viewer-topbar {
   position: absolute;
   left: 0;
@@ -100,7 +153,16 @@
   top: 0;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--viewer-divider);
+}
+.viewer-topbar::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 0;
+  height: 1px;
+  background: var(--viewer-line-strong);
+  pointer-events: none;
 }
 .viewer-back {
   position: absolute;
@@ -123,7 +185,7 @@
   position: absolute;
   left: 156px;
   font-size: 13px;
-  color: #9b9b9f;
+  color: rgba(255, 255, 255, 0.66);
   font-variant-numeric: tabular-nums;
 }
 .viewer-actions {
@@ -136,7 +198,7 @@
 }
 .viewer-zoom-text {
   font-size: 12px;
-  color: #a1a1a3;
+  color: rgba(255, 255, 255, 0.72);
   font-variant-numeric: tabular-nums;
   min-width: 34px;
   text-align: right;
@@ -145,13 +207,13 @@
   display: block;
   width: 1px;
   height: 20px;
-  background: #4f4f51;
+  background: var(--viewer-line-strong);
 }
 .viewer-icon-btn {
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  color: #d3d3d5;
+  color: rgba(255, 255, 255, 0.82);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,7 +222,11 @@
     color var(--dur-fast);
 }
 .viewer-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.viewer-icon-btn.is-active {
+  background: rgba(255, 255, 255, 0.16);
   color: #fff;
 }
 
@@ -174,14 +240,14 @@
   align-items: center;
   justify-content: center;
   color: #f2f2f2;
-  background: rgba(30, 30, 32, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--viewer-tint);
+  border: 1px solid var(--viewer-line);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   animation: viewer-fade 120ms var(--ease-out) both;
 }
 .viewer-nav:hover {
-  background: rgba(44, 44, 46, 0.85);
+  background: var(--viewer-tint-strong);
 }
 .viewer-slide-arrow {
   position: absolute;
@@ -226,8 +292,10 @@
 /* ---- Lecteur vidéo (44 pt, sous le média) ---- */
 .viewer-player {
   border-radius: 10px;
-  background: var(--viewer-control);
-  border: 1px solid var(--viewer-control-border);
+  background: var(--viewer-tint);
+  border: 1px solid var(--viewer-line);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  backdrop-filter: blur(24px) saturate(1.3);
   padding: 0 12px 0 14px;
   gap: 12px;
 }
@@ -269,7 +337,7 @@
 }
 .viewer-player-rail {
   right: 0;
-  background: var(--viewer-track);
+  background: rgba(255, 255, 255, 0.22);
 }
 .viewer-player-fill {
   background: #fff;
@@ -303,13 +371,18 @@
   position: absolute;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--viewer-panel);
-  border: 1px solid var(--viewer-panel-border);
-  border-radius: 12px;
+  background: var(--viewer-tint);
+  border: 1px solid var(--viewer-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 50px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  backdrop-filter: blur(30px) saturate(1.3);
+  border-radius: 14px;
   padding: 0 16px 16px;
   animation: viewer-panel-in 240ms var(--ease-out) both;
   scrollbar-width: thin;
-  scrollbar-color: #3a3a3c transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
 @keyframes viewer-panel-in {
   from {
@@ -322,19 +395,19 @@
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  color: #959597;
-  border-bottom: 1px solid var(--viewer-sep);
+  color: var(--viewer-fg-muted);
+  border-bottom: 1px solid var(--viewer-line);
 }
 .viewer-section {
   padding: 16px 0;
-  border-bottom: 1px solid var(--viewer-sep);
+  border-bottom: 1px solid var(--viewer-line);
 }
 .viewer-section:last-child {
   border-bottom: 0;
 }
 .viewer-label {
   font-size: 12px;
-  color: #888687;
+  color: var(--viewer-fg-muted);
   margin-bottom: 7px;
 }
 .viewer-input {
@@ -342,9 +415,9 @@
   width: 100%;
   height: 32px;
   padding: 0 11px;
-  border-radius: 8px;
-  background: var(--viewer-input);
-  border: 1px solid var(--viewer-input-border);
+  border-radius: 9px;
+  background: var(--viewer-tint-strong);
+  border: 1px solid var(--viewer-line);
   color: var(--viewer-fg);
   font-size: 14px;
   outline: none;
@@ -354,10 +427,10 @@
   transition: border-color var(--dur-fast);
 }
 .viewer-input::placeholder {
-  color: #7b797a;
+  color: rgba(255, 255, 255, 0.42);
 }
 .viewer-input:focus {
-  border-color: #5a5a5c;
+  border-color: rgba(255, 255, 255, 0.28);
 }
 .viewer-note {
   height: auto;
@@ -369,8 +442,8 @@
   overflow: hidden;
 }
 .viewer-postcard {
-  background: var(--viewer-card);
-  border: 1px solid var(--viewer-card-border);
+  background: var(--viewer-tint-strong);
+  border: 1px solid var(--viewer-line);
   border-radius: 12px;
   padding: 18px;
 }
@@ -381,7 +454,7 @@
   height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid #3e3e3e;
+  border: 1px solid var(--viewer-line-strong);
   font-size: 12.5px;
   color: var(--viewer-fg-2);
 }
@@ -391,7 +464,7 @@
 }
 .viewer-chip-add:hover {
   color: #fff;
-  border-color: #5a5a5c;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 .viewer-tag-input {
   height: 26px;
@@ -406,7 +479,7 @@
   user-select: text;
 }
 .viewer-tag-input::placeholder {
-  color: #7b797a;
+  color: rgba(255, 255, 255, 0.42);
 }
 .viewer-suggest {
   position: absolute;
@@ -416,8 +489,8 @@
   z-index: 2;
   padding: 4px;
   border-radius: 10px;
-  background: #1c1c1e;
-  border: 1px solid #2e2e30;
+  background: var(--viewer-tint-solid);
+  border: 1px solid var(--viewer-line-strong);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 .viewer-suggest-item {
@@ -441,7 +514,7 @@
   height: 26px;
   padding: 0 10px;
   border-radius: 999px;
-  border: 1px solid #3e3e3e;
+  border: 1px solid var(--viewer-line-strong);
   font-size: 12px;
   color: var(--viewer-fg-2);
 }
@@ -450,9 +523,9 @@
 }
 .viewer-prompt {
   padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--viewer-input);
-  border: 1px solid var(--viewer-input-border);
+  border-radius: 9px;
+  background: var(--viewer-tint-strong);
+  border: 1px solid var(--viewer-line);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -465,4 +538,57 @@
 }
 .viewer-section.viewer-fields {
   padding-top: 11px;
+}
+
+/* ---- Pastilles de la palette (sous l'aperçu) ---- */
+.viewer-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.viewer-swatch:hover {
+  transform: scale(1.12);
+}
+
+/* ---- Pipette ---- */
+.viewer-root[data-picking] .viewer-media,
+.viewer-root[data-picking] .viewer-media.is-zoomed {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23000' stroke-opacity='.55' stroke-width='3.5'%3E%3Cpath d='m12 9-8.414 8.414A2 2 0 0 0 3 18.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 3.828 21h1.344a2 2 0 0 0 1.414-.586L15 12'/%3E%3Cpath d='m18 9 .4.4a1 1 0 1 1-3 3l-3.8-3.8a1 1 0 1 1 3-3l.4.4 3.4-3.4a1 1 0 1 1 3 3z'/%3E%3C/g%3E%3Cg stroke='%23fff' stroke-width='1.75'%3E%3Cpath d='m12 9-8.414 8.414A2 2 0 0 0 3 18.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 3.828 21h1.344a2 2 0 0 0 1.414-.586L15 12'/%3E%3Cpath d='m18 9 .4.4a1 1 0 1 1-3 3l-3.8-3.8a1 1 0 1 1 3-3l.4.4 3.4-3.4a1 1 0 1 1 3 3z'/%3E%3Cpath d='m2 22 .414-.414'/%3E%3C/g%3E%3C/svg%3E")
+      2 22,
+    crosshair;
+}
+.viewer-chrome > .viewer-loupe {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 9px 4px 4px;
+  border-radius: 999px;
+  background: var(--viewer-tint-solid);
+  border: 1px solid var(--viewer-line-strong);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.viewer-loupe-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--pick, transparent);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+.viewer-loupe-hex {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--viewer-fg);
+  font-variant-numeric: tabular-nums;
 }

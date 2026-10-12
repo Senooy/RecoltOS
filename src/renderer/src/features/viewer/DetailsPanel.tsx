@@ -1,8 +1,9 @@
 /**
- * Panneau Détails : 300 pt à `right: 18 ; top: 62 ; bottom: 18`, fond
- * `--viewer-panel`, rayon 12, défilement interne, sections séparées par `--viewer-sep`, dans
- * l'ordre : en-tête, aperçu `large` + `FormatBadge`, Nom, URL, post source, note, Collections,
- * Tags, Couleurs, Description IA, Texte détecté, Infos. Texte sélectionnable (`.select-text`).
+ * Panneau Détails : 300 pt à `right: 18 ; top: 62 ; bottom: 18`, verre teinté par l'ambiance
+ * (`--viewer-tint`), rayon 14, défilement interne, sections séparées par `--viewer-line`, dans
+ * l'ordre : en-tête, aperçu `large` + `FormatBadge` et pastilles de la palette, Nom, URL, post
+ * source, note, Collections, Tags, Description IA, Texte détecté, Infos (post sans média : section
+ * Couleurs à part). Texte sélectionnable (`.select-text`).
  */
 import { Copy, ExternalLink, Info, Sparkles, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -581,7 +582,7 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
       {card.kind !== 'tweet' && preview ? (
         <Section className="pt-4">
           <div
-            className="relative overflow-hidden rounded-lg bg-black/40"
+            className="relative overflow-hidden rounded-[10px] bg-black/30 shadow-[0_8px_24px_rgba(0,0,0,.28)]"
             style={{ aspectRatio: String(ratio), maxHeight: 190 }}
           >
             <img
@@ -593,6 +594,11 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
             />
             <FormatBadge format={formatOf(card)} className="absolute right-2 top-2" />
           </div>
+          {detail?.palette && detail.palette.length > 0 ? (
+            <div className="mt-[14px]" aria-label={fr.viewer.colors} role="group">
+              <PaletteSwatches palette={detail.palette} />
+            </div>
+          ) : null}
         </Section>
       ) : null}
       {detail ? (
@@ -640,7 +646,7 @@ export function DetailsPanel({ card, detail, className, style }: DetailsPanelPro
             <Label>{fr.viewer.tags}</Label>
             <TagsField detail={detail} />
           </Section>
-          {detail.palette ? (
+          {detail.palette && detail.palette.length > 0 && (card.kind === 'tweet' || !preview) ? (
             <Section>
               <Label>{fr.viewer.colors}</Label>
               <PaletteSwatches palette={detail.palette} />

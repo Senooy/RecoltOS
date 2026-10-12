@@ -43,5 +43,7 @@ export const viewer = {
     downloaded: 'Fichier enregistré',
     notFound: 'Cet élément n’existe plus.',
     thread: 'Fil',
+    pick: 'Pipette',
+    pickFailed: 'Aucune couleur lisible à cet endroit',
   },
 } as const

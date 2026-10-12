@@ -1,7 +1,7 @@
 /**
  * M3 : vue détail — ouverture depuis la grille, compteur = position dans la liste
  * d'origine, ←/→, Échap rend le focus à la carte, note enregistrée (800 ms), tag ajouté en base,
- * panneau Détails (⌘I), menu natif.
+ * panneau Détails (⌘I), menu natif, pipette (Échap annule, clic = couleur copiée).
  */
 import type { ElectronApplication } from '@playwright/test'
 import { expect, test } from '../helpers/e2e-fixtures'
@@ -166,5 +166,23 @@ test.describe('vue détail', () => {
     await expect(page.locator(t('search-page'))).toBeVisible()
     await expect(page.locator(t('search-filter-chip')).first()).toContainText(hex!)
     await expect(page.locator(t('search-count'))).toBeVisible()
+  })
+
+  test('pipette : Échap annule, un clic sur le média copie la couleur', async ({ page }) => {
+    const card = page.locator(`${t('grid')} ${t('card')}[data-kind="image"]`).first()
+    await expect(card).toBeVisible()
+    await card.click()
+    const detail = page.locator(t('detail'))
+    const pipette = page.locator(t('viewer-pipette'))
+    await pipette.click()
+    await expect(detail).toHaveAttribute('data-picking', '')
+    await page.keyboard.press('Escape')
+    await expect(detail).not.toHaveAttribute('data-picking')
+    await expect(detail).toBeVisible()
+
+    await pipette.click()
+    await page.locator(t('viewer-media')).click({ position: { x: 40, y: 40 } })
+    await expect(page.getByText(/^#[0-9a-f]{6} copié$/)).toBeVisible()
+    await expect(detail).not.toHaveAttribute('data-picking')
   })
 })

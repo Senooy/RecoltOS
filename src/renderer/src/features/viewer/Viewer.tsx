@@ -10,9 +10,13 @@
  * apparaissent en fondu ; à la fermeture, la grille fait défiler la carte courante en vue, le média
  * y revient, le voile se dissipe et les cartes réapparaissent en cascade. Carte non montée : fondu.
  * Mouvement réduit : fondus seuls (≤ 80 ms).
+ *
+ * Ambiance : le fond est un champ de couleur flou tiré de la vignette du média (`AmbienceLayer`), qui
+ * teinte le verre du panneau et des contrôles (`--viewer-tint*`) ; fondu enchaîné à chaque
+ * changement d'élément ou de slide. Pipette : prélève la couleur d'un point du média (copie l'hex).
  */
 import { useGesture } from '@use-gesture/react'
-import { ChevronLeft, ChevronRight, Download, Trash2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Pipette, Trash2, X } from 'lucide-react'
 import {
   useCallback,
   useEffect,
@@ -37,6 +41,8 @@ import { usePrefs } from '../../state/prefs'
 import { useUi } from '../../state/ui'
 import { trashItems } from '../grid/actions'
 import { TweetCard } from '../grid/cards/TweetCard'
+import { AmbienceLayer } from './AmbienceLayer'
+import { sampleMediaAt, tintVars, type ViewerTint } from './ambience-engine'
 import { DetailsPanel, formatOf } from './DetailsPanel'
 import {
   PANEL_BOTTOM,
@@ -166,19 +172,44 @@ function stageMedia(card: ItemCard, detail: ItemDetail | null, slide: number): S
   }
 }
 
+/**
+ * Source de l'ambiance : petite vignette de la slide affichée (ou de l'élément), affiche d'une
+ * vidéo. Post : avatar de l'auteur (sinon le rendu du post), fortement désaturé.
+ */
+function ambienceSource(
+  card: ItemCard,
+  detail: ItemDetail | null,
+  slide: number,
+): { url: string | undefined; muted: boolean } {
+  const slides = detail?.slides ?? []
+  const s = slide > 0 && slides.length > 1 ? slides[Math.min(slide, slides.length - 1)] : undefined
+  if (s) return { url: mediaSrc(s.thumbUrl ?? s.largeUrl), muted: false }
+  const own = mediaSrc(card.thumbUrl ?? card.posterUrl ?? card.largeUrl)
+  if (card.kind === 'tweet')
+    return { url: mediaSrc(card.post?.author.avatarUrl) ?? own, muted: true }
+  return { url: own, muted: false }
+}
+
 /** Image : la grande vignette s'affiche tout de suite, l'original la remplace une fois décodé. */
 function StageImage({ media }: { media: StageMedia }) {
   const [loaded, setLoaded] = useState<string | null>(null)
   return (
     <>
       {media.placeholder ? (
-        <img src={media.placeholder} alt="" draggable={false} className="viewer-img" />
+        <img
+          src={media.placeholder}
+          alt=""
+          draggable={false}
+          crossOrigin="anonymous"
+          className="viewer-img"
+        />
       ) : null}
       {media.src && media.src !== media.placeholder ? (
         <img
           src={media.src}
           alt=""
           draggable={false}
+          crossOrigin="anonymous"
           decoding="async"
           className="viewer-img"
           style={{ opacity: loaded === media.src ? 1 : 0 }}
@@ -205,6 +236,10 @@ export default function Viewer() {
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [ready, setReady] = useState(false)
   const [hoverStage, setHoverStage] = useState(false)
+  const [tint, setTint] = useState<ViewerTint | null>(null)
+  const [picking, setPicking] = useState(false)
+  const [still] = useState(motionOff)
+  const loupeRef = useRef<HTMLDivElement | null>(null)
   const muted = usePrefs((s) => s.prefs.videoMuted)
   const win = useWindowSize()
 
@@ -275,6 +310,7 @@ export default function Viewer() {
       )
     : stage
   const box = zoomRect(fit, zoom, pan)
+  const ambience = card ? ambienceSource(card, currentDetail, slide) : null
 
   // Ouverture : FLIP depuis la carte (ou fondu), voile et chrome en fondu.
   useLayoutEffect(() => {
@@ -488,7 +524,8 @@ export default function Viewer() {
         if (editing) return
         if (document.querySelector('[data-radix-popper-content-wrapper]')) return
         e.preventDefault()
-        close()
+        if (picking) setPicking(false)
+        else close()
         return
       }
       if (editing) return
@@ -512,7 +549,7 @@ export default function Viewer() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [close, go, goSlide, remove])
+  }, [close, go, goSlide, remove, picking])
 
   // Pincement / ⌘-molette = zoom ; glisser = déplacement au-delà de 100 %.
   useGesture(
@@ -527,7 +564,7 @@ export default function Viewer() {
         setZoomTo(s)
       },
       onDrag: ({ delta: [dx, dy], pinching, tap }) => {
-        if (pinching || tap || zoom <= 1) return
+        if (pinching || tap || zoom <= 1 || picking) return
         setPan((p) => clampPan(fit, zoom, { x: p.x + dx, y: p.y + dy }))
       },
     },
@@ -537,6 +574,55 @@ export default function Viewer() {
       pinch: { scaleBounds: { min: 0.25, max: 3 }, from: () => [zoom, 0] },
       drag: { filterTaps: true },
     },
+  )
+
+  // Pipette : couleur du média sous le curseur (image décodée la plus haute, ou vidéo).
+  const sampleAt = useCallback((x: number, y: number): string | null => {
+    const host = mediaRef.current
+    if (!host) return null
+    const v = videoRef.current
+    const el =
+      v && host.contains(v)
+        ? v
+        : (Array.from(host.querySelectorAll<HTMLImageElement>('img.viewer-img'))
+            .reverse()
+            .find((i) => i.complete && i.naturalWidth > 0 && i.style.opacity !== '0') ?? null)
+    return el ? sampleMediaAt(el, host.getBoundingClientRect(), x, y) : null
+  }, [])
+
+  const loupeFrame = useRef(0)
+  const moveLoupe = useCallback(
+    (x: number, y: number) => {
+      cancelAnimationFrame(loupeFrame.current)
+      loupeFrame.current = requestAnimationFrame(() => {
+        const el = loupeRef.current
+        if (!el) return
+        const hex = sampleAt(x, y)
+        el.style.opacity = hex ? '1' : '0'
+        if (!hex) return
+        el.style.transform = `translate(${x + 16}px, ${y + 16}px)`
+        el.style.setProperty('--pick', hex)
+        const label = el.lastElementChild
+        if (label) label.textContent = hex
+      })
+    },
+    [sampleAt],
+  )
+  useEffect(() => () => cancelAnimationFrame(loupeFrame.current), [])
+
+  const pickAt = useCallback(
+    (x: number, y: number) => {
+      const hex = sampleAt(x, y)
+      if (!hex) {
+        toast(fr.viewerUi.pickFailed)
+        return
+      }
+      setPicking(false)
+      void rpc('system.copyText', { text: hex })
+        .then(() => toast(fr.viewer.colorCopied(hex)))
+        .catch(() => toast(fr.errors.generic))
+    },
+    [sampleAt],
   )
 
   const counter = list.length > 0 ? fr.viewerUi.counter(index + 1, list.length) : ''
@@ -565,9 +651,21 @@ export default function Viewer() {
       aria-modal="true"
       aria-label={fr.viewerUi.label}
       tabIndex={-1}
-      className={cn('viewer-root', layoutAnim && 'viewer-layout-anim')}
+      data-picking={picking ? '' : undefined}
+      className={cn('viewer-root', layoutAnim && 'viewer-layout-anim', still && 'viewer-still')}
+      style={tint ? tintVars(tint) : undefined}
     >
-      <div ref={backdropRef} className="viewer-backdrop" />
+      <div ref={backdropRef} className="viewer-backdrop">
+        <AmbienceLayer
+          url={ambience?.url}
+          muted={ambience?.muted}
+          dominant={card.dominant}
+          palette={currentDetail?.palette ?? null}
+          videoRef={media.kind === 'video' ? videoRef : undefined}
+          still={still}
+          onTint={setTint}
+        />
+      </div>
       <div
         ref={stageRef}
         data-testid="viewer-stage"
@@ -600,6 +698,17 @@ export default function Viewer() {
             data-kind={media.kind}
             className={cn('viewer-media', zoom > 1 && 'is-zoomed')}
             style={mediaStyle}
+            onClick={(e) => {
+              if (!picking || (e.target as HTMLElement).closest('button')) return
+              e.stopPropagation()
+              pickAt(e.clientX, e.clientY)
+            }}
+            onMouseMove={(e) => {
+              if (picking) moveLoupe(e.clientX, e.clientY)
+            }}
+            onMouseLeave={() => {
+              if (loupeRef.current) loupeRef.current.style.opacity = '0'
+            }}
           >
             {media.kind === 'video' ? (
               <video
@@ -607,6 +716,7 @@ export default function Viewer() {
                 ref={setVideoEl}
                 data-testid="viewer-video"
                 src={media.src}
+                crossOrigin="anonymous"
                 poster={media.poster}
                 autoPlay
                 onPlay={(e) => {
@@ -742,13 +852,23 @@ export default function Viewer() {
                   className="ml-[11px]"
                 />
                 <span className="viewer-sep ml-[15px]" />
+                <button
+                  type="button"
+                  aria-label={fr.viewerUi.pick}
+                  aria-pressed={picking}
+                  data-testid="viewer-pipette"
+                  className={cn('viewer-icon-btn ml-[13px]', picking && 'is-active')}
+                  onClick={() => setPicking((p) => !p)}
+                >
+                  <Pipette size={18} strokeWidth={1.75} />
+                </button>
               </>
             ) : null}
             <button
               type="button"
               aria-label={fr.viewer.download}
               data-testid="viewer-download"
-              className="viewer-icon-btn ml-[13px]"
+              className={cn('viewer-icon-btn', media.kind === 'tweet' ? 'ml-[13px]' : 'ml-[10px]')}
               onClick={download}
             >
               <Download size={18} strokeWidth={1.75} />
@@ -781,6 +901,12 @@ export default function Viewer() {
             detail={currentDetail}
             style={{ right: PANEL_RIGHT, top: PANEL_TOP, bottom: PANEL_BOTTOM, width: PANEL_W }}
           />
+        ) : null}
+        {picking ? (
+          <div ref={loupeRef} className="viewer-loupe" aria-hidden="true">
+            <span className="viewer-loupe-swatch" />
+            <span className="viewer-loupe-hex" />
+          </div>
         ) : null}
       </div>
       <span className="sr-only" aria-live="polite">
