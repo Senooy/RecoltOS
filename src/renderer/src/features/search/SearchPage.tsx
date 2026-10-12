@@ -43,7 +43,14 @@ interface History {
   uses: number
 }
 
-function MiniFan({ covers }: { covers: readonly ItemCard[] }) {
+/** Éventail au survol, même geste que la rangée de la Bibliothèque (FAN_HOVER), à l'échelle 68/84. */
+const MINI_FAN_OPEN = [
+  'translateX(-5px) translateY(-3px) rotate(-3deg)',
+  'translateX(10px) rotate(7deg)',
+  'translateX(21px) rotate(14deg)',
+]
+
+function MiniFan({ covers, open }: { covers: readonly ItemCard[]; open: boolean }) {
   const shown = covers.slice(0, 3)
   const rot = ['rotate(-4deg)', 'rotate(4deg)', 'rotate(0deg)']
   return (
@@ -58,7 +65,8 @@ function MiniFan({ covers }: { covers: readonly ItemCard[] }) {
               key={c.uuid}
               className="absolute left-1 top-1 h-[68px] w-[68px] overflow-hidden rounded-[6px] border border-[rgba(255,255,255,.9)]"
               style={{
-                transform: rot[(shown.length - 1 - i) % 3] ?? undefined,
+                transform: open ? MINI_FAN_OPEN[i] : (rot[(shown.length - 1 - i) % 3] ?? undefined),
+                transition: 'transform 260ms var(--ease-out)',
                 boxShadow: 'var(--shadow-stack)',
                 background: c.dominant ?? 'var(--skeleton)',
               }}
@@ -141,24 +149,39 @@ function CollectionsCarousel({ tree }: { tree: readonly CollectionNode[] }) {
         className="no-scrollbar mt-[22px] flex snap-x snap-mandatory gap-3 overflow-x-auto"
       >
         {tree.map((n) => (
-          <button
+          <CollectionTile
             key={n.uuid}
-            type="button"
-            data-testid="search-collection-card"
-            className="relative h-[160px] w-[130px] shrink-0 snap-start rounded-[10px] border border-border bg-bg text-left transition-colors hover:bg-surface"
-            onClick={() => navigate({ name: 'collection', uuid: n.uuid })}
-          >
-            <MiniFan covers={n.covers} />
-            <span className="absolute bottom-[30px] left-3 right-2 truncate text-[13px] font-semibold leading-4 text-fg">
-              {n.name}
-            </span>
-            <span className="absolute bottom-[14px] left-3 text-[11px] leading-[14px] text-fg-faint">
-              {fr.count.items(n.count)}
-            </span>
-          </button>
+            node={n}
+            onOpen={() => navigate({ name: 'collection', uuid: n.uuid })}
+          />
         ))}
       </div>
     </section>
+  )
+}
+
+function CollectionTile({ node: n, onOpen }: { node: CollectionNode; onOpen: () => void }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <button
+      type="button"
+      data-testid="search-collection-card"
+      className="relative h-[160px] w-[130px] shrink-0 snap-start rounded-[10px] border border-border bg-bg text-left transition-[background-color,box-shadow] hover:bg-surface"
+      style={{ boxShadow: hover ? 'var(--shadow-card-hover)' : undefined }}
+      onClick={onOpen}
+      onPointerEnter={() => setHover(true)}
+      onPointerLeave={() => setHover(false)}
+      onFocus={() => setHover(true)}
+      onBlur={() => setHover(false)}
+    >
+      <MiniFan covers={n.covers} open={hover} />
+      <span className="absolute bottom-[30px] left-3 right-2 truncate text-[13px] font-semibold leading-4 text-fg">
+        {n.name}
+      </span>
+      <span className="absolute bottom-[14px] left-3 text-[11px] leading-[14px] text-fg-faint">
+        {fr.count.items(n.count)}
+      </span>
+    </button>
   )
 }
 
