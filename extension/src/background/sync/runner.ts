@@ -26,6 +26,7 @@ import {
   XClient,
   type PageOutcome,
 } from './platforms'
+import { xt } from '../../lib/i18n'
 import { targetsFor, type ExecTarget } from './policy'
 
 export const SYNC_TICK = 'sync-tick'
@@ -75,7 +76,11 @@ export class SyncRunner {
 
   run(r: PayloadOf<'sync.run'>): Promise<SyncOutcome> {
     if (this.active.has(r.platform)) {
-      this.safePost('sync.finished', { runId: r.runId, status: 'aborted', error: 'déjà en cours' })
+      this.safePost('sync.finished', {
+        runId: r.runId,
+        status: 'aborted',
+        error: xt().syncErrors.alreadyRunning,
+      })
       return Promise.resolve('aborted')
     }
     const run: ActiveRun = { runId: r.runId, cancelled: false }
@@ -175,10 +180,10 @@ export class SyncRunner {
       })
       return status
     }
-    if (!(await hasPermission(p))) return finish('permissions', 'autorisations d’hôte manquantes')
+    if (!(await hasPermission(p))) return finish('permissions', xt().syncErrors.noPermission)
     // Cosmos : la session se vérifie par `me` (jeton capturé ou cookies), pas par un cookie connu.
     if (p !== 'cosmos' && !(await platformState(p)).loggedIn) {
-      return finish('auth_required', 'aucune session dans ce navigateur')
+      return finish('auth_required', xt().syncErrors.noSession)
     }
     await ensureHeaderRules()
     const client = clientFor(p)
@@ -195,7 +200,7 @@ export class SyncRunner {
     try {
       while (pages < r.maxPages) {
         if (run.cancelled) return finish('aborted')
-        if (!exec) return finish('network', 'aucune cible d’exécution')
+        if (!exec) return finish('network', xt().syncErrors.noTarget)
         let page: PageOutcome = await this.withRetries(() => client.fetchPage(cursor, exec!.fetch))
         // Repli seulement si l'arrière-plan est refusé.
         while (page.kind === 'error' && page.outcome === 'blocked' && ti < targets.length - 1) {
@@ -316,7 +321,7 @@ export class SyncRunner {
       this.safePost('media.chunk', { jobId: p.jobId, seq: 0, last: true, data: '', error })
     try {
       const r = await fetch(p.url, { credentials: 'omit', referrer: p.referer ?? '' })
-      if (!r.ok) return fail(`réponse ${r.status}`)
+      if (!r.ok) return fail(xt().syncErrors.response(r.status))
       const buf = new Uint8Array(await r.arrayBuffer())
       const mime = r.headers.get('content-type') ?? 'application/octet-stream'
       let seq = 0

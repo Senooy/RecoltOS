@@ -15,6 +15,7 @@
  * priorisé du graphe de modules (noms `bookmarks-*` puis `history-*` d'abord ; les autres seulement
  * depuis l'entrée et un niveau en dessous), avec un message d'erreur précis à chaque étape.
  */
+import { xt } from '../../lib/i18n'
 import type { FetchFn } from './fetcher'
 
 /** Jeton public du client web X (stable depuis des années ; repli si la lecture échoue). */
@@ -194,16 +195,13 @@ export async function discoverXWeb(fetch: FetchFn, o: DiscoverOptions): Promise<
     credentials: 'omit',
     headers: { accept: 'text/html' },
   })
-  if (home.status === 0) return fail('configuration de X introuvable : x.com injoignable (réseau)')
-  if (!home.text)
-    return fail(`configuration de X introuvable : page d’accueil illisible (HTTP ${home.status})`)
+  if (home.status === 0) return fail(xt().syncErrors.xConfigNetwork)
+  if (!home.text) return fail(xt().syncErrors.xConfigHome(home.status))
   const html = home.text
   const version = appVersion(html)
   const entries = findEntryScripts(html, o.homeUrl)
   if (entries.length === 0) {
-    return fail(
-      'configuration de X introuvable : aucun script x-web (entry-client) dans la page x.com',
-    )
+    return fail(xt().syncErrors.xConfigNoEntry)
   }
   const prefix = entries[0]!.slice(0, entries[0]!.lastIndexOf('/') + 1)
   const inScope = (u: string) => u.startsWith(prefix)
@@ -245,9 +243,7 @@ export async function discoverXWeb(fetch: FetchFn, o: DiscoverOptions): Promise<
     }
   }
   if (!found) {
-    return fail(
-      `configuration de X introuvable : opération GraphQL « ${op} » absente des ${scripts} scripts du client web lus`,
-    )
+    return fail(xt().syncErrors.xConfigNoOp(op, scripts))
   }
   if (!bearer) {
     const sw = await fetch(o.swUrl, { method: 'GET', credentials: 'omit' })

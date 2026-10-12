@@ -6,7 +6,8 @@
  *    service worker classique côté Chromium, `background.scripts` côté Firefox) ;
  *  - scripts de contenu : chaque `extension/src/content/*.ts` → `content/<nom>.js` (IIFE, aucun `import`) ;
  *  - popup : `extension/src/popup/index.ts` → `popup.js`, `popup.html` et `popup.css` copiés ;
- *  - icônes 16/32/48/128 générées depuis `build/icon.png` (sharp).
+ *  - icônes 16/32/48/128 générées depuis `build/icon.png` (sharp) ;
+ *  - `_locales/<langue>/messages.json` depuis `MANIFEST_LOCALES` (textes du manifest en/fr).
  * `--test-base http://127.0.0.1:<port>` : build de TEST (faux serveur, poignées Playwright) vers
  * `--out` (jamais `dist-extension/`). Sans `extension/manifest.ts`, sort proprement.
  */
@@ -104,8 +105,18 @@ async function buildTarget(
   if (existsSync(join(src, 'icons')))
     cpSync(join(src, 'icons'), join(out, 'icons'), { recursive: true })
   else await icons(root, out)
-  const { buildManifest } = (await import(pathToFileURL(join(src, 'manifest.ts')).href)) as {
+  const { buildManifest, MANIFEST_LOCALES } = (await import(
+    pathToFileURL(join(src, 'manifest.ts')).href
+  )) as {
     buildManifest: (t: ExtTarget, o: { extraHosts?: string[] }) => Record<string, unknown>
+    MANIFEST_LOCALES?: Record<string, Record<string, { message: string }>>
+  }
+  for (const [lang, messages] of Object.entries(MANIFEST_LOCALES ?? {})) {
+    mkdirSync(join(out, '_locales', lang), { recursive: true })
+    writeFileSync(
+      join(out, '_locales', lang, 'messages.json'),
+      `${JSON.stringify(messages, null, 2)}\n`,
+    )
   }
   const manifest = buildManifest(
     target,

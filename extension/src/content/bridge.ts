@@ -5,6 +5,7 @@
  */
 import { api } from '../lib/api'
 import { classify, type HookEvent } from '../lib/classify'
+import { loadExtLang } from '../lib/i18n'
 import { injectButtons, type PostRef } from '../lib/inject'
 
 const tweetCache = new Map<string, unknown>()
@@ -62,10 +63,10 @@ function savePost(ref: PostRef): Promise<{ status?: string } | undefined> {
   })
 }
 
+// Langue de l'app (mémorisée par l'arrière-plan) avant d'injecter les boutons.
+const start = () => void loadExtLang().then(() => injectButtons(document, savePost))
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => injectButtons(document, savePost), {
-    once: true,
-  })
+  document.addEventListener('DOMContentLoaded', start, { once: true })
 } else {
-  injectButtons(document, savePost)
+  start()
 }

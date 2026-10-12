@@ -23,6 +23,8 @@ export interface PopupState {
   platforms: PlatformsState | null
   sync: SyncStateMessage['sources'] | null
   pending: boolean
+  /** Langue de l'interface (celle de l'app connectée, sinon du navigateur). */
+  lang: 'fr' | 'en'
 }
 
 export type PopupRequest =

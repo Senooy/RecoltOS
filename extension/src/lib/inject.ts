@@ -5,6 +5,7 @@
  */
 import type { BridgePlatform } from '../../../src/shared/bridge/constants'
 import { showToast } from '../background/page-functions'
+import { xt } from './i18n'
 
 export interface PostRef {
   platform: BridgePlatform
@@ -13,14 +14,16 @@ export interface PostRef {
   dom: { text?: string; authorName?: string; authorHandle?: string; imageUrls?: string[] }
 }
 
-export const BUTTON_LABEL = 'Enregistrer dans RecoltOS'
+/** Libellé du bouton injecté (langue active à l'injection). */
+export const buttonLabel = (): string => xt().menu.save
 const MARK = 'data-recoltos'
 
 function button(doc: Document, onClick: () => void): HTMLButtonElement {
   const b = doc.createElement('button')
   b.type = 'button'
-  b.setAttribute('aria-label', BUTTON_LABEL)
-  b.title = BUTTON_LABEL
+  const label = buttonLabel()
+  b.setAttribute('aria-label', label)
+  b.title = label
   b.setAttribute(MARK, '1')
   b.style.cssText =
     'all:unset;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;color:inherit;opacity:.75'
@@ -106,17 +109,17 @@ export function injectInto(
       .then((r) =>
         showToast(
           r?.status === 'saved'
-            ? 'Enregistré dans RecoltOS'
+            ? xt().toast.saved
             : r?.status === 'duplicate'
-              ? 'Déjà dans ta bibliothèque'
+              ? xt().toast.duplicate
               : r?.status === 'queued'
-                ? 'RecoltOS est fermé : ajouté au prochain lancement'
-                : 'Enregistrement impossible',
+                ? xt().toast.queued
+                : xt().toast.saveFailed,
           r?.status === 'saved' ? 'ok' : r?.status === 'error' || !r ? 'error' : 'info',
           null,
         ),
       )
-      .catch(() => showToast('Enregistrement impossible', 'error', null))
+      .catch(() => showToast(xt().toast.saveFailed, 'error', null))
   if (/(^|\.)x\.com$|(^|\.)twitter\.com$/.test(hostname)) {
     for (const art of root.querySelectorAll('article[data-testid="tweet"]')) {
       const group = art.querySelector('div[role="group"]')

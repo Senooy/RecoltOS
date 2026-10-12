@@ -11,20 +11,13 @@ import {
 import type { SaveAck, SaveRequest } from '../../../src/shared/bridge/save'
 import type { NativeBridge } from './native'
 import { BridgeError } from './native'
+import { xt, type ExtMessages } from '../lib/i18n'
 import { probeBlob, readBlobChunk, type PageMeta } from './page-functions'
 
-export const TOAST = {
-  saved: 'Enregistré dans RecoltOS',
-  duplicate: 'Déjà dans ta bibliothèque',
-  addedTo: (c: string) => `Ajouté à ${c}`,
-  queued: 'RecoltOS est fermé : ajouté au prochain lancement',
-  bigNeedsApp: 'Ouvre RecoltOS pour enregistrer ce fichier volumineux',
-  tooBig: 'Fichier trop volumineux (200 Mo au maximum)',
-  hostMissing: 'Connecteur absent : ouvre RecoltOS une fois pour l’installer',
-  videoStream: 'Cette vidéo se lit en flux : enregistre plutôt la publication',
-  failed: (m: string) => `Enregistrement impossible : ${m}`,
-  addToCollection: 'Ajouter à une collection',
-} as const
+/** Textes des toasts dans la langue active (chaque lecture passe par `xt()`). */
+export const TOAST: ExtMessages['toast'] = new Proxy({} as ExtMessages['toast'], {
+  get: (_t, key: string) => xt().toast[key as keyof ExtMessages['toast']],
+})
 
 export interface SaveDeps {
   bridge: Pick<NativeBridge, 'request' | 'post' | 'state'>
@@ -86,7 +79,7 @@ function ackText(ack: SaveOutcome): {
   }
   if (ack.status === 'duplicate') return { text: TOAST.duplicate, kind: 'info' }
   if (ack.status === 'queued') return { text: TOAST.queued, kind: 'info' }
-  return { text: TOAST.failed(ack.error ?? 'erreur'), kind: 'error' }
+  return { text: TOAST.failed(ack.error ?? TOAST.error), kind: 'error' }
 }
 
 async function send(deps: SaveDeps, req: SaveRequest): Promise<SaveOutcome> {
@@ -98,7 +91,7 @@ async function send(deps: SaveDeps, req: SaveRequest): Promise<SaveOutcome> {
     if (code === 'NOT_CONNECTED' || deps.bridge.state === 'host_missing') {
       return { status: 'refused', error: TOAST.hostMissing }
     }
-    if (code === 'APP_NOT_RUNNING') return { status: 'refused', error: 'RecoltOS est fermé' }
+    if (code === 'APP_NOT_RUNNING') return { status: 'refused', error: TOAST.appClosed }
     return { status: 'error', error: err instanceof Error ? err.message : String(err) }
   }
 }
@@ -111,13 +104,13 @@ async function withBinary(
   src: string,
 ): Promise<SaveRequest | { refused: string }> {
   const probe = await deps.exec(tabId, probeBlob, [src])
-  if (!probe || 'error' in probe) return { refused: TOAST.failed('lecture du fichier') }
+  if (!probe || 'error' in probe) return { refused: TOAST.failed(TOAST.readFile) }
   const { size, mime } = probe
   if (size > MAX_UPLOAD_BYTES) return { refused: TOAST.tooBig }
   const { srcUrl: _drop, ...rest } = req
   if (size <= MAX_INLINE_MEDIA_BYTES) {
     const data = await deps.exec(tabId, readBlobChunk, [src, 0, size, true])
-    if (data === null) return { refused: TOAST.failed('lecture du fichier') }
+    if (data === null) return { refused: TOAST.failed(TOAST.readFile) }
     return { ...rest, inlineMedia: { mime, dataBase64: data } }
   }
   if (deps.bridge.state !== 'app_connected') return { refused: TOAST.bigNeedsApp }
@@ -126,7 +119,7 @@ async function withBinary(
   for (let off = 0; off < size; off += CHUNK_BYTES) {
     const last = off + CHUNK_BYTES >= size
     const data = await deps.exec(tabId, readBlobChunk, [src, off, CHUNK_BYTES, last])
-    if (data === null) return { refused: TOAST.failed('lecture du fichier') }
+    if (data === null) return { refused: TOAST.failed(TOAST.readFile) }
     deps.bridge.post('media.chunk', { jobId: id, seq, last, mime, data })
     seq += 1
   }
@@ -143,7 +136,7 @@ export async function saveFromClick(
   const tabId = tab.id
   let req = baseRequest(info, tab)
   if (!req) {
-    const out = { status: 'refused' as const, error: TOAST.failed('page non prise en charge') }
+    const out = { status: 'refused' as const, error: TOAST.failed(TOAST.unsupportedPage) }
     deps.toast(tabId, out.error, 'error')
     return out
   }
@@ -155,7 +148,7 @@ export async function saveFromClick(
       deps.toast(tabId, TOAST.videoStream, 'error')
       return { status: 'refused', error: TOAST.videoStream }
     }
-    if (tabId === undefined) return { status: 'refused', error: TOAST.failed('onglet inconnu') }
+    if (tabId === undefined) return { status: 'refused', error: TOAST.failed(TOAST.unknownTab) }
     const r = await withBinary(deps, tabId, req, req.srcUrl)
     if ('refused' in r) {
       deps.toast(tabId, r.refused, 'error')

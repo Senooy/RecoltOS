@@ -7,6 +7,7 @@ import type { BridgeCollection, SaveAck } from '../../../src/shared/bridge/save'
 import type { PayloadOf } from '../../../src/shared/bridge/messages'
 import type { SyncStateMessage } from '../../../src/shared/bridge/sync'
 import { api, TARGET } from '../lib/api'
+import { extLang, loadExtLang, rememberAppLang } from '../lib/i18n'
 import { platformOfUrl, TEST_BASE } from '../lib/endpoints'
 import type { PopupRequest, PopupState } from '../lib/popup-protocol'
 import { getLocal, sessionGet, setLocal } from './creds'
@@ -140,6 +141,7 @@ async function popupState(): Promise<PopupState> {
     platforms: await platformsState().catch(() => null),
     sync: syncState,
     pending: !!pending.pendingSave,
+    lang: extLang(),
   }
 }
 
@@ -224,8 +226,10 @@ void a.alarms.get('watchdog').then((al) => {
   if (!al) void a.alarms.create('watchdog', { periodInMinutes: 1 })
 })
 a.runtime.onInstalled.addListener(() => {
-  void setupMenus(collections)
+  void loadExtLang().then(() => setupMenus(collections))
 })
+// Langue mémorisée (celle de l'app) avant les premiers menus et toasts.
+void loadExtLang()
 a.runtime.onStartup.addListener(() => bridge.ensure())
 a.alarms.onAlarm.addListener((al) => {
   if (al.name === 'watchdog') {
@@ -261,6 +265,10 @@ a.runtime.onMessage.addListener((msg: unknown, sender, reply) => {
 
 bridge.on('hello.ack', (m) => {
   const p = m.payload as PayloadOf<'hello.ack'>
+  // Langue de l'app : popup, menus et toasts la suivent (menus reconstruits si elle change).
+  if (p.lang && p.lang !== extLang()) {
+    void rememberAppLang(p.lang).then(() => setupMenus(collections))
+  }
   if (p.needsReload) {
     void maybeReload(p.bundledExtVersion, a.runtime.getManifest().version, (s) => {
       stale = s

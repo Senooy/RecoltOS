@@ -4,6 +4,7 @@
  */
 import type { BridgeCollection } from '../../../src/shared/bridge/save'
 import { api } from '../lib/api'
+import { xt } from '../lib/i18n'
 
 export const MENU = {
   save: 'rcl-save',
@@ -12,11 +13,18 @@ export const MENU = {
   colPrefix: 'rcl-col-',
 } as const
 
+/** Titres dans la langue active (relus à chaque construction du menu). */
 export const MENU_TITLES = {
-  save: 'Enregistrer dans RecoltOS',
-  saveTo: 'Enregistrer dans la collection',
-  more: 'Autre collection…',
-} as const
+  get save(): string {
+    return xt().menu.save
+  },
+  get saveTo(): string {
+    return xt().menu.saveTo
+  },
+  get more(): string {
+    return xt().menu.more
+  },
+}
 
 const CONTEXTS = ['image', 'video', 'link', 'page'] as const
 

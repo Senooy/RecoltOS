@@ -35,6 +35,29 @@ export const CONTENT_MATCHES = [
   'https://www.cosmos.so/*',
 ]
 
+/**
+ * Textes du manifest par langue (`_locales/<langue>/messages.json`, écrits par `build-ext`) :
+ * le navigateur choisit selon SA langue ; anglais par défaut (`default_locale`).
+ */
+export const MANIFEST_LOCALES: Record<'en' | 'fr', Record<string, { message: string }>> = {
+  en: {
+    extDescription: {
+      message:
+        'Save images, videos, pages and posts to RecoltOS, and sync your X, Instagram and Cosmos saves.',
+    },
+    actionTitle: { message: 'Save to RecoltOS' },
+    savePageCommand: { message: 'Save the page to RecoltOS' },
+  },
+  fr: {
+    extDescription: {
+      message:
+        'Enregistre images, vidéos, pages et publications dans RecoltOS, et synchronise tes favoris X, Instagram et Cosmos.',
+    },
+    actionTitle: { message: 'Enregistrer dans RecoltOS' },
+    savePageCommand: { message: 'Enregistrer la page dans RecoltOS' },
+  },
+}
+
 export interface ManifestOptions {
   /** Hôtes supplémentaires (build de test : faux serveur local). */
   extraHosts?: string[]
@@ -57,12 +80,12 @@ export function buildManifest(
     name: 'RecoltOS',
     short_name: 'RecoltOS',
     version: EXTENSION_VERSION,
-    description:
-      'Enregistre images, vidéos, pages et publications dans RecoltOS, et synchronise tes favoris X, Instagram et Cosmos.',
+    default_locale: 'en',
+    description: '__MSG_extDescription__',
     icons,
     action: {
       default_popup: 'popup.html',
-      default_title: 'Enregistrer dans RecoltOS',
+      default_title: '__MSG_actionTitle__',
       default_icon: icons,
     },
     permissions: [
@@ -93,7 +116,7 @@ export function buildManifest(
       },
       'save-page': {
         suggested_key: { default: 'Alt+Shift+S', mac: 'Alt+Shift+S' },
-        description: 'Enregistrer la page dans RecoltOS',
+        description: '__MSG_savePageCommand__',
       },
     },
   }

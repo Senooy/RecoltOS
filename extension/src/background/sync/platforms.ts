@@ -17,6 +17,7 @@ import { endpoint } from '../../lib/endpoints'
 import { getLocal, readCookie, removeLocal, setLocal } from '../creds'
 import type { FetchFn, FetchResult } from './fetcher'
 import { discoverXWeb, isQueryNotFound, missingVariables, providedDefaults } from './x-discovery'
+import { xt } from '../../lib/i18n'
 
 export type PageOutcome =
   | { kind: 'page'; status: number; headers: Record<string, string>; json: unknown }
@@ -38,12 +39,17 @@ const err = (outcome: SyncOutcome, error: string, resetAt?: number): ErrorOutcom
 
 /** Classement commun d'une réponse HTTP (sans le corps propre à la plateforme). */
 export function classifyHttp(r: FetchResult): PageOutcome | null {
-  if (r.status === 0) return err('network', r.text === 'timeout' ? 'délai dépassé' : 'réseau')
+  if (r.status === 0)
+    return err('network', r.text === 'timeout' ? xt().syncErrors.timeout : xt().syncErrors.network)
   if (r.status === 429) {
     const reset = Number(r.headers['x-rate-limit-reset'])
-    return err('rate_limited', 'limite atteinte', Number.isFinite(reset) ? reset * 1000 : undefined)
+    return err(
+      'rate_limited',
+      xt().syncErrors.rateLimited,
+      Number.isFinite(reset) ? reset * 1000 : undefined,
+    )
   }
-  if (r.status === 401 || r.status === 403) return err('blocked', `requête refusée (${r.status})`)
+  if (r.status === 401 || r.status === 403) return err('blocked', xt().syncErrors.refused(r.status))
   return null
 }
 
@@ -329,7 +335,7 @@ export class XClient implements PlatformClient {
       const codes = ((r.json as { errors?: { code?: unknown }[] } | null)?.errors ?? []).map(
         (e) => e.code,
       )
-      if (codes.includes(88)) return err('rate_limited', 'limite atteinte')
+      if (codes.includes(88)) return err('rate_limited', xt().syncErrors.rateLimited)
       if ([400, 404, 422].includes(r.status)) {
         const notFound = r.status === 404 && isQueryNotFound(r.json)
         if (!this.rediscovered) {
@@ -342,19 +348,16 @@ export class XClient implements PlatformClient {
         if (r.status === 404 && !notFound) {
           // Identifiant reconnu mais requête refusée sans corps : X exige peut-être désormais la
           // signature `x-client-transaction-id` (non reproduite). Repli : capture passive.
-          return err(
-            'blocked',
-            'X refuse la requête d’arrière-plan (404 sans corps) : signature x-client-transaction-id probablement exigée ; ouvre x.com/i/bookmarks dans le navigateur',
-          )
+          return err('blocked', xt().syncErrors.xBlocked)
         }
         return err(
           'api_changed',
           notFound
-            ? `X ne reconnaît plus l’opération ${cfg.operationName} (Query not found)`
-            : `X a changé son API (${r.status})`,
+            ? xt().syncErrors.xQueryNotFound(cfg.operationName)
+            : xt().syncErrors.xApiChanged(r.status),
         )
       }
-      if (r.status !== 200) return err('api_changed', `réponse ${r.status}`)
+      if (r.status !== 200) return err('api_changed', xt().syncErrors.response(r.status))
       return { kind: 'page', status: r.status, headers: r.headers, json: r.json }
     }
   }
@@ -413,15 +416,15 @@ export class InstagramClient implements PlatformClient {
 
   private async get(url: string, fetch: FetchFn): Promise<PageOutcome> {
     const headers = await this.headers()
-    if (!headers) return err('auth_required', 'session Instagram absente')
+    if (!headers) return err('auth_required', xt().syncErrors.igNoSession)
     const r = await fetch(url, { method: 'GET', headers })
     const claim = r.headers['x-ig-set-www-claim']
     if (claim) await setLocal('ig.claim', claim)
-    if (igAuthProblem(r.json)) return err('auth_required', 'Instagram demande une vérification')
-    if (igRateLimited(r.json)) return err('rate_limited', 'Instagram demande d’attendre')
+    if (igAuthProblem(r.json)) return err('auth_required', xt().syncErrors.igVerification)
+    if (igRateLimited(r.json)) return err('rate_limited', xt().syncErrors.igWait)
     const http = classifyHttp(r)
     if (http) return http
-    if (r.status !== 200) return err('api_changed', `réponse ${r.status}`)
+    if (r.status !== 200) return err('api_changed', xt().syncErrors.response(r.status))
     return { kind: 'page', status: r.status, headers: r.headers, json: r.json }
   }
 
@@ -539,20 +542,21 @@ export class CosmosClient implements PlatformClient {
       method: 'GET',
       headers: { accept: 'application/json', 'x-cosmos-refresh-trigger': 'proactive' },
     })
-    if (r.status === 0) return err('network', r.text === 'timeout' ? 'délai dépassé' : 'réseau')
+    if (r.status === 0)
+      return err(
+        'network',
+        r.text === 'timeout' ? xt().syncErrors.timeout : xt().syncErrors.network,
+      )
     if (r.status === 401 || r.status === 403) {
       await removeLocal(COSMOS_TOKEN_KEY)
       await removeLocal('cosmos.me')
-      return err(
-        'auth_required',
-        'session Cosmos absente : connecte-toi sur cosmos.so dans ce navigateur',
-      )
+      return err('auth_required', xt().syncErrors.cosmosNoSession)
     }
     const http = classifyHttp(r)
     if (http?.kind === 'error') return http
     const at = (r.json as { accessToken?: unknown } | null)?.accessToken
     if (r.status !== 200 || typeof at !== 'string' || at.split('.').length !== 3) {
-      return err('api_changed', `jeton Cosmos illisible (/api/refresh-token, réponse ${r.status})`)
+      return err('api_changed', xt().syncErrors.cosmosToken(r.status))
     }
     const t = toCosmosToken(at)
     await setLocal(COSMOS_TOKEN_KEY, t)
@@ -622,7 +626,7 @@ export class CosmosClient implements PlatformClient {
           continue
         }
         await removeLocal(COSMOS_TOKEN_KEY)
-        return err('auth_required', 'session Cosmos expirée')
+        return err('auth_required', xt().syncErrors.cosmosExpired)
       }
       const http = classifyHttp(r)
       if (http) return http
@@ -630,7 +634,9 @@ export class CosmosClient implements PlatformClient {
         const msg = errors[0]?.message
         return err(
           'api_changed',
-          msg ? `Cosmos a changé son API : ${msg.slice(0, 200)}` : `réponse ${r.status}`,
+          msg
+            ? xt().syncErrors.cosmosApiChanged(msg.slice(0, 200))
+            : xt().syncErrors.response(r.status),
         )
       }
       return { kind: 'page', status: r.status, headers: r.headers, json: r.json }

@@ -8,60 +8,47 @@ import { BRIDGE_PLATFORMS, type BridgePlatform } from '../../../src/shared/bridg
 import type { BridgeCollection } from '../../../src/shared/bridge/save'
 import { api } from '../lib/api'
 import { ENDPOINTS } from '../lib/endpoints'
+import { setExtLang, xt } from '../lib/i18n'
 import type { PopupRequest, PopupState } from '../lib/popup-protocol'
 
-export const STATUS_TEXT: Record<string, { label: string; hint?: string }> = {
-  connecting: { label: 'Connexion…' },
-  app_connected: { label: 'Connecté à RecoltOS' },
-  app_closed: {
-    label: 'RecoltOS fermé',
-    hint: 'Tes enregistrements seront ajoutés au prochain lancement de RecoltOS.',
+/** Libellé et aide de chaque état du pont, dans la langue active. */
+export const STATUS_TEXT: Record<string, { label: string; hint?: string }> = new Proxy(
+  {},
+  {
+    get: (_t, key: string) => xt().status[key],
+    ownKeys: () => Reflect.ownKeys(xt().status),
+    getOwnPropertyDescriptor: (_t, key: string) => ({
+      enumerable: true,
+      configurable: true,
+      value: xt().status[key],
+    }),
   },
-  host_missing: {
-    label: 'Connecteur absent',
-    hint: 'Ouvre RecoltOS une fois pour installer le connecteur, puis rouvre ce panneau.',
-  },
-  host_forbidden: {
-    label: 'Connecteur refusé',
-    hint: 'Réinstalle le connecteur depuis RecoltOS › Réglages › Synchronisation.',
-  },
-  host_exited: {
-    label: 'RecoltOS introuvable',
-    hint: 'Le connecteur s’est arrêté. Vérifie que RecoltOS est installé, puis rouvre ce panneau.',
-  },
-  protocol_mismatch: {
-    label: 'Mise à jour nécessaire',
-    hint: 'L’extension et RecoltOS ne parlent pas la même version : mets-les à jour.',
-  },
-  stale: {
-    label: 'Extension à recharger',
-    hint: 'Ton extension est plus ancienne que celle fournie avec RecoltOS : retire-la puis charge le dossier RecoltOS.',
-  },
-}
+)
 
 const NAMES: Record<BridgePlatform, string> = { x: 'X', instagram: 'Instagram', cosmos: 'Cosmos' }
 
-/** « il y a 4 min », « il y a 2 h », « hier »… */
+/** « il y a 4 min », « il y a 2 h », « hier »… (« 4 min ago », « yesterday » en anglais). */
 export function relTime(at: number, now = Date.now()): string {
+  const t = xt().time
   const s = Math.max(0, Math.round((now - at) / 1000))
-  if (s < 60) return 'à l’instant'
+  if (s < 60) return t.now
   const m = Math.round(s / 60)
-  if (m < 60) return `il y a ${m}\u00a0min`
+  if (m < 60) return t.minutes(m)
   const h = Math.round(m / 60)
-  if (h < 24) return `il y a ${h}\u00a0h`
+  if (h < 24) return t.hours(h)
   const d = Math.round(h / 24)
-  return d === 1 ? 'hier' : `il y a ${d}\u00a0jours`
+  return d === 1 ? t.yesterday : t.days(d)
 }
 
 export function syncLine(p: BridgePlatform, st: PopupState, now = Date.now()): string {
   const plat = st.platforms?.[p]
   const sync = st.sync?.[p]
-  if (plat && plat.permission === false) return `${NAMES[p]} — accès au site à autoriser`
-  if (sync && !sync.enabled) return `${NAMES[p]} — désactivé dans RecoltOS`
-  if (plat && !plat.loggedIn) return `${NAMES[p]} — non connecté dans ce navigateur`
-  if (sync?.lastSuccessAt != null)
-    return `${NAMES[p]} — dernière synchro ${relTime(sync.lastSuccessAt, now)}`
-  return `${NAMES[p]} — connecté`
+  const l = xt().syncLine
+  if (plat && plat.permission === false) return l.permission(NAMES[p])
+  if (sync && !sync.enabled) return l.disabled(NAMES[p])
+  if (plat && !plat.loggedIn) return l.notLoggedIn(NAMES[p])
+  if (sync?.lastSuccessAt != null) return l.last(NAMES[p], relTime(sync.lastSuccessAt, now))
+  return l.connected(NAMES[p])
 }
 
 function send<T>(msg: PopupRequest): Promise<T> {
@@ -70,8 +57,28 @@ function send<T>(msg: PopupRequest): Promise<T> {
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 
+/** Textes statiques de `popup.html` (attributs `data-i18n*`), dans la langue active. */
+export function applyStaticTexts(doc: Document): void {
+  const p = xt().popup as Record<string, string>
+  for (const el of doc.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    const v = p[el.dataset.i18n ?? '']
+    if (v) el.textContent = v
+  }
+  for (const el of doc.querySelectorAll<HTMLElement>('[data-i18n-placeholder]')) {
+    const v = p[el.dataset.i18nPlaceholder ?? '']
+    if (v) el.setAttribute('placeholder', v)
+  }
+  for (const el of doc.querySelectorAll<HTMLElement>('[data-i18n-label]')) {
+    const v = p[el.dataset.i18nLabel ?? '']
+    if (v) el.setAttribute('aria-label', v)
+  }
+}
+
 async function main(): Promise<void> {
   const st = await send<PopupState>({ type: 'popup:state' })
+  setExtLang(st.lang)
+  document.documentElement.lang = st.lang
+  applyStaticTexts(document)
   let selected: string | null = st.lastCollectionId
   let collections: BridgeCollection[] = st.collections
 
@@ -97,7 +104,7 @@ async function main(): Promise<void> {
     // pages internes : pas d'aperçu
   }
   $('saveImage').hidden = !st.ogImage
-  if (st.pending) $('savePage').textContent = 'Enregistrer ici'
+  if (st.pending) $('savePage').textContent = xt().popup.saveHere
 
   // ---- collections
   const list = $('collections')
@@ -130,7 +137,7 @@ async function main(): Promise<void> {
     render((e.target as HTMLInputElement).value),
   )
   $('newCollection').addEventListener('click', () => {
-    const name = window.prompt('Nom de la nouvelle collection')?.trim()
+    const name = window.prompt(xt().popup.newCollectionPrompt)?.trim()
     if (!name) return
     void send<{ collections: BridgeCollection[]; createdId?: string }>({
       type: 'popup:createCollection',
@@ -157,16 +164,17 @@ async function main(): Promise<void> {
     result.hidden = false
     const ok = ack.status === 'saved' || ack.status === 'duplicate' || ack.status === 'queued'
     result.dataset.kind = ok ? 'ok' : 'error'
+    const t = xt().toast
     result.textContent =
       ack.status === 'saved'
         ? ack.collectionName
-          ? `Ajouté à ${ack.collectionName}`
-          : 'Enregistré dans RecoltOS'
+          ? t.addedTo(ack.collectionName)
+          : t.saved
         : ack.status === 'duplicate'
-          ? 'Déjà dans ta bibliothèque'
+          ? t.duplicate
           : ack.status === 'queued'
-            ? 'RecoltOS est fermé : ajouté au prochain lancement'
-            : `Enregistrement impossible : ${ack.error ?? 'erreur'}`
+            ? t.queued
+            : t.failed(ack.error ?? t.error)
     if (ok) setTimeout(() => window.close(), 900)
     else for (const id of ['savePage', 'saveImage']) $<HTMLButtonElement>(id).disabled = false
   }
@@ -184,7 +192,7 @@ async function main(): Promise<void> {
   )
   $('syncNow').addEventListener('click', () => {
     void send({ type: 'popup:sync' }).then(() => {
-      $('syncNow').textContent = 'Synchronisation demandée'
+      $('syncNow').textContent = xt().popup.syncRequested
     })
   })
   const missing = BRIDGE_PLATFORMS.filter((p) => st.platforms?.[p]?.permission === false)
