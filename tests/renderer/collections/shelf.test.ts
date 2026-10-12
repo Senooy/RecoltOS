@@ -10,7 +10,7 @@ import { makeStars } from '../../../src/renderer/src/features/collections/shelf/
 import { X_LOGO_PATH } from '../../../src/renderer/src/components/icons/brand'
 
 describe('playingIndices', () => {
-  it('au plus 4 vidéos, les plus proches du centre', () => {
+  it('au plus MAX_PLAYING vidéo(s), les plus proches du centre', () => {
     const isVideo = Array.from({ length: 17 }, () => true)
     const set = playingIndices(isVideo, 0, 1280)
     expect(set.size).toBe(MAX_PLAYING)

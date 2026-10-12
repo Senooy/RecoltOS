@@ -1,8 +1,12 @@
 /**
  * Étagère 3D des collections : fond noir plein cadre + `Starfield`, libellés
  * à y≈104 au pas de 122 px depuis x≈150, couvertures `.cover-face` 410×700 en `rotateY(-35deg)`
- * (média `large`, post texte en `TweetCard cover` blanche, vidéos `preview` muettes en boucle : au
- * plus 4, les plus proches du centre, plus la couverture survolée ; jamais l'original). Entrée en
+ * (média `large`, post texte en `TweetCard cover` blanche, vidéo `preview` muette en boucle : UNE à
+ * la fois, celle de la couverture survolée ou, à défaut, la plus proche du centre, et aucune pendant
+ * l'entrée en cascade ; jamais l'original). Une seule : dès que deux vidéos jouent à l'écran,
+ * Chromium aligne l'affichage sur leur cadence (30 Hz, heuristique « visioconférence » du
+ * compositeur) et la chute des tranches comme leur survol passent à une image sur quatre sur un
+ * écran 120 Hz. Entrée en
  * cascade (les tranches tombent une à une, `--i` = rang) et survol qui fait sortir la tranche dans
  * son axe : voir `shelf.css`. Molette (verticale ou horizontale) →
  * défilement inertiel de la piste ; ←/→ passent d'une couverture à l'autre, ↵ ouvre, Échap revient
@@ -39,7 +43,13 @@ export const SHELF_PAD_LEFT = 152
 export const SHELF_STEP = 122
 export const SHELF_LABEL_X = 150
 export const SHELF_LABEL_Y = 104
-export const MAX_PLAYING = 4
+/** Vidéos lues en même temps (voir l'en-tête : au-delà d'une, l'affichage tombe à 30 Hz). */
+export const MAX_PLAYING = 1
+
+/** Durée de l'entrée en cascade (`shelf.css` : `--i` × 45 ms plafonné à 18, chute de 560 ms). */
+export function entranceMs(count: number): number {
+  return Math.min(Math.max(0, count - 1), 18) * 45 + 560
+}
 
 /** Indices des vidéos à lire : au plus `max`, les plus proches du centre de la fenêtre. */
 export function playingIndices(
@@ -110,6 +120,8 @@ export default function CollectionShelf() {
   const current = useRef(0)
   const raf = useRef(0)
   const [active, setActive] = useState<number | null>(null)
+  // Aucune vidéo pendant la cascade : elle commence une fois les tranches posées.
+  const [landed, setLanded] = useState(false)
   const coverRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const count = tree.length + 1 // + couverture « Nouvelle collection »
@@ -215,15 +227,22 @@ export default function CollectionShelf() {
     return () => window.removeEventListener('keydown', onKey)
   }, [active, focusCover, open, navigate])
 
+  useEffect(() => {
+    if (reduced) return
+    const id = window.setTimeout(() => setLanded(true), entranceMs(count) + 60)
+    return () => window.clearTimeout(id)
+    // Une fois, au montage : la cascade ne se rejoue pas quand l'arbre change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduced])
+
   const covers = useMemo(() => tree.map((n) => n.covers[0]), [tree])
   const playing = useMemo(() => {
-    if (reduced) return new Set<number>()
+    if (reduced || !landed) return new Set<number>()
     const isVideo = covers.map((c) => c?.kind === 'video' && c.previewUrl !== null)
-    const set = playingIndices(isVideo, scroll, viewport)
-    // La couverture survolée (ou focalisée) joue toujours sa vidéo.
-    if (active !== null && isVideo[active]) set.add(active)
-    return set
-  }, [covers, scroll, viewport, reduced, active])
+    // La couverture survolée (ou focalisée) joue sa vidéo, seule ; sinon la plus proche du centre.
+    if (active !== null && isVideo[active]) return new Set([active])
+    return playingIndices(isVideo, scroll, viewport)
+  }, [covers, scroll, viewport, reduced, landed, active])
 
   return (
     <div
