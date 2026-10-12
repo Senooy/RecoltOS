@@ -317,10 +317,14 @@ export default function Viewer() {
     rootRef.current?.focus({ preventScroll: true })
     const reduced = motionOff()
     const fade = reduced ? 80 : FADE_MS
-    backdropRef.current?.animate([{ opacity: 0 }, { opacity: 1 }], {
+    // Flou de la grille pendant le fondu seulement (voir `.viewer-backdrop` dans viewer.css).
+    const backdrop = backdropRef.current
+    backdrop?.classList.add('is-fading')
+    const veil = backdrop?.animate([{ opacity: 0 }, { opacity: 1 }], {
       duration: fade,
       easing: 'ease-out',
     })
+    if (veil) veil.onfinish = () => backdrop?.classList.remove('is-fading')
     chromeRef.current?.animate([{ opacity: 0 }, { opacity: 1 }], {
       duration: reduced ? 80 : 220,
       delay: reduced ? 0 : 40,
@@ -360,7 +364,11 @@ export default function Viewer() {
     const done = () => setReady(true)
     if (anim) anim.onfinish = done
     else done()
-    return () => anim?.cancel()
+    return () => {
+      anim?.cancel()
+      veil?.cancel()
+      backdrop?.classList.remove('is-fading')
+    }
     // Une seule fois, au montage.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -394,6 +402,7 @@ export default function Viewer() {
         easing: 'ease-in',
         fill: 'forwards',
       })
+      backdropRef.current?.classList.add('is-fading')
       backdropRef.current?.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: reduced ? 80 : 240,
         easing: 'ease-in-out',

@@ -48,36 +48,46 @@
   transition: none;
 }
 
+/*
+ * Fond opaque : le flou de ce qui est derrière (la grille) ne se voit que pendant les fondus
+ * d'ouverture et de fermeture (`is-fading`, posé par `Viewer`). Vue ouverte, pas de filtre plein
+ * écran : la grille, entièrement masquée, n'est plus ni rastérisée ni floutée à chaque image.
+ */
 .viewer-backdrop {
   position: absolute;
   inset: 0;
   isolation: isolate;
   background: var(--viewer-base);
+}
+.viewer-backdrop.is-fading {
   -webkit-backdrop-filter: blur(24px);
   backdrop-filter: blur(24px);
 }
 
-/* ---- Ambiance (deux fonds 96 × 60 étirés, fondu enchaîné) ---- */
+/* ---- Ambiance (deux canvas 96 × 60 étirés par le compositeur, fondu enchaîné) ---- */
 .viewer-ambience {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  /* Les z-index des deux fonds restent confinés au calque d'ambiance. */
   isolation: isolate;
+  contain: strict;
 }
 .viewer-ambience-layer {
   position: absolute;
   inset: 0;
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Calques stables pendant toute la vue (pas de promotion à chaque fondu). */
+  will-change: opacity;
 }
 .viewer-ambience-grain {
   position: absolute;
   inset: 0;
-  z-index: 3;
   background-size: 96px 96px;
   pointer-events: none;
+  will-change: transform;
 }
 
 .viewer-stage {

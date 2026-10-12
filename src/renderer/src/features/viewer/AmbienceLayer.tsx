@@ -1,13 +1,21 @@
 /**
  * Calque d'ambiance de la vue détail (dans `.viewer-backdrop`, dont il suit les fondus d'ouverture
- * et de fermeture). L'ambiance est dessinée dans un canvas hors écran de 96 × 60 px puis affichée en
- * image de fond étirée sur deux calques superposés : la nouvelle apparaît en fondu (450 ms ;
- * instantané en mouvement réduit) au-dessus de l'ancienne. Hors fondu, ce sont de simples fonds
- * peints, sans calque GPU dédié. Avant le premier dessin, un dégradé tiré de la couleur dominante
- * de la carte occupe le fond. Vidéo en lecture : l'ambiance suit l'image courante toutes les 2 s.
+ * et de fermeture). L'ambiance est calculée dans un canvas hors écran de 96 × 60 px puis copiée dans
+ * deux canvas visibles de même taille, étirés en plein écran par le compositeur (une texture
+ * minuscule agrandie : ni tuiles à rastériser, ni PNG à encoder puis décoder). Ordre fixe : le canvas
+ * du dessus reçoit la nouvelle ambiance et apparaît en fondu (450 ms ; instantané en mouvement
+ * réduit) ; juste avant, l'image visible (fondu en cours compris) est figée dans celui du dessous.
+ * Les deux canvas restent des calques composités stables pendant toute la vue. Avant, deux fonds
+ * étirés plus le grain étaient promus en calques plein écran à chaque fondu puis rétrogradés (≈ 23 Mo
+ * de tuiles chacun en Retina, re-rastérisés à chaque navigation) : c'était l'essentiel de la mémoire
+ * de tuiles de la vue et de son travail de rastérisation. Avant le premier dessin, un dégradé
+ * tiré de la couleur dominante de la carte occupe le fond. Vidéo en lecture : l'ambiance suit
+ * l'image courante toutes les 2 s.
  */
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import {
+  AMBIENCE_H,
+  AMBIENCE_W,
   NEUTRAL,
   drawAmbience,
   parseHex,
@@ -78,8 +86,8 @@ export function AmbienceLayer({
   still,
   onTint,
 }: AmbienceProps) {
-  const layers = useRef<(HTMLDivElement | null)[]>([null, null])
-  const front = useRef(-1)
+  const backRef = useRef<HTMLCanvasElement | null>(null)
+  const frontRef = useRef<HTMLCanvasElement | null>(null)
   const lastK = useRef(0.6)
   const loaded = useRef<{ url: string; img: HTMLImageElement } | null>(null)
   const onTintRef = useRef(onTint)
@@ -111,36 +119,38 @@ export function AmbienceLayer({
 
   /** Dessine l'ambiance et la fait apparaître au-dessus de l'actuelle. */
   const present = (source: CanvasImageSource, sw: number, sh: number): AmbienceResult | null => {
-    const next = front.current === 0 ? 1 : 0
-    const el = layers.current[next]
-    const prev = front.current >= 0 ? layers.current[front.current] : null
-    if (!el) return null
+    const front = frontRef.current
+    const back = backRef.current
+    const fctx = front?.getContext('2d')
+    const bctx = back?.getContext('2d')
+    if (!front || !back || !fctx || !bctx) return null
     scratch ??= document.createElement('canvas')
     const r = drawAmbience(scratch, source, sw, sh, colors, { muted, fallbackK: lastK.current })
-    let data: string
     try {
-      data = scratch.toDataURL('image/png')
+      // Source non CORS : le canvas de calcul est « tainted » (lecture impossible).
+      scratch.getContext('2d')?.getImageData(0, 0, 1, 1)
     } catch {
-      // Canvas non lisible (source non CORS) : on repart d'un canvas neuf la prochaine fois.
+      // On repart d'un canvas neuf la prochaine fois ; l'ambiance actuelle reste affichée.
       scratch = null
       return null
     }
-    front.current = next
-    el.getAnimations().forEach((a) => a.cancel())
-    el.style.backgroundImage = `url(${data})`
-    el.style.zIndex = '2'
-    el.style.opacity = '1'
-    if (prev) prev.style.zIndex = '1'
-    if (still) {
-      if (prev) prev.style.opacity = '0'
-      return r
+    // Fige ce qui est visible (fond + dessus à son opacité courante, fondu en cours compris).
+    const alpha = Number(getComputedStyle(front).opacity) || 0
+    front.getAnimations().forEach((a) => a.cancel())
+    if (alpha > 0) {
+      bctx.globalAlpha = alpha
+      bctx.drawImage(front, 0, 0)
+      bctx.globalAlpha = 1
+      back.style.opacity = '1'
     }
-    const anim = el.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration: AMBIENCE_FADE_MS,
-      easing: 'ease-in-out',
-    })
-    anim.onfinish = () => {
-      if (prev && front.current === next) prev.style.opacity = '0'
+    fctx.clearRect(0, 0, AMBIENCE_W, AMBIENCE_H)
+    fctx.drawImage(scratch, 0, 0)
+    front.style.opacity = '1'
+    if (!still) {
+      front.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: AMBIENCE_FADE_MS,
+        easing: 'ease-in-out',
+      })
     }
     return r
   }
@@ -208,17 +218,17 @@ export function AmbienceLayer({
 
   return (
     <div className="viewer-ambience" aria-hidden="true" style={{ background: fallback }}>
-      <div
-        ref={(el) => {
-          layers.current[0] = el
-        }}
+      <canvas
+        ref={backRef}
+        width={AMBIENCE_W}
+        height={AMBIENCE_H}
         className="viewer-ambience-layer"
         style={{ opacity: 0 }}
       />
-      <div
-        ref={(el) => {
-          layers.current[1] = el
-        }}
+      <canvas
+        ref={frontRef}
+        width={AMBIENCE_W}
+        height={AMBIENCE_H}
         className="viewer-ambience-layer"
         style={{ opacity: 0 }}
       />
