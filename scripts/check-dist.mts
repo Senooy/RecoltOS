@@ -256,13 +256,20 @@ export async function checkDist(options: {
     docTypes.map((d) => `${String(d.LSHandlerRank)}/${String(d.CFBundleTypeRole)}`).join(', '),
   )
   const usage = Object.entries(plist).filter(([k]) => /^NS.*UsageDescription$/.test(k))
-  const english = usage.filter(
-    ([, v]) => !/RecoltOS/.test(String(v)) || /\bthe\b|\bThis app\b/i.test(String(v)),
+  // Electron's defaults start with "This app…" and never name RecoltOS.
+  const defaults = usage.filter(
+    ([, v]) => !/RecoltOS/.test(String(v)) || /\bThis app\b/i.test(String(v)),
   )
   add(
     'Info.plist: permission texts overridden (no Electron defaults)',
-    english.length === 0,
-    english.length ? english.map(([k]) => k).join(', ') : `${usage.length} texts`,
+    defaults.length === 0,
+    defaults.length ? defaults.map(([k]) => k).join(', ') : `${usage.length} texts`,
+  )
+  const frStrings = join(app, 'Contents', 'Resources', 'fr.lproj', 'InfoPlist.strings')
+  add(
+    'fr.lproj/InfoPlist.strings: French permission texts present',
+    existsSync(frStrings),
+    existsSync(frStrings) ? 'present' : 'missing',
   )
 
   // Signature.
