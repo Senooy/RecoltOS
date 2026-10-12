@@ -1,7 +1,7 @@
 {
   "name": "recoltos",
   "productName": "RecoltOS",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "RecoltOS : bibliothèque visuelle locale pour macOS",
   "author": "Younes Khelifi",

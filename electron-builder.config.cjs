@@ -53,11 +53,10 @@ const testHooksEnabled = process.env.NODE_ENV === 'test' || Boolean(process.env.
 
 function resolveSignIdentity() {
   const identity = (process.env.RECOLTOS_SIGN_IDENTITY || '').trim()
-  if (identity === '') return '-'
-  if (identity === '-') return '-'
+  if (identity === '' || identity === '-') return { identity: '-', developerId: false }
   const securityBin = (testHooksEnabled && process.env.RECOLTOS_SECURITY_BIN) || 'security'
   if (process.platform !== 'darwin' && !(testHooksEnabled && process.env.RECOLTOS_SECURITY_BIN))
-    return identity
+    return { identity, developerId: identity.startsWith('Developer ID Application:') }
   let listing = ''
   try {
     listing = execFileSync(securityBin, ['find-identity', '-v', '-p', 'codesigning'], {
@@ -68,7 +67,7 @@ function resolveSignIdentity() {
     listing = ''
   }
   const names = [...listing.matchAll(/^\s*\d+\)\s+([0-9A-F]{40})\s+"([^"]*)"/gim)]
-  const found = names.some(([, hash, name]) => name === identity || hash === identity.toUpperCase())
+  const found = names.find(([, hash, name]) => name === identity || hash === identity.toUpperCase())
   if (!found) {
     throw new Error(
       `RECOLTOS_SIGN_IDENTITY="${identity}" : aucune identité de signature valide de ce nom dans le trousseau ` +
@@ -76,7 +75,9 @@ function resolveSignIdentity() {
         'de code, voir docs/signature.md). Retire la variable pour une signature ad hoc.',
     )
   }
-  return identity
+  const developerId = found[2].startsWith('Developer ID Application:')
+  // electron-builder refuse le préfixe Apple dans le nom : le hash garde une sélection exacte.
+  return { identity: developerId ? found[1] : identity, developerId }
 }
 
 /**
@@ -86,6 +87,14 @@ function resolveSignIdentity() {
  * L'hôte natif est un exécutable SEA séparé : il ne dépend pas de `runAsNode`.
  */
 const testProfile = process.env.RECOLTOS_DIST_PROFILE === 'test'
+const signing = resolveSignIdentity()
+const notarize = process.env.RECOLTOS_NOTARIZE === '1'
+if (notarize && (!signing.developerId || testProfile || !process.env.APPLE_TEAM_ID?.trim())) {
+  throw new Error(
+    'La notarisation exige une identité Developer ID Application, APPLE_TEAM_ID et le profil livré.',
+  )
+}
+const releaseHooks = require('./scripts/notarize.cjs')
 
 module.exports = {
   appId: 'com.recoltos.app',
@@ -100,6 +109,10 @@ module.exports = {
   buildDependenciesFromSource: false,
   removePackageScripts: true,
   publish: null,
+  forceCodeSigning: notarize,
+  afterSign: releaseHooks.notarizeApp,
+  afterAllArtifactBuild: releaseHooks.notarizeDmg,
+  dmg: { sign: signing.developerId, writeUpdateInfo: false },
   electronLanguages: ['fr', 'en'],
   // Fuses : option intégrée d'electron-builder (clés camelCase), aucun hook after-pack.
   electronFuses: {
@@ -165,8 +178,11 @@ module.exports = {
     target: [{ target: 'dir', arch: ['arm64'] }],
     category: 'public.app-category.graphics-design',
     icon: 'build/icon.icns',
-    identity: resolveSignIdentity(),
-    hardenedRuntime: false,
+    identity: signing.identity,
+    hardenedRuntime: signing.developerId,
+    entitlements: 'build/entitlements.mac.plist',
+    entitlementsInherit: 'build/entitlements.mac.inherit.plist',
+    binaries: nativeHost.length ? ['Contents/Resources/native-host/recolt-host'] : [],
     gatekeeperAssess: false,
     notarize: false,
     darkModeSupport: true,

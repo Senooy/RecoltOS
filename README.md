@@ -83,14 +83,7 @@ The screenshots use a demo library with placeholder content.
 1. Download the `.dmg` from the [latest release](https://github.com/Senooy/RecoltOS/releases/latest).
    It requires an Apple Silicon Mac running macOS 13 or later.
 2. Open it and drag RecoltOS into Applications.
-3. The app is not notarized by Apple, so macOS blocks it the first time. Either go to System Settings ›
-   Privacy & Security and click "Open Anyway", or run:
-
-   ```sh
-   xattr -dr com.apple.quarantine /Applications/RecoltOS.app
-   ```
-
-4. Install ffmpeg, which is used for video thumbnails and previews:
+3. Install ffmpeg, which is used for video thumbnails and previews:
 
    ```sh
    brew install ffmpeg

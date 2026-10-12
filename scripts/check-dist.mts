@@ -285,7 +285,9 @@ export async function checkDist(options: {
     const line = /designated => (.+)/.exec(dr)?.[1]?.trim() ?? dr.trim()
     add(
       'exigence désignée stable (certificat, pas cdhash)',
-      /identifier "com\.recoltos\.app" and certificate leaf = H"[0-9a-f]+"/.test(line),
+      /^identifier "com\.recoltos\.app" and /.test(line) &&
+        /\bcertificate leaf(?: = H"[0-9a-f]+"|\[)/i.test(line) &&
+        !/\bcdhash\b/.test(line),
       line,
     )
   } else {

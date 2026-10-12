@@ -1,5 +1,36 @@
 # Signature de RecoltOS et certificat « RecoltOS Local »
 
+## Releases publiques : Developer ID et notarisation
+
+Les releases publiques utilisent un certificat **Developer ID Application**, le hardened runtime et
+les droits JIT d’Electron et de l’hôte Node SEA. Les fuses `runAsNode` et
+`enableNodeCliInspectArguments` restent fermés dans le build livré.
+
+Les identifiants de notarisation sont stockés dans le trousseau sous le profil `RecoltOS-notary` :
+
+```sh
+xcrun notarytool store-credentials "RecoltOS-notary" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID"
+xcrun notarytool history --keychain-profile "RecoltOS-notary"
+```
+
+Saisir le mot de passe d’app uniquement à l’invite sécurisée de `notarytool`. Ne jamais le passer en
+argument, le conserver dans le dépôt ou le journaliser. Le Team ID est fourni par environnement,
+sans valeur enregistrée dans le dépôt.
+
+Pour produire une release, définir `RECOLTOS_SIGN_IDENTITY` avec le nom complet du certificat
+Developer ID Application et `APPLE_TEAM_ID`, puis lancer :
+
+```sh
+RECOLTOS_NOTARIZE=1 pnpm run dist:dmg
+pnpm run check:dist
+pnpm run test:packaged
+```
+
+Le build vérifie le Team ID de la signature, soumet l’app à Apple, agrafe et valide son ticket, puis
+crée le DMG signé, le soumet à Apple et agrafe et valide son ticket. Un rejet interrompt le build.
+Sans `RECOLTOS_NOTARIZE=1`, aucun envoi à Apple n’a lieu. Les builds locaux gardent leur signature
+ad hoc par défaut, ou le certificat « RecoltOS Local » lorsque cette identité est définie.
+
 ## Pourquoi signer avec une identité stable
 
 macOS rattache les autorisations de confidentialité (Enregistrement d'écran, accès au Bureau, aux Documents…) à l'**exigence désignée** (_designated requirement_) du code de l'app, pas à son chemin. Avec une signature **ad hoc** (`-`), cette exigence est le `cdhash` : un hachage du contenu du bundle. Il reste identique tant que le bundle est identique octet pour octet, et change dès que le code, l'`Info.plist` ou les fuses changent. Après chaque nouveau build, macOS peut donc te redemander les permissions.

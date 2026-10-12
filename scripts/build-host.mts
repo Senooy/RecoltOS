@@ -49,10 +49,14 @@ function signIdentity(): string {
 export function buildSea(hostJs: string, outDir: string, nodeBinary = process.execPath): string {
   const exe = join(outDir, SEA_NAME)
   const nodeVersion = execFileSync(nodeBinary, ['--version'], { encoding: 'utf8' }).trim()
+  const identity = signIdentity()
+  const hardenedRuntime = identity.startsWith('Developer ID Application:')
+  const entitlements = join(ROOT, 'build/entitlements.mac.inherit.plist')
   const hash = createHash('sha256')
     .update(readFileSync(hostJs))
     .update(nodeVersion)
-    .update(signIdentity())
+    .update(identity)
+    .update(hardenedRuntime ? readFileSync(entitlements) : '')
     .digest('hex')
   const hashFile = join(outDir, '.build-hash')
   if (existsSync(exe) && existsSync(hashFile) && readFileSync(hashFile, 'utf8') === hash) return exe
@@ -87,7 +91,11 @@ export function buildSea(hostJs: string, outDir: string, nodeBinary = process.ex
   if (process.platform === 'darwin') args.push('--macho-segment-name', 'NODE_SEA')
   execFileSync(nodeBinary, args, { stdio: 'pipe' })
   if (process.platform === 'darwin') {
-    execFileSync('codesign', ['--sign', signIdentity(), '--force', exe], { stdio: 'pipe' })
+    const signArgs = ['--sign', identity, '--force']
+    if (hardenedRuntime) {
+      signArgs.push('--options', 'runtime', '--timestamp', '--entitlements', entitlements)
+    }
+    execFileSync('codesign', [...signArgs, exe], { stdio: 'pipe' })
   }
   rmSync(work, { recursive: true, force: true })
   writeFileSync(hashFile, hash)
