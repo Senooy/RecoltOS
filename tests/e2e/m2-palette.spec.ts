@@ -40,7 +40,8 @@ test.describe('palette ⌘K', () => {
     const item = await page.locator(t('palette-command')).first().boundingBox()
     expect(Math.abs(item!.height - 33)).toBeLessThanOrEqual(1)
     const footer = await page.locator(t('palette-footer')).boundingBox()
-    expect(footer!.height).toBe(32)
+    // Pied de 30 pt mesuré sur 25w3t4 (WP-70).
+    expect(footer!.height).toBe(30)
     await expect(page.locator(t('palette-command')).first()).toHaveAttribute(
       'aria-selected',
       'true',
