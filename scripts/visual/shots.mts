@@ -1,11 +1,12 @@
 /**
  * `pnpm run shots [--scene a,b] [--library demo|real|none] [--theme light|dark|both] [--out dir]`
- * (QA §7.2) : lance l'app comme les tests e2e (build automatique, `userData` neuf) en
+ * lance l'app comme les tests e2e (build automatique, `userData` neuf) en
  * `--force-device-scale-factor=2` et écrit `.visual/current/<scène>-<thème>.png` (2560×1640) plus
  * `manifest.json` (résultat de chaque scène : ok / indisponible + raison).
  *
  * `--library demo` (défaut) : bibliothèque de démo de `make-fixtures.mts` ; `--library real` : copie
- * de la vraie bibliothèque importée, depuis `RECOLTOS_REAL_USERDATA` (jamais le dossier la référence) ;
+ * d'un dossier `userData` RecoltOS, depuis `RECOLTOS_REAL_USERDATA` (une COPIE, jamais le dossier
+ * vivant sous `~/Library/Application Support`) ;
  * `--library none` : app vide.
  */
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
@@ -16,7 +17,7 @@ import { launchApp } from '../../tests/helpers/electron-app'
 import { ensureBuild } from '../../tests/helpers/ensure-build'
 import { makeTmpDir, removeTmpDir } from '../../tests/helpers/tmpdir'
 import { cloneDir, makeDemoLibrary } from '../../tests/helpers/demo-library'
-import { mergeManifest, ROOT } from './refs.mjs'
+import { mergeManifest, ROOT } from './manifest.mjs'
 import { ALL_SCENES, freezePage, playScene, selectScenes } from './scenes.mjs'
 
 export interface ShotResult {
@@ -45,8 +46,9 @@ export function themeUsageError(value: string): string | null {
 }
 
 /**
- * Refus d'une source `RECOLTOS_REAL_USERDATA` qui désigne la bibliothèque la référence (lecture seule,
- * PLAN §2.1) : on vérifie le chemin résolu ET réel (liens symboliques). `null` = source acceptée.
+ * Refus d'une source `RECOLTOS_REAL_USERDATA` qui désigne un dossier de données vivant (sous
+ * `Library/Application Support`) : on travaille sur une copie. Chemin résolu ET réel (liens
+ * symboliques). `null` = source acceptée.
  */
 export function realSourceRefusal(src: string): string | null {
   const resolved = resolve(src)
@@ -57,8 +59,8 @@ export function realSourceRefusal(src: string): string | null {
     // Source absente : la copie échouera plus tard avec un message explicite.
   }
   for (const candidate of [resolved, real]) {
-    if (/legacy/i.test(candidate) || /application support\/legacy/i.test(candidate))
-      return `RECOLTOS_REAL_USERDATA refusé : ${src} désigne un dossier la référence (lecture seule, PLAN §2.1)`
+    if (/\/library\/application support(\/|$)/i.test(candidate))
+      return `RECOLTOS_REAL_USERDATA refusé : ${src} est un dossier de données vivant (utilise une copie)`
   }
   return null
 }
@@ -108,7 +110,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const themeError = themeUsageError(values.theme ?? 'light')
   const realError =
     library === 'real' && !process.env.RECOLTOS_REAL_USERDATA
-      ? '--library real exige RECOLTOS_REAL_USERDATA (copie de dev de la bibliothèque importée)'
+      ? '--library real exige RECOLTOS_REAL_USERDATA (copie d’un dossier userData RecoltOS)'
       : library === 'real'
         ? realSourceRefusal(process.env.RECOLTOS_REAL_USERDATA as string)
         : null

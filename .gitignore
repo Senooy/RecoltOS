@@ -11,7 +11,7 @@ playwright-report/
 .tmp/
 *.tsbuildinfo
 
-# Worktrees des lots (PLAN §7.2)
+# Worktrees git locaux
 .worktrees/
 
 # Données : jamais de base ni de données réelles dans le dépôt
@@ -19,11 +19,6 @@ playwright-report/
 *.db-wal
 *.db-shm
 *.sqlite
-
-# Références visuelles la référence (gitignorées sauf README et ref-map)
-design/reference/*
-!design/reference/README.md
-!design/reference/ref-map.json
 
 # Local
 .DS_Store

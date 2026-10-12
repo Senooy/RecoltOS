@@ -1,8 +1,7 @@
 /**
- * Scènes de la boucle de fidélité visuelle (QA §7.2-7.3) : les 13 de départ (une par référence
- * `ref-map.json`) plus celles du lot R / WP-70. Navigation DÉCLARATIVE par `data-testid` (QA §6.2) :
- * une scène dont les composants n'existent pas encore est signalée « indisponible » au lieu d'échouer ;
- * elle devient disponible quand le lot UI correspondant livre ses `data-testid`.
+ * Scènes des captures d'écran de l'app (`pnpm run shots`) : 13 scènes par défaut plus des scènes
+ * complémentaires. Navigation DÉCLARATIVE par `data-testid` : une scène dont les composants sont
+ * absents est signalée « indisponible » au lieu d'échouer.
  */
 import type { ElectronApplication, Page } from '@playwright/test'
 
@@ -21,8 +20,6 @@ export type Step =
 
 export interface Scene {
   id: string
-  /** Nom de scène dans `ref-map.json` (plusieurs ids peuvent partager une référence). */
-  ref: string
   title: string
   steps: Step[]
   /** Fenêtre de test à laisser sans bibliothèque (état vide). */
@@ -36,11 +33,10 @@ const settings = (section: string): Step[] => [
   { click: t(`settings-nav-${section}`) },
 ]
 
-/** Les 13 scènes de départ. */
+/** Les 13 scènes par défaut. */
 export const START_SCENES: Scene[] = [
   {
     id: 'library-all',
-    ref: 'library-all',
     title: 'Bibliothèque, onglet Tout',
     steps: [
       { click: t('seg-library'), optional: true },
@@ -49,37 +45,31 @@ export const START_SCENES: Scene[] = [
   },
   {
     id: 'detail-video',
-    ref: 'detail-video',
     title: 'Vue détail d’une vidéo',
     steps: [{ click: `${t('card')}[data-kind="video"]` }, { wait: t('detail') }],
   },
   {
     id: 'palette',
-    ref: 'palette',
     title: 'Palette ⌘K',
     steps: [{ menu: 'palette' }, { wait: t('palette') }],
   },
   {
     id: 'collections-shelf',
-    ref: 'collections-shelf',
     title: 'Étagère Collections',
     steps: [{ click: t('seg-collections') }, { wait: t('shelf-cover') }, { sleep: 600 }],
   },
   {
     id: 'rediscover',
-    ref: 'rediscover',
     title: 'Redécouvrir',
     steps: [{ click: t('btn-rediscover') }, { wait: t('rediscover') }],
   },
   {
     id: 'context-menu',
-    ref: 'context-menu',
     title: 'Menu contextuel d’une carte',
     steps: [{ rightClick: t('card') }, { wait: t('ctx-menu') }],
   },
   {
     id: 'collection-dev',
-    ref: 'collection-dev',
     title: 'Vue d’une collection',
     steps: [
       { click: t('seg-collections') },
@@ -91,55 +81,47 @@ export const START_SCENES: Scene[] = [
   },
   {
     id: 'search',
-    ref: 'search',
     title: 'Recherche',
     steps: [{ click: t('seg-search') }, { wait: t('search-input') }, { sleep: 300 }],
   },
   {
     id: 'spaces-empty',
-    ref: 'spaces-empty',
     title: 'Spaces, état vide',
     empty: true,
     steps: [{ click: t('seg-spaces') }, { wait: t('space-empty-cta') }],
   },
   {
     id: 'settings-modal',
-    ref: 'settings-modal',
-    title: 'Réglages, coque de la modale (section Bibliothèques, ERRATA §E)',
+    title: 'Réglages, coque de la modale (section Bibliothèques)',
     steps: settings('libraries'),
   },
   {
     id: 'settings-syncing',
-    ref: 'settings-syncing',
     title: 'Réglages › Synchronisation',
     steps: settings('sync'),
   },
   {
     id: 'settings-capture',
-    ref: 'settings-capture',
     title: 'Réglages › Capture',
     steps: settings('capture'),
   },
-  { id: 'settings-ai', ref: 'settings-ai', title: 'Réglages › IA', steps: settings('ai') },
+  { id: 'settings-ai', title: 'Réglages › IA', steps: settings('ai') },
 ]
 
-/** Scènes du lot R (QA §7.1) : sans référence tant que WP-0O n'a pas recapturé (`ref` = leur propre nom). */
+/** Scènes complémentaires (sur demande : `--scene a,b`). */
 export const EXTRA_SCENES: Scene[] = [
   {
     id: 'detail-image',
-    ref: 'detail-image',
     title: 'Vue détail d’une image',
     steps: [{ click: `${t('card')}[data-kind="image"]` }, { wait: t('detail') }],
   },
   {
     id: 'detail-tweet',
-    ref: 'detail-tweet',
     title: 'Vue détail d’un post',
     steps: [{ click: `${t('card')}[data-kind="tweet"]` }, { wait: t('detail') }],
   },
   {
     id: 'search-results',
-    ref: 'search-results',
     title: 'Recherche avec résultats',
     steps: [
       { click: t('seg-search') },
@@ -150,7 +132,6 @@ export const EXTRA_SCENES: Scene[] = [
   },
   {
     id: 'collection-menu',
-    ref: 'collection-menu',
     title: 'Menu « … » d’une collection',
     steps: [
       { click: t('seg-collections') },
@@ -162,7 +143,6 @@ export const EXTRA_SCENES: Scene[] = [
   },
   {
     id: 'library-picker',
-    ref: 'library-picker',
     title: 'Sélecteur de bibliothèque',
     // La grille d'abord : sinon le menu s'ouvre avant le montage de l'écran (fond vide).
     steps: [
@@ -173,7 +153,6 @@ export const EXTRA_SCENES: Scene[] = [
   },
   ...['appearance', 'libraries', 'tags', 'storage', 'data', 'about'].map((s): Scene => ({
     id: `settings-${s}`,
-    ref: `settings-${s}`,
     title: `Réglages › ${s}`,
     steps: settings(s),
   })),
@@ -235,7 +214,7 @@ export async function playScene(
     } else if ('key' in step) {
       await page.keyboard.press(step.key)
     } else if ('menu' in step) {
-      // Les accélérateurs de menu ne reçoivent pas les événements CDP synthétiques (QA §12 n°12) :
+      // Les accélérateurs de menu ne reçoivent pas les événements CDP synthétiques :
       // on déclenche l'item de menu par son id.
       const clicked = await app.evaluate(({ Menu }, id) => {
         const item = Menu.getApplicationMenu()?.getMenuItemById(id)
