@@ -187,6 +187,11 @@
   --shelf-seg-pill: #f3f3f5;
   --shelf-seg-pill-fg: #0a0a0a;
   --shelf-seg-fg: #ffffff;
+  /* panneau « Collections » pendant le glisser d'une carte (bord droit) */
+  --drag-panel-bg: #ffffff;
+  --drag-panel-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 12px 40px rgba(0, 0, 0, 0.12);
+  --drag-panel-row-hover: rgba(0, 0, 0, 0.055);
+  --drag-panel-row-ring: rgba(0, 0, 0, 0.1);
 }
 [data-theme='dark'] {
   color-scheme: dark;
@@ -292,6 +297,10 @@
   --sp-gray: #98989d;
   --sp-white: #1c1c1e;
   --sp-note-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --drag-panel-bg: #1a1a1c;
+  --drag-panel-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 40px rgba(0, 0, 0, 0.5);
+  --drag-panel-row-hover: rgba(255, 255, 255, 0.08);
+  --drag-panel-row-ring: rgba(255, 255, 255, 0.14);
 }
 
 @theme inline {

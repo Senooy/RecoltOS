@@ -89,7 +89,9 @@ export function internalDropTarget(
       if (!ids) return
       e.preventDefault()
       onDropIds(ids)
-      useUi.getState().clearInternalDrag()
+      // Effacé APRÈS la propagation : le calque de dépôt (écouteur `drop` de la fenêtre) lit encore
+      // `internalDrag` et n'importe pas les fichiers du glisser natif (`installInternalDragCleanup`).
+      setTimeout(() => useUi.getState().clearInternalDrag(), 0)
     },
   }
 }

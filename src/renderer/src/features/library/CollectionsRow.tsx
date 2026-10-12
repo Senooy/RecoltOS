@@ -30,14 +30,15 @@ const FAN_HOVER = [
   'translateX(26px) rotate(14deg)',
 ]
 
-function Cover({ card }: { card: ItemCard }) {
+/** Couverture d'une pile (image, affiche ou post réduit) ; `tweetScale` suit la taille du cadre. */
+export function Cover({ card, tweetScale = 0.28 }: { card: ItemCard; tweetScale?: number }) {
   if (card.kind === 'tweet') {
     return (
       <div className="h-full w-full overflow-hidden bg-surface">
         <TweetCard
           card={card}
           variant="cover"
-          style={{ transform: 'scale(.28)', transformOrigin: 'top left' }}
+          style={{ transform: `scale(${tweetScale})`, transformOrigin: 'top left' }}
         />
       </div>
     )

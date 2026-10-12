@@ -16,6 +16,7 @@ import { useUndo } from '../state/undo'
 import { Dialogs } from './Dialogs'
 import { AiDialogs } from '../features/ai/AiDialogs'
 import { DropOverlay } from './DropOverlay'
+import { CollectionsDragPanel } from '../features/grid/CollectionsDragPanel'
 import { FabMenu } from './FabMenu'
 import { HeaderActions } from './HeaderActions'
 import { LibraryPicker } from './LibraryPicker'
@@ -202,6 +203,7 @@ export function AppShell({ dark }: { dark: boolean }) {
         <IngestProgress />
         <CaptureFeedback />
         <SelectionBar />
+        <CollectionsDragPanel />
         <DropOverlay
           collection={collection ? { uuid: collection.uuid, name: collection.name } : null}
         />

@@ -83,20 +83,53 @@ export async function setHidden(uuids: string[], hidden: boolean): Promise<void>
   }
 }
 
+/** Au-delà, l'appartenance préalable n'est pas relue (l'annulation retire alors toute la sélection). */
+export const MEMBERSHIP_CHECK_MAX = 200
+
+/** Éléments déjà membres directs de la collection (relus seulement pour une sélection multiple). */
+async function alreadyIn(collectionUuid: string, uuids: readonly string[]): Promise<Set<string>> {
+  if (uuids.length < 2 || uuids.length > MEMBERSHIP_CHECK_MAX) return new Set()
+  const details = await Promise.all(
+    uuids.map((uuid) => rpc('items.get', { uuid }).catch(() => null)),
+  )
+  return new Set(
+    details
+      .filter((d) => d?.collections.some((c) => c.uuid === collectionUuid))
+      .map((d) => d!.uuid),
+  )
+}
+
+/**
+ * Ajoute à une collection ; renvoie le nombre d'éléments réellement ajoutés. Un élément déjà
+ * présent n'est ni ajouté deux fois (`INSERT OR IGNORE`) ni retiré par ⌘Z : l'annulation ne porte
+ * que sur les nouveaux membres. Rien d'ajouté : toast « Déjà dans … », pas d'entrée d'annulation.
+ */
 export async function addToCollection(
   collection: { uuid: string; name: string },
   uuids: string[],
-): Promise<void> {
+): Promise<number> {
   try {
-    await rpc('collections.addItems', { collectionUuid: collection.uuid, itemUuids: uuids })
+    const before = await alreadyIn(collection.uuid, uuids)
+    const { count } = await rpc('collections.addItems', {
+      collectionUuid: collection.uuid,
+      itemUuids: uuids,
+    })
+    if (count === 0) {
+      toast(fr.gridUi.alreadyIn(collection.name))
+      return 0
+    }
+    const kept = count < uuids.length ? uuids.filter((u) => !before.has(u)) : uuids
+    const fresh = kept.length > 0 ? kept : uuids
     undoable(
       fr.toast.addedTo(collection.name),
       'collection.add',
-      () => rpc('collections.removeItems', { collectionUuid: collection.uuid, itemUuids: uuids }),
-      () => rpc('collections.addItems', { collectionUuid: collection.uuid, itemUuids: uuids }),
+      () => rpc('collections.removeItems', { collectionUuid: collection.uuid, itemUuids: fresh }),
+      () => rpc('collections.addItems', { collectionUuid: collection.uuid, itemUuids: fresh }),
     )
+    return count
   } catch (err) {
     fail(err)
+    return 0
   }
 }
 
