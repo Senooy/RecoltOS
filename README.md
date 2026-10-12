@@ -9,7 +9,7 @@
   <a href="https://github.com/Senooy/RecoltOS/releases/latest">Download for Apple Silicon</a>
 </p>
 
-![Library view](docs/screenshots/library-all-light.png)
+![The library: a masonry grid of saved images and videos with a row of collections above it](docs/screenshots/library-light.png)
 
 RecoltOS collects the images, videos, web pages, screenshots and saved posts you come across, and keeps
 them in one place on your Mac. You browse them in a masonry grid, sort them into collections, search
@@ -44,8 +44,8 @@ Appearance › Language.
 - Tags, notes, renaming, trash with restore, and undo (⌘Z).
 
 <p align="center">
-  <img src="docs/screenshots/collections-shelf-dark.png" width="49%" alt="Collections shelf">
-  <img src="docs/screenshots/library-all-dark.png" width="49%" alt="Library, dark theme">
+  <img src="docs/screenshots/collections-shelf-dark.png" width="49%" alt="Collections shown as a 3D shelf, dark theme">
+  <img src="docs/screenshots/library-dark.png" width="49%" alt="The library in the dark theme">
 </p>
 
 **Finding things again**
@@ -59,14 +59,21 @@ Appearance › Language.
   collection, or trash).
 
 <p align="center">
-  <img src="docs/screenshots/detail-image-dark.png" width="49%" alt="Detail view">
-  <img src="docs/screenshots/rediscover-dark.png" width="49%" alt="Rediscover">
+  <img src="docs/screenshots/search-color-light.png" width="49%" alt="Search results filtered by the color orange">
+  <img src="docs/screenshots/command-palette-light.png" width="49%" alt="Command palette (⌘K) over the library">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/detail-image-dark.png" width="49%" alt="Detail view of an image, with the color palette and the Details panel">
+  <img src="docs/screenshots/rediscover-dark.png" width="49%" alt="Rediscover, with a card being dragged towards Keep">
 </p>
 
 **Spaces**
 
 - Infinite canvases for moodboards: sticky notes, shapes, text, images and items from your library.
   Zoom, snapping, rotation, alignment and PNG export.
+
+![A Space used as a moodboard, with images from the library, a title and a note](docs/screenshots/space-moodboard-dark.png)
 
 **AI (optional)**
 
@@ -75,8 +82,6 @@ Appearance › Language.
   model.
 - Nothing is sent before you give consent. You can preview exactly what will be sent, set an hourly
   limit and read a log of every call.
-
-The screenshots use a demo library with placeholder content.
 
 ## Install
 
