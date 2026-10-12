@@ -6,18 +6,18 @@ macOS rattache les autorisations de confidentialité (Enregistrement d'écran, a
 
 Avec un **certificat local stable**, l'exigence devient « identifiant `com.recoltos.app` + ce certificat » : elle ne dépend plus du contenu, et les permissions survivent aux reconstructions.
 
-C'est l'hypothèse à confirmer : aucune source officielle ne garantit qu'un certificat **auto-signé** produise un `granted` stable pour Enregistrement d'écran. Si la preuve WP-0F échoue (permission non conservée, ou `CGPreflightScreenCaptureAccess` reste à `false` hors identité à Team ID), le repli est une identité **Apple Development** (voir plus bas). Les notifications d'Electron 42+ exigent en outre une app signée.
+Aucune source officielle ne garantit qu'un certificat **auto-signé** produise un `granted` stable pour Enregistrement d'écran. Si la permission n'est pas conservée (ou si `CGPreflightScreenCaptureAccess` reste à `false` hors identité à Team ID), le repli est une identité **Apple Development** (voir plus bas). Les notifications d'Electron 42+ exigent en outre une app signée.
 
 | Signature                     | `codesign -dr -`                                            | Permissions conservées entre deux builds |
 | ----------------------------- | ----------------------------------------------------------- | ---------------------------------------- |
 | Ad hoc (`-`, par défaut)      | `designated => cdhash H"…"`                                 | Non, dès que le contenu change           |
-| Certificat « RecoltOS Local » | `identifier "com.recoltos.app" and certificate leaf = H"…"` | Attendu, non encore prouvé (WP-0F)       |
+| Certificat « RecoltOS Local » | `identifier "com.recoltos.app" and certificate leaf = H"…"` | Oui en pratique (non garanti par Apple)  |
 
 Le build ad hoc reste pleinement fonctionnel : il suffit pour développer et pour lancer l'app. Le certificat n'est utile que pour garder les permissions entre les builds.
 
 ## Créer le certificat (action à faire par toi, une seule fois)
 
-> **Nom officiel : « RecoltOS Local »** (ERRATA §G et PLAN §1.19 : ce nom prime). La spec QA §8.6 écrit « RecoltOS Local Signing » : c'est une version antérieure, à ne pas suivre. Le nom est imposé par `electron-builder.config.cjs` et `scripts/install-local.sh`, et `check:env` doit le chercher sous ce nom exact.
+> **Nom attendu : « RecoltOS Local »** (exactement). C'est le nom passé dans `RECOLTOS_SIGN_IDENTITY` et cherché par `check:env`.
 
 C'est un réglage de sécurité de ton Mac : aucun script ne le fait à ta place.
 
@@ -63,7 +63,6 @@ codesign --verify --deep --strict --verbose=2 dist/mac-arm64/RecoltOS.app
 
 Avec le bon certificat, la ligne ressemble à
 `designated => identifier "com.recoltos.app" and certificate leaf = H"<empreinte du certificat>"`.
-La preuve « identique entre deux builds » est rejouée au lot d'intégration WP-0F (voir `docs/spikes/s2-signature.md`).
 
 ## Si les permissions se comportent mal
 
@@ -78,18 +77,18 @@ tccutil reset SystemPolicyDownloadsFolder com.recoltos.app
 
 ## Hors ligne
 
-Avec une identité non ad hoc, `codesign` demande un horodatage au serveur d'Apple : sans réseau la signature peut échouer. Deux issues, à valider une fois le certificat créé (hypothèse 16 de QA §12) :
+Avec une identité non ad hoc, `codesign` demande un horodatage au serveur d'Apple : sans réseau la signature peut échouer. Deux issues :
 
 - tester l'option `mac.timestamp` d'electron-builder ;
 - ou signer à la main : `codesign --force --deep --sign "RecoltOS Local" --timestamp=none dist/mac-arm64/RecoltOS.app`.
 
 ## Alternative : identité Apple Development
 
-Si tu as un compte Apple Developer, une identité « Apple Development: … » se passe de la même façon (`RECOLTOS_SIGN_IDENTITY="Apple Development: Prénom Nom (XXXXXXXXXX)"`). Elle est stable aussi, mais expire (un an) et lie le build à ton compte. Le certificat local est le défaut de la V1.
+Si tu as un compte Apple Developer, une identité « Apple Development: … » se passe de la même façon (`RECOLTOS_SIGN_IDENTITY="Apple Development: Prénom Nom (XXXXXXXXXX)"`). Elle est stable aussi, mais expire (un an) et lie le build à ton compte. Le certificat local reste l'option par défaut.
 
 ## Distribution
 
-RecoltOS reste une app personnelle : pas de notarisation, pas de mise à jour automatique. Une copie qui a voyagé (AirDrop, téléchargement) porte l'attribut de quarantaine :
+RecoltOS n'est ni notarisé ni mis à jour automatiquement : chacun le construit et le signe localement. Une copie qui a voyagé (AirDrop, téléchargement) porte l'attribut de quarantaine :
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/RecoltOS.app

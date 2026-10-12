@@ -1,4 +1,4 @@
-# Extension navigateur RecoltOS (M5)
+# Extension navigateur RecoltOS
 
 Une seule base de code (`extension/`), deux builds :
 
@@ -80,7 +80,7 @@ Réglages › Synchronisation l'indique pour chaque source.
 - Les médias sont téléchargés **par l'app** (sans cookie).
 - « Ouvrir un onglet en arrière-plan si besoin » (menu « … » de chaque source) est un repli,
   **désactivé par défaut**, utilisé seulement si le site refuse la requête d'arrière-plan.
-- **X** (client web « x-web », ERRATA §G.3) : l'extension lit, sans cookie, le code public de x.com
+- **X** (client web « x-web ») : l'extension lit, sans cookie, le code public de x.com
   pour trouver l'identifiant de la requête persistée `bookmarksQuery` (accueil → script d'entrée →
   routes → `bookmarks-*.js`), le garde en cache et le revérifie quand x.com change de version. Si X
   exige un jour la signature `x-client-transaction-id` (non reproduite), la ligne indique « X refuse la
@@ -102,5 +102,5 @@ Aucun de ces tests n'utilise tes navigateurs, tes profils, tes cookies ni tes co
 
 ## Désinstaller le connecteur
 
-`/Applications/RecoltOS.app/Contents/MacOS/RecoltOS --uninstall-native-hosts` : retire uniquement les fichiers `com.recoltos.host*.json`. Les manifests `co.legacy.host.json` ne
-sont jamais touchés.
+`/Applications/RecoltOS.app/Contents/MacOS/RecoltOS --uninstall-native-hosts` : retire uniquement les
+fichiers `com.recoltos.host*.json`. Les manifests des autres applications ne sont jamais touchés.
