@@ -64,6 +64,9 @@ function useWidth(ref: RefObject<HTMLElement | null>): number {
 const tweetHeightCache = new Map<string, number>()
 const TWEET_HEIGHT_CACHE_MAX = 20_000
 
+/** Marque de démarrage `grid-painted` déjà émise (une fois par renderer). */
+let gridPaintedMarked = false
+
 function useTweetHeights(items: readonly ItemCard[], colW: number) {
   const tweets = useMemo(() => items.filter((i) => i.kind === 'tweet'), [items])
   const key = (u: string) => `${u}:${colW.toFixed(1)}`
@@ -206,6 +209,16 @@ export function MasonryGrid({
   }, [scrollRef, layout.height])
 
   const visible = useMemo(() => visibleIndices(layout, view.top, view.bottom), [layout, view])
+
+  // Démarrage (QA §11.3, WP-71) : `grid-painted` une seule fois, à la première image peinte qui
+  // contient des cartes (deux rAF : après le rendu de l'image).
+  useEffect(() => {
+    if (gridPaintedMarked || visible.length === 0) return
+    gridPaintedMarked = true
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => window.recolt?.perfMark('grid-painted')),
+    )
+  }, [visible.length])
   const byId = useMemo(() => new Map(items.map((c, i) => [c.uuid, i])), [items])
 
   // Fermeture du Viewer : la carte courante est amenée en vue (si besoin) avant le FLIP inverse.

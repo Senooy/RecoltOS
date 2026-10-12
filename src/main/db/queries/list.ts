@@ -198,12 +198,16 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
   const params: Record<string, unknown> = {}
   const where: string[] = []
   let from = CARD_FROM
+  // Total : sans les LEFT JOIN de la carte (une ligne par élément quoi qu'il arrive ; les filtres ne
+  // portent que sur `i`). Le compte à travers CARD_FROM coûtait ~2,5 ms sur 10 000 éléments (WP-71).
+  let countFrom = 'items i'
   if (scope === 'collection') {
     const col = db.prepare('SELECT id FROM collections WHERE uuid = ?').get(inp.collectionUuid) as
       { id: number } | undefined
     if (!col) throw new AppError('not_found', 'Collection introuvable.')
     params.cid = col.id
     from = `${CARD_FROM} JOIN collection_items ci ON ci.item_id = i.id AND ci.collection_id = @cid`
+    countFrom = 'items i JOIN collection_items ci ON ci.item_id = i.id AND ci.collection_id = @cid'
     where.push('i.deleted_at IS NULL')
   } else {
     where.push(tabWhere(tab))
@@ -211,7 +215,9 @@ export function listItems(db: Database.Database, input: ParsedList | ItemsListIn
   where.push(...filterWhere(inp.filters, params))
   const baseWhere = where.join(' AND ')
   const total = (
-    db.prepare(`SELECT count(*) AS n FROM ${from} WHERE ${baseWhere}`).get(params) as { n: number }
+    db.prepare(`SELECT count(*) AS n FROM ${countFrom} WHERE ${baseWhere}`).get(params) as {
+      n: number
+    }
   ).n
 
   const spec = sortSpec(sort, scope, tab)
