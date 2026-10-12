@@ -153,6 +153,22 @@ describe('electron-builder.config.cjs', () => {
     expect(test).toMatchObject({ runAsNode: true, enableNodeCliInspectArguments: true })
   })
 
+  it('sort le profil test dans dist/test/ (le build livré n’est jamais remplacé)', () => {
+    expect(loadConfig({ RECOLTOS_DIST_PROFILE: undefined }).directories.output).toBe('dist')
+    expect(loadConfig({ RECOLTOS_DIST_PROFILE: 'test' }).directories.output).toBe('dist/test')
+  })
+
+  it('exclut l’outillage de build natif et les autres plateformes (WP-72)', () => {
+    const files = loadConfig().files
+    for (const p of [
+      '!node_modules/node-addon-api/**',
+      '!node_modules/sharp/{src,install}/**',
+      '!node_modules/better-sqlite3/lib/{linux*,win32*,darwin-x64}.js',
+      '!out/.build-hash',
+    ])
+      expect(files).toContain(p)
+  })
+
   it('texte des permissions en français', () => {
     const info = loadConfig().mac.extendInfo
     for (const [key, value] of Object.entries(info)) {

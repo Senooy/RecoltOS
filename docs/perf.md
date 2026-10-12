@@ -117,6 +117,33 @@ Budget < 2 s médiane / < 2,5 s max : **tenu**. Les écrans lourds sont déjà c
 chunks `lazy` ; seuls `index` et `globals` sont préchargés). La minification n'a pas d'effet mesurable sur ce
 démarrage (≈ 0,7 s, dominé par Electron et l'ouverture de la base).
 
+## Paquet (WP-72) : `pnpm run dist`, `scripts/check-dist.mts`
+
+Build livré `dist/mac-arm64/RecoltOS.app`, arm64, signé « RecoltOS Local » (exigence désignée
+`identifier "com.recoltos.app" and certificate leaf = H"f300b0e4…"`, identique d'un build à l'autre), hôte natif
+signé avec la même identité. Fuses lus : `RunAsNode`, `EnableNodeCliInspectArguments`,
+`EnableNodeOptionsEnvironmentVariable`, `EnableEmbeddedAsarIntegrityValidation` **désactivés**,
+`OnlyLoadAppFromAsar` activé. `Info.plist` : `LSHandlerRank = Alternate`, `CFBundleTypeRole = Viewer`.
+Le profil `pnpm run dist:test` (fuses ouverts, pour Playwright) sort dans `dist/test/` et ne remplace jamais le
+build livré ; `test:packaged` couvre les deux (grille rendue sur le build livré par la marque `grid-painted`,
+hôte natif `ping` → `pong` et `hello` → `hello.ack`).
+
+| Élément                                               | Avant M7 |    Après | Budget figé |
+| ----------------------------------------------------- | -------: | -------: | ----------: |
+| `.app`                                                |   372 Mo | 370,1 Mo |      400 Mo |
+| `app.asar`                                            |   4,7 Mo |   2,7 Mo |        4 Mo |
+| `app.asar.unpacked` (better-sqlite3, sharp + libvips) |  20,2 Mo |  20,0 Mo |       22 Mo |
+| Hôte natif SEA (`recolt-host`, binaire Node complet)  | 106,8 Mo | 106,8 Mo |      115 Mo |
+| Extension (Chromium + Firefox)                        |   0,3 Mo |   0,2 Mo |        1 Mo |
+| Electron Framework                                    |   238 Mo |   238 Mo |           — |
+
+Retiré du paquet : `node-addon-api` (en-têtes de compilation), sources et script d'installation de sharp,
+déclarations TypeScript, fichiers gyp / en-têtes C, README / CHANGELOG des dépendances, chargeurs
+better-sqlite3 des autres plateformes, `out/.build-hash` ; renderer minifié. Extension : branches de test
+(auto-test, points d'accès du faux serveur) éliminées du build livré (`minifySyntax`, identifiants lisibles
+conservés). L'hôte natif est un binaire Node officiel complet (SEA) : l'essentiel de son poids, non réductible
+sans changer de technique.
+
 ## Reproduire
 
 ```sh

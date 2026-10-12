@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { EXTENSION_ORIGIN, GECKO_ID } from '../../src/shared/bridge/constants'
+import { EXTENSION_ORIGIN, EXTENSION_VERSION, GECKO_ID } from '../../src/shared/bridge/constants'
 import { encodeFrame, FrameDecoder } from '../../src/host/framing'
 import { REPO_ROOT } from '../helpers/paths'
 import { makeTmpDir } from '../helpers/tmpdir'
@@ -91,7 +91,7 @@ test('hôte natif packagé : ping → pong, hello → hello.ack ; manifests de t
     id: helloId,
     type: 'hello',
     payload: {
-      extVersion: '1.0.0',
+      extVersion: EXTENSION_VERSION,
       protocol: 1,
       target: 'firefox',
       browser: { name: 'Firefox', version: '157.0.1' },
@@ -106,7 +106,12 @@ test('hôte natif packagé : ping → pong, hello → hello.ack ; manifests de t
   })
   await until(() => got.some((m) => m.type === 'hello.ack' && m.re === helloId), 10_000)
   const ack = got.find((m) => m.type === 'hello.ack')!
-  expect(ack.payload).toMatchObject({ protocol: 1, needsReload: false, bundledExtVersion: '1.0.0' })
+  // Extension à jour : pas de rechargement demandé (une 1.0.0 en recevrait un, ERRATA §G.3).
+  expect(ack.payload).toMatchObject({
+    protocol: 1,
+    needsReload: false,
+    bundledExtVersion: EXTENSION_VERSION,
+  })
   host.stdin.end()
   app.kill('SIGTERM')
   await new Promise((r) => app?.once('exit', r))

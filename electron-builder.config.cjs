@@ -80,8 +80,10 @@ function resolveSignIdentity() {
 }
 
 /**
- * Profils de fuses : `RECOLTOS_DIST_PROFILE=test` (réservé aux tests Playwright de l'app empaquetée)
- * laisse `runAsNode` et l'inspection CLI ouverts ; le build livré les ferme (ERRATA §D).
+ * Profils de fuses : `RECOLTOS_DIST_PROFILE=test` (`pnpm run dist:test`, réservé aux tests Playwright
+ * de l'app empaquetée) laisse `runAsNode` et l'inspection CLI ouverts et sort dans `dist/test/` pour
+ * ne jamais remplacer le build livré ; le build livré (`dist/mac-arm64/`) les ferme (ERRATA §D).
+ * L'hôte natif est un exécutable SEA séparé : il ne dépend pas de `runAsNode`.
  */
 const testProfile = process.env.RECOLTOS_DIST_PROFILE === 'test'
 
@@ -89,7 +91,7 @@ module.exports = {
   appId: 'com.recoltos.app',
   productName: 'RecoltOS',
   copyright: 'Copyright © 2026 RecoltOS',
-  directories: { buildResources: 'build', output: 'dist' },
+  directories: { buildResources: 'build', output: testProfile ? 'dist/test' : 'dist' },
   artifactName: '${productName}-${version}-${arch}.${ext}',
   asar: true,
   // Les natifs (better-sqlite3 : prebuild N-API ; sharp : @img/*) sont préconstruits : aucun rebuild.
@@ -114,10 +116,17 @@ module.exports = {
     '!out/host/**',
     '!out/native-host/**',
     'package.json',
+    '!out/.build-hash',
     '!**/*.map',
     '!node_modules/**/{test,tests,__tests__,docs,example,examples}/**',
+    // WP-72 : rien qui ne serve qu'à compiler (en-têtes, gyp, sources natives) ni d'autre plateforme.
+    '!node_modules/**/{README,CHANGELOG,HISTORY,CONTRIBUTING}*',
+    '!node_modules/**/*.{d.ts,d.mts,d.cts,gyp,gypi,h,hpp,cc,c}',
+    '!node_modules/node-addon-api/**',
+    '!node_modules/sharp/{src,install}/**',
     '!node_modules/better-sqlite3/{deps,src}/**',
     '!node_modules/better-sqlite3/prebuilds/{linux*,win32*,darwin-x64}.node',
+    '!node_modules/better-sqlite3/lib/{linux*,win32*,darwin-x64}.js',
   ],
   asarUnpack: [
     '**/*.node',

@@ -61,6 +61,10 @@ async function buildTarget(
     target: ['chrome127', 'firefox128'],
     alias: { '@shared': join(root, 'src/shared') },
     legalComments: 'none' as const,
+    // Constantes de `define` repliées et branches mortes retirées : le build livré ne contient ni
+    // l'auto-test ni les points d'accès du faux serveur (WP-72). Identifiants lisibles conservés.
+    minifySyntax: true,
+    treeShaking: true,
     logLevel: opts.logLevel ?? ('info' as const),
     define: {
       __RECOLTOS_TARGET__: JSON.stringify(target),
