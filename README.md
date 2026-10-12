@@ -18,7 +18,9 @@ them by text or color, and arrange them on free-form canvases.
 There is no account and no server. Your files and the SQLite database live in
 `~/Library/Application Support/RecoltOS`, and you can export everything as a zip at any time.
 
-The interface is in French for now.
+The interface is available in English and French. It follows your Mac's language automatically
+(French if your preferred language is French, English otherwise), and you can pick one in Settings ›
+Appearance › Language.
 
 ## Features
 
@@ -157,7 +159,9 @@ More documentation:
 
 ## Known limitations
 
-- Apple Silicon only, and the interface is French only.
+- Apple Silicon only.
+- AI titles, descriptions and tags are written in the interface language at the time of the analysis;
+  switching languages doesn't rewrite existing ones (use "Regenerate existing descriptions").
 - ffmpeg must be installed separately.
 - Sync only runs while the browser is open. Safari is not supported.
 - X may start requiring a signed request header that the extension doesn't produce. If the X row in
