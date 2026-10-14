@@ -12,12 +12,31 @@ export interface CollectionsState {
   load: () => Promise<void>
 }
 
-export const useCollections = create<CollectionsState>()((set) => ({
+/**
+ * Structural sharing: every node whose content did not change keeps its previous object (and the
+ * whole tree its previous array when nothing changed). The tree is reloaded on every
+ * `items.changed` (tagging, views, derivatives…): without this, each reload re-rendered every
+ * consumer, including the 3D shelf while it animates.
+ */
+export function shareTree(prev: CollectionNode[], next: CollectionNode[]): CollectionNode[] {
+  const old = new Map(prev.map((n) => [n.uuid, n]))
+  let same = prev.length === next.length
+  const out = next.map((n, i) => {
+    const p = old.get(n.uuid)
+    const kept = p && JSON.stringify(p) === JSON.stringify(n) ? p : n
+    if (kept !== prev[i]) same = false
+    return kept
+  })
+  return same ? prev : out
+}
+
+export const useCollections = create<CollectionsState>()((set, get) => ({
   tree: [],
   loaded: false,
   async load() {
     try {
-      set({ tree: await rpc('collections.tree'), loaded: true })
+      const next = await rpc('collections.tree')
+      set({ tree: shareTree(get().tree, next), loaded: true })
     } catch (err) {
       if (!isNotImplemented(err)) console.warn('[collections] could not read', err)
       set({ loaded: true })
