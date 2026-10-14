@@ -153,6 +153,10 @@ module.exports = {
     '!node_modules/better-sqlite3/{deps,src}/**',
     '!node_modules/better-sqlite3/prebuilds/{linux*,win32*,darwin-x64}.node',
     '!node_modules/better-sqlite3/lib/{linux*,win32*,darwin-x64}.js',
+    // electron-updater's YAML parser: CommonJS entry only (no browser/ESM bundles, no CLI and its
+    // argparse dependency).
+    '!node_modules/js-yaml/{dist,bin}/**',
+    '!node_modules/argparse/**',
   ],
   asarUnpack: [
     '**/*.node',
