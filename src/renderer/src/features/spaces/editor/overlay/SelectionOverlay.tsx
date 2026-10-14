@@ -14,7 +14,22 @@ const SELECT = 'var(--sp-select)'
 const HANDLE = 8
 const ROTATE_OFFSET = 22
 
+/**
+ * Only follows the camera when it has something to draw: with nothing selected, panning and
+ * zooming commit no React render at all.
+ */
 export function SelectionOverlay({ interacting }: { interacting: boolean }) {
+  const active = useSpace(
+    (s) => s.selection.length > 0 || s.marquee !== null || s.guides.length > 0,
+  )
+  return active ? (
+    <LiveOverlay interacting={interacting} />
+  ) : (
+    <svg className="space-overlay" data-testid="space-overlay" aria-hidden="true" />
+  )
+}
+
+function LiveOverlay({ interacting }: { interacting: boolean }) {
   const camera = useCamera((s) => s.camera)
   const selection = useSpace((s) => s.selection)
   const nodes = useSpace((s) => s.nodes)

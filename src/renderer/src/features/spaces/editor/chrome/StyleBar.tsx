@@ -342,7 +342,13 @@ function TypeControls({ n }: { n: SpaceNode }) {
   }
 }
 
+/** Follows the camera only while something is selected (no render per pan / zoom frame). */
 export function StyleBar() {
+  const any = useSpace((s) => s.selection.length > 0)
+  return any ? <StyleBarLive /> : null
+}
+
+function StyleBarLive() {
   const selection = useSpace((s) => s.selection)
   const nodes = useSpace((s) => s.nodes)
   const preview = useSpace((s) => s.preview)

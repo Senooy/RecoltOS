@@ -11,8 +11,15 @@ import { usePrefs } from '../../../../state/prefs'
 import { fitAll, fitSelection, zoomStep, zoomTo } from '../actions'
 import { useCamera } from '../store/spaceStore'
 
+/**
+ * Displayed percentage: only this text follows the camera, and only when the rounded value
+ * changes (the cluster, its tooltips and its menu are not re-rendered on every zoom frame).
+ */
+function ZoomValue() {
+  return <>{useCamera((s) => pct(s.camera.zoom))}</>
+}
+
 export function ZoomCluster() {
-  const zoom = useCamera((s) => s.camera.zoom)
   const wheel = usePrefs((s) => s.prefs.spacesWheel)
   const setWheel = (v: 'scroll' | 'zoom') =>
     void usePrefs
@@ -45,7 +52,7 @@ export function ZoomCluster() {
               aria-label={tr.spacesUi.zoomMenu}
               className="h-7 min-w-[52px] rounded-full px-1 text-center text-caption font-medium text-fg tnum hover:bg-[var(--hover)]"
             >
-              {pct(zoom)}
+              <ZoomValue />
             </button>
           </Menu.Dropdown.Trigger>
           <Menu.Dropdown.Content side="top" align="start" data-testid="zoom-menu">
