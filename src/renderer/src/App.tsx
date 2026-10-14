@@ -8,6 +8,7 @@ import { initLayoutMap } from './lib/shortcuts'
 import { installSyncNotifier } from './features/sync/notifier'
 import { useUiLang } from './i18n'
 import { AppShell } from './shell/AppShell'
+import { preloadScreensWhenIdle } from './shell/routes'
 import { installFlushBridge } from './state/flush'
 import { followPrefsChanges, usePrefs } from './state/prefs'
 
@@ -46,6 +47,8 @@ export function App() {
     if (!appMountedMarked) {
       appMountedMarked = true
       window.recolt?.perfMark('app-mounted')
+      // Other screens loaded once the first grid is on screen (see `shell/routes.tsx`).
+      setTimeout(preloadScreensWhenIdle, 1_200)
     }
     return () => {
       window.removeEventListener('focus', onFocus)

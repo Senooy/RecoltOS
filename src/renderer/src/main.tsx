@@ -10,6 +10,8 @@ import { App } from './App'
 import { initApi } from './api/client'
 import { setUiLang } from './i18n'
 import { installVideoGuard } from './lib/video-guard'
+import { routes } from './shell/routes'
+import { useUi } from './state/ui'
 import './styles/tokens.css'
 import './styles/globals.css'
 
@@ -23,8 +25,9 @@ installVideoGuard()
 
 const el = document.getElementById('root')
 if (!el) throw new Error('#root not found')
-// The mock (dev) is loaded before the first render: `getApi()` stays synchronous.
-void initApi().then(() => {
+// The mock (dev) is loaded before the first render: `getApi()` stays synchronous. The initial
+// screen is loaded at the same time: it renders without suspending (see `shell/routes.tsx`).
+void Promise.all([initApi(), routes[useUi.getState().route.name].preload()]).then(() => {
   // Language resolved by main (setting or Mac language): first render in the right language.
   const lang = window.recolt?.flags.lang
   if (lang) setUiLang(lang)
