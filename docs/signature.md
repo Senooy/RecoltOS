@@ -18,19 +18,55 @@ Enter the app-specific password only at the secure prompt of `notarytool`. Never
 argument, keep it in the repository or log it. The Team ID is supplied through the environment, with no
 value stored in the repository.
 
-To produce a release, set `RECOLTOS_SIGN_IDENTITY` to the full name of the Developer ID Application
-certificate and set `APPLE_TEAM_ID`, then run:
+To produce a release, bump `version` in `package.json`, set `RECOLTOS_SIGN_IDENTITY` to the full name
+of the Developer ID Application certificate and set `APPLE_TEAM_ID`, then run:
 
 ```sh
-RECOLTOS_NOTARIZE=1 pnpm run dist:dmg
+pnpm run dist:release      # always notarizes (RECOLTOS_NOTARIZE=1 is set by the script)
 pnpm run check:dist
 pnpm run test:packaged
 ```
 
 The build checks the signature's Team ID, submits the app to Apple, staples and validates its ticket,
-then creates the signed DMG, submits it to Apple and staples and validates its ticket. A rejection stops
-the build. Without `RECOLTOS_NOTARIZE=1`, nothing is sent to Apple. Local builds keep their ad hoc
-signature by default, or the "RecoltOS Local" certificate when that identity is set.
+then creates the artifacts from that stapled app. It checks that the update ZIP holds the signed,
+notarized and stapled app (deep strict signature, Developer ID, `stapler validate`, `spctl`), then
+signs the DMG, submits it to Apple and staples and validates its ticket. A rejection stops the build.
+Nothing is ever uploaded (`--publish never`). For version `X.Y.Z`, `dist/` then contains:
+
+| File                                | Role                                                  |
+| ----------------------------------- | ----------------------------------------------------- |
+| `RecoltOS-X.Y.Z-arm64.dmg`          | Download for new installs (README, Releases page)     |
+| `RecoltOS-X.Y.Z-arm64.zip`          | Downloaded by the automatic update (Squirrel.Mac)     |
+| `RecoltOS-X.Y.Z-arm64.zip.blockmap` | Lets the next update download only the changed blocks |
+| `latest-mac.yml`                    | Update feed: version, ZIP name, size and sha512       |
+
+**All four files must be attached to the GitHub release**, published as a regular release (not a
+draft, not a pre-release) whose tag is `vX.Y.Z`: the installed apps read `latest-mac.yml` from the
+latest release and download the ZIP it names. Use the explicit names (an old blockmap may still sit
+in `dist/`):
+
+```sh
+gh release create vX.Y.Z \
+  dist/RecoltOS-X.Y.Z-arm64.dmg \
+  dist/RecoltOS-X.Y.Z-arm64.zip \
+  dist/RecoltOS-X.Y.Z-arm64.zip.blockmap \
+  dist/latest-mac.yml \
+  --repo Senooy/RecoltOS --title "RecoltOS X.Y.Z" --notes-file <notes.md>
+```
+
+`pnpm run dist:dmg` still produces the notarized DMG alone (with `RECOLTOS_NOTARIZE=1`), without
+update files: it is not enough for a release. Without `RECOLTOS_NOTARIZE=1`, nothing is sent to Apple.
+Local builds keep their ad hoc signature by default, or the "RecoltOS Local" certificate when that
+identity is set.
+
+### Automatic updates
+
+The app checks the GitHub releases of `Senooy/RecoltOS` (public, no token) about 30 seconds after
+launch and then every 6 hours, downloads the update in the background and installs it on restart or
+when the app quits. The setting is in Settings › About. Updates are disabled in development, in e2e
+mode and in any build that is not signed with a Developer ID (ad hoc, "RecoltOS Local"): macOS would
+refuse to replace such an app with the signed release anyway. Network errors are only written to the
+log.
 
 ## Why sign with a stable identity
 
@@ -120,7 +156,9 @@ If you have an Apple Developer account, an "Apple Development: …" identity is 
 
 ## Distribution
 
-RecoltOS is neither notarized nor updated automatically: each person builds and signs it locally. A copy that has traveled (AirDrop, download) carries the quarantine attribute:
+Public releases are notarized and update themselves (see above). A build you make yourself, signed
+ad hoc or with "RecoltOS Local", is neither notarized nor updated automatically. A copy of such a build
+that has traveled (AirDrop, download) carries the quarantine attribute:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/RecoltOS.app

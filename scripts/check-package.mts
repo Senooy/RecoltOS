@@ -50,8 +50,15 @@ export const PNPM_BUILTINS: readonly string[] = [
  */
 export const ALLOWED_BUILTIN_SCRIPTS: readonly string[] = ['pack']
 
-/** Only runtime dependencies kept outside the asar (`dependencies` = native modules only). */
-export const DEPENDENCIES_ALLOWLIST: readonly string[] = ['better-sqlite3', 'sharp']
+/**
+ * Only runtime dependencies left unbundled (`dependencies`): the native modules (kept outside the
+ * asar) and `electron-updater` (loaded from the asar by the main process, after the first paint).
+ */
+export const DEPENDENCIES_ALLOWLIST: readonly string[] = [
+  'better-sqlite3',
+  'electron-updater',
+  'sharp',
+]
 
 export const PACKAGE_MANAGER_PREFIX = 'pnpm@12.6.0+sha512.'
 

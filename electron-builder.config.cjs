@@ -2,7 +2,11 @@
  * electron-builder configuration (shipped build fuses, `fileAssociations`, `check-dist`,
  * size budgets).
  *
- * - arm64 only, target `dir`: `dist/mac-arm64/RecoltOS.app`; disk image via `pnpm run dist:dmg` (no automatic update).
+ * - arm64 only, target `dir`: `dist/mac-arm64/RecoltOS.app`; disk image via `pnpm run dist:dmg`.
+ * - Release (`pnpm run dist:release`, notarized): DMG + ZIP + `latest-mac.yml` + ZIP blockmap. The ZIP
+ *   is what electron-updater downloads (Squirrel.Mac); it is built after `afterSign`, so it holds the
+ *   notarized and stapled app (checked by `afterAllArtifactBuild`). `publish` (GitHub, public
+ *   releases) is embedded as `app-update.yml`; nothing is ever uploaded (`--publish never`).
  * - Signing identity: `RECOLTOS_SIGN_IDENTITY` (local certificate "RecoltOS Local", see
  *   `docs/signature.md`), otherwise `'-'` = explicit ad hoc signature (dev only). `identity: null`
  *   is a trap: on arm64 it only leaves the linker signature, which is refused at launch.
@@ -110,10 +114,13 @@ module.exports = {
   nodeGypRebuild: false,
   buildDependenciesFromSource: false,
   removePackageScripts: true,
-  publish: null,
+  // Update feed (electron-updater): same values as `UPDATE_FEED` in `src/main/updates/init.ts`.
+  publish: { provider: 'github', owner: 'Senooy', repo: 'RecoltOS', releaseType: 'release' },
   forceCodeSigning: notarize,
   afterSign: releaseHooks.notarizeApp,
-  afterAllArtifactBuild: releaseHooks.notarizeDmg,
+  afterAllArtifactBuild: releaseHooks.afterAllArtifactBuild,
+  // The DMG is stapled AFTER its sha512 would be computed: it stays out of `latest-mac.yml` (the
+  // updater only uses the ZIP).
   dmg: { sign: signing.developerId, writeUpdateInfo: false },
   // `en-US` keeps `en.lproj` but not `en_GB.lproj` (a bare `en` keeps every English variant). The UI
   // language comes from `app.getPreferredSystemLanguages()`, not from these Chromium resources.

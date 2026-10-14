@@ -54,3 +54,35 @@ exports.notarizeDmg = async (context) => {
   }
   return []
 }
+
+/**
+ * Update ZIP (electron-updater / Squirrel.Mac): built after `afterSign`, it must hold the signed,
+ * notarized and stapled app. Unpacked with `ditto` (as Squirrel does) into a temporary folder, then
+ * checked: deep strict signature, Developer ID, stapled ticket, Gatekeeper assessment. The ZIP is
+ * never modified (its sha512 is already in `latest-mac.yml`).
+ */
+exports.verifyUpdateZip = async (context) => {
+  if (process.env.RECOLTOS_NOTARIZE !== '1') return
+  for (const artifact of context.artifactPaths.filter((file) => file.endsWith('.zip'))) {
+    const work = await mkdtemp(path.join(tmpdir(), 'recoltos-zip-'))
+    try {
+      await run('ditto', ['-x', '-k', artifact, work])
+      const app = path.join(work, `${context.configuration.productName || 'RecoltOS'}.app`)
+      await run('codesign', ['--verify', '--deep', '--strict', app])
+      const { stderr } = await run('codesign', ['--display', '--verbose=2', app])
+      if (!/^Authority=Developer ID Application: /m.test(stderr)) {
+        throw new Error(`${path.basename(artifact)}: the app is not signed with a Developer ID.`)
+      }
+      await run('xcrun', ['stapler', 'validate', app])
+      await run('spctl', ['--assess', '--type', 'execute', app])
+    } finally {
+      await rm(work, { recursive: true, force: true })
+    }
+  }
+}
+
+/** `afterAllArtifactBuild`: notarizes and staples the DMG, checks the update ZIP. */
+exports.afterAllArtifactBuild = async (context) => {
+  await exports.verifyUpdateZip(context)
+  return exports.notarizeDmg(context)
+}

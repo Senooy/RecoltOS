@@ -401,8 +401,12 @@ export async function checkDist(options: {
   const preload = asar.read('out/preload/index.js')
   const foreign = preload ? foreignRequires(preload.toString('utf8')) : ['(missing)']
   add('preload standalone', foreign.length === 0, foreign.join(', ') || 'electron + Node only')
+  // Native packages only (mirrors the `files` exclusions of the builder config): pure JS
+  // dependencies may ship their code under `src/` (`debug/src`, pulled in by electron-updater).
   const leftovers = [...asar.files, ...asar.unpacked].filter((f) =>
-    /(^|\/)node_modules\/(node-addon-api|[^/]+\/(src|install|deps))\//.test(f),
+    /(^|\/)node_modules\/(node-addon-api|better-sqlite3\/(src|deps)|sharp\/(src|install))\//.test(
+      f,
+    ),
   )
   add(
     'app.asar: no native sources or build tooling',

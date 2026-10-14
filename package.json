@@ -47,11 +47,12 @@
     "shots": "tsx --tsconfig tsconfig.node.json scripts/visual/shots.mts",
     "fixtures": "tsx --tsconfig tsconfig.node.json scripts/make-fixtures.mts",
     "icon": "tsx --tsconfig tsconfig.node.json scripts/make-icon.mts && sh scripts/make-icns.sh",
-    "pack": "pnpm run build && electron-builder --config electron-builder.config.cjs --mac dir --arm64",
+    "pack": "pnpm run build && electron-builder --config electron-builder.config.cjs --mac dir --arm64 --publish never",
     "check:dist": "tsx --tsconfig tsconfig.node.json scripts/check-dist.mts",
     "check:dist:test": "tsx --tsconfig tsconfig.node.json scripts/check-dist.mts --profile test --app dist/test/mac-arm64/RecoltOS.app",
     "dist": "run-s verify:fast pack check:dist",
-    "dist:dmg": "pnpm run build && electron-builder --config electron-builder.config.cjs --mac dmg --arm64",
+    "dist:dmg": "pnpm run build && electron-builder --config electron-builder.config.cjs --mac dmg --arm64 --publish never",
+    "dist:release": "pnpm run build && RECOLTOS_NOTARIZE=1 electron-builder --config electron-builder.config.cjs --mac dmg zip --arm64 --publish never",
     "dist:test": "RECOLTOS_DIST_PROFILE=test run-s pack check:dist:test",
     "app:install": "sh scripts/install-local.sh",
     "guard": "sh scripts/guard-data.sh",
@@ -73,6 +74,7 @@
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",
+    "electron-updater": "6.8.9",
     "sharp": "0.35.5"
   },
   "devDependencies": {
