@@ -79,6 +79,6 @@ describe('foreignRequires', () => {
 describe('size budgets', () => {
   it('are frozen and consistent', () => {
     expect(SIZE_BUDGETS_MB.appAsar).toBeLessThan(SIZE_BUDGETS_MB.app)
-    expect(SIZE_BUDGETS_MB.nativeHost).toBeLessThanOrEqual(120)
+    expect(SIZE_BUDGETS_MB.nativeHost).toBeLessThanOrEqual(5)
   })
 })

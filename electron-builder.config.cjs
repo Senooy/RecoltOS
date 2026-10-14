@@ -115,7 +115,9 @@ module.exports = {
   afterSign: releaseHooks.notarizeApp,
   afterAllArtifactBuild: releaseHooks.notarizeDmg,
   dmg: { sign: signing.developerId, writeUpdateInfo: false },
-  electronLanguages: ['fr', 'en'],
+  // `en-US` keeps `en.lproj` but not `en_GB.lproj` (a bare `en` keeps every English variant). The UI
+  // language comes from `app.getPreferredSystemLanguages()`, not from these Chromium resources.
+  electronLanguages: ['fr', 'en-US'],
   // Fuses: built-in electron-builder option (camelCase keys), no after-pack hook.
   electronFuses: {
     runAsNode: testProfile,
@@ -139,6 +141,8 @@ module.exports = {
     '!node_modules/**/*.{d.ts,d.mts,d.cts,gyp,gypi,h,hpp,cc,c}',
     '!node_modules/node-addon-api/**',
     '!node_modules/sharp/{src,install}/**',
+    // The main process loads sharp with `require`: the ESM copy (`dist/*.mjs`) is never used.
+    '!node_modules/sharp/dist/*.mjs',
     '!node_modules/better-sqlite3/{deps,src}/**',
     '!node_modules/better-sqlite3/prebuilds/{linux*,win32*,darwin-x64}.node',
     '!node_modules/better-sqlite3/lib/{linux*,win32*,darwin-x64}.js',

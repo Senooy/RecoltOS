@@ -46,11 +46,12 @@ const ROOT = resolve(import.meta.dirname, '..')
 
 /** Size budgets (MB), measured then frozen: see `docs/perf.md` § Paquet. */
 export const SIZE_BUDGETS_MB = {
-  // Measured on 2026-10-12: 370.1 / 2.7 / 20.0 / 106.8 / 0.2 MB (margin ≈ 8 %).
-  app: 400,
+  // Measured on 2026-10-14: 263.1 / 2.8 / 19.8 / 0.4 / 0.3 MB (margin ≈ 8 %). The native host is
+  // the Rust executable (was 106.8 MB as a Node SEA): a budget of a few MB catches a regression.
+  app: 285,
   appAsar: 4,
   appAsarUnpacked: 22,
-  nativeHost: 115,
+  nativeHost: 2,
   extension: 1,
 } as const
 

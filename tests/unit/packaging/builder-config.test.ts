@@ -149,6 +149,7 @@ describe('electron-builder.config.cjs', () => {
       '!node_modules/better-sqlite3/prebuilds/{linux*,win32*,darwin-x64}.node',
     )
     expect(files).toContain('!out/host/**')
+    expect(files).toContain('!node_modules/sharp/dist/*.mjs')
     expect(files).toContain('!**/*.map')
   })
 

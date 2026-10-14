@@ -99,16 +99,21 @@ to `dist/test/` and never replaces the shipped build.
 
 | Item                                                  |     Size | Frozen budget |
 | ----------------------------------------------------- | -------: | ------------: |
-| `.app`                                                | 370.1 MB |        400 MB |
-| `app.asar`                                            |   2.7 MB |          4 MB |
-| `app.asar.unpacked` (better-sqlite3, sharp + libvips) |  20.0 MB |         22 MB |
-| SEA native host (`recolt-host`, full Node binary)     | 106.8 MB |        115 MB |
-| Extension (Chromium + Firefox)                        |   0.2 MB |          1 MB |
-| Electron Framework                                    |   238 MB |             — |
+| `.app`                                                | 263.1 MB |        285 MB |
+| `app.asar`                                            |   2.8 MB |          4 MB |
+| `app.asar.unpacked` (better-sqlite3, sharp + libvips) |  19.8 MB |         22 MB |
+| Native host (`recolt-host`, Rust)                     |   0.4 MB |          2 MB |
+| Extension (Chromium + Firefox)                        |   0.3 MB |          1 MB |
+| Electron Framework                                    | 237.6 MB |             — |
 
-Removed from the package: build headers, sources and install scripts of native modules, TypeScript
-declarations, dependency READMEs / CHANGELOGs, native loaders for other platforms. The native host is
-a full official Node binary (SEA), which accounts for most of its size.
+Measured on 2026-10-14. Until 0.1.5 the native host was a Node single executable application (a
+full official Node binary, 106.8 MB, `.app` 370.1 MB); it is now a std-only Rust program
+(`native-host/`). Removed from the package: build headers, sources and install scripts of native
+modules, TypeScript declarations, dependency READMEs / CHANGELOGs, native loaders for other
+platforms, sharp's unused ESM copy (`dist/*.mjs`, the main process uses `require`) and Chromium's
+`en_GB` and gendered English locales (`electronLanguages: ['fr', 'en-US']`). Licenses are kept. The
+Electron Framework (Chromium, V8, Node, ICU data, `libffmpeg` for `<video>`, SwiftShader) is shipped
+as is and now accounts for 90 % of the app.
 
 ## Reproduce
 
