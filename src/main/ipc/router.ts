@@ -157,6 +157,11 @@ export function makeSenderCheck(opts: { rendererUrl: string | null; rendererInde
 export interface RegisterRpcOptions extends DispatchOptions {
   ipcMain: IpcMain
   isAllowedSender: (frameUrl: string | undefined | null) => boolean
+  /**
+   * The window opens while the services start: a call waits for the promise returned for its
+   * channel (the service it needs), `null` once ready. The promise never rejects.
+   */
+  readyFor?: (channel: string) => Promise<void> | null
 }
 
 export function registerRpc(opts: RegisterRpcOptions): () => void {
@@ -164,6 +169,8 @@ export function registerRpc(opts: RegisterRpcOptions): () => void {
     if (!opts.isAllowedSender(e.senderFrame?.url)) {
       return { ok: false, error: { code: 'forbidden_sender', message: 'sender not allowed' } }
     }
+    const wait = typeof channel === 'string' ? opts.readyFor?.(channel) : null
+    if (wait) await wait
     return dispatch(channel, input, { sender: e.sender }, opts)
   }
   opts.ipcMain.handle(RAW_CHANNELS.rpc, listener)

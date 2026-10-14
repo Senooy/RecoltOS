@@ -10,7 +10,15 @@ import { initLog } from './bootstrap/log'
 import { installPerfMarks } from './bootstrap/perf'
 import { preReady } from './bootstrap/pre-ready'
 import { installDefaultSessionPolicy, installSecurity } from './bootstrap/security'
-import { initServices, type ServicesHandle } from './bootstrap/services'
+import {
+  SERVICES,
+  SERVICE_DOMAINS,
+  initServices,
+  serviceForChannel,
+  type ServiceDomain,
+  type ServicesHandle,
+} from './bootstrap/services'
+import { UNINSTALL_FLAG } from './bridge/init'
 import { configureUserData } from './bootstrap/user-data'
 import { handlers } from './ipc/handlers'
 import { makeEmitter, makeSenderCheck, registerRpc } from './ipc/router'
@@ -51,8 +59,27 @@ if (gotLock) {
       onError: (event, err) => log.error(`[ipc] invalid event ${event}`, err),
     })
 
+    // The window opens as soon as the preferences are read (language, theme), while the other
+    // services start: the renderer loads in parallel, each call waits for the service it needs.
+    const gates = new Map<ServiceDomain | 'all', { done: boolean; promise: Promise<void> }>()
+    const opens = new Map<ServiceDomain | 'all', () => void>()
+    for (const d of [...SERVICE_DOMAINS, 'all'] as const) {
+      const gate = { done: false, promise: Promise.resolve() }
+      gate.promise = new Promise<void>((resolve) => {
+        opens.set(d, () => {
+          gate.done = true
+          resolve()
+        })
+      })
+      gates.set(d, gate)
+    }
     registerRpc({
       ipcMain,
+      readyFor: (channel) => {
+        const need = serviceForChannel(channel)
+        const gate = need ? gates.get(need) : undefined
+        return gate && !gate.done ? gate.promise : null
+      },
       handlers,
       validateOutput: isDev,
       isAllowedSender: makeSenderCheck({
@@ -63,16 +90,25 @@ if (gotLock) {
     })
     installPerfMarks(userData)
 
-    services = await initServices({
-      userData,
-      flags,
-      isPackaged: app.isPackaged,
-      getMainWindow,
-      emit,
-      log,
-    })
+    // `--uninstall-native-hosts` quits during the services: no window in that case.
+    const early = !process.argv.includes(UNINSTALL_FLAG)
+    const openWindow = () => {
+      if (!getMainWindow()) createMainWindow({ userData, flags })
+    }
+    try {
+      services = await initServices(
+        { userData, flags, isPackaged: app.isPackaged, getMainWindow, emit, log },
+        SERVICES,
+        (domain) => {
+          opens.get(domain)?.()
+          if (early && domain === 'prefs') openWindow()
+        },
+      )
+    } finally {
+      for (const open of opens.values()) open()
+    }
 
-    createMainWindow({ userData, flags })
+    openWindow()
 
     app.on('activate', () => {
       if (!getMainWindow()) createMainWindow({ userData, flags })

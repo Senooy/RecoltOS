@@ -49,6 +49,28 @@ export const SERVICES: readonly { domain: ServiceDomain; init: InitFn }[] = [
   { domain: 'import-ux', init: initImportUx },
 ]
 
+/**
+ * Service a renderer call needs before it can be served (the window opens while the services
+ * start). Startup reads (`items.list`, `collections.tree`, `prefs.get`…) only need the library;
+ * `null`: no service; anything not listed waits for every service.
+ */
+export function serviceForChannel(channel: string): ServiceDomain | 'all' | null {
+  if (channel === 'system.takePendingNav') return null
+  switch (channel.split('.')[0]) {
+    case 'prefs':
+      return 'prefs'
+    case 'libraries':
+    case 'items':
+    case 'collections':
+    case 'tags':
+    case 'search':
+    case 'rediscover':
+      return 'library'
+    default:
+      return 'all'
+  }
+}
+
 export interface ServicesHandle {
   started: ServiceDomain[]
   failed: { domain: ServiceDomain; error: unknown }[]
@@ -62,6 +84,8 @@ export interface ServicesHandle {
 export async function initServices(
   ctx: ServiceContext,
   registry: readonly { domain: ServiceDomain; init: InitFn }[] = SERVICES,
+  /** Called after each domain (started or failed): e.g. open the window as soon as `prefs` is up. */
+  afterInit?: (domain: ServiceDomain) => void,
 ): Promise<ServicesHandle> {
   const started: ServiceDomain[] = []
   const failed: { domain: ServiceDomain; error: unknown }[] = []
@@ -74,6 +98,11 @@ export async function initServices(
     } catch (error) {
       failed.push({ domain, error })
       ctx.log.error(`[services] init failed for ${domain}`, error)
+    }
+    try {
+      afterInit?.(domain)
+    } catch (error) {
+      ctx.log.error(`[services] after ${domain}`, error)
     }
   }
   return {
