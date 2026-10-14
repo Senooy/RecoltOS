@@ -1,29 +1,40 @@
-/** Shelf: choice of the played videos and deterministic star field. */
+/** Shelf: videos in the window, face texture and deterministic star field. */
 import { describe, expect, it } from 'vitest'
 import {
-  MAX_PLAYING,
   SHELF_PAD_LEFT,
   SHELF_STEP,
-  playingIndices,
+  animatedCount,
+  faceSrc,
 } from '../../../src/renderer/src/features/collections/shelf/CollectionShelf'
+import { visibleSlots } from '../../../src/renderer/src/features/collections/shelf/shelf-videos'
 import { makeStars } from '../../../src/renderer/src/features/collections/shelf/Starfield'
 import { X_LOGO_PATH } from '../../../src/renderer/src/components/icons/brand'
 
-describe('playingIndices', () => {
-  it('at most MAX_PLAYING video(s), closest to the center', () => {
-    const isVideo = Array.from({ length: 17 }, () => true)
-    const set = playingIndices(isVideo, 0, 1280)
-    expect(set.size).toBe(MAX_PLAYING)
-    // Center 640: slots 3 and 4 (centers 579 and 701), then 2 and 5.
-    const centers = [...set].map((i) => SHELF_PAD_LEFT + SHELF_STEP * (i + 0.5))
-    for (const c of centers) expect(Math.abs(c - 640)).toBeLessThan(250)
+describe('visibleSlots', () => {
+  it('slots intersecting the window, following the scrolling', () => {
+    const a = visibleSlots(0, 1280, 18, SHELF_PAD_LEFT, SHELF_STEP)
+    // (1280 − 152) / 122 → slots 0 to 9.
+    expect([...a]).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    const b = visibleSlots(600, 1280, 18, SHELF_PAD_LEFT, SHELF_STEP)
+    expect(b.has(0)).toBe(false)
+    expect(b.has(14)).toBe(true)
   })
-  it('ignores covers that are not videos and follows the scrolling', () => {
-    const isVideo = [false, true, false, true, true, false, true, true, true]
-    const a = playingIndices(isVideo, 0, 1280)
-    expect([...a].every((i) => isVideo[i])).toBe(true)
-    const b = playingIndices(isVideo, 600, 1280)
-    expect(b.has(8)).toBe(true)
+  it('the slices that fall at entry are the visible ones', () => {
+    expect(animatedCount(1280)).toBe(11)
+    expect(animatedCount(1280, 4)).toBe(4)
+  })
+})
+
+describe('faceSrc', () => {
+  const base = {
+    thumbUrl: 'recolt://default/thumbs/ab/x.webp?v=1',
+    largeUrl: 'recolt://default/large/ab/x.webp?v=1',
+    posterUrl: null,
+  }
+  it('800 px thumbnail for portrait sources, large otherwise', () => {
+    expect(faceSrc({ ...base, width: 1080, height: 1920 })).toBe(base.thumbUrl)
+    expect(faceSrc({ ...base, width: 1920, height: 1080 })).toBe(base.largeUrl)
+    expect(faceSrc({ ...base, width: null, height: null })).toBe(base.largeUrl)
   })
 })
 

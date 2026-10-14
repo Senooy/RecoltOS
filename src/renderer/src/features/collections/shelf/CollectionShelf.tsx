@@ -2,24 +2,19 @@
  * 3D shelf of collections: full-frame black background + `Starfield`, labels at y≈104 in steps
  * of 122 px from x≈150, covers 410×700 in `rotateY(-35deg)` (image sized for the face: the
  * 800 px thumbnail when it covers the face at 2×, otherwise `large`; text post in a white
- * `TweetCard cover`; muted looping `preview` video: ONE at a time, that of the hovered cover or,
- * failing that, the one closest to the centre; never the original). Only one: as soon as two
- * videos play on screen, Chromium aligns the display on their rate (30 Hz, the compositor's
- * "video call" heuristic), and the drop of the slices as well as their hover fall to one frame in
- * four on a 120 Hz screen.
+ * `TweetCard cover`; muted looping `preview` video for video covers, never the original).
  *
  * Performance contract (120 Hz):
  *  - No React render per frame or per hover: hover is pure CSS (`:hover` on the slot, sibling
  *    layers), scrolling writes the track `transform` (and the star parallax) from a rAF through
- *    refs, the keyboard state is a `data-active` written on the item. The items are memoized; the
- *    only per-item state is "does my video play", read from a tiny store (`player`), so changing
- *    the video re-renders two items.
+ *    refs, the keyboard state is a `data-active` written on the item. The items are memoized.
  *  - Entry: the covers of the slices visible at entry are decoded (`img.decode()`, capped) BEFORE
  *    the cascade starts (`data-phase` wait → enter → rest): no image arriving, and no raster,
  *    during the fall. The slices outside the window do not fall, they are in place.
- *  - Videos: none during the entry; on hover, the video starts once the slide-out is over (and
- *    after the pointer stays), never two at once. The video is a separate layer above the face
- *    image, which stays painted: no re-raster when it starts or stops.
+ *  - Videos: ALL the visible video covers play together once the slices have landed (none during
+ *    the entry; off-window ones paused; all paused when the window is hidden or in the background
+ *    or an overlay covers the shelf). They are never composited as `<video>` (two composited
+ *    videos pin the display to their 30 Hz): see `shelf-videos.ts`, frames copied into a canvas.
  *  - Compositing, entry and hover animations: see `shelf.css` (transform/opacity only).
  *
  * Wheel (vertical or horizontal) → inertial scrolling of the track; ←/→ move from one cover to
@@ -34,7 +29,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type CSSProperties,
   type WheelEvent,
 } from 'react'
@@ -45,11 +39,11 @@ import { tr } from '../../../i18n'
 import { mediaSrc } from '../../../lib/media-url'
 import { RpcError, rpc } from '../../../lib/rpc'
 import { isEditableTarget } from '../../../lib/shortcuts'
-import { releaseOnUnmount } from '../../../lib/video-guard'
 import { useCollections } from '../../../state/collections'
 import { askName } from '../../../state/dialogs'
 import { useUi } from '../../../state/ui'
 import { TweetCard } from '../../grid/cards/TweetCard'
+import { ShelfVideos, VIDEO_CANVAS_H, VIDEO_CANVAS_W, visibleSlots } from './shelf-videos'
 import { Starfield, type StarfieldHandle } from './Starfield'
 import '../../../styles/shelf.css'
 
@@ -61,11 +55,6 @@ export const SHELF_LABEL_Y = 104
 /** Face of a cover (CSS px). */
 export const FACE_W = 410
 export const FACE_H = 700
-/** Videos played at the same time (see the header: beyond one, the display drops to 30 Hz). */
-export const MAX_PLAYING = 1
-/** Hover slide-out (`shelf.css`); the hovered video starts once it is over. */
-export const HOVER_MS = 220
-const VIDEO_DELAY_MS = HOVER_MS + 60
 /** Maximum wait for the covers' decoding before the cascade starts anyway. */
 const DECODE_CAP_MS = 350
 /** Width of the `thumb` derivative. */
@@ -86,28 +75,6 @@ function maxScrollFor(count: number, viewport: number): number {
   return Math.max(0, SHELF_PAD_LEFT + SHELF_STEP * count + 120 - viewport)
 }
 
-/** Indices of the videos to play: at most `max`, the closest to the centre of the window. */
-export function playingIndices(
-  isVideo: readonly boolean[],
-  scroll: number,
-  viewport: number,
-  max = MAX_PLAYING,
-): Set<number> {
-  const center = viewport / 2
-  return new Set(
-    isVideo
-      .map((v, i) => ({
-        v,
-        i,
-        d: Math.abs(SHELF_PAD_LEFT + SHELF_STEP * (i + 0.5) - scroll - center),
-      }))
-      .filter((x) => x.v)
-      .sort((a, b) => a.d - b.d)
-      .slice(0, max)
-      .map((x) => x.i),
-  )
-}
-
 const DERIVED_THUMB = /\/thumbs\/[^/]+\/[^/?]+\.webp(\?|$)/
 
 /**
@@ -126,32 +93,6 @@ export function faceSrc(
   return mediaSrc(
     (tallEnough ? card.thumbUrl : null) ?? card.largeUrl ?? card.posterUrl ?? card.thumbUrl,
   )
-}
-
-const isVideoCard = (c: ItemCard | undefined) => c?.kind === 'video' && c.previewUrl !== null
-
-/** "Which cover plays its video": one value, each item subscribes to its own boolean. */
-interface Player {
-  get: () => number | null
-  set: (i: number | null) => void
-  subscribe: (cb: () => void) => () => void
-}
-
-function createPlayer(): Player {
-  let value: number | null = null
-  const subs = new Set<() => void>()
-  return {
-    get: () => value,
-    set(i) {
-      if (i === value) return
-      value = i
-      for (const cb of subs) cb()
-    },
-    subscribe(cb) {
-      subs.add(cb)
-      return () => subs.delete(cb)
-    },
-  }
 }
 
 /** Stable handlers shared by every item (they read the shelf's refs). */
@@ -192,17 +133,23 @@ const ShelfItem = memo(function ShelfItem({
   node,
   card,
   animate,
-  player,
+  videos,
   handlers,
 }: {
   index: number
   node: CollectionNode
   card: ItemCard | undefined
   animate: boolean
-  player: Player
+  videos: ShelfVideos
   handlers: ItemHandlers
 }) {
-  const play = useSyncExternalStore(player.subscribe, () => player.get() === index)
+  const preview = card?.kind === 'video' ? mediaSrc(card.previewUrl) : undefined
+  // React 19 ref callback with cleanup: the canvas is registered as long as it is mounted.
+  const videoCanvas = useCallback(
+    (el: HTMLCanvasElement | null) =>
+      el && preview ? videos.register(index, el, preview) : undefined,
+    [videos, index, preview],
+  )
   const count = tr.count.items(node.count)
   return (
     <div
@@ -229,18 +176,13 @@ const ShelfItem = memo(function ShelfItem({
       <span className="cover-layer cover-face" aria-hidden="true">
         <FaceContent card={card} />
       </span>
-      {play && card?.previewUrl ? (
-        <video
-          ref={releaseOnUnmount}
-          data-testid="shelf-video"
-          className="cover-layer cover-video"
+      {preview ? (
+        <canvas
+          ref={videoCanvas}
+          className="cover-layer cover-canvas"
+          width={VIDEO_CANVAS_W}
+          height={VIDEO_CANVAS_H}
           aria-hidden="true"
-          src={mediaSrc(card.previewUrl)}
-          muted
-          loop
-          autoPlay
-          playsInline
-          crossOrigin="anonymous"
         />
       ) : null}
       <span className="cover-layer cover-veil" aria-hidden="true" />
@@ -317,10 +259,8 @@ export default function CollectionShelf() {
   const itemEls = useRef<(HTMLDivElement | null)[]>([])
   const slotEls = useRef<(HTMLButtonElement | null)[]>([])
   const [phase, setPhase] = useState<Phase>(() => (reduced ? 'enter' : 'wait'))
-  const phaseRef = useRef(phase)
-  phaseRef.current = phase
-  const player = useMemo(createPlayer, [])
-  const videoTimer = useRef(0)
+  const videos = useMemo(() => new ShelfVideos(), [])
+  useEffect(() => () => videos.destroy(), [videos])
 
   const count = tree.length + 1 // + "New collection" cover
   // Slots visible at entry (fixed at mount: the cascade does not replay); those slices fall.
@@ -331,28 +271,13 @@ export default function CollectionShelf() {
   const countRef = useRef(count)
   countRef.current = count
   const covers = useMemo(() => tree.map((n) => n.covers[0]), [tree])
-  const coversRef = useRef(covers)
-  coversRef.current = covers
 
-  /** Video to play now: the hovered/focused cover if it is a video, otherwise the centre one. */
-  const chooseVideo = useCallback((): number | null => {
-    if (reduced || phaseRef.current !== 'rest') return null
-    const isVideo = coversRef.current.map(isVideoCard)
-    const a = active.current
-    if (a !== null && isVideo[a]) return a
-    const [first] = playingIndices(isVideo, current.current, viewport.current)
-    return first ?? null
-  }, [reduced])
-
-  /** Re-elects the video after `delay` (cancels a pending election: quick sweeps start nothing). */
-  const scheduleVideo = useCallback(
-    (delay: number) => {
-      window.clearTimeout(videoTimer.current)
-      videoTimer.current = window.setTimeout(() => player.set(chooseVideo()), delay)
-    },
-    [chooseVideo, player],
-  )
-  useEffect(() => () => window.clearTimeout(videoTimer.current), [])
+  /** Videos of the slices in the window play (the others pause). */
+  const updateVisible = useCallback(() => {
+    videos.setVisible(
+      visibleSlots(current.current, viewport.current, countRef.current, SHELF_PAD_LEFT, SHELF_STEP),
+    )
+  }, [videos])
 
   /** Writes the scroll position: track transform + vanishing point + star parallax. */
   const applyScroll = useCallback((x: number) => {
@@ -371,7 +296,7 @@ export default function CollectionShelf() {
       if (reduced) {
         current.current = target.current
         applyScroll(current.current)
-        scheduleVideo(0)
+        updateVisible()
         return
       }
       if (raf.current) return
@@ -381,13 +306,13 @@ export default function CollectionShelf() {
         applyScroll(current.current)
         if (current.current === target.current) {
           raf.current = 0
-          // At rest: the centre video may have changed.
-          scheduleVideo(120)
+          // At rest: the set of slices in the window may have changed.
+          updateVisible()
         } else raf.current = requestAnimationFrame(step)
       }
       raf.current = requestAnimationFrame(step)
     },
-    [reduced, applyScroll, scheduleVideo],
+    [reduced, applyScroll, updateVisible],
   )
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
 
@@ -402,10 +327,11 @@ export default function CollectionShelf() {
         current.current,
       )
       applyScroll(current.current)
+      updateVisible()
     })
     ro.observe(el)
     return () => ro.disconnect()
-  }, [applyScroll])
+  }, [applyScroll, updateVisible])
 
   const onWheel = (e: WheelEvent) => {
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
@@ -438,9 +364,8 @@ export default function CollectionShelf() {
       mark(n)
       reveal(n)
       slotEls.current[n]?.focus({ preventScroll: true })
-      scheduleVideo(VIDEO_DELAY_MS)
     },
-    [mark, reveal, scheduleVideo],
+    [mark, reveal],
   )
 
   const createCollection = useCallback(async () => {
@@ -472,11 +397,9 @@ export default function CollectionShelf() {
         active.current = i
         // The pointer takes over from the keyboard highlight (one cover out at a time).
         if (marked.current !== i) mark(null)
-        scheduleVideo(VIDEO_DELAY_MS)
       },
       leave(i) {
         if (active.current === i) active.current = null
-        scheduleVideo(VIDEO_DELAY_MS)
       },
       focus(i, el) {
         active.current = i
@@ -493,7 +416,7 @@ export default function CollectionShelf() {
         slotEls.current[i] = el
       },
     }),
-    [mark, open, scheduleVideo],
+    [mark, open],
   )
 
   useEffect(() => {
@@ -543,15 +466,32 @@ export default function CollectionShelf() {
     return () => window.clearTimeout(id)
   }, [phase, reduced, animated])
 
-  // Landed: the centre video (or the hovered one) may start.
+  // Videos: once landed, while the window is shown and focused and no overlay covers the shelf.
   useEffect(() => {
-    if (phase === 'rest') player.set(chooseVideo())
-  }, [phase, player, chooseVideo])
+    if (phase !== 'rest' || reduced) return
+    const sync = () =>
+      videos.setEnabled(
+        document.visibilityState === 'visible' &&
+          document.hasFocus() &&
+          useUi.getState().overlay === null,
+      )
+    updateVisible()
+    sync()
+    const offUi = useUi.subscribe(sync)
+    document.addEventListener('visibilitychange', sync)
+    window.addEventListener('focus', sync)
+    window.addEventListener('blur', sync)
+    return () => {
+      offUi()
+      document.removeEventListener('visibilitychange', sync)
+      window.removeEventListener('focus', sync)
+      window.removeEventListener('blur', sync)
+      videos.setEnabled(false)
+    }
+  }, [phase, reduced, videos, updateVisible])
 
-  // Covers changed (reload of the tree): the elected video may no longer be a video.
-  useEffect(() => {
-    if (phaseRef.current === 'rest') player.set(chooseVideo())
-  }, [covers, player, chooseVideo])
+  // Slices added or removed: the set in the window changes.
+  useEffect(updateVisible, [count, updateVisible])
 
   return (
     <div
@@ -578,7 +518,7 @@ export default function CollectionShelf() {
             node={node}
             card={covers[i]}
             animate={i < animated}
-            player={player}
+            videos={videos}
             handlers={handlers}
           />
         ))}

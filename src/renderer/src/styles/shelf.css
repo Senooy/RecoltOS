@@ -9,10 +9,11 @@
  * Compositing (performance): ONE perspective, on the track, and NO `preserve-3d`. Each slice is
  * a few sibling layers, direct children of the track, sharing the same static transform
  * (`rotateY(-35deg)` around the near edge): the face (image, painted once), the dark veil, the
- * light edge, and the preview video while it plays. The slices' planes are parallel, so the
+ * light edge, and the preview video canvas. The slices' planes are parallel, so the
  * painting order (`z-index`, left slice in front) is exactly the 3D order: no 3D sorting, no
  * render surface, no layer promoted or re-rasterized on hover (the veil is its own layer from
- * the start, its opacity changes on the compositor). The track scrolls by `transform`; its
+ * the start, its opacity changes on the compositor). The preview video of a slice is a canvas
+ * layer between face and veil (`shelf-videos.ts`). The track scrolls by `transform`; its
  * `perspective-origin` follows the scroll so the vanishing point stays at the window centre.
  *
  * Entry: a `--bg` veil fades out above the black background (opacity only) while the slices FALL
@@ -109,9 +110,10 @@
   overflow: hidden;
   background: #111;
 }
-.cover-video {
+.cover-canvas {
   z-index: calc(1001 - var(--i) * 4);
-  object-fit: cover;
+  /* Corners clipped in the canvas itself (a CSS radius would add a mask to this 3D layer). */
+  border-radius: 0;
 }
 .cover-veil {
   z-index: calc(1002 - var(--i) * 4);
