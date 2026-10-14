@@ -9,6 +9,7 @@ import { runCapture } from '../features/capture/capture-actions'
 import { importFolder, reportImport, useImportUi } from '../features/import/import-actions'
 import { newSpace } from '../features/spaces/space-actions'
 import { emit } from '../lib/bus'
+import { setThemeTransitionOrigin } from '../lib/theme-transition'
 import { isEditableTarget } from '../lib/shortcuts'
 import { askName } from '../state/dialogs'
 import { effectiveTheme, usePrefs } from '../state/prefs'
@@ -74,7 +75,12 @@ export async function createSnapshot(): Promise<void> {
   }
 }
 
-export function toggleTheme(): void {
+/**
+ * Light ⇄ dark. `origin`: the control clicked, the new theme spreads from its center (otherwise
+ * from the center of the window: shortcut, menu, palette).
+ */
+export function toggleTheme(origin?: Element): void {
+  setThemeTransitionOrigin(origin)
   const prefs = usePrefs.getState().prefs
   const next = effectiveTheme(prefs.theme) === 'dark' ? 'light' : 'dark'
   void usePrefs

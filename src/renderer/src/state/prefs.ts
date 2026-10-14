@@ -8,6 +8,7 @@ import { DEFAULT_PREFS, mergePrefs, type Prefs } from '../../../shared/prefs'
 import { resolveLang, type Lang } from '../../../shared/i18n/lang'
 import { getUiLang, setUiLang } from '../i18n'
 import { isNotImplemented, rpc, subscribe } from '../lib/rpc'
+import { transitionTheme } from '../lib/theme-transition'
 
 export interface PrefsState {
   prefs: Prefs
@@ -57,12 +58,26 @@ export function applyPrefsLanguage(prefs: Prefs): void {
   setUiLang(resolveLang(prefs.ui.language, systemLang()))
 }
 
+/**
+ * Theme change seen by the user: spreads from the control that asked for it and resonates
+ * (`lib/theme-transition.ts`), or instant (`setDocumentTheme`) with reduced motion, in e2e mode,
+ * when `animate` is false (first read of the prefs) or without View Transitions.
+ */
+export function showDocumentTheme(
+  theme: 'light' | 'dark',
+  root: HTMLElement = document.documentElement,
+  animate = true,
+): void {
+  transitionTheme(theme, root, () => setDocumentTheme(theme, root), animate)
+}
+
 export function applyPrefsToDocument(
   prefs: Prefs,
   root: HTMLElement = document.documentElement,
+  animate = true,
 ): void {
   applyPrefsLanguage(prefs)
-  setDocumentTheme(effectiveTheme(prefs.theme), root)
+  showDocumentTheme(effectiveTheme(prefs.theme), root, animate)
   if (prefs.reduceMotion === 'always') root.dataset.reduceMotion = '1'
   else delete root.dataset.reduceMotion
 }
@@ -74,7 +89,7 @@ export const usePrefs = create<PrefsState>()((set, get) => ({
     try {
       const prefs = await rpc('prefs.get')
       set({ prefs, loaded: true })
-      applyPrefsToDocument(prefs)
+      applyPrefsToDocument(prefs, document.documentElement, false)
     } catch (err) {
       // Older builds lack `prefs.get`: keep the defaults.
       if (!isNotImplemented(err)) console.error('[prefs] cannot read', err)

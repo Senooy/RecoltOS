@@ -6,6 +6,7 @@ import type { SortMode } from '../../../../../shared/enums'
 import type { LanguagePref } from '../../../../../shared/i18n/lang'
 import { SegmentedSmall, Slider, Switch } from '../../../components/ui'
 import { tr } from '../../../i18n'
+import { setThemeTransitionOrigin } from '../../../lib/theme-transition'
 import { usePrefs } from '../../../state/prefs'
 import { useUi } from '../../../state/ui'
 import { sortOptions } from '../../library/SortMenu'
@@ -28,7 +29,11 @@ export function AppearanceSection() {
             <SegmentedSmall
               label={tr.settings.appearance.theme}
               value={prefs.theme}
-              onChange={(theme) => update({ theme })}
+              onChange={(theme) => {
+                // The new theme spreads from the segment just chosen.
+                setThemeTransitionOrigin(document.activeElement)
+                update({ theme })
+              }}
               options={[
                 { value: 'light', label: tr.settings.appearance.light },
                 { value: 'dark', label: tr.settings.appearance.dark },

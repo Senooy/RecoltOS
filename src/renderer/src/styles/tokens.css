@@ -93,6 +93,9 @@
   --rd-counter: #aeaeb0;
   /* Spaces selection, macOS blue ring */
   --accent-blue: #0a84ff;
+  /* chromatic ghosts of the theme switch (identical in both themes) */
+  --theme-ghost-cool: #2f8cff;
+  --theme-ghost-warm: #ff6a3d;
   /* 6 note colors (identical in both themes) */
   --note-yellow: #fff4b8;
   --note-pink: #ffd6e0;

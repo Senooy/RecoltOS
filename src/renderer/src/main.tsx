@@ -14,6 +14,7 @@ import { routes } from './shell/routes'
 import { useUi } from './state/ui'
 import './styles/tokens.css'
 import './styles/globals.css'
+import './styles/theme-transition.css'
 
 const root = document.documentElement
 const flags = window.recolt?.flags

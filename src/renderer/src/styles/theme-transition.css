@@ -1,0 +1,174 @@
+/*
+ * Theme switch (`lib/theme-transition.ts`): the new theme spreads from the control in a circle and
+ * resonates. The animations of the transition pseudo-elements are driven from JS (concrete
+ * values); this sheet sets their layering and turns off the default cross-fade. The theme glyph
+ * of the header resonates with CSS keyframes. Only transform, opacity and clip-path move.
+ */
+
+/* The interface stays usable during the ~1 s of the transition: input reaches the live page. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* New theme captured from <body>, apart from the old <html> snapshot: the ghosts fit between. */
+:root[data-theme-wave] {
+  view-transition-name: none;
+}
+:root[data-theme-wave] body {
+  view-transition-name: theme-wave;
+}
+
+.theme-wave-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 4px;
+  pointer-events: none;
+  contain: strict;
+}
+.theme-wave-ghost[data-side='left'] {
+  view-transition-name: theme-ghost-left;
+  background: var(--theme-ghost-cool);
+}
+.theme-wave-ghost[data-side='right'] {
+  view-transition-name: theme-ghost-right;
+  background: var(--theme-ghost-warm);
+}
+
+:root[data-theme-wave]::view-transition-group(root) {
+  z-index: 0;
+  animation: none;
+}
+:root[data-theme-wave]::view-transition-group(theme-ghost-left),
+:root[data-theme-wave]::view-transition-group(theme-ghost-right) {
+  z-index: 1;
+  /* A 4 px tint stretched to the window: the texture stays tiny. */
+  width: 100%;
+  height: 100%;
+  transform: none;
+  animation: none;
+}
+:root[data-theme-wave]::view-transition-group(theme-wave) {
+  z-index: 2;
+  animation: none;
+}
+:root[data-theme-wave]::view-transition-image-pair(root),
+:root[data-theme-wave]::view-transition-image-pair(theme-wave),
+:root[data-theme-wave]::view-transition-image-pair(theme-ghost-left),
+:root[data-theme-wave]::view-transition-image-pair(theme-ghost-right) {
+  isolation: auto;
+  animation: none;
+}
+:root[data-theme-wave]::view-transition-old(root),
+:root[data-theme-wave]::view-transition-new(theme-wave),
+:root[data-theme-wave]::view-transition-new(theme-ghost-left),
+:root[data-theme-wave]::view-transition-new(theme-ghost-right) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root[data-theme-wave]::view-transition-new(theme-ghost-left),
+:root[data-theme-wave]::view-transition-new(theme-ghost-right) {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  opacity: 0;
+}
+
+/* Theme glyph: the new glyph arrives between two tinted copies swinging with a decaying amplitude,
+   then locks sharp. Blur is suggested by the copies and a short vertical stretch. */
+.theme-glyph {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.theme-glyph > svg {
+  grid-area: 1 / 1;
+}
+.theme-glyph__ghost {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.theme-glyph__ghost[data-side='left'] {
+  --ghost-dir: -1;
+  color: var(--theme-ghost-cool);
+}
+.theme-glyph__ghost[data-side='right'] {
+  --ghost-dir: 1;
+  color: var(--theme-ghost-warm);
+}
+:root[data-theme-resonance] .theme-glyph__core {
+  animation: theme-glyph-core 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+:root[data-theme-resonance] .theme-glyph__ghost {
+  visibility: visible;
+  animation: theme-glyph-ghost 1.1s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+@keyframes theme-glyph-core {
+  0% {
+    opacity: 0;
+    transform: translateX(1.2px) scale(0.86, 0.96);
+  }
+  30% {
+    opacity: 1;
+    transform: translateX(-0.55px) scale(1.04, 0.99);
+  }
+  55% {
+    transform: translateX(0.2px) scale(1);
+  }
+  75% {
+    transform: translateX(-0.08px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes theme-glyph-ghost {
+  0% {
+    opacity: 0;
+    transform: translateX(calc(var(--ghost-dir) * 4.5px));
+  }
+  10% {
+    opacity: 0.7;
+  }
+  22% {
+    transform: translateX(calc(var(--ghost-dir) * -2.4px));
+  }
+  38% {
+    transform: translateX(calc(var(--ghost-dir) * 1.3px));
+  }
+  54% {
+    opacity: 0.5;
+    transform: translateX(calc(var(--ghost-dir) * -0.63px));
+  }
+  70% {
+    transform: translateX(calc(var(--ghost-dir) * 0.27px));
+  }
+  84% {
+    opacity: 0.18;
+    transform: translateX(calc(var(--ghost-dir) * -0.09px));
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+/* Reduced motion and e2e: the switch is instant (no resonance attribute); belt and braces. */
+[data-reduce-motion='1'] .theme-glyph > svg,
+[data-e2e] .theme-glyph > svg {
+  animation: none !important;
+}
+[data-reduce-motion='1'] .theme-glyph__ghost,
+[data-e2e] .theme-glyph__ghost {
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-glyph > svg {
+    animation: none !important;
+  }
+  .theme-glyph__ghost {
+    visibility: hidden;
+  }
+}
