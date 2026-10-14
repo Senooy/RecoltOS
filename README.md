@@ -119,7 +119,10 @@ changes. Turn it on at your own risk.
 
 ## Building from source
 
-Requirements: an Apple Silicon Mac, Node 22.22+ or 24.15+, pnpm 12.6 through corepack, and ffmpeg.
+Requirements: an Apple Silicon Mac, Node 22.22+ or 24.15+, pnpm 12.6 through corepack, ffmpeg, and
+Rust (stable, through [rustup](https://rustup.rs)) for the browser extension's native host
+(`native-host/`, built by `pnpm run build:host`; rustup installs the `aarch64-apple-darwin` target
+from `native-host/rust-toolchain.toml`).
 
 ```sh
 corepack enable

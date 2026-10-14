@@ -24,6 +24,8 @@ interface BuilderConfig {
     icon: string
     identity: string
     extendInfo: Record<string, string>
+    binaries?: string[]
+    signIgnore?: string[]
   }
 }
 
@@ -108,6 +110,15 @@ describe('electron-builder.config.cjs', () => {
         loadConfig({ RECOLTOS_SIGN_IDENTITY: 'RecoltOS Local', RECOLTOS_SECURITY_BIN: broken }),
       ).toThrow(/no valid signing identity/)
     })
+  })
+
+  it('leaves the native host signed by build:host (no Electron JIT entitlements)', () => {
+    const c = loadConfig()
+    expect(c.mac.binaries).toBeUndefined()
+    const ignore = (c.mac.signIgnore ?? []).map((r) => new RegExp(r))
+    const host = '/x/RecoltOS.app/Contents/Resources/native-host/recolt-host'
+    expect(ignore.some((r) => r.test(host))).toBe(true)
+    expect(ignore.some((r) => r.test('/x/RecoltOS.app/Contents/MacOS/RecoltOS'))).toBe(false)
   })
 
   it('does not rebuild natives and moves natives out of app.asar', () => {

@@ -1,9 +1,9 @@
 /**
- * Hôte natif lancé comme un navigateur le ferait : bundle `host.js` copié SEUL dans un dossier
- * sans `node_modules`, trames sur stdin/stdout, socket de l'app factice, spool.
+ * Native host launched the way a browser would: the Rust executable (`native-host/`) copied ALONE
+ * into a folder, frames on stdin/stdout, fake app socket, spool.
  */
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import { copyFileSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
+import { chmodSync, copyFileSync, readdirSync, statSync } from 'node:fs'
 import net from 'node:net'
 import os from 'node:os'
 import { join } from 'node:path'
@@ -20,18 +20,18 @@ import { Inbox } from '../../../src/main/bridge/inbox'
 import { socketPath } from '../../../src/main/bridge/paths'
 import { makeTmpDir } from '../../helpers/tmpdir'
 
-let hostJs = ''
+let hostExe = ''
 const procs: ChildProcessWithoutNullStreams[] = []
 const servers: net.Server[] = []
 
-beforeAll(async () => {
-  const build = makeTmpDir('host-build')
-  const out = await buildHost({ outfile: join(build, 'host.js'), logLevel: 'silent' })
+beforeAll(() => {
+  const out = buildHost({ outDir: makeTmpDir('host-build'), logLevel: 'silent' })
   const alone = makeTmpDir('host-alone')
-  hostJs = join(alone, 'host.js')
-  copyFileSync(out as string, hostJs)
-  expect(readdirSync(alone)).toEqual(['host.js'])
-})
+  hostExe = join(alone, 'recolt-host')
+  copyFileSync(out as string, hostExe)
+  chmodSync(hostExe, 0o755)
+  expect(readdirSync(alone)).toEqual(['recolt-host'])
+}, 300_000)
 
 afterEach(() => {
   for (const p of procs.splice(0)) p.kill()
@@ -49,7 +49,7 @@ interface Run {
 }
 
 function run(args: string[], env: Record<string, string>): Run {
-  const proc = spawn(process.execPath, [hostJs, ...args], {
+  const proc = spawn(hostExe, args, {
     env: { PATH: '/usr/bin:/bin', RECOLTOS_USER_DATA: makeTmpDir('host-ud'), ...env },
     cwd: os.tmpdir(),
   })
@@ -236,10 +236,14 @@ describe('hôte natif (processus)', () => {
     )
   })
 
-  it('le bundle ne requiert que des modules intégrés', () => {
-    const code = readFileSync(hostJs, 'utf8')
-    for (const m of code.matchAll(/\brequire\(\s*["']([^"']+)["']\s*\)/g)) {
-      expect(m[1]).toMatch(/^(node:)?[a-z_/]+$/)
-    }
+  it('the executable only links system libraries (no Node, no node_modules)', () => {
+    const libs = execFileSync('otool', ['-L', hostExe], { encoding: 'utf8' })
+      .split('\n')
+      .slice(1)
+      .map((l) => l.trim().split(' ')[0])
+      .filter(Boolean)
+    expect(libs.length).toBeGreaterThan(0)
+    for (const lib of libs) expect(lib).toMatch(/^\/(usr\/lib|System\/Library)\//)
+    expect(statSync(hostExe).size).toBeLessThan(5 * 1024 * 1024)
   })
 })

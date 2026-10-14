@@ -8,7 +8,8 @@
  *    or `--identity`) for the app AND the native host; stable designated requirement (certificate, not cdhash);
  *  - fuses read by `getCurrentFuseWire`: shipped build has `runAsNode` and `enableNodeCliInspectArguments`
  *    CLOSED (`--profile test` profile: open, reserved for tests);
- *  - SEA native host present, executable, standalone: `ping` → `pong` without the app;
+ *  - native host (Rust) present, executable, standalone: `ping` → `pong` without the app; signed
+ *    without entitlements (no JIT), hardened runtime with a Developer ID;
  *  - Chromium + Firefox extensions present, version = `EXTENSION_VERSION`, content scripts without
  *    `import`, no test code (self-test, fake server);
  *  - `app.asar`: no Mach-O (`.node`, `.dylib`, ffmpeg), no `.map`/`.onnx`, standalone preload
@@ -307,6 +308,20 @@ export async function checkDist(options: {
   }
   const hostVerify = sh('codesign', ['--verify', '--strict', host])
   add('native host signed', hostVerify.ok, hostVerify.ok ? 'valid' : hostVerify.out.trim())
+  const hostEntitlements = spawnSyncStderr('codesign', ['-d', '--entitlements', '-', host])
+  const hostKeys = [...hostEntitlements.matchAll(/\[Key\]\s*(\S+)/g)].map((m) => m[1])
+  add('native host: no entitlements (no JIT)', hostKeys.length === 0, hostKeys.join(', ') || 'none')
+  if (
+    identity?.startsWith('Developer ID Application:') ||
+    appSign.authority?.startsWith('Developer ID')
+  ) {
+    const runtime = /flags=0x[0-9a-f]*\([^)]*\bruntime\b/.test(hostSign.raw)
+    add(
+      'native host: hardened runtime',
+      runtime,
+      runtime ? 'runtime' : (hostSign.raw.split('\n').find((l) => l.includes('flags=')) ?? '?'),
+    )
+  }
 
   // Fuses.
   const wire = await getCurrentFuseWire(app)

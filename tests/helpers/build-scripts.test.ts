@@ -4,7 +4,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { buildExt } from '../../scripts/build-ext.mjs'
-import { buildHost, externalRequires } from '../../scripts/build-host.mjs'
+import { buildHost, rustConstants } from '../../scripts/build-host.mjs'
+import {
+  BRIDGE_PROTOCOL_VERSION,
+  CHROMIUM_EXTENSION_ORIGINS,
+  FIREFOX_EXTENSION_IDS,
+} from '../../src/shared/bridge/constants'
 import { REPO_ROOT } from './paths'
 import { makeTmpDir } from './tmpdir'
 
@@ -17,31 +22,17 @@ function write(root: string, rel: string, content: string): void {
 }
 
 describe('build-host', () => {
-  it('without src/host/index.ts: nothing to build', async () => {
-    expect(await buildHost({ root: makeTmpDir('host-none') })).toBeNull()
+  it('without native-host/Cargo.toml: nothing to build', () => {
+    expect(buildHost({ root: makeTmpDir('host-none') })).toBeNull()
   })
 
-  it('standalone CJS bundle: @shared alias inlined, no require outside builtins', async () => {
-    const root = makeTmpDir('host')
-    write(root, 'src/shared/proto.ts', 'export const PROTOCOL_VERSION = 7\n')
-    write(
-      root,
-      'src/host/index.ts',
-      "import { createServer } from 'node:net'\nimport { PROTOCOL_VERSION } from '@shared/proto'\nexport const v = [createServer.name, PROTOCOL_VERSION]\nconsole.log(JSON.stringify(v))\n",
-    )
-    const out = await buildHost({ root, logLevel: 'silent' })
-    expect(out).toBe(join(root, 'out/host/host.js'))
-    const code = readFileSync(out as string, 'utf8')
-    expect(externalRequires(code)).toEqual([])
-    const r = node([out as string])
-    expect(r.status, r.stderr).toBe(0)
-    expect(r.stdout.trim()).toBe('["createServer",7]')
-  })
-
-  it('detects a require of an external module', () => {
-    expect(
-      externalRequires('require("node:fs");require("zod");require("./x");require(\'fs\')'),
-    ).toEqual(['zod'])
+  it('Rust constants generated from the TypeScript protocol constants, committed in sync', () => {
+    const rs = rustConstants()
+    expect(rs).toContain(`pub const BRIDGE_PROTOCOL_VERSION: u32 = ${BRIDGE_PROTOCOL_VERSION};`)
+    for (const id of [...CHROMIUM_EXTENSION_ORIGINS, ...FIREFOX_EXTENSION_IDS]) {
+      expect(rs).toContain(JSON.stringify(id))
+    }
+    expect(readFileSync(join(REPO_ROOT, 'native-host/src/constants.rs'), 'utf8')).toBe(rs)
   })
 })
 

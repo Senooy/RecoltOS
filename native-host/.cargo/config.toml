@@ -1,0 +1,3 @@
+# Apple Silicon only, like the app (`cargo build` / `cargo test` from this folder).
+[build]
+target = "aarch64-apple-darwin"

@@ -1,0 +1,5 @@
+# rustup picks this toolchain when building from this folder (Homebrew's `rust` is not used).
+[toolchain]
+channel = "stable"
+targets = ["aarch64-apple-darwin"]
+profile = "minimal"

@@ -1,6 +1,8 @@
 /**
- * Native messaging frames: `[uint32 length, native order = LE on arm64/x64][JSON UTF-8]`.
- * No dependencies (host bundle and tests).
+ * Native messaging frames: `[uint32 length, native order = LE on arm64/x64][JSON UTF-8]`, and the
+ * NDJSON lines of the app socket. No dependencies: used by the app (`BridgeServer`), `check-dist`
+ * and the tests. The native host itself is Rust and follows the same rules
+ * (`native-host/src/framing.rs`).
  */
 import { MAX_FROM_EXT_BYTES, MAX_TO_EXT_BYTES } from '../shared/bridge/constants'
 

@@ -27,3 +27,6 @@ playwright-report/
 .env.*
 *.log
 .fixtures/
+
+# Native host (Rust) build output
+native-host/target/

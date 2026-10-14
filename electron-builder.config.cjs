@@ -16,8 +16,10 @@ const { execFileSync } = require('node:child_process')
 const root = __dirname
 
 /**
- * Native host of the extension (separate Node SEA executable): produced by `build:host`
- * into `out/native-host/recolt-host`, copied alone to `Contents/Resources/native-host/`.
+ * Native host of the extension (separate Rust executable, `native-host/`): produced and signed by
+ * `build:host` into `out/native-host/recolt-host`, copied alone to `Contents/Resources/native-host/`.
+ * electron-builder must NOT re-sign it (`mac.signIgnore`): it would give it the Electron JIT
+ * entitlements (`entitlementsInherit`), which this binary does not need.
  */
 const nativeHost = fs.existsSync(path.join(root, 'out', 'native-host', 'recolt-host'))
   ? [{ from: 'out/native-host', to: 'native-host', filter: ['recolt-host'] }]
@@ -84,7 +86,7 @@ function resolveSignIdentity() {
  * Fuse profiles: `RECOLTOS_DIST_PROFILE=test` (`pnpm run dist:test`, reserved for Playwright tests
  * of the packaged app) leaves `runAsNode` and CLI inspection open and outputs to `dist/test/` so as
  * to never replace the shipped build; the shipped build (`dist/mac-arm64/`) closes them.
- * The native host is a separate SEA executable: it does not depend on `runAsNode`.
+ * The native host is a separate Rust executable: it does not depend on `runAsNode`.
  */
 const testProfile = process.env.RECOLTOS_DIST_PROFILE === 'test'
 const signing = resolveSignIdentity()
@@ -186,7 +188,8 @@ module.exports = {
     hardenedRuntime: signing.developerId,
     entitlements: 'build/entitlements.mac.plist',
     entitlementsInherit: 'build/entitlements.mac.inherit.plist',
-    binaries: nativeHost.length ? ['Contents/Resources/native-host/recolt-host'] : [],
+    // Signed by `build:host` (same identity, hardened runtime, no entitlement): left as is.
+    signIgnore: ['/Contents/Resources/native-host/recolt-host$'],
     gatekeeperAssess: false,
     notarize: false,
     darkModeSupport: true,

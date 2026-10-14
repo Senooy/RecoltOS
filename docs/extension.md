@@ -8,8 +8,8 @@ One codebase (`extension/`), two builds:
 | Chrome, Brave, Edge, Vivaldi | `dist-extension/chromium/` | MV3, service worker, `key` field → fixed ID `kkcpbglfgmkcjndibkbpjdiakanmbdhi` |
 
 The extension talks to the app through **native messaging**: the browser launches the host
-`RecoltOS.app/Contents/Resources/native-host/recolt-host` (a separate executable), which relays to the
-app's local socket. No network port is opened. While the app is closed, saves (≤ 8 MiB) are queued and
+`RecoltOS.app/Contents/Resources/native-host/recolt-host` (a separate executable of about 0.4 MB,
+written in Rust in `native-host/`), which relays to the app's local socket. No network port is opened. While the app is closed, saves (≤ 8 MiB) are queued and
 added at the next launch.
 
 ## Build and check
@@ -17,8 +17,18 @@ added at the next launch.
 ```sh
 pnpm run build:ext      # → dist-extension/chromium/ and dist-extension/firefox/
 pnpm run lint:ext       # web-ext lint on the Firefox build (0 errors, 0 warnings)
+pnpm run build:host     # → out/native-host/recolt-host (cargo build --release, then signed)
 pnpm run pack           # packaged app: embeds the host and both extensions (+ the signed .xpi if it exists)
 ```
+
+The native host needs Rust (stable, through [rustup](https://rustup.rs)); `native-host/rust-toolchain.toml`
+selects the toolchain and the `aarch64-apple-darwin` target, and `build:host` uses rustup's `cargo` even
+when another one comes first in the `PATH`. It depends on nothing but the Rust standard library. Its
+protocol constants (extension IDs, size limits, ping interval) are generated from
+`src/shared/bridge/constants.ts` into `native-host/src/constants.rs` at each build. `build:host` signs
+it with `RECOLTOS_SIGN_IDENTITY` (ad hoc without it): with a Developer ID, hardened runtime and secure
+timestamp, without any entitlement. electron-builder leaves that signature as is (`mac.signIgnore`).
+`cargo test` (from `native-host/`) runs its unit tests.
 
 On launch, the packaged app copies the extensions to a fixed path:
 `~/Library/Application Support/RecoltOS/extension/{firefox,chromium}/`, and writes the native manifests

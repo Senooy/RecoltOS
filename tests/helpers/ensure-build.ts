@@ -40,7 +40,7 @@ export function ensureBuild(root: string = REPO_ROOT): boolean {
     join(root, 'node_modules/electron-vite/bin/electron-vite.js'),
     'build',
   ])
-  if (existsSync(join(root, 'src/host/index.ts'))) {
+  if (existsSync(join(root, 'native-host/Cargo.toml'))) {
     run(root, 'build-host', ['--import', 'tsx', 'scripts/build-host.mts'], {
       TSX_TSCONFIG_PATH: 'tsconfig.node.json',
     })

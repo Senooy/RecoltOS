@@ -1,5 +1,5 @@
 /**
- * App PACKAGÉE (`pnpm run pack`) : hôte natif SEA embarqué, manifests Firefox + Chromium écrits dans un
+ * App PACKAGÉE (`pnpm run pack`) : hôte natif (Rust) embarqué, manifests Firefox + Chromium écrits dans un
  * HOME de test (`RECOLTOS_HOME`, jamais `~/Library`), aller-retour `ping` → `pong` puis `hello` →
  * `hello.ack` à travers l'exécutable `Contents/Resources/native-host/recolt-host` jusqu'à l'app,
  * désinstallation qui laisse `co.gatheros.host.json` intact.

@@ -3,7 +3,8 @@
 ## Public releases: Developer ID and notarization
 
 Public releases use a **Developer ID Application** certificate, the hardened runtime and the JIT
-entitlements for Electron and the Node SEA host. The `runAsNode` and `enableNodeCliInspectArguments`
+entitlements for Electron. The native host (`recolt-host`, Rust) is signed by `pnpm run build:host`
+with the same identity and the hardened runtime, without any entitlement. The `runAsNode` and `enableNodeCliInspectArguments`
 fuses stay closed in the shipped build.
 
 The notarization credentials are stored in the keychain under the `RecoltOS-notary` profile:
