@@ -1,23 +1,33 @@
 /*
- * 3D shelf of collections: vertical slices in perspective, right side
- * the closest; the face darkens towards this side, just before a 6 px light edge.
+ * 3D shelf of collections: vertical slices in perspective, right side the closest; the face
+ * darkens towards this side, just before a 6 px light edge.
  *
- * Geometry (perspective 1400 / -62° gave slices twice too narrow): near edge of
- * cover i at x = 274 + 122·i pt, top at 172 pt; far edge of « Gaming » at ≈ 99 pt and
- * 227 pt high; hence perspective 800 px centred, face 410×700, rotateY(-35deg).
+ * Geometry (perspective 1400 / -62° gave slices twice too narrow): near edge of cover i at
+ * x = 274 + 122·i pt, top at 172 pt; far edge of « Gaming » at ≈ 99 pt and 227 pt high; hence
+ * perspective 800 px centred, face 410×700, rotateY(-35deg).
  *
- * Entry: the background goes from `--bg` to black while the slices FALL
- * from the top of the window, one by one from left to right (`--i` × 45 ms, capped), with a slight
- * bounce (≈ 10 px) on arrival; labels and the « Nouvelle collection » outline follow their slice.
- * The animation applies to the leaves (face, label): an opacity < 1 on a `preserve-3d` parent
- * would flatten it, and the `translate` property (applied before `transform`, in screen space) leaves
- * the rotateY / hover chain intact.
+ * Compositing (performance): ONE perspective, on the track, and NO `preserve-3d`. Each slice is
+ * a few sibling layers, direct children of the track, sharing the same static transform
+ * (`rotateY(-35deg)` around the near edge): the face (image, painted once), the dark veil, the
+ * light edge, and the preview video while it plays. The slices' planes are parallel, so the
+ * painting order (`z-index`, left slice in front) is exactly the 3D order: no 3D sorting, no
+ * render surface, no layer promoted or re-rasterized on hover (the veil is its own layer from
+ * the start, its opacity changes on the compositor). The track scrolls by `transform`; its
+ * `perspective-origin` follows the scroll so the vanishing point stays at the window centre.
  *
- * Hover / focus: the slice comes out towards the viewer ALONG ITS OWN AXIS, like a book being pulled out:
- * translation applied after the rotateY (local frame of the face), without changing the angle. Calibrated on
- * the original's measurements at 1280×820: top ≈ +26 px upwards, near edge ≈ +73 px towards the
- * right (it overflows onto the neighbour); the dark veil fades, the label turns white bold.
- * Neighbours do not move.
+ * Entry: a `--bg` veil fades out above the black background (opacity only) while the slices FALL
+ * from the top of the window, one by one from left to right (`--i` × 45 ms, capped), with a
+ * slight bounce (≈ 10 px) on arrival; labels and the « New collection » outline follow their
+ * slice. The drop uses the `translate` property (applied before `transform`, in screen space): it
+ * composes with the hover transform. Only the slices visible at entry fall (`data-anim`), the
+ * others are in place. `data-phase`: `wait` (covers decoding, animated slices hidden), `enter`,
+ * `rest`.
+ *
+ * Hover / focus: the slice comes out towards the viewer ALONG ITS OWN AXIS, like a book being
+ * pulled out: translation applied after the rotateY (local frame of the face), without changing
+ * the angle. Calibrated on the original's measurements at 1280×820: top ≈ +26 px upwards, near
+ * edge ≈ +73 px towards the right (it overflows onto the neighbour); the dark veil fades, the
+ * label turns white bold (cross-fade of two texts: no repaint per frame). Neighbours do not move.
  */
 @keyframes shelf-drop {
   0% {
@@ -40,100 +50,98 @@
     opacity: 1;
   }
 }
-@keyframes shelf-backdrop {
+@keyframes shelf-unveil {
   from {
-    background-color: var(--bg);
+    opacity: 1;
   }
   to {
-    background-color: var(--shelf-bg);
+    opacity: 0;
   }
 }
 .shelf-root {
   background: var(--shelf-bg);
-  animation: shelf-backdrop 320ms var(--ease-out) both;
-}
-.shelf-root > canvas {
-  animation: shelf-fade 320ms var(--ease-out) both;
-}
-.shelf {
-  perspective: 800px;
-  perspective-origin: 50% 50%;
   overflow: hidden;
 }
+/* Background entry: the page colour fades out above the black and the stars (≡ the former
+   background-color animation, without a full-screen repaint per frame). Hidden at the end. */
+.shelf-unveil {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  animation: shelf-unveil 320ms var(--ease-out);
+}
 .shelf-track {
-  display: flex;
-  transform-style: preserve-3d;
-  padding-left: 152px;
-  padding-top: 172px;
+  position: absolute;
+  inset: 0;
+  perspective: 800px;
+  perspective-origin: 50% 50%;
   will-change: transform;
 }
-.shelf-cover {
-  flex: 0 0 122px;
+.shelf-item {
+  display: contents;
+}
+.shelf-slot {
+  position: absolute;
+  top: 172px;
+  left: calc(152px + var(--i) * 122px);
+  width: 122px;
   height: 700px;
-  position: relative;
-  transform-style: preserve-3d;
   outline: none;
 }
-.cover-face {
+.cover-layer {
   position: absolute;
-  right: 0;
-  top: 0;
+  top: 172px;
+  /* Near edge (right) on the right edge of the slot: 152 + 122 · (i + 1) − 410. */
+  left: calc(var(--i) * 122px - 136px);
   width: 410px;
   height: 700px;
   border-radius: 6px;
-  overflow: hidden;
-  background: #111;
   transform-origin: 100% 50%;
   transform: rotateY(-35deg);
   /* The click happens on the flat 122 px slot (= visible segment): no 3D test. */
   pointer-events: none;
   transition: transform 220ms var(--ease-out);
 }
-.shelf-cover > .cover-face,
-.shelf-cover > .shelf-new-label,
-.shelf-label {
-  animation:
-    shelf-drop 560ms linear both,
-    shelf-fade 220ms var(--ease-out) both;
-  animation-delay: calc(min(var(--i, 0), 18) * 45ms);
+.cover-face {
+  z-index: calc(1000 - var(--i) * 4);
+  overflow: hidden;
+  background: #111;
 }
-.cover-face::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
+.cover-video {
+  z-index: calc(1001 - var(--i) * 4);
+  object-fit: cover;
+}
+.cover-veil {
+  z-index: calc(1002 - var(--i) * 4);
   background: linear-gradient(
     to right,
     rgba(0, 0, 0, 0) 0%,
     rgba(0, 0, 0, 0.3) 45%,
     rgba(0, 0, 0, 0.82) 100%
   );
-  transition: opacity 220ms var(--ease-out);
+  transition:
+    transform 220ms var(--ease-out),
+    opacity 220ms var(--ease-out);
 }
-.cover-face::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
+.cover-edge {
+  z-index: calc(1003 - var(--i) * 4);
+  left: calc(var(--i) * 122px + 268px);
   width: 6px;
-  z-index: 2;
+  border-radius: 0 6px 6px 0;
   background: linear-gradient(to right, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.38));
 }
-.shelf-cover:hover .cover-face,
-.shelf-cover:focus-visible .cover-face,
-.shelf-cover[data-active='1'] .cover-face {
+.shelf-slot:hover ~ .cover-layer,
+.shelf-item[data-active='1'] > .cover-layer {
   /* Same angle as at rest: only a local translation (along the face) makes it come out. */
   transform: rotateY(-35deg) translate3d(88px, 0, 34px);
 }
-.shelf-cover:hover .cover-face::before,
-.shelf-cover:focus-visible .cover-face::before,
-.shelf-cover[data-active='1'] .cover-face::before {
+.shelf-slot:hover ~ .cover-veil,
+.shelf-item[data-active='1'] > .cover-veil {
   opacity: 0.1;
 }
-.cover-face > img,
-.cover-face > video {
+.cover-face > img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -144,29 +152,55 @@
   background: transparent;
   border: 1.5px dashed rgba(255, 255, 255, 0.18);
 }
-.cover-face-new::before,
-.cover-face-new::after {
-  display: none;
+.shelf-new-label {
+  position: absolute;
+  top: 172px;
+  left: calc(152px + var(--i) * 122px);
+  width: 122px;
+  height: 700px;
+  z-index: 2000;
+  pointer-events: none;
 }
 .shelf-label {
   position: absolute;
-  top: 0;
+  top: 104px;
+  left: calc(150px + var(--i) * 122px);
   width: 116px;
+  z-index: 2000;
   pointer-events: none;
 }
 .shelf-label-name {
-  color: var(--shelf-label);
+  position: relative;
+  height: 16px;
   font-size: 13px;
   line-height: 16px;
-  font-weight: 500;
+}
+.shelf-label-lo,
+.shelf-label-hi {
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 220ms var(--ease-out);
+  transition: opacity 220ms var(--ease-out);
 }
-.shelf-label[data-active='1'] .shelf-label-name {
+.shelf-label-lo {
+  color: var(--shelf-label);
+  font-weight: 500;
+}
+.shelf-label-hi {
+  position: absolute;
+  inset: 0;
   color: #fff;
   font-weight: 600;
+  opacity: 0;
+}
+.shelf-slot:hover ~ .shelf-label .shelf-label-hi,
+.shelf-item[data-active='1'] > .shelf-label .shelf-label-hi {
+  opacity: 1;
+}
+.shelf-slot:hover ~ .shelf-label .shelf-label-lo,
+.shelf-item[data-active='1'] > .shelf-label .shelf-label-lo {
+  opacity: 0;
 }
 .shelf-label-count {
   margin-top: 4px;
@@ -174,24 +208,32 @@
   font-size: 11px;
   line-height: 14px;
 }
+/* Entry: animated slices hidden while their covers decode, then they fall. */
+.shelf[data-phase='wait'] .shelf-item[data-anim] > :not(.shelf-slot) {
+  opacity: 0;
+}
+.shelf[data-phase='enter'] .shelf-item[data-anim] > :not(.shelf-slot) {
+  animation:
+    shelf-drop 560ms linear backwards,
+    shelf-fade 220ms var(--ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 18) * 45ms);
+}
 /* Reduced motion: instant hover, simple shared fade-in (without descent or offset). */
 @media (prefers-reduced-motion: reduce) {
-  .cover-face,
-  .cover-face::before {
+  .cover-layer,
+  .shelf-label-lo,
+  .shelf-label-hi {
     transition: none;
   }
-  .shelf-cover > .cover-face,
-  .shelf-cover > .shelf-new-label,
-  .shelf-label {
+  .shelf[data-phase='enter'] .shelf-item[data-anim] > :not(.shelf-slot) {
     animation: shelf-fade 160ms linear both;
   }
 }
-[data-reduce-motion='1'] .cover-face,
-[data-reduce-motion='1'] .cover-face::before {
+[data-reduce-motion='1'] .cover-layer,
+[data-reduce-motion='1'] .shelf-label-lo,
+[data-reduce-motion='1'] .shelf-label-hi {
   transition: none;
 }
-[data-reduce-motion='1'] .shelf-cover > .cover-face,
-[data-reduce-motion='1'] .shelf-cover > .shelf-new-label,
-[data-reduce-motion='1'] .shelf-label {
+[data-reduce-motion='1'] .shelf[data-phase='enter'] .shelf-item[data-anim] > :not(.shelf-slot) {
   animation: shelf-fade 160ms linear both;
 }

@@ -1,19 +1,24 @@
 /**
- * `Starfield`: full-frame 2D canvas, ≈ 220 stars for 1280×820 (density ∝
- * area), radius 0.5–1.3 px, opacity 0.15–0.9; 10 % twinkle (3–6 s cycle); 2 px parallax
- * tied to horizontal scrolling (`parallax` ∈ [0, 1]). Static (no twinkling or
- * parallax) in reduced motion.
+ * `Starfield`: full-frame 2D canvas, ≈ 220 stars for 1280×820 (density ∝ area), radius
+ * 0.5–1.3 px, opacity 0.15–0.9. Drawn ONCE (mount and resize), never per frame: a canvas
+ * redrawn in a rAF loop re-uploads a full-screen texture at every vsync and damages the whole
+ * frame, so every 3D slice is recomposited even when nothing moves. The 2 px parallax tied to
+ * the horizontal scrolling is a `transform` of the canvas layer, written by the shelf's scroll
+ * loop through the forwarded ref (no React render, no repaint).
  * Deterministic draw (fixed seed): reproducible captures.
  */
-import { useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 export const STARS_PER_PX = 220 / (1280 * 820)
+/** Maximum parallax offset (px) at the end of the track. */
+export const STAR_PARALLAX_PX = 2
 
 interface Star {
   x: number
   y: number
   r: number
   a: number
+  /** Kept for the deterministic draw (seeded sequence); the field no longer twinkles. */
   twinkle: boolean
   period: number
   phase: number
@@ -44,61 +49,62 @@ export function makeStars(width: number, height: number, seed = 7): Star[] {
   }))
 }
 
-export function Starfield({ parallax, still }: { parallax: number; still: boolean }) {
+export interface StarfieldHandle {
+  /** Parallax ∈ [0, 1] (scroll / max scroll): moves the canvas layer, nothing is redrawn. */
+  setParallax: (p: number) => void
+}
+
+export const Starfield = forwardRef<StarfieldHandle>(function Starfield(_props, ref) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const parallaxRef = useRef(parallax)
-  parallaxRef.current = parallax
+  useImperativeHandle(
+    ref,
+    () => ({
+      setParallax(p: number) {
+        const c = canvasRef.current
+        if (c)
+          c.style.transform = `translate3d(${(-STAR_PARALLAX_PX * 0.85 * p).toFixed(2)}px, 0, 0)`
+      },
+    }),
+    [],
+  )
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    let stars: Star[] = []
-    let w = 0
-    let h = 0
-    let raf = 0
-    const resize = () => {
+    let lastW = -1
+    let lastH = -1
+    const draw = () => {
       const dpr = window.devicePixelRatio || 1
-      w = canvas.clientWidth
-      h = canvas.clientHeight
+      const w = canvas.clientWidth
+      const h = canvas.clientHeight
+      if (w === lastW && h === lastH) return
+      lastW = w
+      lastH = h
       canvas.width = Math.round(w * dpr)
       canvas.height = Math.round(h * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      stars = makeStars(w, h)
-    }
-    const draw = (t: number) => {
       ctx.clearRect(0, 0, w, h)
-      const dx = -2 * parallaxRef.current
-      for (const s of stars) {
-        let a = s.a
-        if (s.twinkle && !still) a *= 0.55 + 0.45 * Math.sin((t / s.period) * Math.PI * 2 + s.phase)
-        ctx.globalAlpha = Math.max(0, Math.min(1, a))
-        ctx.fillStyle = '#fff'
+      ctx.fillStyle = '#fff'
+      for (const s of makeStars(w, h)) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, s.a))
         ctx.beginPath()
-        ctx.arc(s.x + dx * (0.5 + s.r / 2.6), s.y, s.r, 0, Math.PI * 2)
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
         ctx.fill()
       }
       ctx.globalAlpha = 1
-      if (!still) raf = requestAnimationFrame(draw)
     }
-    resize()
-    draw(0)
-    const ro = new ResizeObserver(() => {
-      resize()
-      if (still) draw(0)
-    })
+    draw()
+    const ro = new ResizeObserver(draw)
     ro.observe(canvas)
-    return () => {
-      ro.disconnect()
-      cancelAnimationFrame(raf)
-    }
-  }, [still])
+    return () => ro.disconnect()
+  }, [])
   return (
     <canvas
       ref={canvasRef}
       data-testid="starfield"
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 h-full w-full"
+      className="shelf-stars pointer-events-none absolute inset-0 h-full w-full"
     />
   )
-}
+})
