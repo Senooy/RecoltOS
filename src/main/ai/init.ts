@@ -50,6 +50,9 @@ export function initAi(ctx: ServiceContext): Disposer {
     ) {
       service.providers.refresh()
       getJobQueue()?.kick()
+    } else if (a.concurrency !== b.concurrency) {
+      // The queue no longer polls: a higher cap is applied right away.
+      getJobQueue()?.kick()
     }
     if (JSON.stringify(a) !== JSON.stringify(b)) service.scheduleSnapshot()
   })

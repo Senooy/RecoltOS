@@ -67,6 +67,22 @@ export function toJobRecord(row: JobRow): JobRecord {
   }
 }
 
+/**
+ * Notified after each `enqueue` / `requeueFailed` (the queue wakes up on demand instead of
+ * polling). Set by `jobs/queue.ts`; never throws.
+ */
+let onJobsAdded: (() => void) | null = null
+export function setJobsAddedListener(fn: (() => void) | null): void {
+  onJobsAdded = fn
+}
+const notifyAdded = (): void => {
+  try {
+    onJobsAdded?.()
+  } catch {
+    // the queue is stopping: nothing to wake
+  }
+}
+
 export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
   const { q, now } = repoBase(db, opts)
   const requeueTx = db.transaction((type: JobType | null, at: number): number => {
@@ -110,7 +126,16 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
         batch_id: j.batchId ?? null,
         at,
       }) as { id: number }
+      notifyAdded()
       return row.id
+    },
+
+    /** Earliest `run_after` of a queued job still in the future (`null`: none): next wake-up. */
+    nextRunAfter(at: number = now()): number | null {
+      const row = q(
+        "SELECT min(run_after) AS t FROM jobs WHERE state = 'queued' AND run_after > ?",
+      ).get(at) as { t: number | null }
+      return row.t
     },
 
     /** Takes the next ready job of a type and sets it to `running`. */
@@ -179,7 +204,9 @@ export function createJobsRepo(db: Database.Database, opts: RepoOptions = {}) {
      * already active or superseded are cancelled instead of being re-run.
      */
     requeueFailed(type?: JobType, at: number = now()): number {
-      return requeueTx(type ?? null, at)
+      const n = requeueTx(type ?? null, at)
+      if (n > 0) notifyAdded()
+      return n
     },
 
     /** At startup: jobs left `running` go back to `queued`. */

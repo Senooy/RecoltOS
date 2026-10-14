@@ -12,6 +12,7 @@ import {
   type JobType,
   type JobsStatus,
 } from '../../shared/jobs'
+import { setJobsAddedListener } from '../db/repos/jobs'
 import type { JobFailureHook, JobHandler, JobServices } from './handlers/types'
 
 export const JOB_CONCURRENCY: Readonly<Record<JobType, number>> = {
@@ -62,7 +63,10 @@ export interface JobQueueDeps {
   concurrency?: Partial<Record<JobType, number>>
   /** Dynamic cap (e.g. `prefs.ai.concurrency`); takes precedence over `concurrency`. */
   concurrencyOf?: (type: JobType) => number | undefined
-  /** Wake-up period (deferred jobs, expired pauses). */
+  /**
+   * Safety wake-up period. The queue is event-driven: it wakes up on `enqueue`, at the end of a job,
+   * at the next deferred `run_after` and at the end of a pause; no polling while idle.
+   */
   tickMs?: number
   /** Called (at most every `statusThrottleMs`) when the queue state changes. */
   onStatus?: (s: JobsStatus) => void
@@ -99,6 +103,9 @@ export class JobQueue {
   private paused = false
   private started = false
   private timer: NodeJS.Timeout | null = null
+  private wakeTimer: NodeJS.Timeout | null = null
+  private wakeAt = 0
+  private kickQueued = false
   private pumping = false
   private pumpAgain = false
   private pauses: Record<string, PauseEntry> = {}
@@ -119,9 +126,12 @@ export class JobQueue {
     if (!this.started) {
       this.started = true
       this.loadPauses()
-      const tick = this.deps.tickMs ?? 1_000
-      this.timer = setInterval(() => this.kick(), tick)
-      this.timer.unref?.()
+      // New jobs (any `enqueue`, wherever it comes from): one coalesced kick per tick.
+      setJobsAddedListener(() => this.kickSoon())
+      if (this.deps.tickMs) {
+        this.timer = setInterval(() => this.kick(), this.deps.tickMs)
+        this.timer.unref?.()
+      }
     }
     this.paused = false
     this.kick()
@@ -132,6 +142,8 @@ export class JobQueue {
     this.paused = true
     if (this.timer) clearInterval(this.timer)
     this.timer = null
+    this.clearWake()
+    setJobsAddedListener(null)
     this.started = false
     for (const r of this.running.values()) r.abort.abort()
     await Promise.allSettled([...this.running.values()].map((r) => r.done))
@@ -206,7 +218,17 @@ export class JobQueue {
     else s.lib.repos.settings.set(PAUSED_SETTING, this.pauses)
   }
 
-  /** Re-runs the selection (after an `enqueue`, the end of a job or the periodic wake-up). */
+  /** `kick` at the next microtask, coalesced (a batch of `enqueue` = one selection). */
+  private kickSoon(): void {
+    if (this.kickQueued) return
+    this.kickQueued = true
+    queueMicrotask(() => {
+      this.kickQueued = false
+      this.kick()
+    })
+  }
+
+  /** Re-runs the selection (after an `enqueue`, the end of a job or a scheduled wake-up). */
   kick(): void {
     if (this.pumping) {
       this.pumpAgain = true
@@ -221,7 +243,55 @@ export class JobQueue {
     } finally {
       this.pumping = false
     }
+    this.scheduleWake()
     this.checkIdle()
+  }
+
+  private clearWake(): void {
+    if (this.wakeTimer) clearTimeout(this.wakeTimer)
+    this.wakeTimer = null
+    this.wakeAt = 0
+  }
+
+  /**
+   * Single timer on the next event that can make a job ready: earliest deferred `run_after`, or
+   * end of a type's pause. Nothing scheduled when nothing is waiting (0 wake-ups at rest).
+   */
+  private scheduleWake(): void {
+    if (this.paused || !this.started) {
+      this.clearWake()
+      return
+    }
+    const services = this.deps.services()
+    if (!services) {
+      this.clearWake()
+      return
+    }
+    const now = this.now()
+    let next: number | null = null
+    try {
+      next = services.lib.repos.jobs.nextRunAfter(now)
+    } catch {
+      next = null
+    }
+    for (const p of Object.values(this.pauses)) {
+      if (p.until !== null && p.until > now && (next === null || p.until < next)) next = p.until
+    }
+    if (next === null) {
+      this.clearWake()
+      return
+    }
+    if (this.wakeTimer && this.wakeAt === next) return
+    this.clearWake()
+    this.wakeAt = next
+    // Capped: a `setTimeout` beyond 2^31 ms fires immediately.
+    const delay = Math.min(Math.max(0, next - now) + 5, 2 ** 31 - 1)
+    this.wakeTimer = setTimeout(() => {
+      this.wakeTimer = null
+      this.wakeAt = 0
+      this.kick()
+    }, delay)
+    this.wakeTimer.unref?.()
   }
 
   private runningOf(type: JobType): number {
