@@ -96,6 +96,11 @@ export const StoragePrefs = z.object({
   downloadRemoteMedia: z.boolean().default(true),
 })
 
+export const UpdatesPrefs = z.object({
+  /** Checks GitHub Releases at launch and every 6 h, downloads in the background. */
+  auto: z.boolean().default(true),
+})
+
 export const UiPrefs = z.object({
   /** Interface language: `system` follows the first preferred language of the Mac (French or English). */
   language: z.enum(LANGUAGE_PREFS).default('system'),
@@ -123,6 +128,7 @@ export const PrefsSchema = z.object({
   tools: ToolsPrefs.prefault({}),
   storage: StoragePrefs.prefault({}),
   ui: UiPrefs.prefault({}),
+  updates: UpdatesPrefs.prefault({}),
 })
 
 export type Prefs = z.output<typeof PrefsSchema>

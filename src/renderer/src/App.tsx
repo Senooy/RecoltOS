@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { installInternalDragCleanup } from './lib/dnd'
 import { initLayoutMap } from './lib/shortcuts'
 import { installSyncNotifier } from './features/sync/notifier'
+import { installUpdateNotifier } from './features/updates/notifier'
 import { useUiLang } from './i18n'
 import { AppShell } from './shell/AppShell'
 import { preloadScreensWhenIdle } from './shell/routes'
@@ -39,6 +40,7 @@ export function App() {
       installInternalDragCleanup(),
       followPrefsChanges(),
       installSyncNotifier(),
+      installUpdateNotifier(),
     ]
     void usePrefs.getState().load()
     void initLayoutMap()

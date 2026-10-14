@@ -136,6 +136,11 @@ export function runMenuCommand(cmd: MenuCommand): void {
     case 'settings':
       ui.openOverlay({ type: 'settings' })
       return
+    case 'checkForUpdates':
+      // Settings › About shows the state; the check itself runs in main.
+      ui.openOverlay({ type: 'settings', section: 'about' })
+      void rpc('updates.check').catch(() => undefined)
+      return
     case 'importGatheros':
       ui.openOverlay({ type: 'settings', section: 'libraries' })
       return

@@ -21,6 +21,7 @@ import { shell } from './fr/shell'
 import { spaces } from './fr/spaces'
 import { spacesExtra } from './fr/spaces-extra'
 import { sync } from './fr/sync'
+import { updates } from './fr/updates'
 import { viewer } from './fr/viewer'
 
 export const I18N_DOMAINS = [
@@ -41,6 +42,7 @@ export const I18N_DOMAINS = [
   'sync',
   'spaces',
   'spaces-extra',
+  'updates',
 ] as const
 
 export const fr = {
@@ -62,6 +64,7 @@ export const fr = {
   ...sync,
   ...spaces,
   ...spacesExtra,
+  ...updates,
 } as const
 
 export type Fr = typeof fr

@@ -8,6 +8,7 @@ import type { mainFr } from './fr'
 export const mainEn: Widen<typeof mainFr> = {
   menu: {
     about: (app: string) => `About ${app}`,
+    checkForUpdates: 'Check for Updates…',
     settings: 'Settings…',
     services: 'Services',
     hide: (app: string) => `Hide ${app}`,

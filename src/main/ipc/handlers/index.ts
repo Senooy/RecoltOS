@@ -21,6 +21,7 @@ import { spacesHandlers } from './spaces'
 import { syncHandlers } from './sync'
 import { systemHandlers } from './system'
 import { tagsHandlers } from './tags'
+import { updatesHandlers } from './updates'
 
 export const handlersByDomain: { [D in Domain]: DomainHandlers<D> } = {
   items: itemsHandlers,
@@ -40,6 +41,7 @@ export const handlersByDomain: { [D in Domain]: DomainHandlers<D> } = {
   capture: captureHandlers,
   rediscover: rediscoverHandlers,
   libraries: librariesHandlers,
+  updates: updatesHandlers,
 }
 
 export const handlers: AllHandlers = Object.assign(

@@ -94,6 +94,8 @@ Appearance › Language.
    brew install ffmpeg
    ```
 
+RecoltOS updates itself from GitHub Releases; you can turn this off in Settings › About.
+
 ### Setup
 
 - **Screenshots**: press ⌘⇧S once, allow RecoltOS under System Settings › Privacy & Security › Screen
@@ -166,7 +168,6 @@ More documentation:
 - X may start requiring a signed request header that the extension doesn't produce. If the X row in
   Settings says the request was refused, opening x.com/i/bookmarks once lets the extension pick up the
   bookmarks shown on that page.
-- There are no automatic updates. New versions are published on the Releases page.
 
 ## License
 

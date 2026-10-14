@@ -54,6 +54,7 @@ export function buildMenuTemplate(
       label: appName,
       submenu: [
         { role: 'about', label: m.about(appName) },
+        cmd('checkForUpdates', m.checkForUpdates),
         { type: 'separator' },
         cmd('settings', m.settings),
         { type: 'separator' },

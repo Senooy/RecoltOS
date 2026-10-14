@@ -18,6 +18,7 @@ export const EVENT_NAME_LIST = [
   'spaces.changed',
   'spaces.exportProgress',
   'sync.status',
+  'updates.status',
   'menu.command',
   'nav.openItem',
   'library.switched',

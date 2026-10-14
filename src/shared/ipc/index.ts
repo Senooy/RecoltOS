@@ -21,6 +21,7 @@ import { spacesContract, spacesEvents } from './spaces'
 import { syncContract, syncEvents } from './sync'
 import { systemContract, systemEvents } from './system'
 import { tagsContract } from './tags'
+import { updatesContract, updatesEvents } from './updates'
 
 export * from './channels'
 export type { ChannelDef, ContractShape, EventShape } from './define'
@@ -44,6 +45,7 @@ export const DOMAINS = [
   'capture',
   'rediscover',
   'libraries',
+  'updates',
 ] as const
 export type Domain = (typeof DOMAINS)[number]
 
@@ -65,6 +67,7 @@ export const contractsByDomain = {
   capture: captureContract,
   rediscover: rediscoverContract,
   libraries: librariesContract,
+  updates: updatesContract,
 } as const satisfies Record<Domain, unknown>
 
 export const contract = {
@@ -85,6 +88,7 @@ export const contract = {
   ...captureContract,
   ...rediscoverContract,
   ...librariesContract,
+  ...updatesContract,
 } as const
 
 export type Contract = typeof contract
@@ -121,6 +125,7 @@ export const events = {
   ...systemEvents,
   ...syncEvents,
   ...captureEvents,
+  ...updatesEvents,
 } as const
 
 export type Events = typeof events
@@ -136,5 +141,6 @@ export { ItemFilters, ItemsListInput } from './items'
 export { ApplyBatchInput } from './spaces'
 export { ImportProgress, ImportReport } from './import'
 export { LibraryInfo } from './libraries'
+export { UpdateStatus } from './updates'
 export { RESERVED_TAG_NAMES } from './tags'
 export { MenuCommandSchema, EditCommand } from './system'

@@ -21,6 +21,7 @@ import { shell } from './en/shell'
 import { spaces } from './en/spaces'
 import { spacesExtra } from './en/spaces-extra'
 import { sync } from './en/sync'
+import { updates } from './en/updates'
 import { viewer } from './en/viewer'
 
 export type Messages = Widen<Fr>
@@ -44,4 +45,5 @@ export const en: Messages = {
   ...sync,
   ...spaces,
   ...spacesExtra,
+  ...updates,
 }

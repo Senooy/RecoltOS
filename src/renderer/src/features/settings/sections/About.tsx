@@ -1,8 +1,9 @@
-/** Settings › About. */
+/** Settings › About (with the Updates block). */
 import { useEffect, useState } from 'react'
 import { RecoltLogo } from '../../../components/icons'
 import { tr } from '../../../i18n'
 import { rpc } from '../../../lib/rpc'
+import { UpdatesBlock } from '../../updates/UpdatesBlock'
 
 export function AboutSection() {
   const [version, setVersion] = useState<string | null>(null)
@@ -47,6 +48,9 @@ export function AboutSection() {
           {tr.settingsMoreUi.licensesBody}
         </p>
       ) : null}
+      <div className="mt-4 w-full">
+        <UpdatesBlock />
+      </div>
     </div>
   )
 }

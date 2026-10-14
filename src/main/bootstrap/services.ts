@@ -15,6 +15,7 @@ import { initPrefs } from '../prefs/init'
 import { initProtocol } from '../protocol/init'
 import { initSpaces } from '../spaces/init'
 import { initSync } from '../sync/init'
+import { initUpdates } from '../updates/init'
 import type { Disposer, InitFn, ServiceContext } from './context'
 
 export const SERVICE_DOMAINS = [
@@ -30,6 +31,7 @@ export const SERVICE_DOMAINS = [
   'sync',
   'capture',
   'import-ux',
+  'updates',
 ] as const
 export type ServiceDomain = (typeof SERVICE_DOMAINS)[number]
 
@@ -47,6 +49,8 @@ export const SERVICES: readonly { domain: ServiceDomain; init: InitFn }[] = [
   { domain: 'sync', init: initSync },
   { domain: 'capture', init: initCapture },
   { domain: 'import-ux', init: initImportUx },
+  // Last: nothing before the first paint (electron-updater is loaded later, on first use).
+  { domain: 'updates', init: initUpdates },
 ]
 
 /**

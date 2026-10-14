@@ -6,6 +6,7 @@
 export const mainFr = {
   menu: {
     about: (app: string) => `À propos de ${app}`,
+    checkForUpdates: 'Rechercher les mises à jour…',
     settings: 'Réglages…',
     services: 'Services',
     hide: (app: string) => `Masquer ${app}`,
