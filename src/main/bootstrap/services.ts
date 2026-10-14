@@ -51,8 +51,9 @@ export const SERVICES: readonly { domain: ServiceDomain; init: InitFn }[] = [
 
 /**
  * Service a renderer call needs before it can be served (the window opens while the services
- * start). Startup reads (`items.list`, `collections.tree`, `prefs.get`…) only need the library;
- * `null`: no service; anything not listed waits for every service.
+ * start). Startup reads (`items.list`, `collections.tree`…) need the library AND the `recolt://`
+ * handler (the cards' images are requested right after): they wait for `protocol`, which starts
+ * after `library`. `null`: no service; anything not listed waits for every service.
  */
 export function serviceForChannel(channel: string): ServiceDomain | 'all' | null {
   if (channel === 'system.takePendingNav') return null
@@ -65,7 +66,7 @@ export function serviceForChannel(channel: string): ServiceDomain | 'all' | null
     case 'tags':
     case 'search':
     case 'rediscover':
-      return 'library'
+      return 'protocol'
     default:
       return 'all'
   }

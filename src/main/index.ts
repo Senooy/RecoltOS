@@ -18,7 +18,6 @@ import {
   type ServiceDomain,
   type ServicesHandle,
 } from './bootstrap/services'
-import { UNINSTALL_FLAG } from './bridge/init'
 import { configureUserData } from './bootstrap/user-data'
 import { handlers } from './ipc/handlers'
 import { makeEmitter, makeSenderCheck, registerRpc } from './ipc/router'
@@ -90,8 +89,8 @@ if (gotLock) {
     })
     installPerfMarks(userData)
 
-    // `--uninstall-native-hosts` quits during the services: no window in that case.
-    const early = !process.argv.includes(UNINSTALL_FLAG)
+    // `--uninstall-native-hosts` (bridge) quits during the services: no early window in that case.
+    const early = !process.argv.includes('--uninstall-native-hosts')
     const openWindow = () => {
       if (!getMainWindow()) createMainWindow({ userData, flags })
     }
