@@ -36,7 +36,7 @@ import { SHEET_EASING } from '../../lib/flip'
 import { pct } from '../../lib/format'
 import { mediaSrc } from '../../lib/media-url'
 import { RpcError, rpc, subscribe } from '../../lib/rpc'
-import { pauseVideo, releaseDetached, releaseVideo } from '../../lib/video-guard'
+import { attachSrc, pauseVideo, releaseDetached, releaseVideo } from '../../lib/video-guard'
 import { isEditableTarget } from '../../lib/shortcuts'
 import { usePrefs } from '../../state/prefs'
 import { useUi } from '../../state/ui'
@@ -251,10 +251,12 @@ export default function Viewer() {
   const stageRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const closing = useRef(false)
-  // Stable ref: releases the element's stream on unmount or on any change of `key`.
+  // Stable ref: attaches the stream once committed (never during a render React may discard,
+  // see `lib/video-guard.ts`), releases it on unmount or on any change of `key`.
   const setVideoEl = useCallback((el: HTMLVideoElement | null) => {
     videoRef.current = el
     if (!el) return
+    if (!closing.current) attachSrc(el)
     return () => {
       if (videoRef.current === el) videoRef.current = null
       releaseDetached(el)
@@ -725,7 +727,7 @@ export default function Viewer() {
                 key={media.src}
                 ref={setVideoEl}
                 data-testid="viewer-video"
-                src={media.src}
+                data-src={media.src}
                 crossOrigin="anonymous"
                 poster={media.poster}
                 autoPlay

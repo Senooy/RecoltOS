@@ -34,7 +34,7 @@ import { tr } from '../../i18n'
 import { cn } from '../../lib/cn'
 import { cardLargeSrc, mediaSrc } from '../../lib/media-url'
 import { RpcError, rpc } from '../../lib/rpc'
-import { releaseOnUnmount } from '../../lib/video-guard'
+import { mountVideo } from '../../lib/video-guard'
 import { askName } from '../../state/dialogs'
 import { useUi } from '../../state/ui'
 import { useUndo } from '../../state/undo'
@@ -118,8 +118,9 @@ function CardFace({ card, top }: { card: ItemCard; top: boolean }) {
       {img ? <img src={img} alt="" draggable={false} className="rd-img" /> : null}
       {video ? (
         <video
-          ref={releaseOnUnmount}
-          src={video}
+          key={video}
+          ref={mountVideo}
+          data-src={video}
           autoPlay
           loop
           muted

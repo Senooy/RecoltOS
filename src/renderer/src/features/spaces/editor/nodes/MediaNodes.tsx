@@ -15,7 +15,7 @@ import { useState, type SyntheticEvent } from 'react'
 import { MediaBadge } from '../../../../components/ui'
 import { tr } from '../../../../i18n'
 import { mediaSrc } from '../../../../lib/media-url'
-import { releaseOnUnmount } from '../../../../lib/video-guard'
+import { mountVideo } from '../../../../lib/video-guard'
 import { PageCard } from '../../../grid/cards/MediaCards'
 import { cardKind } from '../../../grid/cards/SaveCard'
 import { TweetCard } from '../../../grid/cards/TweetCard'
@@ -143,8 +143,9 @@ export function ItemNodeView({
       />
       {videoActive && preview ? (
         <video
-          ref={releaseOnUnmount}
-          src={preview}
+          key={preview}
+          ref={mountVideo}
+          data-src={preview}
           muted
           loop
           autoPlay
@@ -192,8 +193,9 @@ export function ImageNodeView({
       ) : null}
       {video && videoActive && full ? (
         <video
-          ref={releaseOnUnmount}
-          src={full}
+          key={full}
+          ref={mountVideo}
+          data-src={full}
           muted
           loop
           autoPlay

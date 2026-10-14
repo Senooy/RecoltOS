@@ -17,7 +17,7 @@
  * AND slot in the window. The others are paused (their last frame stays). The `<video>` and its
  * stream are only created on the first play: nothing loads during the entry cascade.
  */
-import { releaseVideo } from '../../../lib/video-guard'
+import { allowOffscreen, releaseVideo } from '../../../lib/video-guard'
 
 /** Backing size of the video canvas (CSS 410×700 × 1.3: the 540p previews, without upscaling). */
 export const VIDEO_CANVAS_W = 533
@@ -91,8 +91,8 @@ export class ShelfVideos {
 
   private createVideo(e: Entry): HTMLVideoElement {
     const v = document.createElement('video')
-    v.muted = true
-    v.defaultMuted = true
+    // Detached frame source, registered with the guard: muted and at volume 0 before any play.
+    allowOffscreen(v)
     v.loop = true
     v.playsInline = true
     v.preload = 'auto'

@@ -11,7 +11,7 @@ import { MediaBadge } from '../../../components/ui'
 import { tr } from '../../../i18n'
 import { lruSet } from '../../../lib/lru'
 import { mediaSrc } from '../../../lib/media-url'
-import { releaseDetached } from '../../../lib/video-guard'
+import { attachSrc, releaseDetached } from '../../../lib/video-guard'
 import { rpc } from '../../../lib/rpc'
 
 export function CardImage({
@@ -94,7 +94,8 @@ export function VideoCard({
     if (!active || !v) return
     if (playing && playing !== v) playing.pause()
     playing = v
-    v.currentTime = 0
+    // Stream attached once committed (see `lib/video-guard.ts`).
+    attachSrc(v)
     void v.play().catch(() => undefined)
     return () => {
       releaseDetached(v)
@@ -111,8 +112,9 @@ export function VideoCard({
       {active && preview ? (
         <>
           <video
+            key={preview}
             ref={ref}
-            src={preview}
+            data-src={preview}
             muted
             loop
             playsInline
