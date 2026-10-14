@@ -210,9 +210,11 @@
   font-size: 11px;
   line-height: 14px;
 }
-/* Entry: animated slices hidden while their covers decode, then they fall. */
+/* Entry: animated slices not painted while their covers decode (`visibility`, not `opacity`:
+   an invisible but painted face would be rasterized with its `decoding=sync` image and hold the
+   first frame of the shelf), then they fall. */
 .shelf[data-phase='wait'] .shelf-item[data-anim] > :not(.shelf-slot) {
-  opacity: 0;
+  visibility: hidden;
 }
 .shelf[data-phase='enter'] .shelf-item[data-anim] > :not(.shelf-slot) {
   animation:
