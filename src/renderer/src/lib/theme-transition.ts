@@ -34,6 +34,8 @@ export const GHOST_MS = 1100
 
 const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)'
 const EASE_SWING = 'cubic-bezier(0.33, 1, 0.68, 1)'
+/** Curve of the spreading circle. */
+const EASE_WAVE = 'cubic-bezier(0.4, 0, 0.2, 1)'
 
 /** An origin older than this is ignored (the change did not come from that control). */
 const ORIGIN_TTL_MS = 1000
@@ -149,13 +151,14 @@ function circle(r: number, x: number, y: number): string {
 }
 
 function run(root: HTMLElement, x: number, y: number, w: number, h: number): void {
-  // Slightly beyond the farthest corner, so the tremor never uncovers it.
-  const radius = Math.ceil(Math.hypot(Math.max(x, w - x), Math.max(y, h - y))) + 8
+  // Well beyond the farthest corner: the last corners are covered while the front is still
+  // moving, instead of crawling in at the very end and snapping full when the transition ends.
+  const radius = Math.ceil(Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.25) + 8
   const clip = { clipPath: [circle(0, x, y), circle(radius, x, y)] }
   // The swing starts in the direction the wave travels.
   const phase = x > w / 2 ? -1 : 1
-  // Gentler than the tremor's curve, so the spreading reads before the window is covered.
-  const wave = { duration: WAVE_MS, easing: EASE_SWING, fill: 'backwards' } as const
+  // Eases out without a long crawling tail, so the front keeps travelling until the window is covered.
+  const wave = { duration: WAVE_MS, easing: EASE_WAVE, fill: 'backwards' } as const
   root.animate(clip, { ...wave, pseudoElement: NEW })
   root.animate(
     CORE_KEYS.map(([offset, tx, s]) => ({
