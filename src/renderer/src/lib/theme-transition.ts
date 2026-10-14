@@ -4,14 +4,13 @@
  * sides of the wavefront with a decaying amplitude and fade, while the interface trembles slightly
  * and settles sharp. The theme icon of the header resonates along (`styles/theme-transition.css`).
  *
- * Built on a View Transition whose captures are split in two groups so the ghosts can sit between
- * them (bottom to top):
- *  - `root`: static snapshot of the old theme (the `<html>` element, as captured before the change);
- *  - `theme-ghost-left` / `theme-ghost-right`: two solid tints (4 px elements stretched to the
- *    window), clipped by the same growing circle but shifted sideways: only their crescents outside
- *    the front show;
- *  - `theme-wave`: the new theme, live (`<body>`, named only once the theme has changed), clipped
- *    by the circle.
+ * Built on a View Transition of the whole document (bottom to top):
+ *  - `::view-transition-old(root)`: static snapshot of the old theme;
+ *  - `::view-transition-new(root)`: the new theme, the whole document, live, clipped by a circle
+ *    that grows from the origin until well beyond the farthest corner;
+ *  - `theme-ghost-left` / `theme-ghost-right`: two thin tinted rings (4 px elements stretched to
+ *    the window, clipped by an evenodd ring path) riding the wavefront, shifted sideways.
+ * When the circle has covered the window, what shows is already exactly the final state.
  * Only `clip-path`, `transform` and `opacity` are animated, with concrete values (WAAPI), on images
  * the compositor already holds. No DOM is cloned: every `<video>` keeps playing in place and the
  * registry of `video-guard` is left alone.
@@ -73,7 +72,10 @@ const CORE_KEYS: ReadonlyArray<readonly [number, number, number]> = [
   [1, 0, 1],
 ]
 
-const NEW = '::view-transition-new(theme-wave)'
+/** Thickness of the chromatic rings, in px, just outside the front. */
+const RING_PX = 14
+
+const NEW = '::view-transition-new(root)'
 const GHOSTS = [
   { side: 'left', dir: -1, pseudo: '::view-transition-new(theme-ghost-left)' },
   { side: 'right', dir: 1, pseudo: '::view-transition-new(theme-ghost-right)' },
@@ -150,15 +152,24 @@ function circle(r: number, x: number, y: number): string {
   return `circle(${r}px at ${x}px ${y}px)`
 }
 
+/** Ring between two circles (evenodd), each two arcs: the same commands for every radius. */
+function ring(inner: number, outer: number, x: number, y: number): string {
+  const sub = (r: number): string =>
+    `M ${x - r} ${y} A ${r} ${r} 0 1 0 ${x + r} ${y} A ${r} ${r} 0 1 0 ${x - r} ${y} Z`
+  return `path(evenodd, "${sub(outer)} ${sub(inner)}")`
+}
+
 function run(root: HTMLElement, x: number, y: number, w: number, h: number): void {
   // Well beyond the farthest corner: the last corners are covered while the front is still
   // moving, instead of crawling in at the very end and snapping full when the transition ends.
   const radius = Math.ceil(Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.25) + 8
   const clip = { clipPath: [circle(0, x, y), circle(radius, x, y)] }
+  // Rings on the front: inner radius = radius of the wave, at every instant (same curve).
+  const rings = { clipPath: [ring(0, RING_PX, x, y), ring(radius, radius + RING_PX, x, y)] }
   // The swing starts in the direction the wave travels.
   const phase = x > w / 2 ? -1 : 1
   // Eases out without a long crawling tail, so the front keeps travelling until the window is covered.
-  const wave = { duration: WAVE_MS, easing: EASE_WAVE, fill: 'backwards' } as const
+  const wave = { duration: WAVE_MS, easing: EASE_WAVE, fill: 'both' } as const
   root.animate(clip, { ...wave, pseudoElement: NEW })
   root.animate(
     CORE_KEYS.map(([offset, tx, s]) => ({
@@ -169,7 +180,7 @@ function run(root: HTMLElement, x: number, y: number, w: number, h: number): voi
     { duration: CORE_MS, fill: 'backwards', pseudoElement: NEW },
   )
   for (const { dir, pseudo } of GHOSTS) {
-    root.animate(clip, { ...wave, pseudoElement: pseudo })
+    root.animate(rings, { ...wave, pseudoElement: pseudo })
     root.animate(
       GHOST_SWING.map(([offset, swing]) => ({
         offset,
@@ -212,7 +223,7 @@ export function transitionTheme(
     if (id !== gen) return
     pending = null
     apply()
-    // From here on the new theme is captured from `<body>` and the ghosts exist.
+    // The ghosts exist in the new state only; the resonance of the icon starts.
     root.dataset.themeWave = '1'
     root.dataset.themeResonance = '1'
     mountGhosts()

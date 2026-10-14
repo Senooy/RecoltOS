@@ -1,21 +1,14 @@
 /*
  * Theme switch (`lib/theme-transition.ts`): the new theme spreads from the control in a circle and
  * resonates. The animations of the transition pseudo-elements are driven from JS (concrete
- * values); this sheet sets their layering and turns off the default cross-fade. The theme glyph
+ * values); this sheet sets their layering and turns off the default cross-fade: the old document
+ * stays static underneath, the new one shows only inside the circle. The theme glyph
  * of the header resonates with CSS keyframes. Only transform, opacity and clip-path move.
  */
 
 /* The interface stays usable during the ~1 s of the transition: input reaches the live page. */
 ::view-transition {
   pointer-events: none;
-}
-
-/* New theme captured from <body>, apart from the old <html> snapshot: the ghosts fit between. */
-:root[data-theme-wave] {
-  view-transition-name: none;
-}
-:root[data-theme-wave] body {
-  view-transition-name: theme-wave;
 }
 
 .theme-wave-ghost {
@@ -40,6 +33,7 @@
   z-index: 0;
   animation: none;
 }
+/* Rings above the whole document, on the wavefront. */
 :root[data-theme-wave]::view-transition-group(theme-ghost-left),
 :root[data-theme-wave]::view-transition-group(theme-ghost-right) {
   z-index: 1;
@@ -49,23 +43,20 @@
   transform: none;
   animation: none;
 }
-:root[data-theme-wave]::view-transition-group(theme-wave) {
-  z-index: 2;
-  animation: none;
-}
 :root[data-theme-wave]::view-transition-image-pair(root),
-:root[data-theme-wave]::view-transition-image-pair(theme-wave),
 :root[data-theme-wave]::view-transition-image-pair(theme-ghost-left),
 :root[data-theme-wave]::view-transition-image-pair(theme-ghost-right) {
   isolation: auto;
   animation: none;
 }
+/* Old theme static underneath (no fade), new theme revealed by the circle only. */
 :root[data-theme-wave]::view-transition-old(root),
-:root[data-theme-wave]::view-transition-new(theme-wave),
+:root[data-theme-wave]::view-transition-new(root),
 :root[data-theme-wave]::view-transition-new(theme-ghost-left),
 :root[data-theme-wave]::view-transition-new(theme-ghost-right) {
   animation: none;
   mix-blend-mode: normal;
+  opacity: 1;
 }
 :root[data-theme-wave]::view-transition-new(theme-ghost-left),
 :root[data-theme-wave]::view-transition-new(theme-ghost-right) {
