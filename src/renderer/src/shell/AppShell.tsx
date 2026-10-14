@@ -4,7 +4,7 @@
  * overlays (Settings…), FAB, drop overlay, selection bar, toasts, dialogs. Commands from the
  * native menu (`evt:menu.command`) and keyboard fallbacks (⌘1/2/3 by `e.code`, Esc).
  */
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { EmptyState, Toaster, TooltipProvider, toast } from '../components/ui'
 import { tr } from '../i18n'
 import { cn } from '../lib/cn'
@@ -142,6 +142,21 @@ export function AppShell({ dark }: { dark: boolean }) {
 
   const Screen = routes[route.name]
   const implemented = isRouteImplemented(route.name)
+  // Same element while the screen does not change: opening an overlay (detail, Rediscover,
+  // Settings…), resizing or a header change no longer re-renders the whole screen below.
+  const screen = useMemo(
+    () =>
+      implemented ? (
+        <Suspense fallback={null}>
+          <Screen />
+        </Suspense>
+      ) : (
+        <div className="flex flex-1 items-center justify-center border-t border-border-subtle">
+          <EmptyState title={tr.shell.unavailable} />
+        </div>
+      ),
+    [Screen, implemented],
+  )
   const showFab = route.name === 'library' || route.name === 'collection' || route.name === 'search'
   const Overlay = overlay ? overlays[overlay.type] : null
   const collection =
@@ -182,17 +197,7 @@ export function AppShell({ dark }: { dark: boolean }) {
             />
           )}
         </header>
-        <div className="relative flex min-h-0 flex-1 flex-col">
-          {implemented ? (
-            <Suspense fallback={null}>
-              <Screen />
-            </Suspense>
-          ) : (
-            <div className="flex flex-1 items-center justify-center border-t border-border-subtle">
-              <EmptyState title={tr.shell.unavailable} />
-            </div>
-          )}
-        </div>
+        <div className="relative flex min-h-0 flex-1 flex-col">{screen}</div>
         {showFab ? (
           <FabMenu
             collection={collection ? { uuid: collection.uuid, name: collection.name } : null}

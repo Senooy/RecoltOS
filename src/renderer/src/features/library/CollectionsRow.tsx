@@ -5,7 +5,7 @@
  */
 import { Pencil, Plus, Trash, Compass } from 'lucide-react'
 import { Reorder } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import type { CollectionNode } from '../../../../shared/dto/collections'
 import type { ItemCard } from '../../../../shared/dto/items'
 import { Menu, toast } from '../../components/ui'
@@ -82,7 +82,13 @@ export function FanStack({ covers, open }: { covers: readonly ItemCard[]; open: 
   )
 }
 
-export function CollectionCard({ node, dragging }: { node: CollectionNode; dragging: boolean }) {
+export const CollectionCard = memo(function CollectionCard({
+  node,
+  dragging,
+}: {
+  node: CollectionNode
+  dragging: boolean
+}) {
   const [hover, setHover] = useState(false)
   const [target, setTarget] = useState(false)
   const navigate = useUi((s) => s.navigate)
@@ -159,7 +165,7 @@ export function CollectionCard({ node, dragging }: { node: CollectionNode; dragg
       </Menu.Context.Content>
     </Menu.Context.Root>
   )
-}
+})
 
 export function NewCollectionCard() {
   const [editing, setEditing] = useState(false)
@@ -223,7 +229,12 @@ export function NewCollectionCard() {
   )
 }
 
-export function CollectionsRow({ collections }: { collections: readonly CollectionNode[] }) {
+/** Memoized: the tree keeps its array while unchanged (`state/collections.ts`). */
+export const CollectionsRow = memo(function CollectionsRow({
+  collections,
+}: {
+  collections: readonly CollectionNode[]
+}) {
   const [order, setOrder] = useState<string[]>(() => collections.map((c) => c.uuid))
   const [dragging, setDragging] = useState(false)
   useEffect(() => setOrder(collections.map((c) => c.uuid)), [collections])
@@ -264,4 +275,4 @@ export function CollectionsRow({ collections }: { collections: readonly Collecti
       <div className="w-[6px] shrink-0" />
     </div>
   )
-}
+})

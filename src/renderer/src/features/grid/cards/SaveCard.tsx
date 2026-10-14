@@ -37,8 +37,13 @@ export interface SaveCardProps {
   card: ItemCard
   width: number
   height: number
+  /** Position in the grid (`translate`): primitives, so `memo` holds while scrolling. */
+  x?: number
+  y?: number
+  /** Reappearance cascade: delay of this card (ms), or `null` outside a cascade. */
+  cascadeDelay?: number | null
+  cascadeMs?: number
   selected: boolean
-  style?: CSSProperties
   className?: string
   onActivate: (e: MouseEvent | KeyboardEvent, card: ItemCard) => void
   onToggleSelect: (e: MouseEvent, card: ItemCard) => void
@@ -50,8 +55,11 @@ function SaveCardInner({
   card,
   width,
   height,
+  x,
+  y,
+  cascadeDelay = null,
+  cascadeMs,
   selected,
-  style,
   className,
   onActivate,
   onToggleSelect,
@@ -61,6 +69,16 @@ function SaveCardInner({
   const [hover, setHover] = useState(false)
   const kind = cardKind(card)
   const framed = kind === 'tweet' || kind === 'page'
+  const style: CSSProperties = {
+    width,
+    height,
+    background: framed ? undefined : (card.dominant ?? 'var(--skeleton)'),
+  }
+  if (x !== undefined && y !== undefined) style.transform = `translate(${x}px, ${y}px)`
+  if (cascadeDelay !== null) {
+    style.animationDelay = `${cascadeDelay}ms`
+    if (cascadeMs !== undefined) style.animationDuration = `${cascadeMs}ms`
+  }
   return (
     <div
       role="listitem"
@@ -73,12 +91,7 @@ function SaveCardInner({
       aria-label={cardLabel(card)}
       draggable
       className={cn('save-card group overflow-hidden rounded-md', className)}
-      style={{
-        width,
-        height,
-        background: framed ? undefined : (card.dominant ?? 'var(--skeleton)'),
-        ...style,
-      }}
+      style={style}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={(e) => {

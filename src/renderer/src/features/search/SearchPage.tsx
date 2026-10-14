@@ -7,7 +7,7 @@
  * `type:` `source:` `couleur:` `#source` `#tag connu` becomes a chip when a space is typed.
  */
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CollectionNode, SourceChip, TagInfo } from '../../../../shared/dto/collections'
 import type { ItemCard } from '../../../../shared/dto/items'
 import { toFtsQuery } from '../../../../shared/search-query'
@@ -95,7 +95,12 @@ function MiniFan({ covers, open }: { covers: readonly ItemCard[]; open: boolean 
   )
 }
 
-function CollectionsCarousel({ tree }: { tree: readonly CollectionNode[] }) {
+/** Memoized: the page re-renders on each keystroke, the collections do not change. */
+const CollectionsCarousel = memo(function CollectionsCarousel({
+  tree,
+}: {
+  tree: readonly CollectionNode[]
+}) {
   const ref = useRef<HTMLDivElement | null>(null)
   const navigate = useUi((s) => s.navigate)
   const [edges, setEdges] = useState({ start: true, end: false })
@@ -158,7 +163,7 @@ function CollectionsCarousel({ tree }: { tree: readonly CollectionNode[] }) {
       </div>
     </section>
   )
-}
+})
 
 function CollectionTile({ node: n, onOpen }: { node: CollectionNode; onOpen: () => void }) {
   const [hover, setHover] = useState(false)

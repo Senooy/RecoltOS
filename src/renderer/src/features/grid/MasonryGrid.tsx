@@ -43,6 +43,8 @@ import './grid.css'
 export const GRID_GAP = 8
 export const GRID_PAD_X = 18
 export const OVERSCAN = 800
+/** Scroll distance before the mounted window is recomputed. */
+const WINDOW_STEP = 160
 /** Reappearance cascade: offset per card (reading order) and fade duration. */
 export const CASCADE_STEP_MS = 40
 export const CASCADE_MS = 240
@@ -191,7 +193,11 @@ export function MasonryGrid({
       const top = sc.scrollTop - offset
       setView((v) => {
         const next = { top: top - OVERSCAN, bottom: top + sc.clientHeight + OVERSCAN }
-        return Math.abs(next.top - v.top) < 60 && Math.abs(next.bottom - v.bottom) < 60 ? v : next
+        // Re-windowed every 160 px (the 800 px overscan absorbs it): 3× fewer grid renders.
+        return Math.abs(next.top - v.top) < WINDOW_STEP &&
+          Math.abs(next.bottom - v.bottom) < WINDOW_STEP
+          ? v
+          : next
       })
     }
     const onScroll = () => {
@@ -276,34 +282,35 @@ export function MasonryGrid({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cascade])
 
+  // Card handlers read the latest list / layout through a ref: they stay stable, so a reload of
+  // the list or a new layout does not re-render every memoized card.
+  const latest = useRef({ items, byId, layout, onOpen })
+  latest.current = { items, byId, layout, onOpen }
+
   // Selection: ⌘-click toggles, Shift-click extends the range from the last anchor.
   const anchor = useRef<string | null>(null)
-  const onToggleSelect = useCallback(
-    (e: MouseEvent, card: ItemCard) => {
-      const ui = useUi.getState()
-      if (e.shiftKey && anchor.current && byId.has(anchor.current)) {
-        const a = byId.get(anchor.current)!
-        const b = byId.get(card.uuid)!
-        const [lo, hi] = a < b ? [a, b] : [b, a]
-        ui.setSelection([...ui.selection, ...items.slice(lo, hi + 1).map((c) => c.uuid)])
-      } else {
-        ui.toggleSelected(card.uuid)
-        anchor.current = card.uuid
-      }
-    },
-    [byId, items],
-  )
-  const onActivate = useCallback(
-    (_e: MouseEvent | KeyboardEvent, card: ItemCard) => {
-      const ui = useUi.getState()
-      if (ui.selection.length > 0) {
-        ui.toggleSelected(card.uuid)
-        return
-      }
-      onOpen?.(card, items)
-    },
-    [items, onOpen],
-  )
+  const onToggleSelect = useCallback((e: MouseEvent, card: ItemCard) => {
+    const { items, byId } = latest.current
+    const ui = useUi.getState()
+    if (e.shiftKey && anchor.current && byId.has(anchor.current)) {
+      const a = byId.get(anchor.current)!
+      const b = byId.get(card.uuid)!
+      const [lo, hi] = a < b ? [a, b] : [b, a]
+      ui.setSelection([...ui.selection, ...items.slice(lo, hi + 1).map((c) => c.uuid)])
+    } else {
+      ui.toggleSelected(card.uuid)
+      anchor.current = card.uuid
+    }
+  }, [])
+  const onActivate = useCallback((_e: MouseEvent | KeyboardEvent, card: ItemCard) => {
+    const ui = useUi.getState()
+    if (ui.selection.length > 0) {
+      ui.toggleSelected(card.uuid)
+      return
+    }
+    const { items, onOpen } = latest.current
+    onOpen?.(card, items)
+  }, [])
   const onDragStart = useCallback((e: DragEvent<HTMLDivElement>, card: ItemCard) => {
     const ui = useUi.getState()
     const uuids = ui.selection.includes(card.uuid) ? ui.selection : [card.uuid]
@@ -311,6 +318,7 @@ export function MasonryGrid({
   }, [])
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>, card: ItemCard) => {
+      const { byId, layout } = latest.current
       const dirs: Record<string, 'left' | 'right' | 'up' | 'down'> = {
         ArrowLeft: 'left',
         ArrowRight: 'right',
@@ -333,7 +341,7 @@ export function MasonryGrid({
         onActivate(e, card)
       }
     },
-    [byId, layout, onActivate, scrollRef],
+    [onActivate, scrollRef],
   )
 
   // Single context menu: the targeted card is read from the clicked element.
@@ -387,17 +395,12 @@ export function MasonryGrid({
                     card={card}
                     width={p.w}
                     height={p.h}
+                    x={p.x}
+                    y={p.y}
+                    cascadeDelay={cascading ? (rank ?? 40) * CASCADE_STEP_MS : null}
+                    cascadeMs={CASCADE_MS}
                     selected={selected.has(card.uuid)}
                     className={cascading ? 'masonry-card cascade-in' : 'masonry-card'}
-                    style={{
-                      transform: `translate(${p.x}px, ${p.y}px)`,
-                      ...(cascading
-                        ? {
-                            animationDelay: `${(rank ?? 40) * CASCADE_STEP_MS}ms`,
-                            animationDuration: `${CASCADE_MS}ms`,
-                          }
-                        : {}),
-                    }}
                     onActivate={onActivate}
                     onToggleSelect={onToggleSelect}
                     onDragStart={onDragStart}

@@ -28,7 +28,6 @@ export function CardImage({
   alt?: string
   className?: string
 }) {
-  const [loaded, setLoaded] = useState(false)
   const thumb = mediaSrc(thumbUrl)
   const large = mediaSrc(largeUrl)
   if (!thumb && !large) return null
@@ -44,9 +43,12 @@ export function CardImage({
       decoding="async"
       loading="lazy"
       draggable={false}
-      data-loaded={loaded ? '1' : '0'}
       className={`card-img ${className}`}
-      onLoad={() => setLoaded(true)}
+      // Fade-in flag written on the element (`.card-img[data-loaded='1']`): no React commit per
+      // decoded image while scrolling. React does not manage this attribute.
+      onLoad={(e) => {
+        e.currentTarget.dataset.loaded = '1'
+      }}
       onError={(e: SyntheticEvent<HTMLImageElement>) => {
         e.currentTarget.style.visibility = 'hidden'
       }}

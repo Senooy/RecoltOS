@@ -36,6 +36,34 @@ type ListBase =
   | { scope: 'library'; tab: LibraryTab; sort: SortMode; seed: number }
   | { scope: 'collection'; collectionUuid: string; sort: SortMode; seed: number }
 
+/** Serialized form of a card (comparison), computed once per card object. */
+const signatures = new WeakMap<ItemCard, string>()
+function signature(c: ItemCard): string {
+  let sig = signatures.get(c)
+  if (sig === undefined) {
+    sig = JSON.stringify(c)
+    signatures.set(c, sig)
+  }
+  return sig
+}
+
+/**
+ * Structural sharing between two loads: an unchanged card keeps its previous object (memoized
+ * cards and layouts do not re-render), and an unchanged list keeps its previous array.
+ */
+export function reuseCards(prev: readonly ItemCard[], next: ItemCard[]): ItemCard[] {
+  if (prev.length === 0) return next
+  const old = new Map(prev.map((c) => [c.uuid, c]))
+  let same = prev.length === next.length
+  const out = next.map((c, i) => {
+    const o = old.get(c.uuid)
+    const keep = o !== undefined && signature(o) === signature(c) ? o : c
+    if (same && prev[i] !== keep) same = false
+    return keep
+  })
+  return same ? (prev as ItemCard[]) : out
+}
+
 /** Full list of a scope, by keyset pages. */
 export function useItemsList(base: ListBase, onCollectionsChanged: boolean): LibraryItemsState {
   const key = JSON.stringify(base)
@@ -49,9 +77,12 @@ export function useItemsList(base: ListBase, onCollectionsChanged: boolean): Lib
   useEffect(() => {
     const generation = gen
     let timer: ReturnType<typeof setTimeout> | null = null
+    let loadedOnce = false
     const load = async () => {
       const my = ++gen.current
-      setState((s) => ({ ...s, loading: true }))
+      const reloading = loadedOnce
+      loadedOnce = true
+      if (!reloading) setState((s) => (s.loading ? s : { ...s, loading: true }))
       try {
         let cursor: string | null = null
         const all: ItemCard[] = []
@@ -63,12 +94,19 @@ export function useItemsList(base: ListBase, onCollectionsChanged: boolean): Lib
           all.push(...r.items)
           total = r.total
           cursor = r.nextCursor
-          // First page: immediate display (first render < 800 ms).
-          if (page === 0)
+          // First page: immediate display (first render < 800 ms). On a reload, the previous
+          // full list stays displayed until the last page (no shrink, no flicker).
+          if (page === 0 && !cursor) break
+          if (page === 0 && !reloading)
             setState({ items: [...all], total, loading: cursor !== null, loaded: true })
           if (!cursor) break
         }
-        setState({ items: all, total, loading: false, loaded: true })
+        setState((s) => {
+          const items = reuseCards(s.items, all)
+          return items === s.items && s.total === total && !s.loading && s.loaded
+            ? s
+            : { items, total, loading: false, loaded: true }
+        })
       } catch (err) {
         if (my !== gen.current) return
         if (!isNotImplemented(err)) console.warn('[items] list unavailable', err)
